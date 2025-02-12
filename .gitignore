@@ -169,3 +169,6 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+# Generated C files
+cnake_charmer/cy/**/*.c
