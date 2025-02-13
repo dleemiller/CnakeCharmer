@@ -7,12 +7,14 @@ This module provides a performance-optimized FizzBuzz example as part of the liv
 Keywords: fizzbuzz, leetcode, cython, benchmark, example
 
 """
+from cnake_charmer.benchmarks import cython_benchmark
 
 from libc.stdio cimport printf
 import cython
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
+@cython_benchmark(args=(10000,))
 def fizzbuzz(int n):
     """Generate the FizzBuzz sequence for numbers from 1 to n.
 

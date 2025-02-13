@@ -41,4 +41,5 @@ Documentation = "https://github.com/dleemiller/cnakecharmer#readme"
 [tool.poetry.group.dev.dependencies]
 cython = "^3.0.12"
 pytest = "^8.3.4"
+black = "^25.1.0"
 
