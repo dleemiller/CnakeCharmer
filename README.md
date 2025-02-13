@@ -33,13 +33,15 @@ taxonomy, it should be organizing implementations into an appropriately submodul
 
 ### Testing
 
-Testing should be done for correctness. More importantly, it should be done to check that the implementations have
-equivalent inputs and outputs.
+Testing should be done for correctness. More importantly, it should be done to check that the twin implementations have
+**equivalent** inputs and outputs.
 
 ### Benchmarking
 
 There are many ways to optimizing both python and cython code. Therefore, we'd like to ensure that implementation
-optimizations do not regress in performance.
+optimizations do not regress in performance. For each implementation, we need to benchmark the results. Given our
+goal of a large number of implementations, benchmarks should generally run in less than 1s, and use inputs
+that would be demonstrative of a typical workload (if applicable).
 
 The benchmarking decorators should be applied:
 ```python
@@ -75,6 +77,15 @@ we should ask:
 - is this a library that would commonly benefit from being used in *cython* code?
 - can our script be reasonably implemented without it?
 - will it be useful for multiple different code implementations?
+
+## Changes to existing implementations
+
+Changes to any existing implementation are welcome. "Best practice" improvements are encouraged.
+Changes should not regress in benchmarks. It is probable that we will use an implementation's history,
+along with Cython's annotations to create additional Cython optimization datasets.
+Therefore, it is actually beneficial to have committed *inefficient* Cython implementations that are improved over time.
+
+Example: (Cython: Determining where to add types)[https://cython.readthedocs.io/en/latest/src/quickstart/cythonize.html#determining-where-to-add-types]
 
 
 ## Contributing
