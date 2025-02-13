@@ -9,7 +9,7 @@ requires = [
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "cnakecharmer"
+name = "cnake_charmer"
 version = "0.1.0"
 description = "A living dataset of parallel Python/Cython implementations for AI training and benchmarking."
 authors = [
@@ -29,10 +29,15 @@ classifiers = [
     "Operating System :: OS Independent"
 ]
 dependencies = [
+    "numpy (>=2.0,<3.0)"
 ]
 
 [project.urls]
 Homepage = "https://github.com/dleemiller/cnakecharmer"
 Repository = "https://github.com/dleemiller/cnakecharmer"
 Documentation = "https://github.com/dleemiller/cnakecharmer#readme"
+
+
+[tool.poetry.group.dev.dependencies]
+cython = "^3.0.12"
 
