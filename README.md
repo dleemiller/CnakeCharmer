@@ -85,7 +85,7 @@ Changes should not regress in benchmarks. It is probable that we will use an imp
 along with Cython's annotations to create additional Cython optimization datasets.
 Therefore, it is actually beneficial to have committed *inefficient* Cython implementations that are improved over time.
 
-Example: (Cython: Determining where to add types)[https://cython.readthedocs.io/en/latest/src/quickstart/cythonize.html#determining-where-to-add-types]
+Example: [Cython: Determining where to add types](https://cython.readthedocs.io/en/latest/src/quickstart/cythonize.html#determining-where-to-add-types)
 
 
 ## Contributing
