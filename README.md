@@ -6,14 +6,20 @@ A "living dataset" of python -> cython pair implementations
 ## Project Goals
 
 Due to the vast amount of python code available for training language models,
-LLMs are increasingly getting better at producing python code.
-Due to the similarity in syntax between Python and Cython, LLMs are likely capable of making translations
-between Python and Cyth    logging.info(benchmark_registry.items())
-on code. This is a desirable capability, as it would facilitate tools that can
+LLMs are pretty good at generating it. Not coincidentally, LLMs are also capable
+of writing good, but *not-quite-there* cython code. This is strictly a training data
+gap.
+
+The intentional similarity between Python and Cython syntax is fortuitous:
+- translation from python to cython is more straightforward
+- has advantages in LLM reasoning patterns for thinking between syntaxes
+- interoperability creates an easy testing environment
+
+This is a desirable capability, as it would facilitate tools that can
 profile and automate performance improving-capabilities to existing codebases.
 
-Currently however, automated translation capability seems to underperform, with simple syntax mistakes that
-could be easily improved with example data.
+Currently however, automated translation capability seems to **underperform**, with simple syntax mistakes that
+could be easily improved with example data, and ideally, supervised fine-tuning.
 
 To that end, we set a target of **10,000 Python->Cython implementations** as a "living codebase" that can be
 compiled, benchmarked and tested. This allows us to write the dataset as code, while testing performance,
