@@ -28,7 +28,7 @@ correctness and making implementation changes that can progress toward a gold st
 ## Project Structure
 
 The dataset goal is to create mirror implementations between python and cython. These implementations go into
-modules mirroring one another at `cnake_charmer/(py || cy)/...`. Due to the size, and potential usefulness of a
+modules mirroring one another at `cnake_charmer/(py | cy)/...`. Due to the size, and potential usefulness of a
 taxonomy, it should be organizing implementations into an appropriately submodule.
 
 ### Testing
