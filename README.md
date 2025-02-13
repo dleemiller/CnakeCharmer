@@ -44,6 +44,19 @@ from typing import List
 def fizzbuzz(n: int) -> List[str]:
 ```
 
+Or perhaps:
+```cython
+from cnake_charmer.benchmarks import cython_benchmark
+
+from libc.stdio cimport printf
+import cython
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
+@cython_benchmark(args=(10000,))
+def fizzbuzz(int n):
+```
+
 Note that the decorators use the `__name__` property. For matching purposes, this means the script name should be
 globally unique, but mirrored across the py/cy implementation mirror.
 
