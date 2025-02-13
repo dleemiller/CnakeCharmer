@@ -36,7 +36,10 @@ There are many ways to optimizing both python and cython code. Therefore, we'd l
 optimizations do not regress in performance.
 
 The benchmarking decorators should be applied:
-```
+```python
+from cnake_charmer.benchmarks import python_benchmark
+from typing import List
+
 @python_benchmark(args=(10000,))
 def fizzbuzz(n: int) -> List[str]:
 ```
