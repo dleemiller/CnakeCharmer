@@ -8,35 +8,26 @@ Keywords: fizzbuzz, leetcode, cython, benchmark, example
 
 """
 from cnake_charmer.benchmarks import cython_benchmark
-
-from libc.stdio cimport printf
 import cython
 
-@cython.boundscheck(False)
-@cython.wraparound(False)
 @cython_benchmark(args=(10000,))
-def fizzbuzz(int n):
-    """Generate the FizzBuzz sequence for numbers from 1 to n.
+def fizzbuzz(n: cython.int) -> list[cython.str]:
+    # Preallocate the list to avoid repeated appends.
+    results: list[cython.str] = [None] * n  
+    i: cython.int
 
-    Args:
-        n (int): The upper limit of numbers to process.
-
-    Returns:
-        list: A list where multiples of 3 are replaced with 'Fizz',
-        multiples of 5 with 'Buzz', and multiples of both with 'FizzBuzz'.
-    """
-    cdef int i
-    result = []
     for i in range(1, n + 1):
         if i % 15 == 0:
-            result.append("FizzBuzz")
+            results[i - 1] = "FizzBuzz"
         elif i % 3 == 0:
-            result.append("Fizz")
+            results[i - 1] = "Fizz"
         elif i % 5 == 0:
-            result.append("Buzz")
+            results[i - 1] = "Buzz"
         else:
-            result.append(str(i))
-    return result
+            # Convert the integer to a Python string.
+            results[i - 1] = str(i)
+
+    return results
 
 
 def main():
