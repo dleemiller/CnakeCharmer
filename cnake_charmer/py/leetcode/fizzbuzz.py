@@ -8,11 +8,10 @@ Keywords: fizzbuzz, leetcode, python, benchmark, example
 """
 
 from cnake_charmer.benchmarks import python_benchmark
-from typing import List
 
 
 @python_benchmark(args=(10000,))
-def fizzbuzz(n: int) -> List[str]:
+def fizzbuzz(n: int) -> list[str]:
     """Generate the FizzBuzz sequence for numbers from 1 to n.
 
     Args:
