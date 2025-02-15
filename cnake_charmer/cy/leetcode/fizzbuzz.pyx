@@ -1,4 +1,4 @@
-# cython: language_level=3
+# cython: boundscheck=False, wraparound=False, language_level=3
 """
 FizzBuzz Implementation in Cython.
 
