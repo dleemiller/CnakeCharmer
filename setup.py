@@ -2,6 +2,7 @@ import os
 from setuptools import setup, find_packages, Extension
 from Cython.Build import cythonize
 
+
 def get_cython_extensions():
     """
     Walk through the cnake_charmer/cy directory (and its subdirectories)
@@ -14,13 +15,10 @@ def get_cython_extensions():
                 file_path = os.path.join(root, file)
                 # Convert file path to module name:
                 # e.g., "cnake_charmer/cy/math/add.pyx" => "cnake_charmer.cy.math.add"
-                module_name = (
-                    file_path
-                    .replace(os.path.sep, ".")
-                    .replace(".pyx", "")
-                )
+                module_name = file_path.replace(os.path.sep, ".").replace(".pyx", "")
                 extensions.append(Extension(module_name, [file_path]))
-    return cythonize(extensions, language_level="3")
+    return extensions
+
 
 setup(
     name="CnakeCharmer",
@@ -33,10 +31,19 @@ setup(
     author_email="dleemiller@protonmail.com",
     url="https://github.com/dleemiller/CnakeCharmer",
     packages=find_packages(),
-    ext_modules=get_cython_extensions(),
+    # ext_modules=extensions,
+    ext_modules=cythonize(
+        get_cython_extensions(),
+        compiler_directives={
+            "language_level": "3",
+            "boundscheck": False,
+            "wraparound": False,
+        },
+        annotate=True,
+    ),
     install_requires=[
         "numpy>=2.0.0",
-        "cython>=0.29.21",
+        "cython>=3.0.0",
     ],
     extras_require={
         "dev": [
@@ -49,6 +56,5 @@ setup(
         "Programming Language :: Cython",
         "Operating System :: OS Independent",
     ],
-    python_requires='>=3.7',
+    python_requires=">=3.9",
 )
-
