@@ -18,18 +18,10 @@ Example:
 from cnake_charmer.benchmarks import cython_benchmark
 import cython
 
-# Import C array functionality
-from cpython cimport array
-from libc.stdlib cimport malloc, free
-
 
 @cython_benchmark(args=(300,))
-def primes(nb_primes: cython.int) -> list:
+def primes(nb_primes: cython.int):
     """Generate a list of prime numbers.
-
-    This function implements a basic prime sieve algorithm optimized
-    for Cython execution. It uses static typing and C-style arrays
-    for better performance.
 
     Args:
         nb_primes: Number of prime numbers to generate.
@@ -38,38 +30,31 @@ def primes(nb_primes: cython.int) -> list:
     Returns:
         list: Python list containing the generated prime numbers.
 
-    Raises:
-        MemoryError: If unable to allocate memory for the prime array.
-        
     Note:
         The function automatically caps the output at 1000 primes
         to prevent buffer overflow.
     """
-    cdef:
-        int i                    # Loop counter
-        int[1000] p             # Array to store prime numbers
-        int len_p = 0           # Current number of primes found
-        int n = 2               # Number being tested for primality
+    i: cython.int
+    p: cython.int[1000]
 
-    # Cap the maximum number of primes for safety
     if nb_primes > 1000:
         nb_primes = 1000
 
-    # Initialize array in pure Python mode
-    if not cython.compiled:
-        p = [0] * 1000
+    if not cython.compiled:  # Only if regular Python is running
+        p = [0] * 1000       # Make p work almost like a C array
 
-    # Main prime finding loop
+    len_p: cython.int = 0  # The current number of elements in p.
+    n: cython.int = 2
     while len_p < nb_primes:
-        # Test if n is divisible by any previously found prime
+        # Is n prime?
         for i in p[:len_p]:
             if n % i == 0:
                 break
+
+        # If no break occurred in the loop, we have a prime.
         else:
-            # n is prime - add to our array
             p[len_p] = n
             len_p += 1
         n += 1
 
-    # Convert C array to Python list for return
     return [prime for prime in p[:len_p]]
