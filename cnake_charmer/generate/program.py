@@ -9,6 +9,7 @@ from dspy.signatures.signature import ensure_signature
 from dspy.primitives import Module
 import os
 from dotenv import load_dotenv
+
 load_dotenv()
 
 lm=dspy.LM(model="openrouter/google/gemini-2.0-flash-001")
@@ -94,6 +95,7 @@ class CodeGenerator(Module):
     def _try_regeneration(self, kwargs, previous_code, error):
         # Attempt to fix code up to self.max_iters times
         attempts = 0
+        print(f"attempts: {attempts}")
         while attempts < self.max_iters:
             attempts += 1
             regen_data = self.code_regenerate(
@@ -180,8 +182,7 @@ class CodeGenerator(Module):
           3) run 'python setup.py build_ext --inplace'
         Return error message or None.
         """
-        import textwrap
-        # Create a temp directory
+        import textwrap, sys
         with tempfile.TemporaryDirectory() as tmpdir:
             pyx_path = os.path.join(tmpdir, "gen_code.pyx")
             with open(pyx_path, "w") as f:
@@ -190,17 +191,17 @@ class CodeGenerator(Module):
             setup_path = os.path.join(tmpdir, "setup.py")
             with open(setup_path, "w") as f:
                 f.write(textwrap.dedent(f"""
-                from distutils.core import setup
-                from Cython.Build import cythonize
+                    from setuptools import setup
+                    from Cython.Build import cythonize
 
-                setup(
-                    name="gen_code",
-                    ext_modules=cythonize("{pyx_path}", language_level=3),
-                )
+                    setup(
+                        name="gen_code",
+                        ext_modules=cythonize("{pyx_path}", language_level=3),
+                    )
                 """))
 
-            # Attempt to compile
-            cmd = ["python", setup_path, "build_ext", "--inplace"]
+            # Use sys.executable, not bare "python"
+            cmd = [sys.executable, setup_path, "build_ext", "--inplace"]
             try:
                 proc = subprocess.run(cmd, cwd=tmpdir, capture_output=True, text=True)
                 if proc.returncode != 0:
@@ -208,7 +209,7 @@ class CodeGenerator(Module):
             except Exception as e:
                 return f"Cython compile error: {traceback.format_exc()}"
 
-        return None  # success
+        return None
 
 import dspy
 from dspy.signatures.signature import Signature
