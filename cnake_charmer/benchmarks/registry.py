@@ -26,7 +26,7 @@ import functools
 from dataclasses import dataclass, field
 from enum import Enum, auto
 from functools import partial
-from typing import Any, Callable, Dict, Optional, Tuple
+from typing import Any, Callable, Dict, Optional, Tuple, Literal
 
 
 class Variant(Enum):
@@ -34,6 +34,7 @@ class Variant(Enum):
 
     PYTHON = auto()
     CYTHON = auto()
+    CYTHON_PP = auto()
 
 
 @dataclass
@@ -135,6 +136,7 @@ def python_benchmark(
 
 
 def cython_benchmark(
+    syntax=Literal["cy", "pp"],
     *,
     benchmark_id: Optional[str] = None,
     args: Tuple[Any, ...] = (),
@@ -153,9 +155,10 @@ def cython_benchmark(
     Returns:
         Callable: A decorator that registers the function as a Cython benchmark.
     """
+    assert syntax in ["cy", "pp"]
     return partial(
         _register_benchmark,
-        Variant.CYTHON,
+        Variant.CYTHON if syntax == "cy" else Variant.CYTHON_PP,
         benchmark_id=benchmark_id,
         args=args,
         kwargs=kwargs,
