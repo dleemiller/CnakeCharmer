@@ -2,14 +2,14 @@
 Integration Example
 
 This example demonstrates how to use the modular components together
-with or without the DSPy framework.
+with or without the DSPy framework, using markdown files for instructions.
 """
 
 import os
 import logging
 import tempfile
 import json
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 import re
 from dotenv import load_dotenv
 import sys
@@ -35,9 +35,13 @@ except Exception as e:
 load_dotenv()
 
 # Import our modular components
-from code_runner import CodeRunner, run_code
-from cython_analyzer import CythonAnnotationAnalyzer, analyze_cython_code
-from reward_system import RewardSystem, create_default_reward_system
+try:
+    from code_runner import CodeRunner, run_code
+    from cython_analyzer import CythonAnnotationAnalyzer, analyze_cython_code
+    from reward_system import RewardSystem, create_default_reward_system
+except ImportError as e:
+    logger.warning(f"Error importing module: {str(e)}")
+    logger.warning("Make sure you're running from the correct directory (project root)")
 
 # Try to import DSPy components (optional)
 try:
@@ -77,6 +81,77 @@ def dot_product(double[:] a, double[:] b):
         
     return result
 '''
+
+# Function to load instructions from a markdown file
+def load_instructions_from_file(filename: str) -> str:
+    """
+    Load instructions from a markdown file in the prompt folder.
+    
+    Args:
+        filename: The name of the markdown file (e.g., 'prompt1.md')
+        
+    Returns:
+        str: The contents of the markdown file
+    """
+    from pathlib import Path
+    
+    try:
+        # Find the project root by looking for directories that should be there
+        # Start with the current file's directory and go up until we find the project root
+        current_path = Path(__file__).resolve().parent
+        
+        # Go up directories until we find the 'prompt' folder or reach the filesystem root
+        project_root = current_path
+        while project_root != project_root.parent:
+            if (project_root / 'prompt').exists():
+                break
+            # Go up one directory
+            project_root = project_root.parent
+            
+            # Safety check to avoid infinite loop
+            if project_root == project_root.parent:
+                logger.error("Could not find project root containing 'prompt' directory")
+                raise ValueError("Project structure not as expected - couldn't locate prompt directory")
+        
+        # Now that we have the project root, look for the file in various locations
+        prompt_dir = project_root / 'prompt'
+        
+        # Possible locations for the file
+        possible_paths = [
+            prompt_dir / filename,                      # Direct in prompt folder
+            prompt_dir / 'cython_notes' / filename,     # In cython_notes subfolder
+            Path(filename)                              # Direct path if absolute
+        ]
+        
+        # Find the first path that exists
+        file_path = None
+        for path in possible_paths:
+            if path.exists():
+                file_path = path
+                break
+                
+        # If we didn't find it, try one more approach - maybe it's just the basename we need
+        if file_path is None:
+            # Search for any file with the same name in the prompt directory and its subdirectories
+            for path in prompt_dir.glob(f"**/{filename}"):
+                if path.exists():
+                    file_path = path
+                    break
+        
+        if file_path is None:
+            logger.error(f"Could not find file {filename} in prompt directory or subdirectories")
+            raise FileNotFoundError(f"File {filename} not found in prompt directory structure")
+            
+        logger.info(f"Loading instructions from {file_path}")
+        
+        with open(file_path, 'r', encoding='utf-8') as f:
+            content = f.read()
+            
+        logger.info(f"Successfully loaded {len(content)} bytes from {filename}")
+        return content
+    except Exception as e:
+        logger.error(f"Error loading instructions from {filename}: {str(e)}")
+        raise ValueError(f"Failed to load instructions from {filename}: {str(e)}")
 
 class CythonEvaluator:
     """
@@ -326,7 +401,7 @@ if HAS_DSPY:
         A DSPy module for generating and evaluating optimized Cython code.
         """
         
-        def __init__(self, signature=None):
+        def __init__(self, signature=None, instructions_file=None):
             super().__init__()
             
             # Create a signature if none provided
@@ -346,6 +421,40 @@ if HAS_DSPY:
                 
             self.signature = signature
             
+            # Load instructions from file if provided
+            instructions = None
+            if instructions_file:
+                try:
+                    instructions = load_instructions_from_file(instructions_file)
+                    logger.info(f"CythonGenerator Instructions: {instructions}")
+                    logger.info(f"Loaded instructions from {instructions_file}")
+                except Exception as e:
+                    logger.error(f"Failed to load instructions from {instructions_file}: {str(e)}")
+                    logger.info("Falling back to default instructions")
+            
+            # Default instructions if no file was provided or loading failed
+            if instructions is None:
+                instructions = (
+                    "You are given `prompt` describing a user request. "
+                    "Generate code in Cython that solves the request. "
+                    "Your response must be enclosed in triple backticks (```), with NO language indicator. "
+                    "Include ONLY the code itself, no additional commentary before or after the code block.\n\n"
+                    
+                    "Code quality requirements:\n"
+                    "1. Follow PEP 8 style guidelines (proper spacing, naming conventions)\n"
+                    "2. Include Google-style docstrings for all functions, classes, and modules\n"
+                    "3. Add appropriate comments for complex logic\n\n"
+                    
+                    "For Cython optimization:\n"
+                    "- Add comment-based directives at the top of the file:\n"
+                    "  # cython: boundscheck=False\n"
+                    "  # cython: wraparound=False\n"
+                    "- Use cdef for variables, especially in loops\n"
+                    "- Use memoryviews (e.g., double[:]) for array operations\n"
+                    "- Add proper C type declarations for all functions and variables\n"
+                    "- Use nogil where possible to avoid the Python GIL\n"
+                )
+            
             # Initialize the code generation chain
             self.generate_chain = dspy.ChainOfThought(
                 Signature(
@@ -353,26 +462,7 @@ if HAS_DSPY:
                         "prompt": signature.fields["prompt"],
                         "generated_code": signature.fields["generated_code"]
                     },
-                    instructions=(
-                        "You are given `prompt` describing a user request. "
-                        "Generate code in Cython that solves the request. "
-                        "Your response must be enclosed in triple backticks (```), with NO language indicator. "
-                        "Include ONLY the code itself, no additional commentary before or after the code block.\n\n"
-                        
-                        "Code quality requirements:\n"
-                        "1. Follow PEP 8 style guidelines (proper spacing, naming conventions)\n"
-                        "2. Include Google-style docstrings for all functions, classes, and modules\n"
-                        "3. Add appropriate comments for complex logic\n\n"
-                        
-                        "For Cython optimization:\n"
-                        "- Add comment-based directives at the top of the file:\n"
-                        "  # cython: boundscheck=False\n"
-                        "  # cython: wraparound=False\n"
-                        "- Use cdef for variables, especially in loops\n"
-                        "- Use memoryviews (e.g., double[:]) for array operations\n"
-                        "- Add proper C type declarations for all functions and variables\n"
-                        "- Use nogil where possible to avoid the Python GIL\n"
-                    )
+                    instructions=instructions
                 )
             )
             
@@ -464,20 +554,25 @@ def standalone_example():
 
 
 # Example usage with DSPy if available
-def dspy_example():
-    """Run the DSPy integration example if DSPy is available"""
+def dspy_example(instructions_file=None):
+    """
+    Run the DSPy integration example if DSPy is available
+    
+    Args:
+        instructions_file: Optional path to a markdown file with instructions
+    """
     if not HAS_DSPY:
         print("DSPy is not installed. Skipping DSPy example.")
         return
     
     print("Running DSPy integration example...")
     
-    lm = dspy.LM(model="openrouter/anthropic/claude-3.7-sonnet:thinking", cache=False, max_tokens=16000)
+    lm = dspy.LM(model="openrouter/anthropic/claude-3.7-sonnet", cache=False, max_tokens=2500)
     dspy.configure(lm=lm)
     
-    # Create and use the generator
-    generator = OptimizedCythonGenerator()
-    result = generator(prompt="Write a Cython function to compute the dot product of two vectors.")
+    # Create and use the generator with the specified instructions file
+    generator = OptimizedCythonGenerator(instructions_file=instructions_file)
+    result = generator(prompt="Write an efficient Cython function for fizzbuzz.")
     
     # Print detailed report
     print_evaluation_report("DSPy Integration Example", result)
@@ -489,28 +584,51 @@ if __name__ == "__main__":
     print(f"Running from: {os.getcwd()}")
     print(f"DSPy available: {HAS_DSPY}")
     
-    # Display command line help if requested
-    if len(sys.argv) > 1 and sys.argv[1] in ['-h', '--help']:
-        print("Usage: python integration_example.py [options]")
-        print("Options:")
-        print("  --standalone     Run only the standalone example")
-        print("  --dspy           Run only the DSPy example (if available)")
-        print("  --help, -h       Show this help message")
-        print("  By default, all available examples will be run.")
+    # Parse command line arguments
+    import argparse
+    parser = argparse.ArgumentParser(description='Run Cython code generation and evaluation examples')
+    parser.add_argument('--standalone', action='store_true', help='Run only the standalone example')
+    parser.add_argument('--dspy', action='store_true', help='Run only the DSPy example (if available)')
+    parser.add_argument('--instructions', type=str, help='Path to a markdown file with instructions')
+    parser.add_argument('--list-prompts', action='store_true', help='List available prompt files')
+    
+    args = parser.parse_args()
+    
+    # List available prompt files if requested
+    if args.list_prompts:
+        from pathlib import Path
+        
+        # Find project root
+        current_path = Path(__file__).resolve().parent
+        project_root = current_path
+        while project_root != project_root.parent:
+            if (project_root / 'prompt').exists():
+                break
+            project_root = project_root.parent
+        
+        prompt_dir = project_root / 'prompt'
+        if prompt_dir.exists():
+            print(f"\nAvailable prompt files in {prompt_dir}:")
+            for md_file in sorted(prompt_dir.glob("*.md")):
+                print(f"  - {md_file.name}")
+            
+            cython_notes_dir = prompt_dir / 'cython_notes'
+            if cython_notes_dir.exists():
+                print(f"\nAvailable prompt files in {cython_notes_dir}:")
+                for md_file in sorted(cython_notes_dir.glob("*.md")):
+                    print(f"  - cython_notes/{md_file.name}")
+        else:
+            print(f"Prompt directory not found at {prompt_dir}")
+        
         sys.exit(0)
     
-    # Parse command line options
-    run_standalone = True
-    run_dspy = True
-    
-    if '--standalone' in sys.argv:
-        run_dspy = False
-    elif '--dspy' in sys.argv:
-        run_standalone = False
+    # Determine which examples to run
+    run_standalone = args.standalone or (not args.standalone and not args.dspy)
+    run_dspy = args.dspy or (not args.standalone and not args.dspy)
     
     # Run the selected examples
     if run_standalone:
         standalone_example()
     
     if run_dspy:
-        dspy_example()
+        dspy_example(instructions_file=args.instructions)
