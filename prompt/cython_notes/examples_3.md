@@ -1,192 +1,203 @@
-``Syntax Comparison: Pure Python vs. Cython``
-==============================================
+# Syntax Comparison: Pure Python vs. Cython
 
-``Overview``
------------
+## Overview
 
-Cython provides two main syntax variations for writing its code: pure Python syntax (using type hints and decorators) and Cython syntax (using `cdef` and other keywords). This page highlights the primary differences between the two approaches.
+Cython provides two main syntax variations for writing code:
+1. **Pure Python syntax** - using type hints and decorators
+2. **Cython syntax** - using `cdef` and other keywords
 
-The key considerations when choosing a syntax are:
-* **Readability**: Pure Python syntax allows the .py file to be valid Python code.
-* **Flexibility**: Pure Python allows easy refactoring in Python without specific Cython knowledge.
-* **C/C++ Integration**: Cython syntax provides better and more explicit control.
-* **Ease of Use**: Pure Python might be easier for beginners, while Cython syntax is generally considered more concise in typed sections;
-* **Backwards Compatibility**: New features in pure-python syntax such as annotations, support for final, readonly, and more may work only for recent Cython 3 releases.
+This guide highlights the key differences between these two approaches to help you choose the most appropriate style for your project.
 
-``Core Features and Syntax``
------------------------------
+### Key Considerations
 
-The table below show the differences between core features and syntax. It builds on the assumption that both files contains the line  `import cython`.
+When deciding which syntax to use, consider the following factors:
 
-+-------------------------+--------------------------------------------+-----------------------------------------------------+
-| Feature                 | Pure Python Syntax                         | Cython Syntax                                       |
-+=========================+============================================+=====================================================+
-| File Extension          | ``.py``                                    | ``.pyx``                                             |
-+-------------------------+--------------------------------------------+-----------------------------------------------------+
-| Static Typing           | Variable annotations and decorators (e.g.,  | ``cdef`` keyword (e.g., ``cdef int i``)               |
-|                         | ``i: cython.int``)                        |                                                     |
-+-------------------------+--------------------------------------------+-----------------------------------------------------+
-| C Functions             | Decorator (``@cython.cfunc`` /  ``ccall``) | ``cdef`` / ``cpdef`` keyword (e.g.,  ``cdef int f()``) |
-+-------------------------+--------------------------------------------+-----------------------------------------------------+
-| Class Definition        | Decorator (``@cython.cclass``) with        | ``cdef class`` (e.g., ``cdef class MyClass:``)       |
-|                         | Python ``class``                           |                                                     |
-+-------------------------+--------------------------------------------+-----------------------------------------------------+
-| Struct, Union           | ``cython.struct``,  ``cython.union``          | ``cdef struct``,  ``cdef union``                       |
-+-------------------------+--------------------------------------------+-----------------------------------------------------+
-| Include Statment       |Not Supported. | ``include "filename.pxi"``   |                                                     |
-+--------------------------------+--------------------------------------------+-----------------------------------------------------+
-| Memory management  | Memoryviews (see tutorial)           | Memoryviews (see tutorial)    |
-+-------------------------+--------------------------------------------+-----------------------------------------------------+|
-| Accessing C-variables and pointers| Direct access with  ``x.address`` function to access pointer or ``value[0]`` to dereference|  Direct  using & operator, Indirect access is not supported|
+* **Readability**: Pure Python syntax allows `.py` files to remain valid Python code
+* **Flexibility**: Pure Python enables easier refactoring without specific Cython knowledge
+* **C/C++ Integration**: Cython syntax provides more explicit control over C/C++ features
+* **Ease of Use**: Pure Python might be easier for beginners, while Cython syntax is generally more concise in typed sections
+* **Compatibility**: New features in pure-Python syntax (annotations, support for `final`, `readonly`, etc.) may only work with recent Cython 3 releases
 
-``Example 1: Static Typing``
-----------------------------
+## Core Features and Syntax
 
-**Pure Python**
+The table below summarizes the differences between core features in both syntaxes. Both approaches assume the code includes `import cython`.
 
-.. code-block:: python
-    import cython
-    def add(a: cython.int, b: cython.int) -> cython.int:
-        return a + b
+| Feature | Pure Python Syntax | Cython Syntax |
+|---------|-------------------|---------------|
+| File Extension | `.py` | `.pyx` |
+| Static Typing | Variable annotations (`i: cython.int`) | `cdef` keyword (`cdef int i`) |
+| C Functions | Decorators (`@cython.cfunc`, `@cython.ccall`) | `cdef`/`cpdef` keywords (`cdef int f()`) |
+| Class Definition | Decorator (`@cython.cclass`) with Python `class` | `cdef class` keyword (`cdef class MyClass:`) |
+| Struct, Union | `cython.struct`, `cython.union` | `cdef struct`, `cdef union` |
+| Include Statement | Not Supported | `include "filename.pxi"` |
+| Memory Management | Memoryviews | Memoryviews |
+| Accessing C Variables/Pointers | `x.address` for pointers, `value[0]` to dereference | Direct using `&` operator |
 
-**Cython Syntax**
+## Example 1: Static Typing
 
-.. code-block:: cython
-    def add(int a, int b):
-        return a + b
+### Pure Python
 
-``Example 2: C Functions``
---------------------------
+```python
+import cython
 
-**Pure Python**
+def add(a: cython.int, b: cython.int) -> cython.int:
+    return a + b
+```
 
-.. code-block:: python
-    import cython
-    @cython.cfunc
-    def c_add(a: cython.int, b: cython.int) -> cython.int:
-        return a + b
+### Cython Syntax
 
-    @cython.ccall
-    def hybrid_add(a: cython.int, b: cython.int) -> cython.int:
-        return a + b
+```python
+def add(int a, int b):
+    return a + b
+```
 
-**Cython Syntax**
+## Example 2: C Functions
 
-.. code-block:: cython
-    cdef int c_add(int a, int b):
-        return a + b
+### Pure Python
 
-    cpdef int hybrid_add(int a, int b):
-        return a + b
+```python
+import cython
 
-``Example 3: Extension Types (C Classes)``
------------------------------------------
+@cython.cfunc
+def c_add(a: cython.int, b: cython.int) -> cython.int:
+    return a + b
 
-**Pure Python**
+@cython.ccall
+def hybrid_add(a: cython.int, b: cython.int) -> cython.int:
+    return a + b
+```
 
-.. code-block:: python
-    import cython
+### Cython Syntax
 
-    @cython.cclass
-    class Rectangle:
-        width: cython.int
-        height: cython.int
+```python
+cdef int c_add(int a, int b):
+    return a + b
 
-        def __init__(self, width: cython.int, height: cython.int):
-            self.width = width
-            self.height = height
+cpdef int hybrid_add(int a, int b):
+    return a + b
+```
 
-        def area(self) -> cython.int:
-            return self.width * self.height
+## Example 3: Extension Types (C Classes)
 
-**Cython Syntax**
+### Pure Python
 
-.. code-block:: cython
-    cdef class Rectangle:
-        cdef int width
-        cdef int height
+```python
+import cython
 
-        def __init__(self, int width, int height):
-            self.width = width
-            self.height = height
+@cython.cclass
+class Rectangle:
+    width: cython.int
+    height: cython.int
 
-        def area(self):
-            return self.width * self.height
+    def __init__(self, width: cython.int, height: cython.int):
+        self.width = width
+        self.height = height
 
-``Example 4: C Structures``
---------------------------
+    def area(self) -> cython.int:
+        return self.width * self.height
+```
 
-**Pure Python**
+### Cython Syntax
 
-.. code-block:: python
-    import cython
+```python
+cdef class Rectangle:
+    cdef int width
+    cdef int height
 
-    Point = cython.struct(x=cython.int, y=cython.int)
+    def __init__(self, int width, int height):
+        self.width = width
+        self.height = height
 
-    def distance(p1: Point, p2: Point) -> cython.double:
-        return ((p1.x - p2.x)**2 + (p1.y - p2.y)**2)**0.5
+    def area(self):
+        return self.width * self.height
+```
 
-**Cython Syntax**
+## Example 4: C Structures
 
-.. code-block:: cython
-    cdef struct Point:
-        int x
-        int y
+### Pure Python
 
-    def distance(Point p1, Point p2):
-        return ((p1.x - p2.x)**2 + (p1.y - p2.y)**2)**0.5
+```python
+import cython
 
-``Example 5: Exception Propagation``
------------------------------
+Point = cython.struct(x=cython.int, y=cython.int)
 
-**Pure Python**
+def distance(p1: Point, p2: Point) -> cython.double:
+    return ((p1.x - p2.x)**2 + (p1.y - p2.y)**2)**0.5
+```
 
-.. code-block:: python
-        import cython
+### Cython Syntax
 
-        @cython.cfunc
-        @cython.exceptval(-1, check=True)
-        def pySum(a: cython.int, b: cython.int) -> cython.int:
-                return a + b
+```python
+cdef struct Point:
+    int x
+    int y
 
-**Cython Syntax**
+def distance(Point p1, Point p2):
+    return ((p1.x - p2.x)**2 + (p1.y - p2.y)**2)**0.5
+```
 
-.. code-block:: cython
-        cdef int pySum(int a, int b) except? -1:
-                return a + b
+## Example 5: Exception Propagation
 
-``Example 6: Direct accessing C variables and pointers``
------------------------------
+### Pure Python
 
-**Pure Python**
+```python
+import cython
 
-.. code-block:: python
-    import cython
-    cdef extern from *:
-        void test_function(void* a)
-    cdef struct test_struct:
-        int a
-        int b
-    def main(test:test_struct):
-        a = cython.address(test)
-        b = cython.cast(cython.p_int, test.a)
-        deref = b[0]
-   
+@cython.cfunc
+@cython.exceptval(-1, check=True)
+def pySum(a: cython.int, b: cython.int) -> cython.int:
+    return a + b
+```
 
-**Cython Syntax**
+### Cython Syntax
 
-.. code-block:: cython
-     cdef extern from *:   
-        void test_function(void* a)
-    cdef extern struct test_struct:
-        int a
-        int b
+```python
+cdef int pySum(int a, int b) except? -1:
+    return a + b
+```
 
-    def main(test_struct test):   
-        test_function(&test)  //Pass by Reference using Address-of operator   
-        deref = (&test.a)[ 0 ]     
+## Example 6: Accessing C Variables and Pointers
 
-``Conclusion``
----------------
+### Pure Python
 
-Both pure Python and Cython syntax have advantages. Pure Python syntax provides greater compatibility with Python tooling and ecosystem, while Cython syntax is more verbose but can be more expressive for C/C++ integration. Choosing between these two approaches depends on factors such as project needs, team skills, readability, and C/C++ library integration needs.
+```python
+import cython
+
+cdef extern from *:
+    void test_function(void* a)
+
+cdef struct test_struct:
+    int a
+    int b
+
+def main(test: test_struct):
+    a = cython.address(test)
+    b = cython.cast(cython.p_int, test.a)
+    deref = b[0]
+```
+
+### Cython Syntax
+
+```python
+cdef extern from *:
+    void test_function(void* a)
+
+cdef extern struct test_struct:
+    int a
+    int b
+
+def main(test_struct test):
+    test_function(&test)  # Pass by Reference using Address-of operator
+    deref = (&test.a)[0]
+```
+
+## Conclusion
+
+Both pure Python and Cython syntax have their advantages:
+
+- **Pure Python syntax** provides better compatibility with Python tooling and ecosystem (linters, IDEs, etc.)
+- **Cython syntax** is more concise for heavily typed code and provides more explicit control for C/C++ integration
+
+Your choice between these approaches should be based on your project requirements, team familiarity with Cython, need for Python compatibility, and the extent of C/C++ library integration needed.
+
+For new projects using Cython 3+, the pure Python syntax offers excellent compatibility with standard Python tools while still providing most of Cython's performance benefits.
