@@ -426,7 +426,6 @@ if HAS_DSPY:
             if instructions_file:
                 try:
                     instructions = load_instructions_from_file(instructions_file)
-                    logger.info(f"CythonGenerator Instructions: {instructions}")
                     logger.info(f"Loaded instructions from {instructions_file}")
                 except Exception as e:
                     logger.error(f"Failed to load instructions from {instructions_file}: {str(e)}")
