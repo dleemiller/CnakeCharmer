@@ -56,16 +56,16 @@ class CythonBuilder(BaseBuilder):
             Error message if failed, None if successful
         """
         with tempfile.TemporaryDirectory() as tmpdir:
-            logger.debug(
+            logger.info(
                 f"Request {self.request_id}: Created temporary directory: {tmpdir}"
             )
 
             # 1) Create ephemeral venv
             try:
                 venv_dir = os.path.join(tmpdir, "venv")
-                logger.debug(f"Request {self.request_id}: Creating venv at {venv_dir}")
+                logger.info(f"Request {self.request_id}: Creating venv at {venv_dir}")
                 venv.create(venv_dir, with_pip=True)
-                logger.debug(f"Request {self.request_id}: Successfully created venv")
+                logger.info(f"Request {self.request_id}: Successfully created venv")
             except Exception as e:
                 logger.error(
                     f"Request {self.request_id}: Error creating venv: {str(e)}"
@@ -75,7 +75,7 @@ class CythonBuilder(BaseBuilder):
             # 2) Parse dependencies
             try:
                 deps = self.parse_dependencies(code_str)
-                logger.debug(f"Request {self.request_id}: Parsed dependencies: {deps}")
+                logger.info(f"Request {self.request_id}: Parsed dependencies: {deps}")
             except Exception as e:
                 logger.error(
                     f"Request {self.request_id}: Error parsing dependencies: {str(e)}"
@@ -85,7 +85,7 @@ class CythonBuilder(BaseBuilder):
             # Always need cython
             if not any(d.lower() == "cython" for d in deps):
                 deps.append("cython")
-                logger.debug(f"Request {self.request_id}: Added cython to dependencies")
+                logger.info(f"Request {self.request_id}: Added cython to dependencies")
 
             # 3) Install dependencies with retries
             install_error = self._install_dependencies(venv_dir, deps)
@@ -100,7 +100,7 @@ class CythonBuilder(BaseBuilder):
             try:
                 with open(pyx_path, "w") as f:
                     f.write(code_str)
-                logger.debug(
+                logger.info(
                     f"Request {self.request_id}: Wrote Cython code ({len(code_str)} bytes) to {pyx_path}"
                 )
             except Exception as e:
@@ -113,18 +113,18 @@ class CythonBuilder(BaseBuilder):
             compile_info = self._analyze_dependencies(tmpdir, venv_dir, deps)
 
             # 6) Try pyximport first
-            logger.debug(
+            logger.info(
                 f"Request {self.request_id}: Attempting compilation with pyximport"
             )
             pyximport_err = self._try_pyximport(tmpdir, venv_dir, compile_info)
 
             if not pyximport_err:
-                logger.debug(
+                logger.info(
                     f"Request {self.request_id}: pyximport compilation succeeded"
                 )
                 return None
 
-            logger.debug(
+            logger.info(
                 f"Request {self.request_id}: pyximport compilation failed, falling back to setup.py"
             )
 
@@ -151,7 +151,7 @@ class CythonBuilder(BaseBuilder):
                 )
                 # We don't fail the build here since the module compiled successfully
             else:
-                logger.debug(
+                logger.info(
                     f"Request {self.request_id}: Execution tests passed successfully"
                 )
 
@@ -169,7 +169,7 @@ class CythonBuilder(BaseBuilder):
             Error message if failed, None if successful
         """
         for attempt in range(self.max_install_attempts):
-            logger.debug(
+            logger.info(
                 f"Request {self.request_id}: Installing dependencies (attempt {attempt+1}/{self.max_install_attempts}): {deps}"
             )
 
@@ -180,7 +180,7 @@ class CythonBuilder(BaseBuilder):
             install_error = None
 
             for i, cmd in enumerate(commands):
-                logger.debug(
+                logger.info(
                     f"Request {self.request_id}: Running command [{i+1}/{len(commands)}]: {cmd}"
                 )
                 err = self.run_in_venv(venv_dir, cmd)
@@ -192,7 +192,7 @@ class CythonBuilder(BaseBuilder):
                     break
 
             if not install_error:
-                logger.debug(
+                logger.info(
                     f"Request {self.request_id}: Successfully installed all dependencies"
                 )
                 return None
@@ -200,7 +200,7 @@ class CythonBuilder(BaseBuilder):
             # Wait before retry
             if attempt < self.max_install_attempts - 1:
                 sleep_time = (attempt + 1) * 2  # Exponential backoff
-                logger.debug(
+                logger.info(
                     f"Request {self.request_id}: Waiting {sleep_time}s before retry"
                 )
                 time.sleep(sleep_time)
@@ -228,7 +228,7 @@ class CythonBuilder(BaseBuilder):
         try:
             with open(setup_helper_path, "w") as f:
                 f.write(setup_helper_template)
-            logger.debug(f"Request {self.request_id}: Wrote dependency helper script")
+            logger.info(f"Request {self.request_id}: Wrote dependency helper script")
         except Exception as e:
             logger.error(
                 f"Request {self.request_id}: Error writing helper script: {str(e)}"
@@ -236,7 +236,7 @@ class CythonBuilder(BaseBuilder):
             # Continue with default empty configuration if this fails
 
         # Run the helper to get dependency information
-        logger.debug(f"Request {self.request_id}: Running dependency analysis helper")
+        logger.info(f"Request {self.request_id}: Running dependency analysis helper")
         helper_cmd = f"python {setup_helper_path} {' '.join(deps)}"
         helper_output = self.run_in_venv(venv_dir, helper_cmd, capture_stdout=True)
 
@@ -254,14 +254,14 @@ class CythonBuilder(BaseBuilder):
                 # Get the last line which should be the JSON output
                 json_line = lines[-1]
                 compile_info = json.loads(json_line)
-                logger.debug(
+                logger.info(
                     f"Request {self.request_id}: Dependency analysis result: {compile_info}"
                 )
             except Exception as e:
                 logger.warning(
                     f"Request {self.request_id}: Error parsing dependency analysis output: {str(e)}"
                 )
-                logger.debug(
+                logger.info(
                     f"Raw output: {helper_output[:300]}..."
                     if len(helper_output) > 300
                     else helper_output
@@ -295,7 +295,7 @@ class CythonBuilder(BaseBuilder):
 
             with open(test_script_path, "w") as f:
                 f.write(test_script_content)
-            logger.debug(f"Request {self.request_id}: Wrote pyximport test script")
+            logger.info(f"Request {self.request_id}: Wrote pyximport test script")
         except Exception as e:
             logger.error(
                 f"Request {self.request_id}: Error writing test script: {str(e)}"
@@ -337,7 +337,7 @@ class CythonBuilder(BaseBuilder):
 
             with open(setup_path, "w") as f:
                 f.write(setup_content)
-            logger.debug(
+            logger.info(
                 f"Request {self.request_id}: Wrote setup.py for Cython compilation"
             )
         except Exception as e:
@@ -367,7 +367,7 @@ class CythonBuilder(BaseBuilder):
         try:
             with open(test_runner_path, "w") as f:
                 f.write(test_runner_template)
-            logger.debug(f"Request {self.request_id}: Wrote test runner script")
+            logger.info(f"Request {self.request_id}: Wrote test runner script")
         except Exception as e:
             logger.error(
                 f"Request {self.request_id}: Error writing test runner: {str(e)}"
@@ -376,7 +376,7 @@ class CythonBuilder(BaseBuilder):
             return None
 
         # Run the test script
-        logger.debug(
+        logger.info(
             f"Request {self.request_id}: Running execution tests on compiled module"
         )
         test_cmd = f"python {test_runner_path}"

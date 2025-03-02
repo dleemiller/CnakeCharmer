@@ -12,11 +12,13 @@ import logging
 import os
 
 # Configure logging to show debug information
-logging.basicConfig(level=logging.INFO, 
-                   format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logging.basicConfig(
+    level=logging.DEBUG, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
 
 # Import the builders
 from ephemeral_runner.builders import PythonBuilder, CythonBuilder
+
 
 def main():
     # Define sample Python code
@@ -74,37 +76,38 @@ def fibonacci_sequence_cy(int n):
     return result
 """
 
-    print("\n" + "="*80)
+    print("\n" + "=" * 80)
     print("EXAMPLE 1: BUILDING AND TESTING PYTHON CODE")
-    print("="*80)
-    
+    print("=" * 80)
+
     # Create a Python builder
     python_builder = PythonBuilder()
-    
+
     # Build and run the Python code
     print("\nBuilding and running Python code...")
     error = python_builder.build_and_run(python_code)
-    
+
     if error:
         print(f"Error building and running Python code:\n{error}")
     else:
         print("Python code built and ran successfully!")
-    
-    print("\n" + "="*80)
+
+    print("\n" + "=" * 80)
     print("EXAMPLE 2: BUILDING AND TESTING CYTHON CODE")
-    print("="*80)
-    
+    print("=" * 80)
+
     # Create a Cython builder
     cython_builder = CythonBuilder()
-    
+
     # Build and run the Cython code
     print("\nBuilding and running Cython code...")
     error = cython_builder.build_and_run(cython_code)
-    
+
     if error:
         print(f"Error building and running Cython code:\n{error}")
     else:
         print("Cython code built and ran successfully!")
+
 
 if __name__ == "__main__":
     main()
