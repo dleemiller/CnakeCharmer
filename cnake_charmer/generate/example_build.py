@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
 """
-Example demonstrating how to use the ephemeral_runner for both Python and Cython code.
+Example demonstrating how to use:
+1. The ephemeral_runner for both Python and Cython code
+2. The Cython analyzer for performance optimization analysis
 
 This script:
 1. Defines sample Python and Cython code snippets
 2. Uses the appropriate builders to build and test each snippet
-3. Shows the output of the build and test process
+3. Analyzes the Cython code for optimization opportunities
+4. Shows the output of the build, test, and analysis processes
 """
 
 import logging
@@ -18,6 +21,13 @@ logging.basicConfig(
 
 # Import the builders
 from ephemeral_runner.builders import PythonBuilder, CythonBuilder
+
+# Import the Cython analyzer components
+from cython_analyzer import (
+    CythonAnalyzer,
+    get_optimization_report,
+    get_optimization_hints,
+)
 
 
 def main():
@@ -96,17 +106,51 @@ def fibonacci_sequence_cy(int n):
     print("EXAMPLE 2: BUILDING AND TESTING CYTHON CODE")
     print("=" * 80)
 
-    # Create a Cython builder
-    cython_builder = CythonBuilder()
+    # Create a Cython builder with a specific request ID
+    request_id = "example_cython_run"
+    cython_builder = CythonBuilder(request_id=request_id)
 
-    # Build and run the Cython code
+    # Build and run the Cython code (without annotation for this run)
     print("\nBuilding and running Cython code...")
-    error = cython_builder.build_and_run(cython_code)
+    result = cython_builder.build_and_run(cython_code)
 
-    if error:
-        print(f"Error building and running Cython code:\n{error}")
+    if not result.success:
+        print(f"Error building and running Cython code:\n{result.error_message}")
     else:
         print("Cython code built and ran successfully!")
+
+    print("\n" + "=" * 80)
+    print("EXAMPLE 3: ANALYZING CYTHON CODE FOR OPTIMIZATION")
+    print("=" * 80)
+
+    # Create a new builder specifically for analysis
+    analysis_request_id = "analysis_run"
+    analysis_builder = CythonBuilder(request_id=analysis_request_id)
+
+    # Create a CythonAnalyzer instance that will use our builder
+    analyzer = CythonAnalyzer(ephemeral_runner=analysis_builder)
+
+    print("\nAnalyzing Cython code optimization...")
+    # Analyze the Cython code
+    metrics = analyzer.analyze_code(cython_code)
+
+    # Generate an optimization report
+    report = get_optimization_report(metrics)
+    print("\nCython Optimization Report:")
+    print(report)
+
+    # Get specific optimization hints
+    hints = get_optimization_hints(metrics)
+    if hints:
+        print("\nLine-specific optimization hints:")
+        for line_num, hint in sorted(hints.items()):
+            print(f"Line {line_num}: {hint}")
+    else:
+        print("\nNo specific optimization hints found.")
+
+    # Print the overall optimization score
+    print(f"\nOverall optimization score: {metrics.get('optimization_score', 0):.2f}")
+    print("(Higher score indicates better Cython optimization)")
 
 
 if __name__ == "__main__":

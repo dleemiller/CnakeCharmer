@@ -11,6 +11,7 @@ import time
 import venv
 import logging
 from typing import List, Optional, Dict, Any
+from dataclasses import dataclass
 
 from cnake_charmer.generate.ephemeral_runner.builders.base import BaseBuilder
 from cnake_charmer.generate.ephemeral_runner.utils.templates import load_template
@@ -24,6 +25,16 @@ from cnake_charmer.generate.ephemeral_runner.exceptions import (
 logger = logging.getLogger("ephemeral_runner.builders.cython")
 
 
+@dataclass
+class CythonBuildResult:
+    """Result of a Cython build operation."""
+
+    success: bool
+    error_message: Optional[str] = None
+    html_annotation: Optional[str] = None
+    build_dir: Optional[str] = None  # For debugging/reference
+
+
 class CythonBuilder(BaseBuilder):
     """
     Builder for Cython code compilation and execution in ephemeral environments.
@@ -32,6 +43,7 @@ class CythonBuilder(BaseBuilder):
     1. Creates a virtual environment
     2. Installs dependencies including Cython
     3. Attempts to compile and run Cython code using pyximport or setup.py
+    4. Optionally generates HTML annotations for code analysis
     """
 
     def __init__(self, request_id: str = None, max_install_attempts: int = 3):
@@ -45,17 +57,21 @@ class CythonBuilder(BaseBuilder):
         super().__init__(request_id)
         self.max_install_attempts = max_install_attempts
 
-    def build_and_run(self, code_str: str) -> Optional[str]:
+    def build_and_run(self, code_str: str, annotate: bool = False) -> CythonBuildResult:
         """
         Build and run Cython code in an ephemeral environment.
 
         Args:
             code_str: Cython code to compile and run
+            annotate: Whether to generate HTML annotation
 
         Returns:
-            Error message if failed, None if successful
+            CythonBuildResult with build status and annotation if requested
         """
+        result = CythonBuildResult(success=False)
+
         with tempfile.TemporaryDirectory() as tmpdir:
+            result.build_dir = tmpdir
             logger.info(
                 f"Request {self.request_id}: Created temporary directory: {tmpdir}"
             )
@@ -67,20 +83,20 @@ class CythonBuilder(BaseBuilder):
                 venv.create(venv_dir, with_pip=True)
                 logger.info(f"Request {self.request_id}: Successfully created venv")
             except Exception as e:
-                logger.error(
-                    f"Request {self.request_id}: Error creating venv: {str(e)}"
-                )
-                return f"Failed to create virtual environment for Cython: {str(e)}"
+                error_msg = f"Failed to create virtual environment for Cython: {str(e)}"
+                logger.error(f"Request {self.request_id}: {error_msg}")
+                result.error_message = error_msg
+                return result
 
             # 2) Parse dependencies
             try:
                 deps = self.parse_dependencies(code_str)
                 logger.info(f"Request {self.request_id}: Parsed dependencies: {deps}")
             except Exception as e:
-                logger.error(
-                    f"Request {self.request_id}: Error parsing dependencies: {str(e)}"
-                )
-                return f"Failed to parse dependencies: {str(e)}"
+                error_msg = f"Failed to parse dependencies: {str(e)}"
+                logger.error(f"Request {self.request_id}: {error_msg}")
+                result.error_message = error_msg
+                return result
 
             # Always need cython
             if not any(d.lower() == "cython" for d in deps):
@@ -93,7 +109,8 @@ class CythonBuilder(BaseBuilder):
                 logger.error(
                     f"Request {self.request_id}: Failed to install dependencies after {self.max_install_attempts} attempts"
                 )
-                return install_error
+                result.error_message = install_error
+                return result
 
             # 4) Write .pyx file
             pyx_path = os.path.join(tmpdir, "gen_code.pyx")
@@ -104,44 +121,56 @@ class CythonBuilder(BaseBuilder):
                     f"Request {self.request_id}: Wrote Cython code ({len(code_str)} bytes) to {pyx_path}"
                 )
             except Exception as e:
-                logger.error(
-                    f"Request {self.request_id}: Error writing Cython code to file: {str(e)}"
-                )
-                return f"Failed to write Cython code to file: {str(e)}"
+                error_msg = f"Failed to write Cython code to file: {str(e)}"
+                logger.error(f"Request {self.request_id}: {error_msg}")
+                result.error_message = error_msg
+                return result
 
             # 5) Create dependency analysis helper
             compile_info = self._analyze_dependencies(tmpdir, venv_dir, deps)
 
-            # 6) Try pyximport first
-            logger.info(
-                f"Request {self.request_id}: Attempting compilation with pyximport"
-            )
-            pyximport_err = self._try_pyximport(tmpdir, venv_dir, compile_info)
+            # 6) Compilation strategy based on annotation request
+            setup_err = None
 
-            if not pyximport_err:
+            if annotate:
+                # If annotation is requested, skip pyximport and go directly to setup.py
                 logger.info(
-                    f"Request {self.request_id}: pyximport compilation succeeded"
+                    f"Request {self.request_id}: Compiling with setup.py for annotation"
                 )
-                return None
+                setup_err = self._compile_with_setup(
+                    tmpdir, venv_dir, compile_info, annotate=True
+                )
+            else:
+                # Try pyximport first if not annotating
+                logger.info(
+                    f"Request {self.request_id}: Attempting compilation with pyximport"
+                )
+                pyximport_err = self._try_pyximport(tmpdir, venv_dir, compile_info)
 
-            logger.info(
-                f"Request {self.request_id}: pyximport compilation failed, falling back to setup.py"
-            )
+                if pyximport_err:
+                    logger.info(
+                        f"Request {self.request_id}: pyximport failed, falling back to setup.py"
+                    )
+                    setup_err = self._compile_with_setup(tmpdir, venv_dir, compile_info)
 
-            # 7) Fall back to setup.py if pyximport fails
-            logger.info(
-                f"Request {self.request_id}: Compiling Cython code with setup.py"
-            )
-            setup_err = self._compile_with_setup(tmpdir, venv_dir, compile_info)
             if setup_err:
                 logger.error(
                     f"Request {self.request_id}: Cython compilation failed: {setup_err[:1000]}..."
                     if len(setup_err) > 1000
                     else setup_err
                 )
-                return f"Cython compile error:\n{setup_err}"
+                result.error_message = f"Cython compile error:\n{setup_err}"
+                return result
 
             logger.info(f"Request {self.request_id}: Cython compilation successful")
+
+            # 7) If annotation was requested, find and read the HTML file
+            if annotate:
+                html_content = self._get_annotation_html(tmpdir)
+                result.html_annotation = html_content
+                logger.info(
+                    f"Request {self.request_id}: HTML annotation {'found' if html_content else 'not found'}"
+                )
 
             # 8) Run tests on the compiled module
             test_err = self._run_tests(tmpdir, venv_dir)
@@ -155,7 +184,8 @@ class CythonBuilder(BaseBuilder):
                     f"Request {self.request_id}: Execution tests passed successfully"
                 )
 
-        return None
+            result.success = True
+            return result
 
     def _install_dependencies(self, venv_dir: str, deps: List[str]) -> Optional[str]:
         """
@@ -309,7 +339,11 @@ class CythonBuilder(BaseBuilder):
         return pyximport_err
 
     def _compile_with_setup(
-        self, tmpdir: str, venv_dir: str, compile_info: Dict[str, Any]
+        self,
+        tmpdir: str,
+        venv_dir: str,
+        compile_info: Dict[str, Any],
+        annotate: bool = False,
     ) -> Optional[str]:
         """
         Compile Cython code using setup.py.
@@ -318,12 +352,18 @@ class CythonBuilder(BaseBuilder):
             tmpdir: Path to the temporary directory
             venv_dir: Path to the virtual environment
             compile_info: Compilation information from dependency analysis
+            annotate: Whether to generate HTML annotation
 
         Returns:
             Error message if failed, None if successful
         """
         setup_path = os.path.join(tmpdir, "setup.py")
-        setup_template = load_template("setup.py.template")
+
+        # Choose the appropriate template based on whether we're annotating
+        if annotate:
+            setup_template = load_template("setup_annotate.py.template")
+        else:
+            setup_template = load_template("setup.py.template")
 
         try:
             # Format the template with compile_info
@@ -349,6 +389,45 @@ class CythonBuilder(BaseBuilder):
         err = self.run_in_venv(venv_dir, compile_cmd, cwd=tmpdir)
 
         return err
+
+    def _get_annotation_html(self, build_dir: str) -> Optional[str]:
+        """
+        Find and read the generated HTML annotation file.
+
+        Args:
+            build_dir: Directory where compilation occurred
+
+        Returns:
+            HTML content as a string, or None if not found
+        """
+        # Common naming patterns for annotation HTML
+        possible_html_paths = [
+            os.path.join(build_dir, "gen_code.html"),
+            os.path.join(build_dir, "gen_code.c.html"),
+        ]
+
+        # Also look for any HTML file
+        html_files = [f for f in os.listdir(build_dir) if f.endswith(".html")]
+        for html_file in html_files:
+            possible_html_paths.append(os.path.join(build_dir, html_file))
+
+        # Try to read the first HTML file found
+        for html_path in possible_html_paths:
+            if os.path.exists(html_path):
+                logger.info(
+                    f"Request {self.request_id}: Found annotation HTML at {html_path}"
+                )
+                try:
+                    with open(html_path, "r", encoding="utf-8") as f:
+                        return f.read()
+                except Exception as e:
+                    logger.error(
+                        f"Request {self.request_id}: Error reading HTML file: {str(e)}"
+                    )
+                    break
+
+        logger.warning(f"Request {self.request_id}: No annotation HTML file found")
+        return None
 
     def _run_tests(self, tmpdir: str, venv_dir: str) -> Optional[str]:
         """
