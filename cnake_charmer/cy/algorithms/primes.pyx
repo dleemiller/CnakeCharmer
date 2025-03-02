@@ -19,7 +19,7 @@ from cnake_charmer.benchmarks import cython_benchmark
 import cython
 
 
-@cython_benchmark(args=(300,))
+@cython_benchmark(syntax="cy", args=(300,))
 def primes(nb_primes: cython.int):
     """Generate a list of prime numbers.
 

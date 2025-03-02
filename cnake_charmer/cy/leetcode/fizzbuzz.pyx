@@ -10,30 +10,21 @@ Keywords: fizzbuzz, leetcode, cython, benchmark, example
 from cnake_charmer.benchmarks import cython_benchmark
 import cython
 
-@cython_benchmark(args=(10000,))
-def fizzbuzz(n: cython.int) -> list[cython.str]:
-    # Preallocate the list to avoid repeated appends.
-    results: list[cython.str] = [None] * n  
-    i: cython.int
+@cython_benchmark(syntax="cy", args=(10000,))
+def fizzbuzz(int n):
+    """FizzBuzz written in Cython syntax."""
+    cdef list result = [None] * n
+    cdef int i
 
-    for i in range(1, n + 1):
+    for i in range(1, n+1):
         if i % 15 == 0:
-            results[i - 1] = "FizzBuzz"
+            result[i - 1] = "FizzBuzz"
         elif i % 3 == 0:
-            results[i - 1] = "Fizz"
+            result[i - 1] = "Fizz"
         elif i % 5 == 0:
-            results[i - 1] = "Buzz"
+            result[i - 1] = "Buzz"
         else:
-            # Convert the integer to a Python string.
-            results[i - 1] = str(i)
+            result[i - 1] = str(i)
 
-    return results
-
-
-def main():
-    import sys
-    cdef int n = int(sys.argv[1]) if len(sys.argv) > 1 else 100
-    result = fizzbuzz(n)
-    for s in result:
-        print(s)
+    return result
 

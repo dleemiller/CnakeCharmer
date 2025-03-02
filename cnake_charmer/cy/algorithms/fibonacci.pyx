@@ -16,7 +16,7 @@ import array as pyarray
 from cnake_charmer.benchmarks import cython_benchmark
 
 
-@cython_benchmark(args=(1e18,))
+@cython_benchmark(syntax="cy", args=(1e18,))
 def fib(n: cython.longlong) -> list[cython.longlong]:
     """Compute Fibonacci numbers less than n using a preallocated array and memory views.
 

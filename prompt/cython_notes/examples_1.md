@@ -1,168 +1,217 @@
-``Canonical Examples: Python vs. Cython``
-===========================================
+# Canonical Examples: Python vs. Cython
 
-``Overview``
------------
+## Overview
 
-This page provides a set of canonical examples comparing implementations in pure Python versus Cython. The examples showcase different language features and usage scenarios, with a focus on performance improvements gained with Cython's static typing and direct C code generation.
-The Cython examples will have 2 code segments, a pure Python form and the cython-ized code.
-The intention is to showcase the differences in performance and readability when types are added.
+This guide provides a set of canonical examples comparing implementations in pure Python versus Cython, with a focus on Cython 3 best practices. The examples showcase different language features and usage scenarios, highlighting the performance improvements gained with Cython's static typing and direct C code generation.
 
-.. note::
-    These examples are aimed at demonstrating the core concepts of Cython. Actual
-    performance gains will vary based on the specific use-case, hardware, and
-    compiler optimizations applied during the build process. Profile before optimizing.
+Each example includes:
+1. A pure Python implementation
+2. The equivalent Cython-optimized code
 
-``Example 1: Basic Arithmetic``
-------------------------------
+> **Note:** These examples demonstrate core concepts of Cython. Actual performance gains will vary based on your specific use case, hardware, and compiler optimizations. Always profile before optimizing.
+
+## Example 1: Basic Arithmetic
 
 **Aim**: Demonstrate performance differences in basic arithmetic operations.
 
-**Python**
+### Python
 
-.. code-block:: python
+```python
+def py_add(a, b):
+    return a + b
+```
 
-   def py_add(a, b):
-       return a + b
+### Cython
 
-**Cython**
+```python
+def add(int a, int b):
+    return a + b
+```
 
-.. code-block:: cython
-    def add(int a, int b):
-        return a + b
+**Performance Comparison**: Adding static types to a simple addition provides a small but measurable speedup by removing interpreter overhead.
 
-**Performance Comparison**: Adding static types to a simple addition provides a small but measurable speedup. Because the interpreter overhead has been removed.
-
-``Example 2: Looping with Range``
--------------------------------
+## Example 2: Looping with Range
 
 **Aim**: Showcase the impact of static typing on loop performance.
 
-**Python**
+### Python
 
-.. code-block:: python
+```python
+def py_sum_range(n):
+    s = 0
+    for i in range(n):
+        s += i
+    return s
+```
 
-   def py_sum_range(n):
-       s = 0
-       for i in range(n):
-           s += i
-       return s
+### Cython
 
-**Cython**
+```python
+def sum_range(int n):
+    cdef int i, s = 0
+    for i in range(n):
+        s += i
+    return s
+```
 
-.. code-block:: cython
+**Performance Comparison**: With both index and result variables defined as C types, loop speed improves significantly. Larger loops show greater speedups.
 
-   def sum_range(int n):
-        cdef int i, s = 0
-        for i in range(n):
-            s += i
-        return s
-**Performance Comparison**: With both index and result variables defined as a C type we can improve the loop speed significantly, where larger loops will show a greater speedup.
-
-``Example 3: Array Processing with NumPy``
-----------------------------------------
+## Example 3: Array Processing with NumPy
 
 **Aim**: Demonstrate efficient array manipulation using memoryviews.
 
-  .. code-block:: python
+### Python
 
-    import numpy as np
-    def py_array_sum(arr):
-        sum_val = 0
+```python
+import numpy as np
+
+def py_array_sum(arr):
+    sum_val = 0
     n = arr.shape[0]
-        for i in range(n):
-            sum_val += arr[i]
-        return sum_val
+    for i in range(n):
+        sum_val += arr[i]
+    return sum_val
+```
 
-**Cython**
+### Cython
 
- .. code-block:: cython
-    import numpy as np
-    cimport numpy as np
-    import cython
-    @cython.boundscheck(False)
-    @cython.wraparound(False)
-    def array_sum(np.ndarray[np.int_t, ndim=1] arr):
-        cdef np.int_t sum = 0
-        cdef int i
-assert arr.dtype == np.intc
+```python
+import numpy as np
+cimport numpy as np
+import cython
 
-        for i in range(arr.shape[0]):
-          sum = sum + arr[ i ]
-        return sum
+@cython.boundscheck(False)
+@cython.wraparound(False)
+def array_sum(double[:] arr):  # Modern memoryview syntax
+    cdef double sum_val = 0
+    cdef int i
+    
+    for i in range(arr.shape[0]):
+        sum_val += arr[i]
+    return sum_val
+```
 
-**Performance comparison**: Accessing numpy arrays with memory views gives a significant boost for numerical operations. As in previous examples, turning off bounds checking further increases performance where it is safe to do so.
+**Performance Comparison**: Using typed memoryviews (Cython 3 preferred approach) over NumPy arrays provides a significant performance boost for numerical operations. Disabling bounds checking further increases performance where it's safe to do so.
 
-``Example 4: Struct Usage``
---------------------------
+## Example 4: Struct Usage
 
 **Aim**: Illustrate the performance benefits of using C structs for data grouping.
 
-**Python**: (This will be an artificial case given the lack of struct support...)
+### Python
 
-.. code-block:: python
-    def py_process_points(points):  #Imagine points is a list of (x, y) tuples
-        result = 0
-        for p in points:
-          x, y = p
-        result += point_function(x, y)
-        return result
+```python
+def py_process_points(points):  # points is a list of (x, y) tuples
+    result = 0
+    for p in points:
+        x, y = p
+        result += x * y
+    return result
+```
 
-**Cython**:
-*First, define the C struct in Cython:*
+### Cython
 
-.. code-block:: cython
+```python
+# Define the C struct
+cdef struct Point:
+    int x
+    int y
 
-    cdef struct Point:
-        int x
-        int y
+# Function using the struct
+cdef int point_function(Point p):
+    return p.x * p.y
 
-Then, define a function using the struct:
-
-.. code-block:: cython
-
-   cdef int point_function(Point p):
-       return p.x * p.y
-
-    def process_points(list points):
-        cdef int result = 0
-        cdef Point p ##We now know that the "point" is of an extension type rather than a Python object.
-
-        for point in points:
+def process_points(points):
+    cdef int result = 0
+    cdef Point p
+    
+    for point in points:
+        p.x, p.y = point  # Unpack tuple into struct
         result += point_function(p)
-        return result
+    return result
+```
 
-**Performance Comparison**: Using C structures provides benefits in terms of memory layout and direct access to data, enhancing the performance for calculations on complex data structures. The downside is a loss of flexibility compared to dynamically typed objects.
+**Performance Comparison**: Using C structures improves memory layout and provides direct data access, enhancing performance for calculations on complex data structures. The tradeoff is reduced flexibility compared to Python's dynamic typing.
 
-``Example 5: Callbacks``
-----------------------
+## Example 5: Callbacks and C Integration
 
-**Aim**: Illustrate the use of callback functions in C Libraries
+**Aim**: Illustrate the use of callback functions with C libraries.
 
-*Declare the function called in C Header:*
+First, declare the function in a C header:
 
-.. code-block:: c
+```c
+// In C header
+typedef int (*callback_t)(int);
+int call_with(int x, callback_t foo);
+```
 
-    typedef int (*callback_t)(int);
-    int call_with(int x, call_back_t foo);
+### Cython
 
-**Python**:
-*Since the C Function takes a function pointer as input, annotate with "noexcept"*
+```python
+# Declare the external C function
+cdef extern from "myclib.h":
+    ctypedef int (*callback_t)(int)
+    int call_with(int x, callback_t foo)
 
-.. code-block:: cython
+# Define a callback function
+@cython.cfunc
+def cy_callback(x: cython.int) -> cython.int:
+    return x * x
 
-    cdef extern int call_with(int x, object foo) noexcept
+# Function to call the C function with our callback
+def call_c_func(int x):
+    return call_with(x, cy_callback)
+```
 
-Then you can call it:
+**Performance Comparison**: Cython 3's `@cython.cfunc` decorator creates true C function pointers, allowing for zero-overhead callbacks to C libraries.
 
-      .. code-block:: cython
-            def callCFunc(bar):
-                cdef int y = call_with(5, bar)
-                return y
+## Example 6: Parallelization with OpenMP
 
-**Performance Comparison**: Use the @exceptval(check=False) decorator for faster function creation.
+**Aim**: Demonstrate Cython's support for parallel computing with OpenMP.
 
-``Conclusion``
----------------
+### Python
 
-These simple examples provide a starting point to understand the potential advantages that the combination of Python and Cython can offer. Cython's ability to seamlessly integrate Python and C allows for significant performance optimizations while maintaining a high level of code readability and flexibility. By strategically adding static types and leveraging Cython's features, developers get the best of both worlds.
+```python
+import numpy as np
+
+def py_vector_add(a, b):
+    result = np.zeros_like(a)
+    for i in range(len(a)):
+        result[i] = a[i] + b[i]
+    return result
+```
+
+### Cython
+
+```python
+import numpy as np
+cimport numpy as np
+import cython
+from cython.parallel import prange
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
+def vector_add(double[:] a, double[:] b):
+    cdef int i
+    cdef int n = a.shape[0]
+    cdef double[:] result = np.zeros(n, dtype=np.float64)
+    
+    # Parallel loop using OpenMP
+    for i in prange(n, nogil=True):
+        result[i] = a[i] + b[i]
+        
+    return np.asarray(result)
+```
+
+**Performance Comparison**: Using Cython's `prange` with the `nogil=True` option enables parallel execution across multiple CPU cores, providing significant speedups for computationally intensive operations.
+
+## Conclusion
+
+These examples demonstrate how Cython bridges Python and C, offering performance optimizations while maintaining code readability. Key Cython 3 best practices include:
+
+1. Using typed memoryviews instead of NumPy arrays for maximum performance
+2. Leveraging `@cython.cfunc` for creating true C function pointers
+3. Taking advantage of parallel computing with OpenMP via `prange`
+4. Using decorators like `@cython.boundscheck(False)` to disable unnecessary checks
+5. Employing C structs for efficient data handling
+
+By strategically adding static types and leveraging Cython's features, developers get the best of both worlds: Python's ease of use with C's performance.
