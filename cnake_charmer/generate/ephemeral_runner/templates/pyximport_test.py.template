@@ -1,0 +1,35 @@
+import sys
+import os
+import importlib
+
+# Configure pyximport with detected include paths
+import pyximport
+
+# Setup include paths from dependency analysis
+include_dirs = {include_dirs}
+
+if include_dirs:
+    pyximport.install(setup_args={{"include_dirs": include_dirs}})
+else:
+    pyximport.install()
+
+# Try to import our generated code
+try:
+    import gen_code
+    print("Successfully imported gen_code")
+    print("Available in gen_code:", dir(gen_code))
+    
+    # List callable functions
+    callables = [name for name in dir(gen_code) 
+               if callable(getattr(gen_code, name)) 
+               and not name.startswith('_')]
+    
+    if callables:
+        print(f"Found callable functions: {{', '.join(callables)}}")
+    else:
+        print("No callable functions found in module")
+        
+except Exception as e:
+    print(f"Pyximport failed: {{e}}")
+    print("Falling back to manual compilation")
+    sys.exit(1)

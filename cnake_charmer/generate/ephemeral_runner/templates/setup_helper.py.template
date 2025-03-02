@@ -1,0 +1,46 @@
+import sys
+import importlib
+import json
+import os
+
+# This script helps discover any special include paths or compilation
+# requirements for the installed dependencies.
+
+# Arguments: list of dependencies
+deps = sys.argv[1:]
+result = {
+    'include_dirs': [],
+    'library_dirs': [],
+    'libraries': [],
+    'compile_args': [],
+    'define_macros': []
+}
+
+for dep in deps:
+    try:
+        # Try to import the dependency
+        mod = importlib.import_module(dep)
+        
+        # Check for common special cases
+        # numpy provides get_include
+        if hasattr(mod, 'get_include'):
+            include_dir = mod.get_include()
+            print(f"Found include directory for {dep}: {include_dir}")
+            if include_dir not in result['include_dirs']:
+                result['include_dirs'].append(include_dir)
+        
+        # Try to get package location to find headers
+        if hasattr(mod, '__file__'):
+            pkg_dir = os.path.dirname(mod.__file__)
+            potential_include = os.path.join(os.path.dirname(pkg_dir), 'include')
+            if os.path.exists(potential_include):
+                print(f"Found potential include directory: {potential_include}")
+                if potential_include not in result['include_dirs']:
+                    result['include_dirs'].append(potential_include)
+    
+    except ImportError as e:
+        print(f"Could not import {dep}: {e}")
+        continue
+
+# Print result as JSON for the parent process
+print(json.dumps(result))

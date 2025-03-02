@@ -1,0 +1,90 @@
+import sys
+import inspect
+import time
+
+def log(msg):
+    print("[TEST] " + str(msg))
+
+try:
+    log("Importing module {module_name}...")
+    import {module_name}
+    log("Successfully imported {module_name}")
+    
+    # Introspect the module
+    functions = [name for name in dir({module_name}) 
+               if callable(getattr({module_name}, name)) 
+               and not name.startswith('_')]
+    
+    log("Found " + str(len(functions)) + " callable functions: " + ", ".join(functions))
+    
+    # Only try to test functions if we found any
+    if functions:
+        log("Attempting to test functions with generic data")
+        
+        # Create basic test data for common parameter types
+        test_data = {{
+            'int': 5,
+            'float': 3.14,
+            'str': "test",
+            'list': [1, 2, 3],
+            'dict': {{"key": "value"}}
+        }}
+        
+        # Dynamically add specialized data types if libraries are available
+        try:
+            import numpy
+            test_data['ndarray'] = numpy.array([1.0, 2.0, 3.0], dtype=numpy.float64)
+            test_data['ndarray_int'] = numpy.array([1, 2, 3], dtype=numpy.int32)
+            log("NumPy is available, adding array test data")
+        except ImportError:
+            pass
+        
+        # Try to execute functions with reasonable defaults
+        for func_name in functions:
+            func = getattr({module_name}, func_name)
+            sig = inspect.signature(func)
+            log("Testing function: " + func_name + str(sig))
+            
+            try:
+                params = {{}}
+                for param_name, param in sig.parameters.items():
+                    # Simple heuristics for choosing test data
+                    param_str = str(param).lower()
+                    
+                    if 'int' in param_str:
+                        params[param_name] = test_data['int']
+                    elif 'float' in param_str:
+                        params[param_name] = test_data['float']
+                    elif 'str' in param_str:
+                        params[param_name] = test_data['str']
+                    elif 'list' in param_str:
+                        params[param_name] = test_data['list']
+                    elif 'dict' in param_str:
+                        params[param_name] = test_data['dict']
+                    elif ('array' in param_str or 'ndarray' in param_str) and 'ndarray' in test_data:
+                        params[param_name] = test_data['ndarray']
+                    elif param_name.lower() in ['a', 'b', 'x', 'y', 'v', 'u'] and 'ndarray' in test_data:
+                        # Common vector parameter names
+                        params[param_name] = test_data['ndarray']
+                    else:
+                        # Default to an integer
+                        params[param_name] = test_data['int']
+                
+                # Execute the function
+                start_time = time.time()
+                result = func(**params)
+                end_time = time.time()
+                
+                log("Function " + func_name + " executed successfully in " + str((end_time - start_time)*1000) + "ms")
+                log("Result: " + str(result))
+                
+            except Exception as e:
+                log("Error executing " + func_name + ": " + str(e))
+                log("Skipping to next function")
+        
+    log("Test execution complete")
+    sys.exit(0)
+    
+except Exception as e:
+    log("Critical error during testing: " + str(e))
+    sys.exit(1)
