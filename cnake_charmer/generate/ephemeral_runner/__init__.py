@@ -11,8 +11,8 @@ import os
 import logging
 import sys
 
-from ephemeral_runner.core import EphemeralCodeGenerator, generate_code
-from ephemeral_runner.exceptions import (
+from cnake_charmer.generate.ephemeral_runner.core import EphemeralCodeGenerator, generate_code
+from cnake_charmer.generate.ephemeral_runner.exceptions import (
     EphemeralRunnerError,
     VenvCreationError,
     FileWriteError,

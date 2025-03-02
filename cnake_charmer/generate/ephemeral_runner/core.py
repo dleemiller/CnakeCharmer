@@ -17,8 +17,8 @@ from dspy.primitives import Module
 from dspy.signatures import InputField, OutputField
 from dspy.signatures.signature import Signature, ensure_signature
 
-from ephemeral_runner.builders import get_builder
-from ephemeral_runner.exceptions import ParseError
+from cnake_charmer.generate.ephemeral_runner.builders import get_builder
+from cnake_charmer.generate.ephemeral_runner.exceptions import ParseError
 
 # Configure logger with more detailed formatting
 logger = logging.getLogger("ephemeral_runner")

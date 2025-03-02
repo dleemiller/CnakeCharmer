@@ -30,10 +30,15 @@ classifiers = [
 ]
 dependencies = [
     "bs4>=0.0.2",
+    "celery>=5.4.0",
     "cython>=3.0.12",
     "dspy>=2.6.6",
+    "fastapi>=0.115.11",
     "numpy>=2.0,<3.0",
+    "psycopg2>=2.9.10",
+    "redis>=5.2.1",
     "setuptools>=75.8.1",
+    "uvicorn>=0.34.0",
 ]
 
 [project.urls]

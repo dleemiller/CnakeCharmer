@@ -12,9 +12,9 @@ import venv
 import logging
 from typing import List, Optional, Dict, Any
 
-from ephemeral_runner.builders.base import BaseBuilder
-from ephemeral_runner.utils.templates import load_template
-from ephemeral_runner.exceptions import (
+from cnake_charmer.generate.ephemeral_runner.builders.base import BaseBuilder
+from cnake_charmer.generate.ephemeral_runner.utils.templates import load_template
+from cnake_charmer.generate.ephemeral_runner.exceptions import (
     VenvCreationError,
     FileWriteError,
     CompilationError,

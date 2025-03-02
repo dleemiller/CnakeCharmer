@@ -11,7 +11,7 @@ import logging
 import subprocess
 from typing import List, Optional, Dict, Any
 
-from ephemeral_runner.exceptions import VenvCreationError
+from cnake_charmer.generate.ephemeral_runner.exceptions import VenvCreationError
 
 # Configure logger
 logger = logging.getLogger("ephemeral_runner.utils.venv")

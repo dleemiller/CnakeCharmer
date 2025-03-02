@@ -10,9 +10,9 @@ import venv
 import logging
 from typing import List, Optional
 
-from ephemeral_runner.builders.base import BaseBuilder
-from ephemeral_runner.utils.venv import create_venv
-from ephemeral_runner.exceptions import VenvCreationError, FileWriteError
+from cnake_charmer.generate.ephemeral_runner.builders.base import BaseBuilder
+from cnake_charmer.generate.ephemeral_runner.utils.venv import create_venv
+from cnake_charmer.generate.ephemeral_runner.exceptions import VenvCreationError, FileWriteError
 
 # Configure logger
 logger = logging.getLogger("ephemeral_runner.builders.python")
