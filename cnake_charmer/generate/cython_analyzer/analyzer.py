@@ -10,6 +10,7 @@ from typing import Dict, Any, Optional
 from .parsing.static_parser import analyze_static_features
 from .parsing.html_parser import parse_annotation_html
 from .metrics import calculate_optimization_scores
+from .common import CythonAnalysisResult
 
 logger = logging.getLogger("cython_analyzer")
 
@@ -33,7 +34,7 @@ class CythonAnalyzer:
         self.last_metrics = {}
         logger.info(f"Initialized CythonAnalyzer with temp_dir: {self.temp_dir}")
 
-    def analyze_code(self, code_str):
+    def analyze_code(self, code_str) -> Dict[str, Any]:
         """
         Analyze Cython code by compiling it with annotations and parsing the HTML output.
 
@@ -62,6 +63,24 @@ class CythonAnalyzer:
         self.last_metrics = metrics
 
         return metrics
+
+    def analyze_code_structured(self, code_str) -> CythonAnalysisResult:
+        """
+        Analyze Cython code and return a structured result.
+
+        Args:
+            code_str: String containing the Cython code to analyze
+
+        Returns:
+            CythonAnalysisResult: Structured analysis results
+        """
+        from .reporting import metrics_to_analysis_result
+
+        # Get standard dictionary-based metrics
+        metrics = self.analyze_code(code_str)
+
+        # Convert to structured result
+        return metrics_to_analysis_result(metrics)
 
     def _get_html_annotation(self, code_str):
         """
