@@ -47,8 +47,9 @@ class CodeDatabase:
                 
                 if not table_exists:
                     logger.info("Creating generated_code table")
+                    # Use IF NOT EXISTS to prevent errors if sequence already exists
                     cur.execute("""
-                        CREATE TABLE generated_code (
+                        CREATE TABLE IF NOT EXISTS generated_code (
                             id SERIAL PRIMARY KEY,
                             prompt_id TEXT NOT NULL,
                             python_code TEXT,
@@ -60,7 +61,7 @@ class CodeDatabase:
                     
                     # Create an index on prompt_id for faster lookups
                     cur.execute("""
-                        CREATE INDEX idx_generated_code_prompt_id 
+                        CREATE INDEX IF NOT EXISTS idx_generated_code_prompt_id 
                         ON generated_code (prompt_id)
                     """)
                     
