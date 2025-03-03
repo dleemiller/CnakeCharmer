@@ -12,7 +12,8 @@ import re
 import sys
 import tempfile
 import subprocess
-from typing import List, Optional, Set, Tuple, Dict, Any
+import traceback
+from typing import List, Optional, Set, Tuple, Dict, Any, Union
 
 # Configure logger
 logger = logging.getLogger("ephemeral_runner.builders")
@@ -29,14 +30,39 @@ class BaseBuilder(abc.ABC):
     4. Building and executing code
     """
 
-    def __init__(self, request_id: str = None):
+    def __init__(self, request_id: str = None, verbose_logging: bool = True):
         """
         Initialize the builder.
 
         Args:
             request_id: Unique identifier for this build request
+            verbose_logging: Whether to enable detailed logging
         """
         self.request_id = request_id or id(self)
+        self.verbose_logging = verbose_logging
+        self.log_prefix = f"Request {self.request_id}: "
+
+    def log(self, level: str, message: str, exc_info: bool = False):
+        """
+        Log a message with consistent formatting.
+
+        Args:
+            level: Logging level ('debug', 'info', 'warning', 'error', 'critical')
+            message: Message to log
+            exc_info: Whether to include exception information
+        """
+        log_message = f"{self.log_prefix}{message}"
+
+        if level == "debug":
+            logger.debug(log_message, exc_info=exc_info)
+        elif level == "info":
+            logger.info(log_message, exc_info=exc_info)
+        elif level == "warning":
+            logger.warning(log_message, exc_info=exc_info)
+        elif level == "error":
+            logger.error(log_message, exc_info=exc_info)
+        elif level == "critical":
+            logger.critical(log_message, exc_info=exc_info)
 
     @abc.abstractmethod
     def build_and_run(self, code_str: str) -> Optional[str]:
@@ -53,7 +79,7 @@ class BaseBuilder(abc.ABC):
 
     def run_in_venv(
         self, venv_dir: str, command: str, cwd: str = None, capture_stdout: bool = False
-    ) -> Optional[str]:
+    ) -> Union[None, str]:
         """
         Run a shell command inside the virtual environment.
 
@@ -90,12 +116,27 @@ class BaseBuilder(abc.ABC):
 
         # Check if the executable exists
         if not os.path.exists(exe):
-            logger.error(f"Request {self.request_id}: Executable not found: {exe}")
-            return f"Command execution failed: executable not found at {exe}"
+            error_msg = f"Executable not found: {exe}"
+            self.log("error", error_msg)
+            return f"Command execution failed: {error_msg}"
 
-        logger.debug(
-            f"Request {self.request_id}: Running in venv: {cmd_str} (cwd={cwd}, capture_stdout={capture_stdout})"
+        self.log("info", f"Running command in venv: {cmd_str}")
+        self.log(
+            "debug", f"Command details: cwd={cwd}, capture_stdout={capture_stdout}"
         )
+
+        # Save command to file for debugging
+        if self.verbose_logging and args and args[0].endswith(".py"):
+            try:
+                script_path = os.path.join(cwd or ".", args[0])
+                if os.path.exists(script_path):
+                    with open(script_path, "r") as f:
+                        script_content = f.read()
+                    self.log(
+                        "debug", f"Script content for {args[0]}:\n{script_content}"
+                    )
+            except Exception as e:
+                self.log("debug", f"Could not read script file: {str(e)}")
 
         try:
             proc = subprocess.run(
@@ -103,12 +144,17 @@ class BaseBuilder(abc.ABC):
                 cwd=cwd,
                 capture_output=True,
                 text=True,
+                timeout=300,  # 5-minute timeout to prevent hangs
             )
 
-            # Always log some basic info about the execution
-            logger.debug(
-                f"Request {self.request_id}: Command returned with code {proc.returncode}"
-            )
+            # Always log detailed info about the execution
+            self.log("debug", f"Command returned with code {proc.returncode}")
+
+            # Log stdout and stderr regardless of return code
+            if proc.stdout and self.verbose_logging:
+                self.log("debug", f"STDOUT ({len(proc.stdout)} chars):\n{proc.stdout}")
+            if proc.stderr and self.verbose_logging:
+                self.log("debug", f"STDERR ({len(proc.stderr)} chars):\n{proc.stderr}")
 
             if proc.returncode != 0:
                 error_output = f"Command failed with code {proc.returncode}\n"
@@ -116,38 +162,27 @@ class BaseBuilder(abc.ABC):
                     error_output += f"STDOUT:\n{proc.stdout}\n"
                 if proc.stderr:
                     error_output += f"STDERR:\n{proc.stderr}"
-                logger.error(
-                    f"Request {self.request_id}: Command failed: {cmd_str} (code={proc.returncode})"
-                )
-                logger.debug(
-                    f"Request {self.request_id}: Error output lengths - stdout: {len(proc.stdout) if proc.stdout else 0}, stderr: {len(proc.stderr) if proc.stderr else 0}"
-                )
+
+                self.log("error", f"Command failed: {cmd_str} (code={proc.returncode})")
+                self.log("error", f"Full error output:\n{error_output}")
+
                 return error_output.strip()
 
             # Return stdout if requested
             if capture_stdout and proc.stdout:
-                logger.debug(
-                    f"Request {self.request_id}: Command captured stdout ({len(proc.stdout)} chars)"
-                )
+                self.log("debug", f"Command captured stdout ({len(proc.stdout)} chars)")
                 return proc.stdout.strip()
 
-            # Otherwise just log the stdout for debugging
-            elif proc.stdout and proc.stdout.strip():
-                stdout_snippet = (
-                    proc.stdout[:300] + "..."
-                    if len(proc.stdout) > 300
-                    else proc.stdout.strip()
-                )
-                logger.debug(
-                    f"Request {self.request_id}: Command output length: {len(proc.stdout)}, snippet: {stdout_snippet}"
-                )
-
+        except subprocess.TimeoutExpired:
+            error_msg = f"Command timed out after 300 seconds: {cmd_str}"
+            self.log("error", error_msg)
+            return f"Command execution failed: {error_msg}"
         except Exception as e:
-            logger.error(
-                f"Request {self.request_id}: Exception executing command: {str(e)}"
-            )
-            return f"Command execution failed with exception: {str(e)}"
+            error_msg = f"Exception executing command: {str(e)}"
+            self.log("error", error_msg, exc_info=True)
+            return f"Command execution failed with exception: {str(e)}\n{traceback.format_exc()}"
 
+        self.log("info", f"Command executed successfully: {cmd_str}")
         return None
 
     def parse_dependencies(self, code_str: str) -> List[str]:
@@ -164,7 +199,9 @@ class BaseBuilder(abc.ABC):
 
         # Use the utility function to parse dependencies
         is_cython = self.is_cython(code_str)
-        return parse_imports(code_str, is_cython)
+        deps = parse_imports(code_str, is_cython)
+        self.log("info", f"Parsed dependencies: {deps}")
+        return deps
 
     def is_cython(self, code_str: str) -> bool:
         """
@@ -181,5 +218,55 @@ class BaseBuilder(abc.ABC):
         # Use the utility function to detect Cython
         is_cython = detect_cython(code_str)
         if is_cython:
-            logger.debug(f"Identified code as Cython")
+            self.log("debug", "Identified code as Cython")
         return is_cython
+
+    def save_file_content(self, filepath: str, label: str = "file"):
+        """
+        Save the content of a file to the logs for debugging purposes.
+
+        Args:
+            filepath: Path to the file to save
+            label: Label to use in the log message
+        """
+        if not self.verbose_logging:
+            return
+
+        try:
+            if os.path.exists(filepath):
+                with open(filepath, "r") as f:
+                    content = f.read()
+                self.log("debug", f"Content of {label} at {filepath}:\n{content}")
+            else:
+                self.log("debug", f"{label.capitalize()} not found at {filepath}")
+        except Exception as e:
+            self.log("debug", f"Error reading {label} at {filepath}: {str(e)}")
+
+    def setup_persistent_logs(self, log_dir: str = None):
+        """
+        Set up persistent logging to a file.
+
+        Args:
+            log_dir: Directory to store logs (default: current working directory)
+        """
+        if log_dir is None:
+            log_dir = os.getcwd()
+
+        os.makedirs(log_dir, exist_ok=True)
+        log_file = os.path.join(log_dir, f"build_{self.request_id}.log")
+
+        # Create a file handler
+        file_handler = logging.FileHandler(log_file)
+        file_handler.setLevel(logging.DEBUG)
+
+        # Create a formatter
+        formatter = logging.Formatter(
+            "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        )
+        file_handler.setFormatter(formatter)
+
+        # Add the handler to the logger
+        logger.addHandler(file_handler)
+
+        self.log("info", f"Persistent logging enabled to {log_file}")
+        return log_file
