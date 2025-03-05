@@ -1,0 +1,21 @@
+services:
+  build:
+    build:
+      context: ./containers/build
+      dockerfile: Dockerfile
+    volumes:
+      - ./code/cython:/src
+    environment:
+      - CYTHON_FILE=fizzbuzz.pyx
+      - INDEX
+    command: ["/build/build.sh"]
+
+  run:
+    build:
+      context: ./containers/run
+      dockerfile: Dockerfile
+    volumes:
+      - ./code/cython:/data
+    environment:
+      - INDEX
+    command: ["/app/run.sh"]
