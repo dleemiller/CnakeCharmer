@@ -1,0 +1,112 @@
+/* Base Layout and Typography */
+body {
+  font-family: Arial, sans-serif;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: #f5f5f5;
+}
+
+h1, h2, h3 {
+  color: #333;
+}
+
+h1 {
+  margin-bottom: 20px;
+}
+
+/* Container layout */
+.container {
+  display: flex;
+  gap: 20px;
+}
+
+.code-panel {
+  flex: 2;
+}
+
+.results-panel {
+  flex: 1;
+}
+
+/* Form elements */
+textarea {
+  width: 100%;
+  font-family: monospace;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+button {
+  background-color: #4CAF50;
+  color: white;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-top: 10px;
+  margin-right: 5px;
+}
+
+button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+.button-group {
+  margin-top: 10px;
+}
+
+/* Status indicators */
+.status {
+  font-weight: bold;
+}
+
+.status-pending {
+  color: #ff9900;
+}
+
+.status-completed {
+  color: #339900;
+}
+
+.status-error {
+  color: #cc0000;
+}
+
+/* Utility classes */
+.error {
+  color: red;
+}
+
+.success {
+  color: green;
+}
+
+.info {
+  color: blue;
+}
+
+/* Common UI elements */
+.info-message {
+  padding: 15px;
+  margin: 10px 0;
+  background-color: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 4px;
+  color: #495057;
+  font-style: italic;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .container {
+      flex-direction: column;
+  }
+
+  .code-panel, .results-panel {
+      flex: 1;
+      width: 100%;
+  }
+}

@@ -1,0 +1,21 @@
+services:
+  cython-worker:
+    build:
+      context: ./worker
+      dockerfile: Dockerfile
+    volumes:
+      - ./jobs:/app/jobs
+      - ./results:/app/results
+    restart: always
+    
+  web-interface:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./jobs:/app/jobs
+      - ./results:/app/results
+    depends_on:
+      - cython-worker
