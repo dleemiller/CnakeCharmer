@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Cython Analysis Dashboard</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/css/main.css">
+    <link rel="stylesheet" href="/static/css/dashboard.css">
+</head>
+<body>
+    <h1>Cython Analysis Dashboard</h1>
+    
+    <div class="container">
+        <div class="code-panel">
+            <h2>Enter Your Cython Code</h2>
+            <textarea id="code-editor" rows="20" placeholder="Paste your Cython code here..."></textarea>
+            <div class="button-group">
+                <button id="submit-btn" onclick="submitCode()">Analyze Code</button>
+                <button onclick="loadExample()">Load Example</button>
+                <button onclick="loadSimpleExample()">Load Simple Example</button>
+                <button onclick="loadComplexExample()">Load Complex Example</button>
+                <button onclick="checkSystemStatus()">Check System Status</button>
+                <button onclick="cancelPolling()">Cancel</button>
+            </div>
+        </div>
+        
+        <div class="results-panel">
+            <h2>Analysis Results</h2>
+            
+            <div class="job-info">
+                <p>Job ID: <span id="job-id">None</span></p>
+                <p>Status: <span id="status" class="status">Ready</span></p>
+            </div>
+            
+            <!-- Tab navigation -->
+            <div class="tab">
+                <button class="tablinks active" data-tab="summary-view" onclick="openTab(event, 'summary-view')">Summary</button>
+                <button class="tablinks" data-tab="detailed-view-tab" onclick="openTab(event, 'detailed-view-tab')">Detailed Analysis</button>
+                <button class="tablinks" data-tab="job-history-view" onclick="openTab(event, 'job-history-view')">Job History (<span id="history-count">0</span>)</button>
+                <button class="tablinks" data-tab="logs-view" onclick="openTab(event, 'logs-view')">Logs</button>
+            </div>
+            
+            <!-- Summary Tab -->
+            <div id="summary-view" class="tabcontent">
+                <div class="metrics">
+                    <div class="metric excellent">
+                        <h3>Excellent Lines</h3>
+                        <p id="excellent-lines">0</p>
+                        <small>Highly optimized Cython code</small>
+                    </div>
+                    <div class="metric good">
+                        <h3>Good Lines</h3>
+                        <p id="good-lines">0</p>
+                        <small>Well-optimized Cython code</small>
+                    </div>
+                    <div class="metric yellow">
+                        <h3>Yellow Lines</h3>
+                        <p id="yellow-lines">0</p>
+                        <small>Python operations that could be optimized</small>
+                    </div>
+                    <div class="metric red">
+                        <h3>Red Lines</h3>
+                        <p id="red-lines">0</p>
+                        <small>Python operations that are difficult to optimize</small>
+                    </div>
+                    <div class="metric">
+                        <h3>Cython Lint Issues</h3>
+                        <p id="lint-issues">0</p>
+                    </div>
+                    <div class="metric">
+                        <h3>PEP8 Issues</h3>
+                        <p id="pep8-issues">0</p>
+                    </div>
+                </div>
+                
+                <h3>HTML Annotations</h3>
+                <div id="annotation-links"></div>
+                
+                <h3>Detailed Analysis</h3>
+                <div id="detailed-view" class="detailed-view"></div>
+            </div>
+            
+            <!-- Detailed Analysis Tab -->
+            <div id="detailed-view-tab" class="tabcontent">
+                <div class="analysis-section">
+                    <h3>Score Distribution</h3>
+                    <div id="score-distribution" class="score-distribution"></div>
+                </div>
+                
+                <div class="analysis-section">
+                    <h3>Efficiency Metrics</h3>
+                    <div id="efficiency-metrics"></div>
+                </div>
+                
+                <div class="analysis-section">
+                    <button class="collapsible">Excellent Lines</button>
+                    <div class="collapsible-content">
+                        <div id="excellent-lines-details"></div>
+                    </div>
+                </div>
+                
+                <div class="analysis-section">
+                    <button class="collapsible">Good Lines</button>
+                    <div class="collapsible-content">
+                        <div id="good-lines-details"></div>
+                    </div>
+                </div>
+                
+                <div class="analysis-section">
+                    <button class="collapsible">Yellow Line Reasons</button>
+                    <div class="collapsible-content">
+                        <div id="yellow-reasons"></div>
+                    </div>
+                </div>
+                
+                <div class="analysis-section">
+                    <button class="collapsible">Red Line Reasons</button>
+                    <div class="collapsible-content">
+                        <div id="red-reasons"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Job History Tab -->
+            <div id="job-history-view" class="tabcontent">
+                <h3>Job History</h3>
+                <button class="refresh-btn" onclick="refreshJobHistory()">Refresh</button>
+                <table class="job-history-table">
+                    <thead>
+                        <tr>
+                            <th>Job ID</th>
+                            <th>Status</th>
+                            <th>Timestamp</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="job-history-tbody">
+                        <!-- Job history entries will be populated here -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Logs Tab -->
+            <div id="logs-view" class="tabcontent">
+                <div id="log-panel" class="log-panel"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript imports -->
+    <script src="/static/js/dashboard.js"></script>
+    <script src="/static/js/codeEditor.js"></script>
+    <script src="/static/js/resultViewer.js"></script>
+    <script src="/static/js/jobHistory.js"></script>
+</body>
+</html>
