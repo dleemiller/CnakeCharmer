@@ -1,0 +1,19 @@
+{
+  "name": "cnake-charmer-socket-server",
+  "version": "1.0.0",
+  "description": "Socket.io server for CnakeCharmer",
+  "main": "socket_server.js",
+  "scripts": {
+    "start": "node socket_server.js",
+    "dev": "nodemon socket_server.js"
+  },
+  "dependencies": {
+    "axios": "^1.6.0",
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "socket.io": "^4.7.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+} 

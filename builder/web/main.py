@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
+import socketio
 import os
 import subprocess
 import uuid
@@ -10,7 +11,8 @@ import json
 import threading
 import time
 import logging
-from typing import Dict, Any, Optional, List
+import asyncio
+from typing import Dict, Any, Optional, List, Set
 from pydantic import BaseModel
 
 # Set up logging
@@ -21,8 +23,19 @@ logging.basicConfig(
 )
 logger = logging.getLogger("cython-api")
 
-# FastAPI app
+# Set up Socket.io server
+sio = socketio.AsyncServer(
+    async_mode='asgi',
+    cors_allowed_origins=['*'],
+    logger=True,
+    engineio_logger=True
+)
+
+# Create FastAPI app
 app = FastAPI(title="Cython Analyzer", description="API for analyzing Cython code")
+
+# Create Socket.io ASGI app
+socket_app = socketio.ASGIApp(sio, app)
 
 # Enable CORS
 app.add_middleware(
@@ -37,6 +50,86 @@ app.add_middleware(
 JOBS_DIR = "/app/jobs"
 RESULTS_DIR = "/app/results"
 JOB_STATUS = {}  # In-memory job tracking
+
+# Track job subscriptions
+job_subscriptions = {}  # job_id -> set of sid
+client_subscriptions = {}  # sid -> set of job_id
+
+# Socket.io event handlers
+@sio.event
+async def connect(sid, environ):
+    logger.info(f"Client connected: {sid}")
+    client_subscriptions[sid] = set()
+    # Send initial system status
+    try:
+        status = await get_system_status()
+        await sio.emit('system_status', status, room=sid)
+    except Exception as e:
+        logger.error(f"Error sending initial status: {e}")
+
+
+@sio.event
+async def subscribe(sid, data):
+    job_id = data.get('job_id')
+    if not job_id:
+        return
+    
+    logger.info(f"Client {sid} subscribing to job {job_id}")
+    
+    # Add to job subscriptions
+    if job_id not in job_subscriptions:
+        job_subscriptions[job_id] = set()
+    job_subscriptions[job_id].add(sid)
+    
+    # Add to client subscriptions
+    client_subscriptions[sid].add(job_id)
+    
+    # Send initial job status if available
+    try:
+        result = await get_job_result(job_id)
+        if result:
+            await sio.emit('job_update', {
+                'job_id': job_id,
+                'status': result.get('status', 'unknown'),
+                'result': result
+            }, room=sid)
+    except Exception as e:
+        logger.error(f"Error sending initial job status: {e}")
+
+
+@sio.event
+async def unsubscribe(sid, data):
+    job_id = data.get('job_id')
+    if not job_id:
+        return
+    
+    logger.info(f"Client {sid} unsubscribing from job {job_id}")
+    
+    # Remove from job subscriptions
+    if job_id in job_subscriptions:
+        job_subscriptions[job_id].discard(sid)
+        if not job_subscriptions[job_id]:
+            del job_subscriptions[job_id]
+    
+    # Remove from client subscriptions
+    if sid in client_subscriptions:
+        client_subscriptions[sid].discard(job_id)
+
+
+@sio.event
+async def disconnect(sid):
+    logger.info(f"Client disconnected: {sid}")
+    
+    # Clean up subscriptions
+    if sid in client_subscriptions:
+        job_ids = list(client_subscriptions[sid])
+        for job_id in job_ids:
+            if job_id in job_subscriptions:
+                job_subscriptions[job_id].discard(sid)
+                if not job_subscriptions[job_id]:
+                    del job_subscriptions[job_id]
+        
+        del client_subscriptions[sid]
 
 
 # Models
@@ -85,6 +178,39 @@ async def read_root():
     return FileResponse("static/index.html")
 
 
+# Helper function to get job result
+async def get_job_result(job_id: str):
+    result_path = os.path.join(RESULTS_DIR, f"{job_id}.json")
+    
+    if os.path.exists(result_path):
+        try:
+            with open(result_path, "r") as f:
+                result = json.load(f)
+            
+            # Ensure detailed_analysis is properly included
+            if "detailed_analysis" not in result:
+                result["detailed_analysis"] = {
+                    "message": "Detailed analysis data not available. Please run the analysis again."
+                }
+            
+            return result
+        except Exception as e:
+            logger.error(f"Error reading result file: {e}", exc_info=True)
+            return None
+    else:
+        status_info = JOB_STATUS.get(job_id, {"status": "unknown"})
+        return {
+            "job_id": job_id,
+            "status": status_info.get("status", "unknown"),
+            "yellow_lines": 0,
+            "red_lines": 0,
+            "cython_lint": 0,
+            "pep8_issues": 0,
+            "html_files": [],
+            "detailed_analysis": {"message": "No analysis results available yet."},
+        }
+
+
 @app.post("/api/submit", response_model=JobStatus)
 async def submit_code(submission: CodeSubmission):
     if not submission.code.strip():
@@ -128,44 +254,12 @@ async def submit_code(submission: CodeSubmission):
 @app.get("/api/results/{job_id}", response_model=AnalysisResult)
 async def get_results(job_id: str):
     logger.info(f"Fetching results for job {job_id}")
-    result_path = os.path.join(RESULTS_DIR, f"{job_id}.json")
-
-    if os.path.exists(result_path):
-        logger.info(f"Result file found for job {job_id}")
-        try:
-            with open(result_path, "r") as f:
-                result = json.load(f)
-            logger.info(
-                f"Result for {job_id}: Status={result.get('status', 'unknown')}"
-            )
-
-            # Ensure detailed_analysis is properly included
-            if "detailed_analysis" not in result:
-                result["detailed_analysis"] = {
-                    "message": "Detailed analysis data not available. Please run the analysis again."
-                }
-
-            return result
-        except Exception as e:
-            logger.error(f"Error reading result file: {e}", exc_info=True)
-            raise HTTPException(
-                status_code=500, detail=f"Error reading result file: {str(e)}"
-            )
+    result = await get_job_result(job_id)
+    
+    if result:
+        return result
     else:
-        logger.info(
-            f"No result file found for job {job_id}, returning status from memory"
-        )
-        status_info = JOB_STATUS.get(job_id, {"status": "unknown"})
-        return {
-            "job_id": job_id,
-            "status": status_info.get("status", "unknown"),
-            "yellow_lines": 0,
-            "red_lines": 0,
-            "cython_lint": 0,
-            "pep8_issues": 0,
-            "html_files": [],
-            "detailed_analysis": {"message": "No analysis results available yet."},
-        }
+        raise HTTPException(status_code=404, detail=f"No results found for job {job_id}")
 
 
 @app.get("/api/html/{filename}")
@@ -222,128 +316,54 @@ async def get_code_analysis(job_id: str):
             </style>
         </head>
         <body>
-            <h1>Cython Analysis Results</h1>
-            <p>Job ID: {job_id}</p>
-            <p>Yellow Lines: {result.get("yellow_lines", 0)}</p>
-            <p>Red Lines: {result.get("red_lines", 0)}</p>
+            <h1>Cython Analysis for Job {job_id}</h1>
             
-            <h2>Score Distribution</h2>
+            <h2>Summary</h2>
+            <p>Yellow Lines: {len(yellow_lines)}</p>
+            <p>Red Lines: {len(red_lines)}</p>
+            
+            <h2>Yellow Lines (Python operations that could be optimized)</h2>
         """
 
-        # Add score distribution if available
-        if detailed_analysis:
-            for file_name, file_analysis in detailed_analysis.items():
-                html_content += f"<h3>File: {file_name}</h3>"
-
-                # Score distribution
-                score_distribution = file_analysis.get("score_distribution", {})
-                if score_distribution:
-                    html_content += "<table><tr><th>Category</th><th>Count</th><th>Percentage</th><th>Visualization</th></tr>"
-
-                    categories = [
-                        ("excellent", "Excellent (80-255)", "#CCFFCC"),
-                        ("good", "Good (40-79)", "#E6FFCC"),
-                        ("yellow", "Yellow (20-39)", "#FFFF99"),
-                        ("red", "Red (0-19)", "#FFCCCC"),
-                    ]
-
-                    for key, label, color in categories:
-                        if key in score_distribution:
-                            count = score_distribution[key].get("count", 0)
-                            percentage = score_distribution[key].get("percentage", 0)
-                            html_content += f"""
-                            <tr>
-                                <td>{label}</td>
-                                <td>{count}</td>
-                                <td>{percentage}%</td>
-                                <td><div class="score-bar" style="width: {percentage}%; background-color: {color};"></div></td>
-                            </tr>
-                            """
-
-                    html_content += "</table>"
-
-                # Efficiency metrics
-                efficiency_metrics = file_analysis.get("efficiency_metrics", {})
-                if efficiency_metrics:
-                    html_content += "<h2>Efficiency Metrics</h2>"
-                    html_content += "<table><tr><th>Metric</th><th>Value</th></tr>"
-
-                    if "avg_score" in efficiency_metrics:
-                        html_content += f"""
-                        <tr>
-                            <td>Average Score</td>
-                            <td>{efficiency_metrics["avg_score"]:.2f}</td>
-                        </tr>
-                        """
-
-                    if "python_api_heavy_lines" in efficiency_metrics:
-                        html_content += f"""
-                        <tr>
-                            <td>Python API Heavy Lines</td>
-                            <td>{efficiency_metrics["python_api_heavy_lines"]}</td>
-                        </tr>
-                        """
-
-                    if "exception_handling_lines" in efficiency_metrics:
-                        html_content += f"""
-                        <tr>
-                            <td>Exception Handling Lines</td>
-                            <td>{efficiency_metrics["exception_handling_lines"]}</td>
-                        </tr>
-                        """
-
-                    html_content += "</table>"
-
-                # Red line reasons
-                red_line_reasons = file_analysis.get("red_line_reasons", [])
-                if red_line_reasons:
-                    html_content += "<h2>Red Line Reasons (Very Inefficient)</h2>"
-                    html_content += (
-                        "<table><tr><th>Line</th><th>Content</th><th>Reason</th></tr>"
-                    )
-
-                    for reason in red_line_reasons:
-                        html_content += f"""
-                        <tr class="red">
-                            <td>{reason.get("line", "")}</td>
-                            <td><pre>{reason.get("content", "")}</pre></td>
-                            <td class="reason">{reason.get("reason", "")}</td>
-                        </tr>
-                        """
-
-                    html_content += "</table>"
-
-                # Yellow line reasons
-                yellow_line_reasons = file_analysis.get("yellow_line_reasons", [])
-                if yellow_line_reasons:
-                    html_content += (
-                        "<h2>Yellow Line Reasons (Potentially Inefficient)</h2>"
-                    )
-                    html_content += (
-                        "<table><tr><th>Line</th><th>Content</th><th>Reason</th></tr>"
-                    )
-
-                    for reason in yellow_line_reasons:
-                        html_content += f"""
-                        <tr class="yellow">
-                            <td>{reason.get("line", "")}</td>
-                            <td><pre>{reason.get("content", "")}</pre></td>
-                            <td class="reason">{reason.get("reason", "")}</td>
-                        </tr>
-                        """
-
-                    html_content += "</table>"
+        if yellow_lines:
+            for line in yellow_lines:
+                file_name = line.get("file", "unknown")
+                line_num = line.get("line_num", 0)
+                content = line.get("content", "")
+                reason = line.get("reason", "")
+                html_content += f"""
+                <div class="yellow">
+                    <span class="file-name">{file_name}</span>
+                    <span class="line-number">Line {line_num}</span>
+                    <pre>{content}</pre>
+                    <div class="reason">Reason: {reason}</div>
+                </div>
+                """
+        else:
+            html_content += "<p>No yellow lines detected.</p>"
 
         html_content += """
-            <h2>Cython HTML Annotations</h2>
-            <ul>
+            <h2>Red Lines (Python operations that are difficult to optimize)</h2>
         """
 
-        for html_file in result.get("html_files", []):
-            html_content += f'<li><a href="/api/html/{html_file}" target="_blank">{html_file}</a></li>'
+        if red_lines:
+            for line in red_lines:
+                file_name = line.get("file", "unknown")
+                line_num = line.get("line_num", 0)
+                content = line.get("content", "")
+                reason = line.get("reason", "")
+                html_content += f"""
+                <div class="red">
+                    <span class="file-name">{file_name}</span>
+                    <span class="line-number">Line {line_num}</span>
+                    <pre>{content}</pre>
+                    <div class="reason">Reason: {reason}</div>
+                </div>
+                """
+        else:
+            html_content += "<p>No red lines detected.</p>"
 
         html_content += """
-            </ul>
         </body>
         </html>
         """
@@ -351,72 +371,117 @@ async def get_code_analysis(job_id: str):
         return HTMLResponse(content=html_content)
 
     except Exception as e:
-        logger.error(f"Error generating analysis: {e}", exc_info=True)
+        logger.error(f"Error generating analysis HTML: {e}", exc_info=True)
         raise HTTPException(
-            status_code=500, detail=f"Error generating analysis: {str(e)}"
+            status_code=500, detail=f"Error generating analysis HTML: {str(e)}"
         )
 
 
 @app.get("/api/status")
 async def get_system_status():
-    """Return the status of the whole system including jobs and results"""
-    job_files = [f for f in os.listdir(JOBS_DIR) if f.endswith(".tar.gz")]
-    result_files = [f for f in os.listdir(RESULTS_DIR) if f.endswith(".json")]
+    """Get system status"""
+    logger.info("Fetching system status")
+    
+    try:
+        # Get pending jobs
+        pending_jobs = [
+            f for f in os.listdir(JOBS_DIR) if f.endswith(".tar.gz")
+        ]
+        
+        # Get completed jobs
+        completed_jobs = [
+            f for f in os.listdir(RESULTS_DIR) if f.endswith(".json")
+        ]
+        
+        # Get archived jobs (if any)
+        archived_dir = os.path.join(RESULTS_DIR, "archived")
+        archived_jobs = []
+        if os.path.exists(archived_dir):
+            archived_jobs = [
+                f for f in os.listdir(archived_dir) if f.endswith(".json")
+            ]
+        
+        # Return status
+        return {
+            "status": "running",
+            "pending_jobs": pending_jobs,
+            "completed_jobs": completed_jobs,
+            "archived_jobs": archived_jobs,
+            "in_memory_status": JOB_STATUS,
+        }
+    
+    except Exception as e:
+        logger.error(f"Error fetching system status: {e}", exc_info=True)
+        return {
+            "status": "error",
+            "error": str(e),
+            "pending_jobs": [],
+            "completed_jobs": [],
+            "archived_jobs": [],
+        }
 
-    archive_dir = os.path.join(JOBS_DIR, "archive")
-    archived_jobs = []
-    if os.path.exists(archive_dir):
-        archived_jobs = [f for f in os.listdir(archive_dir) if f.endswith(".tar.gz")]
 
-    return {
-        "status": "running",
-        "pending_jobs": job_files,
-        "completed_jobs": result_files,
-        "archived_jobs": archived_jobs,
-        "in_memory_status": JOB_STATUS,
-    }
-
-
-def monitor_results():
-    """Background task to monitor for new results"""
-    logger.info("Starting result monitoring thread")
+# Monitor results and broadcast updates
+async def monitor_results():
+    logger.info("Starting result monitor")
+    last_check = time.time()
+    processed_files = set()
+    
     while True:
         try:
-            for result_file in os.listdir(RESULTS_DIR):
-                if result_file.endswith(".json"):
-                    job_id = result_file.replace(".json", "")
-
-                    if job_id in JOB_STATUS:
-                        # Update status from the result file
-                        try:
-                            with open(os.path.join(RESULTS_DIR, result_file), "r") as f:
-                                result = json.load(f)
-                                new_status = result.get("status", "completed")
-                                if JOB_STATUS[job_id].get("status") != new_status:
-                                    JOB_STATUS[job_id]["status"] = new_status
-                                    logger.info(
-                                        f"Updated job {job_id} status to {new_status}"
-                                    )
-                        except Exception as e:
-                            logger.error(
-                                f"Error reading result file {result_file}: {e}"
-                            )
-
-            # Clean up old statuses (over 1 hour)
             current_time = time.time()
-            old_jobs = []
-            for job_id, status in JOB_STATUS.items():
-                if current_time - status.get("timestamp", 0) > 3600:  # 1 hour
-                    old_jobs.append(job_id)
-
-            for job_id in old_jobs:
-                del JOB_STATUS[job_id]
-                logger.info(f"Removed old job status for {job_id}")
-
+            
+            # Get all result files modified after the last check
+            result_files = []
+            for filename in os.listdir(RESULTS_DIR):
+                if filename.endswith(".json"):
+                    file_path = os.path.join(RESULTS_DIR, filename)
+                    mod_time = os.path.getmtime(file_path)
+                    if mod_time > last_check and file_path not in processed_files:
+                        result_files.append((filename, file_path, mod_time))
+            
+            # Process new/updated results
+            for filename, file_path, mod_time in result_files:
+                job_id = filename.replace(".json", "")
+                logger.info(f"Processing updated result for job {job_id}")
+                
+                try:
+                    with open(file_path, "r") as f:
+                        result = json.load(f)
+                    
+                    # Update in-memory status
+                    if job_id in JOB_STATUS:
+                        JOB_STATUS[job_id]["status"] = result.get("status", "unknown")
+                    
+                    # Broadcast update via Socket.io
+                    if job_id in job_subscriptions and job_subscriptions[job_id]:
+                        logger.info(f"Broadcasting update for job {job_id} to {len(job_subscriptions[job_id])} subscribers")
+                        message = {
+                            "job_id": job_id,
+                            "status": result.get("status", "unknown"),
+                            "result": result
+                        }
+                        for sid in job_subscriptions[job_id]:
+                            await sio.emit('job_update', message, room=sid)
+                    
+                    processed_files.add(file_path)
+                
+                except Exception as e:
+                    logger.error(f"Error processing result file {file_path}: {e}", exc_info=True)
+            
+            # Get system status and broadcast to all
+            system_status = await get_system_status()
+            await sio.emit('system_status', system_status)
+            
+            # Update last check time
+            last_check = current_time
+            
+            # Sleep for a while
+            await asyncio.sleep(2)  # Check every 2 seconds
+        
         except Exception as e:
-            logger.error(f"Error in monitor thread: {e}", exc_info=True)
-
-        time.sleep(5)  # Check every 5 seconds
+            logger.error(f"Error in monitor loop: {e}", exc_info=True)
+            await asyncio.sleep(5)  # Wait a bit longer on error
 
 
 @app.on_event("startup")
@@ -425,17 +490,10 @@ async def startup_event():
     os.makedirs(JOBS_DIR, exist_ok=True)
     os.makedirs(RESULTS_DIR, exist_ok=True)
     os.makedirs(os.path.join(RESULTS_DIR, "html"), exist_ok=True)
-    archive_dir = os.path.join(JOBS_DIR, "archive")
-    os.makedirs(archive_dir, exist_ok=True)
-
-    logger.info(
-        f"API server started. Jobs directory: {JOBS_DIR}, Results directory: {RESULTS_DIR}"
-    )
-
-    # Start result monitoring in background
-    monitor_thread = threading.Thread(target=monitor_results, daemon=True)
-    monitor_thread.start()
-    logger.info("Background monitoring thread started")
+    
+    # Start result monitor as a background task
+    asyncio.create_task(monitor_results())
+    logger.info("Cython Analyzer API started")
 
 
 if __name__ == "__main__":

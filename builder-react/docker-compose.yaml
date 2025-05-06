@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    volumes:
+      - ./backend:/app
+      - jobs_data:/app/jobs
+      - results_data:/app/results
+    environment:
+      - JOBS_DIR=/app/jobs
+      - RESULTS_DIR=/app/results
+    ports:
+      - "8000:8000"
+    # no command override; your Dockerfile ENTRYPOINT/ CMD should start Uvicorn
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules   # so host/node_modules mismatch is ignored
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    # no extra env here—CRA proxy does the routing
+
+volumes:
+  jobs_data:
+  results_data:

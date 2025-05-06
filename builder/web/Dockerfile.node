@@ -1,0 +1,18 @@
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Copy package.json and package-lock.json first for better caching
+COPY package.json ./
+
+# Install dependencies
+RUN npm install
+
+# Copy the socket server file
+COPY socket_server.js ./
+
+# Expose the socket.io port
+EXPOSE 8001
+
+# Start the server
+CMD ["node", "socket_server.js"] 

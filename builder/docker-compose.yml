@@ -1,3 +1,5 @@
+version: '3'
+
 services:
   cython-worker:
     build:
@@ -8,7 +10,7 @@ services:
       - ./results:/app/results
     restart: always
     
-  web-interface:
+  api:
     build:
       context: ./web
       dockerfile: Dockerfile
@@ -19,3 +21,42 @@ services:
       - ./results:/app/results
     depends_on:
       - cython-worker
+
+  web-client:
+    build:
+      context: ./web-client
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./web-client:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - REACT_APP_API_URL=http://localhost:8000
+    depends_on:
+      - api
+
+  socketio:
+    build:
+      context: ./web
+      dockerfile: Dockerfile.node
+    ports:
+      - "8001:8001"
+    volumes:
+      - ./web:/app
+    environment:
+      - API_HOST=http://web:8000
+      - SOCKET_PORT=8001
+    depends_on:
+      - api
+
+  worker:
+    build:
+      context: ./worker
+    volumes:
+      - ./worker:/app
+      - ./jobs:/app/jobs
+      - ./results:/app/results
+    environment:
+      - PYTHONPATH=/app

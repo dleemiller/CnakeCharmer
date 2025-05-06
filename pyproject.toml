@@ -46,3 +46,6 @@ cython = "^3.0.12"
 pytest = "^8.3.4"
 black = "^25.1.0"
 
+[tool.uv.workspace]
+members = ["builder-react/backend"]
+

@@ -750,10 +750,9 @@ def handle_job(job_file_path, output_dir):
         # Write to output file
         logger.info(f"Writing results to {result_file}")
         with open(result_file, "w") as f:
-            json.dump(result, f)
-
+            json.dump(result, f, indent=2)  # Pretty print for debugging
         logger.info(f"Completed job {job_id}")
-        logger.info(f"Results: {json.dumps(result)}")
+        logger.info(f"Results: {json.dumps(result, indent=2)}")  # Pretty print for debugging
 
     except Exception as e:
         logger.error(f"Error processing job {job_id}: {e}", exc_info=True)
@@ -767,10 +766,18 @@ def handle_job(job_file_path, output_dir):
             "red_lines": 0,
             "cython_lint": 0,
             "pep8_issues": 0,
+            "html_files": [],
+            "manual_analysis": {
+                "yellow_lines": [],
+                "red_lines": [],
+            },
+            "detailed_analysis": {
+                "message": f"Error processing job: {str(e)}"
+            }
         }
         logger.info(f"Writing error results to {result_file}")
         with open(result_file, "w") as f:
-            json.dump(error_result, f)
+            json.dump(error_result, f, indent=2)  # Pretty print for debugging
 
     finally:
         # 6) Clean up

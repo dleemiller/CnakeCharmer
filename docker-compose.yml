@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  web:
+    build: 
+      context: ./builder/web
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./builder/web:/app
+      - ./builder/jobs:/app/jobs
+      - ./builder/results:/app/results
+    environment:
+      - PYTHONUNBUFFERED=1
+    networks:
+      - app-network
+
+  monitor:
+    build:
+      context: ./builder/client
+      dockerfile: Dockerfile
+    volumes:
+      - ./builder/generated_code:/app/generated_code
+      - ./builder/jobs:/app/jobs
+      - ./builder/results:/app/results
+    environment:
+      - PYTHONUNBUFFERED=1
+    networks:
+      - app-network
+    depends_on:
+      - web
+
+  web-client:
+    build:
+      context: ./builder/web-client
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./builder/web-client:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - REACT_APP_API_URL=http://localhost:8000
+    networks:
+      - app-network
+    depends_on:
+      - web
+
+networks:
+  app-network:
+    driver: bridge 

@@ -1,0 +1,34 @@
+[project]
+name = "cython-analyzer-web"
+version = "0.1.0"
+description = "Web service for Cython code analysis"
+requires-python = ">=3.9"
+dependencies = [
+    "fastapi==0.104.1",
+    "uvicorn==0.24.0",
+    "python-multipart==0.0.6",
+    "pydantic==2.4.2",
+    "websockets==12.0",
+    "python-jose==3.3.0",
+    "passlib==1.7.4",
+    "bcrypt==4.0.1"
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["."]
+
+[tool.ruff]
+line-length = 88
+target-version = "py39"
+
+[tool.ruff.lint]
+select = ["E", "F", "B", "I"]
+ignore = []
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space" 

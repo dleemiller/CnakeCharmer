@@ -14,11 +14,14 @@ The Cython Analysis Dashboard is a web-based tool that helps developers analyze 
 
 ## System Components
 
-The system consists of three main components:
+The system consists of five main components:
 
-1. **Web Interface**: A FastAPI-based web server that provides the frontend and API endpoints
-2. **Worker Service**: A background service that processes Cython code analysis jobs
-3. **Shared Storage**: Directories for job submissions and analysis results
+1. **Web Interface**: A FastAPI-based web server that provides the API endpoints
+2. **Socket.io Server**: A Node.js Express server that provides real-time communication
+3. **Web Client**: A React-based frontend application for the dashboard
+4. **Worker Service**: A background service that processes Cython code analysis jobs
+5. **Monitor Service**: A service that monitors for new code files and submits them for analysis
+6. **Shared Storage**: Directories for job submissions and analysis results
 
 ## Prerequisites
 
@@ -27,147 +30,96 @@ The system consists of three main components:
 
 ## Project Structure
 
-Create the following directory structure:
+The project has the following structure:
 
 ```
-cython-analyzer/
+builder/
 ├── docker-compose.yml
 ├── jobs/                 # Shared directory for job submissions
 ├── results/              # Shared directory for analysis results
 │   └── html/             # Sub-directory for HTML annotations
-├── web/
+├── web/                  # FastAPI backend
 │   ├── Dockerfile
-│   ├── main.py         # FastAPI server implementation
+│   ├── main.py           # FastAPI server implementation
+│   ├── socket_server.js  # Express Socket.io server
+│   ├── Dockerfile.node   # Dockerfile for Socket.io server 
+│   ├── package.json      # Node.js dependencies for Socket.io server
 │   └── static/
-│       └── index.html    # Dashboard frontend
-└── worker/
-    ├── Dockerfile
-    └── worker.py         # Cython analysis worker script
+├── web-client/           # React frontend
+│   ├── Dockerfile
+│   ├── package.json
+│   ├── src/
+│   │   ├── components/
+│   │   ├── contexts/
+│   │   │   ├── JobContext.tsx
+│   │   │   └── SocketContext.tsx  # Socket.io context
+│   │   ├── types/
+│   │   └── api/
+│   └── public/
+├── client/               # Monitor service
+│   ├── Dockerfile
+│   └── monitor.py
+├── worker/               # Analysis worker
+│   ├── Dockerfile
+│   └── worker.py
+└── pyproject.toml        # Python project configuration
 ```
 
-## Implementation Steps
+## Implementation Details
 
-### 1. Set Up the Project Structure
+### Web Interface (FastAPI)
 
-```bash
-mkdir -p cython-analyzer/{jobs,results/html,web/static,worker}
-cd cython-analyzer
-```
-
-### 2. Create the Web Interface
-
-#### 2.1. Create the FastAPI Server (web/main.py)
-
-Copy the provided server code into `web/main.py`. This implements:
+The FastAPI server (`web/main.py`) provides:
 - API endpoints for job submission and result retrieval
 - Static file serving for the dashboard frontend
-- Background monitoring of job results
 
-#### 2.2. Create the Dashboard Frontend (web/static/index.html)
+Key features:
+- Job history tracking
+- System status monitoring
+- RESTful API for job management
 
-Copy the provided HTML code into `web/static/index.html`. This implements:
-- Code editor with example loading
+### Socket.io Server (Express.js)
+
+The Socket.io server (`web/socket_server.js`) provides:
+- Real-time communication between the backend and frontend
+- Job status updates via Socket.io
+- System status broadcasts
+- Subscription-based job updates
+
+Key features:
+- Low-latency real-time updates
+- Event-based communication model
+- Client reconnection with backoff
+- Efficient subscription management
+
+### Web Client (React)
+
+The React frontend (`web-client/`) provides:
+- Modern, responsive UI for code submission and analysis
 - Real-time job status updates
 - Detailed analysis visualization
 - Job history tracking
 
-#### 2.3. Create the Web Dockerfile (web/Dockerfile)
+Key features:
+- Code editor with syntax highlighting
+- Real-time Socket.io updates
+- Interactive analysis results
+- Job history management
 
-```dockerfile
-FROM python:3.12-slim
+### Monitor Service
 
-# Install FastAPI and dependencies
-RUN pip install --no-cache-dir fastapi uvicorn pydantic python-multipart
+The monitor service (`client/monitor.py`) provides:
+- Directory monitoring for new Cython files
+- Automatic job submission
+- WebSocket notifications for job status
 
-# Create app directory
-WORKDIR /app
+### Worker Service
 
-# Create directories for jobs and results
-RUN mkdir -p /app/jobs /app/results /app/results/html /app/static
-
-# Copy application files
-COPY main.py .
-COPY static/index.html ./static/
-
-# Expose port
-EXPOSE 8000
-
-# Run the app
-CMD ["python3", "main.py"]
-```
-
-### 3. Create the Worker Service
-
-#### 3.1. Create the Worker Script (worker/worker.py)
-
-Copy the provided worker code into `worker/worker.py`. This implements:
-- Monitoring for new job submissions
-- Cython compilation and annotation
-- Code efficiency analysis
-- Result generation and storage
-
-#### 3.2. Create the Worker Dockerfile (worker/Dockerfile)
-
-```dockerfile
-FROM python:3.12-slim
-
-# Install system build dependencies
-RUN apt-get update \
- && apt-get install -y --no-install-recommends \
-      build-essential \
-      python3-dev \
-      python3-setuptools \
- && rm -rf /var/lib/apt/lists/*
-
-# Install Cython + linters + wheel + setuptools
-RUN pip install --no-cache-dir \
-      cython \
-      cython-lint \
-      flake8 \
-      wheel \
-      setuptools \
-      numpy 
-
-# Create directories for jobs and results
-RUN mkdir -p /app/jobs /app/results /app/results/html
-
-# Copy worker script
-WORKDIR /app
-COPY worker.py .
-
-# Set entrypoint
-ENTRYPOINT ["python3", "worker.py"]
-```
-
-### 4. Create the Docker Compose Configuration
-
-Create a `docker-compose.yml` file in the project root:
-
-```yaml
-version: '3'
-
-services:
-  cython-worker:
-    build:
-      context: ./worker
-      dockerfile: Dockerfile
-    volumes:
-      - ./jobs:/app/jobs
-      - ./results:/app/results
-    restart: always
-    
-  web-interface:
-    build:
-      context: ./web
-      dockerfile: Dockerfile
-    ports:
-      - "8000:8000"
-    volumes:
-      - ./jobs:/app/jobs
-      - ./results:/app/results
-    depends_on:
-      - cython-worker
-```
+The worker service (`worker/worker.py`) provides:
+- Cython code analysis
+- Efficiency scoring
+- HTML annotation generation
+- Result file generation
 
 ## Running the System
 
@@ -177,7 +129,7 @@ services:
 docker-compose up -d
 ```
 
-2. Access the dashboard at http://localhost:8000
+2. Access the dashboard at http://localhost:3000
 
 3. Monitor the logs:
 
@@ -191,7 +143,10 @@ docker-compose logs -f
 
 2. Click "Analyze Code" to submit the code for analysis.
 
-3. Monitor the analysis progress in real-time.
+3. Monitor the analysis progress in real-time:
+   - Job status updates via WebSocket
+   - Real-time progress indicators
+   - Automatic result loading
 
 4. Once completed, view the results in the Summary tab:
    - Yellow Lines: Python operations that could be optimized
@@ -219,8 +174,25 @@ docker-compose logs -f
 
 - View server logs:
   ```bash
-  docker-compose logs web-interface
+  docker-compose logs web
   ```
+
+### Socket.io Server Issues
+
+- Check if the Socket.io server is running:
+  ```bash
+  docker-compose ps socketio
+  ```
+
+- View Socket.io server logs:
+  ```bash
+  docker-compose logs socketio
+  ```
+
+- Check connection issues:
+  - Verify that the Socket.io server is running on port 8001
+  - Check that the web client is able to connect to the Socket.io server
+  - Inspect browser console for connection errors
 
 ### Worker Issues
 
@@ -231,7 +203,31 @@ docker-compose logs -f
 
 - View worker logs:
   ```bash
-  docker-compose logs cython-worker
+  docker-compose logs worker
+  ```
+
+### Monitor Issues
+
+- Check if the monitor service is running:
+  ```bash
+  docker-compose ps
+  ```
+
+- View monitor logs:
+  ```bash
+  docker-compose logs monitor
+  ```
+
+### Web Client Issues
+
+- Check if the web client is running:
+  ```bash
+  docker-compose ps
+  ```
+
+- View web client logs:
+  ```bash
+  docker-compose logs web-client
   ```
 
 ### File Permission Issues
@@ -248,7 +244,7 @@ chmod -R 777 jobs/ results/
 
 To add new analysis metrics:
 
-1. Modify the worker's `parse_cython_html` function to extract additional metrics
+1. Modify the worker's analysis functions to extract additional metrics
 2. Update the server's result model to include the new metrics
 3. Add UI elements in the dashboard to display the new metrics
 
@@ -256,7 +252,7 @@ To add new analysis metrics:
 
 To support additional file types (e.g., .py files with Cython annotations):
 
-1. Modify the worker's file detection logic in the `compile_and_annotate` function
+1. Modify the worker's file detection logic
 2. Update the submission API to accept different file extensions
 
 ## Conclusion
