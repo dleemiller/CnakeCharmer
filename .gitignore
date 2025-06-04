@@ -172,3 +172,5 @@ cython_debug/
 
 # Generated C files
 cnake_charmer/cy/**/*.c
+.DS_Store
+data/

@@ -31,7 +31,9 @@ classifiers = [
 dependencies = [
     "cython>=3.0.12",
     "dspy>=2.6.6",
+    "duckdb>=1.2.2",
     "numpy>=2.0,<3.0",
+    "polars>=1.29.0",
     "setuptools>=75.8.1",
 ]
 

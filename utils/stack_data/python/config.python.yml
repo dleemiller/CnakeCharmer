@@ -1,0 +1,16 @@
+name: python
+
+# Required
+parquet_path: data/stackv2/python/train-00000-of-00006.parquet
+sqlite_db: ../../stack_python.sqlite
+base_url: https://softwareheritage.s3.amazonaws.com/content/
+
+# Optional overrides
+table: files
+batch: 1000
+concurrency: 40
+max_size: 5242880      # bytes; files >5 MB will be skipped
+retries: 3
+
+# Stop after N download batches (for testing)
+max_batches: 5

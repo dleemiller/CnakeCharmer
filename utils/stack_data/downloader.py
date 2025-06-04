@@ -1,259 +1,322 @@
-import os
-import time
+#!/usr/bin/env python3
+"""
+downloader.py – config-driven toolkit for The Stack / SWH datasets
+=================================================================
+
+*Import it as a library or run from CLI.*
+
+Core object: Downloader
+• Exports metadata (blob_id, src_encoding, directory_id, repo_id) → SQLite, with `content` column NULL
+• Downloads missing blobs into `content`
+• Helpers: explore / topdir
+
+You can set `max_batches` in your YAML *or* via `--max-batches` on the CLI.
+
+Dependencies: pip install polars aiohttp tqdm pyyaml
+"""
+from __future__ import annotations
+
+import argparse
 import asyncio
-import aiohttp
 import gzip
-import pyarrow.parquet as pq
-import duckdb
-import pandas as pd
+import math
+import sqlite3
+import sys
+import textwrap
 from pathlib import Path
+from typing import Any, Sequence
+
+import aiohttp
+import polars as pl
+import yaml  # type: ignore
 from tqdm import tqdm
 
-# Configuration
-PARQUET_PATH = "the-stack-v2-dedup-cython.parquet"
-DB_PATH = "stack_cython.duckdb"
-OUTPUT_DIR = "downloaded_content"
-BASE_URL = "https://softwareheritage.s3.amazonaws.com/content/"
-MAX_RETRIES = 3
-RETRY_DELAY = 1  # seconds
-BATCH_SIZE = 500  # Number of rows to process before committing to DB
-MAX_CONCURRENT_REQUESTS = 20  # Maximum concurrent downloads
-SKIP_LARGE_FILES = True  # Skip files larger than MAX_FILE_SIZE
-MAX_FILE_SIZE = 5 * 1024 * 1024  # 5 MB
 
-# Create output directory if it doesn't exist
-Path(OUTPUT_DIR).mkdir(exist_ok=True)
-
-# Initialize DuckDB connection
-conn = duckdb.connect(DB_PATH)
-
-# Check if the table already exists
-table_exists = (
-    conn.execute(
-        "SELECT name FROM sqlite_master WHERE type='table' AND name='stack_cython'"
-    ).fetchone()
-    is not None
-)
-
-if table_exists:
-    # If table exists, check if content column is TEXT
-    try:
-        # Try to alter the column type if needed
-        conn.execute("ALTER TABLE stack_cython ALTER COLUMN content TYPE TEXT")
-    except:
-        print(
-            "Note: Could not alter content column. If you encounter type errors, you may need to recreate the database."
-        )
-
-# Check if our table exists, if not create it from the parquet file
-conn.execute(
-    "CREATE TABLE IF NOT EXISTS stack_cython AS SELECT *, NULL::TEXT AS content FROM '"
-    + PARQUET_PATH
-    + "'"
-)
+def _decompress_if_needed(data: bytes) -> bytes:
+    return gzip.decompress(data) if data.startswith(b"\x1f\x8b") else data
 
 
-# Function to safely decompress gzipped content
-def decompress_if_needed(content):
-    # Check for gzip magic bytes (starts with 0x1f 0x8b)
-    if content and len(content) > 2 and content[0] == 0x1F and content[1] == 0x8B:
+async def _http_fetch(
+    session: aiohttp.ClientSession,
+    url: str,
+    *,
+    max_size: int | None,
+    retries: int,
+) -> bytes | str | None:
+    for attempt in range(retries):
         try:
-            return gzip.decompress(content)
-        except Exception as e:
-            print(f"Error decompressing content: {e}")
-    return content  # Return original if not gzipped or decompression fails
+            async with session.get(url, timeout=aiohttp.ClientTimeout(total=30)) as resp:
+                if resp.status != 200:
+                    raise aiohttp.ClientResponseError(resp.request_info, resp.history, status=resp.status)
+                if max_size is not None:
+                    hdr = resp.headers.get("Content-Length")
+                    if hdr and int(hdr) > max_size:
+                        return "SKIPPED_LARGE_FILE"
+                raw = await resp.read()
+                return _decompress_if_needed(raw)
+        except (aiohttp.ClientError, asyncio.TimeoutError):
+            if attempt == retries - 1:
+                return None
+            await asyncio.sleep(1.5**attempt)
+    return None
 
 
-# Async function to download content
-async def download_content(session, blob_id, src_encoding, semaphore):
-    url = BASE_URL + blob_id
+class Downloader:
+    def __init__(
+        self,
+        *,
+        sqlite_db: str | Path,
+        base_url: str,
+        parquet_path: str | Path | None = None,
+        table: str = "files",
+        batch: int = 500,
+        concurrency: int = 20,
+        max_size: int = 5 * 1024 * 1024,
+        retries: int = 3,
+        max_batches: int | None = None,
+        **_: Any,
+    ) -> None:
+        self.parquet_path = (Path(parquet_path).expanduser().resolve() if parquet_path else None)
+        self.sqlite_db = Path(sqlite_db).expanduser().resolve()
+        self.base_url = base_url.rstrip("/") + "/"
+        self.table = table
+        self.batch = batch
+        self.concurrency = concurrency
+        self.max_size = max_size
+        self.retries = retries
+        self.max_batches = max_batches
 
-    async with semaphore:  # Limit concurrent requests
-        for attempt in range(MAX_RETRIES):
-            try:
-                async with session.get(url, timeout=30) as response:
-                    if response.status != 200:
-                        if attempt < MAX_RETRIES - 1:
-                            await asyncio.sleep(RETRY_DELAY)
-                            continue
-                        return None, blob_id
+    def run(self) -> None:
+        if self.parquet_path and not self.sqlite_db.exists():
+            self._export_parquet_to_sqlite()
+        asyncio.run(self.download_missing())
 
-                    # Check content size before downloading fully
-                    content_length = response.headers.get("Content-Length")
-                    if (
-                        content_length
-                        and SKIP_LARGE_FILES
-                        and int(content_length) > MAX_FILE_SIZE
-                    ):
-                        return (
-                            f"SKIPPED_LARGE_FILE:{int(content_length) // 1024}KB",
-                            blob_id,
-                        )
+    def _export_parquet_to_sqlite(self) -> None:
+        print(f"▶ Exporting {self.parquet_path} → {self.sqlite_db} …")
+        if self.sqlite_db.exists():
+            self.sqlite_db.unlink()
 
-                    # Download the content
-                    content = await response.read()
+        df = pl.read_parquet(
+            self.parquet_path,
+            columns=["blob_id", "src_encoding", "directory_id", "repo_id"],
+        )
+        total = df.height
 
-                    # Decompress if it's gzipped
-                    content = decompress_if_needed(content)
+        conn = sqlite3.connect(self.sqlite_db)
+        cur = conn.cursor()
+        cur.execute(f"""
+            CREATE TABLE {self.table} (
+                blob_id      TEXT PRIMARY KEY,
+                src_encoding TEXT,
+                directory_id TEXT,
+                repo_id      TEXT,
+                content      TEXT
+            );
+        """)
 
-                    # Try to decode the content with the provided encoding
-                    try:
-                        text_content = content.decode(src_encoding)
-                        return text_content, blob_id
-                    except UnicodeDecodeError:
-                        # Fallback to utf-8
-                        try:
-                            text_content = content.decode("utf-8")
-                            return text_content, blob_id
-                        except UnicodeDecodeError:
-                            # If we can't decode it after decompression, we'll skip it
-                            return "SKIPPED_BINARY_CONTENT", blob_id
-
-            except (aiohttp.ClientError, asyncio.TimeoutError) as e:
-                if attempt < MAX_RETRIES - 1:
-                    await asyncio.sleep(RETRY_DELAY)
-                else:
-                    return f"ERROR:{str(e)}", blob_id
-
-        return None, blob_id
-
-
-# Get count of rows that need processing
-result = conn.execute(
-    "SELECT COUNT(*) FROM stack_cython WHERE content IS NULL"
-).fetchone()
-total_rows = result[0]
-print(f"Found {total_rows} rows that need content downloaded")
-
-
-# Function to update database with downloaded content
-def update_db(results):
-    success_count = 0
-    error_count = 0
-    skipped_count = 0
-
-    for content, blob_id in results:
-        if content is None:
-            error_count += 1
-        elif content.startswith("SKIPPED_"):
-            skipped_count += 1
-            conn.execute(
-                """
-                UPDATE stack_cython
-                SET content = ?
-                WHERE blob_id = ?
-            """,
-                [content, blob_id],
-            )
-        elif content.startswith("ERROR:"):
-            error_count += 1
-            conn.execute(
-                """
-                UPDATE stack_cython
-                SET content = ?
-                WHERE blob_id = ?
-            """,
-                [content, blob_id],
-            )
-        else:
-            success_count += 1
-            conn.execute(
-                """
-                UPDATE stack_cython
-                SET content = ?
-                WHERE blob_id = ?
-            """,
-                [content, blob_id],
-            )
-
-    conn.commit()
-    return success_count, error_count, skipped_count
-
-
-# Main async processing function
-async def process_batch(batch_data):
-    semaphore = asyncio.Semaphore(MAX_CONCURRENT_REQUESTS)
-    async with aiohttp.ClientSession() as session:
-        tasks = []
-        for blob_id, src_encoding in batch_data:
-            task = download_content(session, blob_id, src_encoding, semaphore)
-            tasks.append(task)
-
-        # Process downloads with progress bar
-        results = []
-        for future in tqdm(
-            asyncio.as_completed(tasks), total=len(tasks), desc="Downloading"
+        insert_sql = (
+            f"INSERT INTO {self.table} "
+            "(blob_id, src_encoding, directory_id, repo_id) VALUES (?, ?, ?, ?);"
+        )
+        for blob_id, enc, dir_id, repo_id in tqdm(
+            df.rows(), total=total, desc="export metadata", unit="row"
         ):
-            result = await future
-            results.append(result)
+            cur.execute(insert_sql, (blob_id, enc, dir_id, repo_id))
+        conn.commit()
+        conn.close()
 
-        return results
+        print(f"✔ Exported {total:,} metadata rows (content NULL)")
+
+    async def download_missing(self) -> None:
+        db = sqlite3.connect(self.sqlite_db)
+        db.row_factory = sqlite3.Row
+        # ensure content column exists
+        cols = [r[1] for r in db.execute(f"PRAGMA table_info({self.table})")]
+        if "content" not in cols:
+            db.execute(f"ALTER TABLE {self.table} ADD COLUMN content TEXT")
+            db.commit()
+
+        total_missing = db.execute(
+            f"SELECT COUNT(*) FROM {self.table} WHERE content IS NULL"
+        ).fetchone()[0]
+        print(f"Need to fetch {total_missing:,} blobs…")
+
+        # compute how many batches we'll actually do
+        total_batches = math.ceil(total_missing / self.batch)
+        if self.max_batches is not None:
+            total_batches = min(total_batches, self.max_batches)
+
+        batch_bar = tqdm(total=total_batches, desc="batches", unit="batch")
+        overall  = tqdm(total=total_missing, desc="blobs",   unit="blob")
+        sem = asyncio.Semaphore(self.concurrency)
+        batch_num = 0
+        async with aiohttp.ClientSession() as session:
+            while True:
+                rows = db.execute(
+                    f"SELECT blob_id, src_encoding FROM {self.table} "
+                    "WHERE content IS NULL LIMIT ?",
+                    (self.batch,),
+                ).fetchall()
+                if not rows or (self.max_batches is not None and batch_num >= self.max_batches):
+                    break
+
+                batch_num += 1
+                tasks = [
+                    asyncio.create_task(self._worker(sem, session, blob_id, enc))
+                    for blob_id, enc in rows
+                ]
+
+                # download this batch (we leave the batch progress hidden)
+                for fut in tqdm(
+                    asyncio.as_completed(tasks),
+                    total=len(tasks),
+                    desc=f"batch {batch_num}",
+                    unit="blob",
+                    leave=False,
+                ):
+                    content, blob = await fut
+                    overall.update(1)
+                    db.execute(
+                        f"UPDATE {self.table} SET content = ? WHERE blob_id = ?",
+                        (content, blob),
+                    )
+                db.commit()
+                batch_bar.update(1)
+
+        batch_bar.close()
+        overall.close()
+        db.close()
+        print("✔ Downloads complete")
+
+    async def _worker(
+        self,
+        sem: asyncio.Semaphore,
+        session: aiohttp.ClientSession,
+        blob_id: str,
+        encoding: str,
+    ) -> tuple[str, str]:
+        async with sem:
+            data = await _http_fetch(
+                session,
+                self.base_url + blob_id,
+                max_size=self.max_size,
+                retries=self.retries,
+            )
+            if data is None:
+                return "ERROR", blob_id
+            if data == "SKIPPED_LARGE_FILE":
+                return "SKIPPED_LARGE_FILE", blob_id
+            try:
+                text = data.decode(encoding)  # type: ignore
+            except (UnicodeDecodeError, AttributeError):
+                try:
+                    text = data.decode("utf-8") if isinstance(data, bytes) else str(data)
+                except UnicodeDecodeError:
+                    return "SKIPPED_BINARY_CONTENT", blob_id
+            return text, blob_id
 
 
-# Async main process
-async def main():
-    total_processed = 0
-    total_success = 0
-    total_errors = 0
-    total_skipped = 0
+def explore_parquet(path: Path, *, rows: int = 10, lazy: bool = False) -> None:
+    df = pl.scan_parquet(path) if lazy else pl.read_parquet(path)
+    print("Rows × Cols:", df.shape if not lazy else "(lazy – unknown)")
+    print(df.schema)
+    print(df.head(rows))
 
-    while True:
-        # Get blob_ids that need to be processed
-        result = conn.execute(
-            """
-            SELECT blob_id, src_encoding
-            FROM stack_cython 
-            WHERE content IS NULL
-            LIMIT ?
-        """,
-            [BATCH_SIZE],
-        ).fetchall()
 
-        if not result:
-            break  # No more rows to process
-
-        print(f"Processing batch of {len(result)} items...")
-        results = await process_batch(result)
-
-        # Update database with results
-        success, errors, skipped = update_db(results)
-        total_success += success
-        total_errors += errors
-        total_skipped += skipped
-
-        total_processed += len(result)
-        print(f"Processed {total_processed}/{total_rows} files")
-        print(f"  Success: {success}, Errors: {errors}, Skipped: {skipped}")
-
-    print(f"Download complete! Processed {total_processed} files.")
-    print(
-        f"Total success: {total_success}, Total errors: {total_errors}, Total skipped: {total_skipped}"
+def top_directory(path: Path, *, rows: int = 20, lazy: bool = False) -> None:
+    lf = pl.scan_parquet(path) if lazy else pl.read_parquet(path)
+    top_id = (
+        lf.groupby("directory_id")
+        .count()
+        .sort("count", descending=True)
+        .limit(1)
+        .collect()[0, "directory_id"]
     )
+    print("Top directory:", top_id)
+    print(lf.filter(pl.col("directory_id") == top_id).limit(rows).collect())
 
 
-# Run the async process
+def load_config(path: Path) -> dict[str, Any]:
+    if path.suffix in {".yml", ".yaml"}:
+        return yaml.safe_load(path.read_text())
+    if path.suffix == ".json":
+        import json as _j
+
+        return _j.loads(path.read_text())
+    raise ValueError("Config must be YAML or JSON")
+
+
+def build_parser() -> argparse.ArgumentParser:
+    p = argparse.ArgumentParser(
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        description=textwrap.dedent(
+            """Downloader for The Stack / Software Heritage blobs.
+
+Sub-commands:
+  run     – export (if needed) + download
+  explore – quick peek at a Parquet shard
+  topdir  – show directory with most blobs
+"""
+        ),
+    )
+    sub = p.add_subparsers(dest="cmd", required=True)
+
+    runp = sub.add_parser("run", help="Export → download")
+    runp.add_argument("--config",      type=Path, help="YAML/JSON config file")
+    runp.add_argument("--max-batches", type=int,  help="stop after N download batches (overrides config)")
+    runp.add_argument("--parquet",     type=Path, help="Parquet file (if no config)")
+    runp.add_argument("--sqlite",      type=Path, help="SQLite DB (if no config)")
+    runp.add_argument("--base-url",    help="Base URL (if no config)")
+    runp.add_argument("--table",       default="files",       help="DB table name")
+    runp.add_argument("--batch",       type=int, default=500, help="rows per batch")
+    runp.add_argument("--concurrency", type=int, default=20,  help="HTTP concurrency")
+    runp.add_argument("--max-size",    type=int, default=5*1024*1024, help="max bytes")
+    runp.add_argument("--retries",     type=int, default=3,   help="retry attempts")
+
+    xp = sub.add_parser("explore", help="Quick peek at Parquet")
+    xp.add_argument("--path", type=Path, required=True)
+    xp.add_argument("--rows", type=int, default=10)
+    xp.add_argument("--lazy", action="store_true")
+
+    td = sub.add_parser("topdir", help="Show directory with most blobs")
+    td.add_argument("--path", type=Path, required=True)
+    td.add_argument("--rows", type=int, default=20)
+    td.add_argument("--lazy", action="store_true")
+
+    return p
+
+
+def main(argv: Sequence[str] | None = None) -> None:
+    args = build_parser().parse_args(argv)
+
+    if args.cmd == "explore":
+        explore_parquet(args.path, rows=args.rows, lazy=args.lazy)
+        return
+    if args.cmd == "topdir":
+        top_directory(args.path, rows=args.rows, lazy=args.lazy)
+        return
+
+    if args.config:
+        cfg = load_config(args.config)
+        if args.max_batches is not None:
+            cfg["max_batches"] = args.max_batches
+    else:
+        if not (args.parquet and args.sqlite and args.base_url):
+            sys.exit("error: --parquet, --sqlite and --base-url are required when no --config")
+        cfg = {
+            "parquet_path": str(args.parquet),
+            "sqlite_db":    str(args.sqlite),
+            "base_url":     args.base_url,
+            "table":        args.table,
+            "batch":        args.batch,
+            "concurrency":  args.concurrency,
+            "max_size":     args.max_size,
+            "retries":      args.retries,
+            "max_batches":  args.max_batches,
+        }
+
+    Downloader(**cfg).run()
+
+
 if __name__ == "__main__":
-    print("Starting download process...")
-    asyncio.run(main())
-
-    # Query to check completion status
-    completion_stats = conn.execute(
-        """
-        SELECT 
-            COUNT(*) AS total_rows,
-            SUM(CASE WHEN content IS NOT NULL THEN 1 ELSE 0 END) AS completed_rows,
-            SUM(CASE WHEN content LIKE 'SKIPPED_%' THEN 1 ELSE 0 END) AS skipped_rows,
-            SUM(CASE WHEN content LIKE 'ERROR:%' THEN 1 ELSE 0 END) AS error_rows,
-            (SUM(CASE WHEN content IS NOT NULL THEN 1 ELSE 0 END) * 100.0 / COUNT(*)) AS completion_percentage
-        FROM stack_cython
-    """
-    ).fetchone()
-
-    print(f"Total rows: {completion_stats[0]}")
-    print(f"Completed rows: {completion_stats[1]}")
-    print(f"  - Skipped binary/large files: {completion_stats[2]}")
-    print(f"  - Errors: {completion_stats[3]}")
-    print(f"Completion percentage: {completion_stats[4]:.2f}%")
-
-    # Close the connection
-    conn.close()
+    main()

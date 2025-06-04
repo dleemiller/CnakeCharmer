@@ -1,0 +1,9 @@
+name: cython
+parquet_path: the-stack-v2-dedup-cython.parquet
+sqlite_db: stack_cython.sqlite
+base_url: https://softwareheritage.s3.amazonaws.com/content/
+table: files
+batch: 500
+concurrency: 20
+max_size: 5_242_880   # 5 MB
+retries: 3
