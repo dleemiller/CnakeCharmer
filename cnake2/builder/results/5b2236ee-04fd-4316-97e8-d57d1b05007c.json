@@ -1,0 +1,169 @@
+{
+  "job_id": "5b2236ee-04fd-4316-97e8-d57d1b05007c",
+  "yellow_lines": 8,
+  "red_lines": 6,
+  "cython_lint": 66,
+  "pep8_issues": 0,
+  "timestamp": 1749056773.9157581,
+  "status": "completed",
+  "html_files": ["5b2236ee-04fd-4316-97e8-d57d1b05007c_code.html"],
+  "manual_analysis": {
+    "yellow_lines": [
+      {
+        "file": "code.html",
+        "line_num": 15,
+        "content": "def recursive_process(item, depth):"
+      },
+      {
+        "file": "code.html",
+        "line_num": 27,
+        "content": "return {k: recursive_process(v, depth-1) for k, v in item.items()}"
+      },
+      {
+        "file": "code.html",
+        "line_num": 32,
+        "content": "def unsafe_calculation(expr):"
+      },
+      {
+        "file": "code.html",
+        "line_num": 46,
+        "content": "if random.random() &gt; 0.5:"
+      },
+      {
+        "file": "code.html",
+        "line_num": 53,
+        "content": "value = data[i % len(data)] if isinstance(data, (list, tuple)) else i"
+      },
+      {
+        "file": "code.html",
+        "line_num": 55,
+        "content": "results[key] = f\"Value: {value} processed: {sin(float(value))}\""
+      },
+      {
+        "file": "code.html",
+        "line_num": 56,
+        "content": "except Exception as e:"
+      },
+      {
+        "file": "code.html",
+        "line_num": 63,
+        "content": "operation = f\"{item} * 2 + {random.random()}\""
+      }
+    ],
+    "red_lines": [
+      {
+        "file": "code.html",
+        "line_num": 8,
+        "content": "def highly_inefficient_function(data, iteration_count=100):"
+      },
+      {
+        "file": "code.html",
+        "line_num": 21,
+        "content": "return re.sub(r'\\d+', lambda m: str(int(m.group(0)) * 2), item)"
+      },
+      {
+        "file": "code.html",
+        "line_num": 24,
+        "content": "return [recursive_process(x, depth-1) for x in item]"
+      },
+      {
+        "file": "code.html",
+        "line_num": 41,
+        "content": "for i in range(iteration_count):"
+      },
+      {
+        "file": "code.html",
+        "line_num": 48,
+        "content": "results[key] = json.dumps({\"value\": i, \"squared\": i*i})"
+      },
+      {
+        "file": "code.html",
+        "line_num": 60,
+        "content": "for i in range(min(5, len(data))):"
+      }
+    ]
+  },
+  "detailed_analysis": {
+    "code.html": {
+      "score_distribution": {
+        "excellent": {
+          "range": [0, 0],
+          "count": 0,
+          "lines": [],
+          "percentage": 0.0
+        },
+        "good": {
+          "range": [1, 19],
+          "count": 19,
+          "lines": [
+            [1, "# Complex Cython example with inefficient Python operations"],
+            [12, "results = {}"],
+            [16, "if depth &lt;= 0:"],
+            [17, "return item"],
+            [19, "if isinstance(item, str):"],
+            [22, "elif isinstance(item, (list, tuple)):"],
+            [25, "elif isinstance(item, dict):"],
+            [29, "return item"],
+            [33, "try:"],
+            [34, "return eval(expr)"],
+            [35, "except:"],
+            [36, "return 0"],
+            [39, "dynamic_attributes = dir(data)"],
+            [43, "key = str(i)"],
+            [51, "try:"],
+            [57, "results[key] = str(e)"],
+            [61, "item = data[i] if isinstance(data, (list, tuple)) else i"],
+            [64, "results[f\"calc_{i}\"] = unsafe_calculation(operation)"],
+            [66, "return results"]
+          ],
+          "percentage": 57.6
+        },
+        "yellow": {
+          "range": [20, 39],
+          "count": 8,
+          "lines": [
+            [15, "def recursive_process(item, depth):"],
+            [
+              27,
+              "return {k: recursive_process(v, depth-1) for k, v in item.items()}"
+            ],
+            [32, "def unsafe_calculation(expr):"],
+            [46, "if random.random() &gt; 0.5:"],
+            [
+              53,
+              "value = data[i % len(data)] if isinstance(data, (list, tuple)) else i"
+            ],
+            [
+              55,
+              "results[key] = f\"Value: {value} processed: {sin(float(value))}\""
+            ],
+            [56, "except Exception as e:"],
+            [63, "operation = f\"{item} * 2 + {random.random()}\""]
+          ],
+          "percentage": 24.2
+        },
+        "red": {
+          "range": [40, 255],
+          "count": 6,
+          "lines": [
+            [8, "def highly_inefficient_function(data, iteration_count=100):"],
+            [
+              21,
+              "return re.sub(r'\\d+', lambda m: str(int(m.group(0)) * 2), item)"
+            ],
+            [24, "return [recursive_process(x, depth-1) for x in item]"],
+            [41, "for i in range(iteration_count):"],
+            [48, "results[key] = json.dumps({\"value\": i, \"squared\": i*i})"],
+            [60, "for i in range(min(5, len(data))):"]
+          ],
+          "percentage": 18.2
+        }
+      },
+      "efficiency_metrics": {
+        "avg_score": 21.12121212121212,
+        "python_api_heavy_lines": 15,
+        "exception_handling_lines": 23
+      }
+    }
+  }
+}
