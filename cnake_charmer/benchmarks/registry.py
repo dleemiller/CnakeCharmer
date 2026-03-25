@@ -22,11 +22,11 @@ Example usage:
 
 from __future__ import annotations
 
-import functools
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from enum import Enum, auto
 from functools import partial
-from typing import Any, Callable, Dict, Optional, Tuple, Literal
+from typing import Any, Literal
 
 
 class Variant(Enum):
@@ -53,22 +53,22 @@ class BenchmarkItem:
     benchmark_id: str
     variant: Variant
     func: Callable
-    args: Tuple[Any, ...] = field(default_factory=tuple)
-    kwargs: Dict[str, Any] = field(default_factory=dict)
+    args: tuple[Any, ...] = field(default_factory=tuple)
+    kwargs: dict[str, Any] = field(default_factory=dict)
     num_runs: int = 100
 
 
 # Global registry mapping benchmark IDs to a dict of Variant to BenchmarkItem.
-benchmark_registry: Dict[str, Dict[Variant, BenchmarkItem]] = {}
+benchmark_registry: dict[str, dict[Variant, BenchmarkItem]] = {}
 
 
 def _register_benchmark(
     variant: Variant,
     func: Callable,
     *,
-    benchmark_id: Optional[str] = None,
-    args: Tuple[Any, ...] = (),
-    kwargs: Optional[Dict[str, Any]] = None,
+    benchmark_id: str | None = None,
+    args: tuple[Any, ...] = (),
+    kwargs: dict[str, Any] | None = None,
     num_runs: int = 100,
 ) -> Callable:
     """Base decorator to register a benchmark.
@@ -108,9 +108,9 @@ def _register_benchmark(
 
 def python_benchmark(
     *,
-    benchmark_id: Optional[str] = None,
-    args: Tuple[Any, ...] = (),
-    kwargs: Optional[Dict[str, Any]] = None,
+    benchmark_id: str | None = None,
+    args: tuple[Any, ...] = (),
+    kwargs: dict[str, Any] | None = None,
     num_runs: int = 100,
 ) -> Callable[[Callable], Callable]:
     """Decorator to register a Python benchmark implementation.
@@ -138,9 +138,9 @@ def python_benchmark(
 def cython_benchmark(
     syntax=Literal["cy", "pp"],
     *,
-    benchmark_id: Optional[str] = None,
-    args: Tuple[Any, ...] = (),
-    kwargs: Optional[Dict[str, Any]] = None,
+    benchmark_id: str | None = None,
+    args: tuple[Any, ...] = (),
+    kwargs: dict[str, Any] | None = None,
     num_runs: int = 100,
 ) -> Callable[[Callable], Callable]:
     """Decorator to register a Cython benchmark implementation.
