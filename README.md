@@ -5,8 +5,11 @@ A living dataset of parallel Python/Cython implementations for training AI model
 ## Quickstart
 
 ```bash
-# Install dependencies (first time only — also compiles all Cython extensions)
+# Install dependencies
 uv sync
+
+# Build Cython extensions
+uv run python setup.py build_ext --inplace
 
 # Run tests
 uv run pytest tests/ -q
@@ -15,20 +18,9 @@ uv run pytest tests/ -q
 uv run run_benchmarks.py
 ```
 
-After the initial `uv sync`, use `--no-sync` to skip recompiling everything:
-
-```bash
-# Day-to-day development — skip the full package rebuild
-uv run --no-sync pytest tests/ -q
-uv run --no-sync run_benchmarks.py
-
-# Only rebuild when you change .pyx files
-uv run --no-sync python setup.py build_ext --inplace
-```
-
-> **Why `--no-sync`?** `uv run` without it triggers `uv sync` which rebuilds the
-> entire package including all 250+ Cython extensions. This takes several minutes.
-> Use `--no-sync` for code-only changes and rebuild extensions separately when needed.
+> **Note:** `uv sync` only installs Python dependencies — it does **not** compile
+> Cython extensions. The `setup.py build_ext --inplace` step is always explicit.
+> Re-run it when you add or change `.pyx` files.
 
 ## Project Goals
 
