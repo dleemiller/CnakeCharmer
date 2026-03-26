@@ -9,7 +9,7 @@ from libc.string cimport memset
 from cnake_charmer.benchmarks import cython_benchmark
 
 
-@cython_benchmark(syntax="cy", args=(1000,))
+@cython_benchmark(syntax="cy", args=(3000,))
 def max_flow(int n):
     """Compute max flow using Edmonds-Karp with C arrays for adjacency matrix."""
     if n < 2:

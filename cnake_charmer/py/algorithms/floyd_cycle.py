@@ -1,4 +1,4 @@
-"""Detect cycle length using Floyd's tortoise and hare algorithm.
+"""Detect cycle lengths using Floyd's tortoise and hare algorithm.
 
 Keywords: algorithms, floyd, cycle detection, tortoise hare, benchmark
 """
@@ -6,31 +6,34 @@ Keywords: algorithms, floyd, cycle detection, tortoise hare, benchmark
 from cnake_charmer.benchmarks import python_benchmark
 
 
-@python_benchmark(args=(100000000,))
+@python_benchmark(args=(500000,))
 def floyd_cycle(n: int) -> int:
-    """Detect cycle length in sequence f(x) = (x*x + 1) % n starting from x=2.
-
-    Uses Floyd's tortoise and hare algorithm.
+    """Sum cycle lengths for n different sequences f(x) = (x*x + c) % 1000003.
 
     Args:
-        n: Modulus for the sequence.
+        n: Number of sequences to test (each with c = i).
 
     Returns:
-        Length of the detected cycle.
+        Sum of all cycle lengths found.
     """
-    # Phase 1: find meeting point
-    tortoise = (2 * 2 + 1) % n
-    hare = (tortoise * tortoise + 1) % n
-    while tortoise != hare:
-        tortoise = (tortoise * tortoise + 1) % n
-        hare = (hare * hare + 1) % n
-        hare = (hare * hare + 1) % n
+    total = 0
+    mod = 1000003
 
-    # Phase 2: find cycle length
-    cycle_len = 1
-    hare = (tortoise * tortoise + 1) % n
-    while tortoise != hare:
-        hare = (hare * hare + 1) % n
-        cycle_len += 1
+    for i in range(n):
+        c = i + 1
+        tortoise = (2 * 2 + c) % mod
+        hare = (tortoise * tortoise + c) % mod
+        while tortoise != hare:
+            tortoise = (tortoise * tortoise + c) % mod
+            hare = (hare * hare + c) % mod
+            hare = (hare * hare + c) % mod
 
-    return cycle_len
+        cycle_len = 1
+        hare = (tortoise * tortoise + c) % mod
+        while tortoise != hare:
+            hare = (hare * hare + c) % mod
+            cycle_len += 1
+
+        total += cycle_len
+
+    return total
