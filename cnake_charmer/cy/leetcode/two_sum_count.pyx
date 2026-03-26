@@ -8,7 +8,7 @@ from libc.stdlib cimport malloc, free
 from cnake_charmer.benchmarks import cython_benchmark
 
 
-@cython_benchmark(syntax="cy", args=(50000,))
+@cython_benchmark(syntax="cy", args=(200000,))
 def two_sum_count(int n):
     """Count pairs (i, j) with i < j where arr[i] + arr[j] == target."""
     cdef int target = n // 2

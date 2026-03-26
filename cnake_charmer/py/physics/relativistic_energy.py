@@ -8,7 +8,7 @@ import math
 from cnake_charmer.benchmarks import python_benchmark
 
 
-@python_benchmark(args=(5000000,))
+@python_benchmark(args=(2000000,))
 def relativistic_energy(n: int) -> float:
     """Compute relativistic kinetic energy for n particles.
 

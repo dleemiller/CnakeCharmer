@@ -6,7 +6,7 @@ Keywords: algorithms, floyd, cycle detection, tortoise hare, benchmark
 from cnake_charmer.benchmarks import python_benchmark
 
 
-@python_benchmark(args=(10000000,))
+@python_benchmark(args=(100000000,))
 def floyd_cycle(n: int) -> int:
     """Detect cycle length in sequence f(x) = (x*x + 1) % n starting from x=2.
 

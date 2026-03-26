@@ -10,7 +10,7 @@ from libc.string cimport memset
 from cnake_charmer.benchmarks import cython_benchmark
 
 
-@cython_benchmark(syntax="cy", args=(10000,))
+@cython_benchmark(syntax="cy", args=(100000,))
 def trie_search(int n):
     """Build a flat-array trie from n words and count query matches using C arrays.
 

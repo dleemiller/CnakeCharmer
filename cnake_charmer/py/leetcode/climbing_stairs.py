@@ -6,7 +6,7 @@ Keywords: leetcode, climbing stairs, fibonacci, dynamic programming, benchmark
 from cnake_charmer.benchmarks import python_benchmark
 
 
-@python_benchmark(args=(10000000,))
+@python_benchmark(args=(3000000,))
 def climbing_stairs(n: int) -> int:
     """Compute sum of ways(1) + ways(2) + ... + ways(n) mod 10^9+7.
 

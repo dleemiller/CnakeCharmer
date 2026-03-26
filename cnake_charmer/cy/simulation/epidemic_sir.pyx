@@ -7,7 +7,7 @@ Keywords: SIR model, epidemic, simulation, population dynamics, cython, benchmar
 from cnake_charmer.benchmarks import cython_benchmark
 
 
-@cython_benchmark(syntax="cy", args=(100000,))
+@cython_benchmark(syntax="cy", args=(10000000,))
 def epidemic_sir(int n):
     """Simulate SIR epidemic model."""
     cdef double s = <double>(n - 10)

@@ -8,7 +8,7 @@ import math
 from cnake_charmer.benchmarks import python_benchmark
 
 
-@python_benchmark(args=(25,))
+@python_benchmark(args=(20,))
 def romberg_integration(n: int) -> float:
     """Compute Romberg integration of sin(x) from 0 to pi with n levels.
 

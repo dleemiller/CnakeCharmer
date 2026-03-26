@@ -7,7 +7,7 @@ Keywords: sieve, eratosthenes, primes, math, benchmark
 from cnake_charmer.benchmarks import python_benchmark
 
 
-@python_benchmark(args=(100000,))
+@python_benchmark(args=(1000000,))
 def sieve_of_eratosthenes(n: int) -> list[int]:
     """Find all prime numbers up to n using the Sieve of Eratosthenes.
 

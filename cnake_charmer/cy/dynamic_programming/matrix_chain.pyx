@@ -10,7 +10,7 @@ from libc.string cimport memset
 from cnake_charmer.benchmarks import cython_benchmark
 
 
-@cython_benchmark(syntax="cy", args=(300,))
+@cython_benchmark(syntax="cy", args=(200,))
 def matrix_chain(int n):
     """Find minimum scalar multiplications using flat C arrays for DP table."""
     cdef int i, j, k, length

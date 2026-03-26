@@ -7,7 +7,7 @@ Keywords: run-length encoding, RLE, compression, cython, benchmark
 from cnake_charmer.benchmarks import cython_benchmark
 
 
-@cython_benchmark(syntax="cy", args=(10000000,))
+@cython_benchmark(syntax="cy", args=(3000000,))
 def rle_compress_int(int n):
     """Run-length encode n integers using pure typed loop."""
     if n == 0:

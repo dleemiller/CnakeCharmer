@@ -6,7 +6,7 @@ Keywords: simulation, diffusion, 2D, Laplacian, PDE, finite difference, benchmar
 from cnake_charmer.benchmarks import python_benchmark
 
 
-@python_benchmark(args=(200,))
+@python_benchmark(args=(150,))
 def diffusion_2d(n: int) -> float:
     """Simulate 2D diffusion on an n x n grid for 100 timesteps.
 

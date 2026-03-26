@@ -6,7 +6,7 @@ Keywords: lucas, fibonacci, sequence, number theory, modular arithmetic, benchma
 from cnake_charmer.benchmarks import python_benchmark
 
 
-@python_benchmark(args=(10000000,))
+@python_benchmark(args=(3000000,))
 def lucas_numbers(n: int) -> int:
     """Compute the sum of the first n Lucas numbers mod 10^9+7.
 

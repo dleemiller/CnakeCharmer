@@ -8,7 +8,7 @@ Keywords: algorithms, reservoir sampling, random, LCG, streaming, cython, benchm
 from cnake_charmer.benchmarks import cython_benchmark
 
 
-@cython_benchmark(syntax="cy", args=(5000000,))
+@cython_benchmark(syntax="cy", args=(2000000,))
 def reservoir_sampling(int n):
     """Deterministic reservoir sampling over n items, return sum of reservoir."""
     cdef int k = 100

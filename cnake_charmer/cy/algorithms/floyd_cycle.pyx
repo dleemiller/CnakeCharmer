@@ -7,7 +7,7 @@ Keywords: algorithms, floyd, cycle detection, tortoise hare, cython, benchmark
 from cnake_charmer.benchmarks import cython_benchmark
 
 
-@cython_benchmark(syntax="cy", args=(10000000,))
+@cython_benchmark(syntax="cy", args=(100000000,))
 def floyd_cycle(int n):
     """Detect cycle length in sequence f(x) = (x*x + 1) % n starting from x=2."""
     cdef long long tortoise, hare

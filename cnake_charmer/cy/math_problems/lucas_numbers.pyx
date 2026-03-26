@@ -7,7 +7,7 @@ Keywords: lucas, fibonacci, sequence, number theory, modular arithmetic, cython,
 from cnake_charmer.benchmarks import cython_benchmark
 
 
-@cython_benchmark(syntax="cy", args=(10000000,))
+@cython_benchmark(syntax="cy", args=(3000000,))
 def lucas_numbers(int n):
     """Compute sum of first n Lucas numbers mod 10^9+7 using typed arithmetic."""
     cdef long long MOD = 1000000007

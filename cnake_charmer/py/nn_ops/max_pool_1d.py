@@ -6,7 +6,7 @@ Keywords: max pool, pooling, neural network, downsampling
 from cnake_charmer.benchmarks import python_benchmark
 
 
-@python_benchmark(args=(10000000,))
+@python_benchmark(args=(3000000,))
 def max_pool_1d(n: int) -> int:
     """Max pool with kernel=4, stride=4 and return sum of pooled values.
 
