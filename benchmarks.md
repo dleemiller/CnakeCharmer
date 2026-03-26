@@ -23,6 +23,7 @@
 | mandelbrot_count | cython | 39.709 | 1.501 | 26.5x |
 | trie_search | cython | 3.282 | 0.170 | 19.3x |
 | convolution_1d | cython | 20.115 | 1.196 | 16.8x |
+| great_circle | cython | 36.010 | 2.890 | 12.5x |
 | bubble_sort | cython | 210.343 | 18.430 | 11.4x |
 | primes | cython | 0.668 | 0.061 | 11.0x |
 | sieve_of_eratosthenes | cython | 4.050 | 0.395 | 10.2x |

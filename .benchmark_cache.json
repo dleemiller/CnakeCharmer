@@ -35,7 +35,8 @@
     "merge_sort": "b77494f331a602a4",
     "count_substrings": "703a7a78a1c26b07",
     "edit_distance": "1d06f13d27e10b93",
-    "run_length_encode": "ad409de954bc9756"
+    "run_length_encode": "ad409de954bc9756",
+    "great_circle": "ed234d63a349bfba"
   },
   "results": {
     "binary_search_count": [
@@ -432,6 +433,17 @@
         "cy_avg": 0.0008581482688896358,
         "cy_std": 1.389465215221926e-05,
         "speedup": 90.68478870233926
+      }
+    ],
+    "great_circle": [
+      {
+        "benchmark": "great_circle",
+        "syntax": "cython",
+        "py_avg": 0.036010448911692944,
+        "py_std": 0.000690744833570378,
+        "cy_avg": 0.002890347563661635,
+        "cy_std": 5.504205544492431e-05,
+        "speedup": 12.458864589306737
       }
     ]
   }
