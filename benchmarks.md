@@ -303,3 +303,13 @@ Compares portable Cython (scalar) vs platform-optimized SIMD.
 | layer_norm | 1,000,000 | 1.525 | 0.290 | avx2+fma | 5.3x |
 | conv1d | 500,000 | 1.387 | 0.163 | avx2+fma | 8.5x |
 | max_pool_1d | 5,000,000 | 2.205 | 1.271 | avx2+fma | 1.7x |
+
+
+## Kernel-Only Benchmark (vs XNNPACK C)
+
+Pre-allocated tensors, timing only the compute kernel.
+
+| Kernel | Size | XNNPACK C (ms) | Cython scalar (ms) | Cython AVX2+FMA (ms) | AVX vs C |
+|--------|------|----------------|--------------------|-----------------------|-----------|
+| relu | 5,000,000 | 1.012 | 3.001 | 2.919 | 2.9x |
+| gemm | 200 | 0.193 | 3.445 | 0.226 | 1.2x |
