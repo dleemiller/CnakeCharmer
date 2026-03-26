@@ -54,6 +54,7 @@ class BenchmarkItem:
     benchmark_id: str
     variant: Variant
     func: Callable
+    category: str = ""
     args: tuple[Any, ...] = field(default_factory=tuple)
     kwargs: dict[str, Any] = field(default_factory=dict)
     num_runs: int = 10
@@ -91,10 +92,18 @@ def _register_benchmark(
     if benchmark_id is None:
         benchmark_id = func.__name__
 
+    # Extract category from module path: cnake_charmer.{py|cy}.{category}.{name}
+    category = ""
+    module = getattr(func, "__module__", "")
+    parts = module.split(".")
+    if len(parts) >= 3:
+        category = parts[-2]  # e.g. "nn_ops" from "cnake_charmer.py.nn_ops.relu"
+
     item = BenchmarkItem(
         benchmark_id=benchmark_id,
         variant=variant,
         func=func,
+        category=category,
         args=args,
         kwargs=kwargs,
         num_runs=num_runs,
