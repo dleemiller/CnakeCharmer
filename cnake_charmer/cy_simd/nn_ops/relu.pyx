@@ -10,6 +10,7 @@ Keywords: relu, activation, neural network, tensor, f32, simd, avx, xnnpack, cyt
 
 from libc.stdlib cimport malloc, free
 from libc.math cimport sin
+
 from cnake_charmer.benchmarks import cython_benchmark
 
 cdef extern from "immintrin.h":

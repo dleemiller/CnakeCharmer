@@ -6,6 +6,7 @@ Keywords: dropout, mask, neural network, tensor, f32, simd, avx, cython
 
 from libc.stdlib cimport malloc, free
 from libc.math cimport sin
+
 from cnake_charmer.benchmarks import cython_benchmark
 
 cdef extern from "immintrin.h":
