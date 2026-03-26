@@ -29,9 +29,11 @@ def xor_cipher_checksum(n: int) -> int:
 
     # Encrypt and compute checksum
     checksum = 0
+    last_byte = 0
     for i in range(n):
         plaintext = (i * 7 + 3) % 256
         encrypted = plaintext ^ key[i % 16]
         checksum += encrypted
+        last_byte = encrypted
 
-    return checksum
+    return (checksum, last_byte)

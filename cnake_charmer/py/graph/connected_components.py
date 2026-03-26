@@ -19,7 +19,7 @@ def connected_components(n: int) -> int:
         n: Number of nodes.
 
     Returns:
-        Number of connected components.
+        Tuple of (number of connected components, size of largest component).
     """
     parent = list(range(n))
     rank = [0] * n
@@ -47,9 +47,15 @@ def connected_components(n: int) -> int:
         v = (i * 13 + 7) % n
         union(u, v)
 
-    # Count components
+    # Count components and find largest
     count = 0
+    comp_size = {}
     for i in range(n):
-        if find(i) == i:
+        root = find(i)
+        if root not in comp_size:
+            comp_size[root] = 0
+        comp_size[root] += 1
+        if root == i:
             count += 1
-    return count
+    largest_size = max(comp_size.values())
+    return (count, largest_size)

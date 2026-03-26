@@ -17,6 +17,7 @@ def max_subarray_sum(int n):
     cdef long long total = 0
     cdef int chunk, i, offset, val
     cdef int max_ending_here, max_so_far
+    cdef int max_single = -101
     cdef int *v = <int *>malloc(chunk_size * sizeof(int))
 
     if v == NULL:
@@ -41,6 +42,8 @@ def max_subarray_sum(int n):
                 max_so_far = max_ending_here
 
         total += max_so_far
+        if max_so_far > max_single:
+            max_single = max_so_far
 
     free(v)
-    return total
+    return (total, max_single)

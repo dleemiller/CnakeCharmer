@@ -25,7 +25,7 @@ def palindrome_partition(int n):
         raise MemoryError()
 
     cdef int i, j, length
-    cdef int result
+    cdef int result, result_mid
 
     # Generate string: s[i] = 65 + (i*i + 3*i + 1) % 4
     for i in range(n):
@@ -64,9 +64,10 @@ def palindrome_partition(int n):
                     cuts[i] = cuts[j - 1] + 1
 
     result = cuts[n - 1]
+    result_mid = cuts[n // 2]
 
     free(s)
     free(is_pal)
     free(cuts)
 
-    return result
+    return (result, result_mid)

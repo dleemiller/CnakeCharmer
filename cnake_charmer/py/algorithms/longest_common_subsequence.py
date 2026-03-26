@@ -34,4 +34,4 @@ def longest_common_subsequence(n: int) -> int:
                 val2 = dp[i * (n + 1) + (j - 1)]
                 dp[i * (n + 1) + j] = val1 if val1 > val2 else val2
 
-    return dp[n * (n + 1) + n]
+    return (dp[n * (n + 1) + n], dp[(n // 2) * (n + 1) + (n // 2)])

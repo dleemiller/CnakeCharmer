@@ -41,4 +41,4 @@ def palindrome_partition(n: int) -> int:
             if is_pal[j][i] and cuts[j - 1] + 1 < cuts[i]:
                 cuts[i] = cuts[j - 1] + 1
 
-    return cuts[n - 1]
+    return (cuts[n - 1], cuts[n // 2])

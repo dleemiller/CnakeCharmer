@@ -17,9 +17,10 @@ def mandelbrot_count(n: int) -> int:
         n: Grid resolution (n x n points).
 
     Returns:
-        Number of points in the Mandelbrot set.
+        Tuple of (number of points in the Mandelbrot set, total iteration sum).
     """
     count = 0
+    iteration_sum = 0
     max_iter = 100
 
     for row in range(n):
@@ -37,7 +38,8 @@ def mandelbrot_count(n: int) -> int:
                 zi = 2.0 * zr * zi + ci
                 zr = zr2 - zi2 + cr
                 iteration += 1
+            iteration_sum += iteration
             if iteration == max_iter:
                 count += 1
 
-    return count
+    return (count, iteration_sum)

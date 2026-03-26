@@ -25,6 +25,7 @@ def rc4_keystream(int n):
     cdef int ii, jj, kk
     cdef unsigned char temp
     cdef long long total = 0
+    cdef int last_byte = 0
 
     key[0] = 1
     key[1] = 2
@@ -52,6 +53,7 @@ def rc4_keystream(int n):
         temp = S[ii]
         S[ii] = S[jj]
         S[jj] = temp
-        total += S[(S[ii] + S[jj]) % 256]
+        last_byte = S[(S[ii] + S[jj]) % 256]
+        total += last_byte
 
-    return total
+    return (total, last_byte)

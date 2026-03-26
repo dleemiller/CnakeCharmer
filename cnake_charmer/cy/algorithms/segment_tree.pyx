@@ -48,13 +48,18 @@ def segment_tree(int n):
         raise MemoryError("Failed to allocate segment tree")
 
     _n = n
-    cdef int i
+    cdef int i, n_half, query_at_n_half, q
     cdef long long total = 0
 
     _build(1, 0, n - 1)
 
+    n_half = n / 2
+    query_at_n_half = 0
     for i in range(n):
-        total += _query(1, 0, n - 1, i)
+        q = _query(1, 0, n - 1, i)
+        total += q
+        if i == n_half:
+            query_at_n_half = q
 
     free(_tree)
-    return int(total)
+    return (int(total), query_at_n_half)

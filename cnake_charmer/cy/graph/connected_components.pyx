@@ -17,16 +17,19 @@ def connected_components(int n):
         n: Number of nodes.
 
     Returns:
-        Number of connected components.
+        Tuple of (number of connected components, size of largest component).
     """
     cdef int *parent = <int *>malloc(n * sizeof(int))
     cdef int *rank = <int *>malloc(n * sizeof(int))
+    cdef int *comp_size = <int *>malloc(n * sizeof(int))
 
-    if parent == NULL or rank == NULL:
+    if parent == NULL or rank == NULL or comp_size == NULL:
         if parent != NULL:
             free(parent)
         if rank != NULL:
             free(rank)
+        if comp_size != NULL:
+            free(comp_size)
         raise MemoryError("Failed to allocate union-find arrays")
 
     cdef int i, u, v, ru, rv, m, tmp
@@ -35,6 +38,7 @@ def connected_components(int n):
     for i in range(n):
         parent[i] = i
         rank[i] = 0
+        comp_size[i] = 0
 
     # Process edges
     m = n * 2
@@ -64,17 +68,24 @@ def connected_components(int n):
             if rank[ru] == rank[rv]:
                 rank[ru] += 1
 
-    # Count components (find root for each node first)
+    # Count components and find largest
     cdef int count = 0
+    cdef int largest_size = 0
     for i in range(n):
         # Find root of i
         ru = i
         while parent[ru] != ru:
             parent[ru] = parent[parent[ru]]
             ru = parent[ru]
+        comp_size[ru] += 1
         if ru == i:
             count += 1
 
+    for i in range(n):
+        if comp_size[i] > largest_size:
+            largest_size = comp_size[i]
+
     free(parent)
     free(rank)
-    return count
+    free(comp_size)
+    return (count, largest_size)

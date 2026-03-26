@@ -18,7 +18,7 @@ def sparse_matrix_vector(n: int) -> float:
         n: Matrix dimension.
 
     Returns:
-        Sum of the result vector as a float.
+        Tuple of (sum of result vector, result[0], result[n//2]).
     """
     # Build CSR arrays
     nnz = 3 * n
@@ -40,11 +40,15 @@ def sparse_matrix_vector(n: int) -> float:
     vec = [i * 0.1 for i in range(n)]
 
     # SpMV
+    result = [0.0] * n
     total = 0.0
     for i in range(n):
         row_sum = 0.0
         for j in range(row_ptr[i], row_ptr[i + 1]):
             row_sum += values[j] * vec[col_idx[j]]
+        result[i] = row_sum
         total += row_sum
 
-    return total
+    result_at_0 = result[0]
+    result_at_half = result[n // 2]
+    return (total, result_at_0, result_at_half)

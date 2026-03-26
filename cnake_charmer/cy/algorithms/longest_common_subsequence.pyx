@@ -44,8 +44,9 @@ def longest_common_subsequence(int n):
                 dp[i * stride + j] = val1 if val1 > val2 else val2
 
     cdef int result = dp[n * stride + n]
+    cdef int result_mid = dp[(n // 2) * stride + (n // 2)]
 
     free(a)
     free(b)
     free(dp)
-    return result
+    return (result, result_mid)

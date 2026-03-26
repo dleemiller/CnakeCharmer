@@ -16,7 +16,7 @@ def strongly_connected(n: int) -> int:
         n: Number of nodes.
 
     Returns:
-        Number of strongly connected components.
+        Tuple of (SCC count, largest SCC size).
     """
     # Build adjacency list
     adj = [[] for _ in range(n)]
@@ -31,6 +31,7 @@ def strongly_connected(n: int) -> int:
     index = [-1] * n
     lowlink = [-1] * n
     scc_count = 0
+    largest_scc_size = 0
 
     for node in range(n):
         if index[node] != -1:
@@ -65,10 +66,14 @@ def strongly_connected(n: int) -> int:
                     lowlink[parent] = lowlink[v]
             if lowlink[v] == index[v]:
                 scc_count += 1
+                scc_size = 0
                 while True:
                     w = stack.pop()
                     on_stack[w] = False
+                    scc_size += 1
                     if w == v:
                         break
+                if scc_size > largest_scc_size:
+                    largest_scc_size = scc_size
 
-    return scc_count
+    return (scc_count, largest_scc_size)

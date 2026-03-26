@@ -17,7 +17,7 @@ def partition_equal_sum(int n):
     if items == NULL:
         raise MemoryError("Failed to allocate items")
 
-    cdef int i, j, total, target, val
+    cdef int i, j, total, target, val, reachable_count
 
     total = 0
     for i in range(n):
@@ -26,7 +26,7 @@ def partition_equal_sum(int n):
 
     if total % 2 != 0:
         free(items)
-        return 0
+        return (0, 0)
 
     target = total // 2
 
@@ -46,6 +46,10 @@ def partition_equal_sum(int n):
                 dp[j] = 1
 
     cdef int result = dp[target]
+    reachable_count = 0
+    for j in range(target + 1):
+        if dp[j]:
+            reachable_count += 1
     free(dp)
     free(items)
-    return result
+    return (1 if result else 0, reachable_count)

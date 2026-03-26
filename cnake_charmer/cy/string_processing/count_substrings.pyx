@@ -19,7 +19,7 @@ def count_substrings(int n):
         if counts: free(counts)
         raise MemoryError()
 
-    cdef int i, c1, c2, total
+    cdef int i, c1, c2, total, unique_pairs
 
     # Build deterministic character array
     for i in range(n):
@@ -34,11 +34,14 @@ def count_substrings(int n):
         c2 = chars[i + 1]
         counts[c1 * 26 + c2] += 1
 
-    # Sum all counts
+    # Sum all counts and count unique pairs
     total = 0
+    unique_pairs = 0
     for i in range(676):
         total += counts[i]
+        if counts[i] > 0:
+            unique_pairs += 1
 
     free(chars)
     free(counts)
-    return total
+    return (total, unique_pairs)

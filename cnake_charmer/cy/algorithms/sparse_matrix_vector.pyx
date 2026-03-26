@@ -26,6 +26,15 @@ def sparse_matrix_vector(int n):
 
     cdef int i, j, base
     cdef double row_sum, total
+    cdef double *result = <double *>malloc(n * sizeof(double))
+    cdef double result_at_0, result_at_half
+
+    if not result:
+        free(row_ptr)
+        free(col_idx)
+        free(vals)
+        free(vec)
+        raise MemoryError()
 
     # Build CSR
     row_ptr[0] = 0
@@ -49,10 +58,15 @@ def sparse_matrix_vector(int n):
         row_sum = 0.0
         for j in range(row_ptr[i], row_ptr[i + 1]):
             row_sum += vals[j] * vec[col_idx[j]]
+        result[i] = row_sum
         total += row_sum
 
+    result_at_0 = result[0]
+    result_at_half = result[n / 2]
+
+    free(result)
     free(row_ptr)
     free(col_idx)
     free(vals)
     free(vec)
-    return total
+    return (total, result_at_0, result_at_half)

@@ -18,7 +18,7 @@ def bfs_shortest_path(int n):
         n: Number of nodes in the graph.
 
     Returns:
-        Sum of shortest path distances from node 0 to all reachable nodes.
+        Tuple of (total distance sum, max distance, reachable node count).
     """
     cdef int EDGES_PER_NODE = 3
     cdef int i, u, v, head, tail
@@ -63,11 +63,16 @@ def bfs_shortest_path(int n):
 
     # Sum distances
     cdef long long total = 0
+    cdef int max_dist = 0
+    cdef int reachable_count = 0
     for i in range(n):
         if dist[i] != -1:
             total += dist[i]
+            if dist[i] > max_dist:
+                max_dist = dist[i]
+            reachable_count += 1
 
     free(adj)
     free(dist)
     free(queue)
-    return total
+    return (total, max_dist, reachable_count)

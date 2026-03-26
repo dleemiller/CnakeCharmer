@@ -72,7 +72,7 @@ def huffman_frequency(n: int) -> int:
     freq_list.sort()
 
     if len(freq_list) == 1:
-        return freq_list[0][0]
+        return (freq_list[0][0], 0, 1)
 
     # Use a list-based priority queue simulation
     # Each entry: (combined_freq, [list of (original_freq, depth)])
@@ -96,7 +96,12 @@ def huffman_frequency(n: int) -> int:
 
     # Sum freq * depth
     total = 0
+    max_depth = 0
     for f, d in queue[0][1]:
         total += f * d
+        if d > max_depth:
+            max_depth = d
 
-    return total
+    num_symbols = len(freq_list)
+
+    return (total, max_depth, num_symbols)

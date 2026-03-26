@@ -53,7 +53,8 @@ def longest_palindrome(int n):
         curr = tmp
 
     cdef int result = prev[n - 1]
+    cdef int result_mid = prev[n // 2]
     free(s)
     free(prev)
     free(curr)
-    return result
+    return (result, result_mid)

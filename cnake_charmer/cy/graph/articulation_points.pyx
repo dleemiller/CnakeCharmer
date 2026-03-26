@@ -44,6 +44,7 @@ def articulation_points(int n):
     cdef int parent_node, start
     cdef int total_edges = 0
     cdef int count = 0
+    cdef long ap_index_sum = 0
 
     memset(degree, 0, n * sizeof(int))
 
@@ -155,6 +156,7 @@ def articulation_points(int n):
     for i in range(n):
         if is_ap[i]:
             count += 1
+            ap_index_sum += i
 
     free(degree)
     free(disc)
@@ -167,6 +169,6 @@ def articulation_points(int n):
     free(adj_offset)
     free(adj_list)
     free(adj_pos)
-    return count
+    return (count, ap_index_sum)
 
 

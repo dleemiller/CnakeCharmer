@@ -26,7 +26,7 @@ def pagerank(int n):
         n: Number of nodes.
 
     Returns:
-        Sum of top-10 PageRank values.
+        Tuple of (sum of top-10 PageRank values, PageRank of node 0).
     """
     cdef double damping = 0.85
     cdef int iterations = 20
@@ -67,6 +67,9 @@ def pagerank(int n):
         rank_arr = new_rank
         new_rank = tmp
 
+    # Capture rank of node 0 before sorting
+    cdef double rank_at_0 = rank_arr[0]
+
     # Sort descending to find top 10
     qsort(rank_arr, n, sizeof(double), _compare_doubles_desc)
 
@@ -81,4 +84,4 @@ def pagerank(int n):
     free(adj1)
     free(rank_arr)
     free(new_rank)
-    return total
+    return (total, rank_at_0)

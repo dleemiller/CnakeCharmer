@@ -18,7 +18,7 @@ def count_inversions(n: int) -> int:
         n: Size of the permutation.
 
     Returns:
-        Total number of inversions as an integer.
+        Tuple of (total inversions, positional checksum of sorted array).
     """
     arr = [(i * 7 + 13) % n for i in range(n)]
 
@@ -45,5 +45,6 @@ def count_inversions(n: int) -> int:
         merged.extend(right[j:])
         return merged, inversions
 
-    _, total = merge_count(arr)
-    return total
+    sorted_arr, total = merge_count(arr)
+    checksum = sum(i * sorted_arr[i] for i in range(n)) % (10**9 + 7)
+    return (total, checksum)
