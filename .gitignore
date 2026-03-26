@@ -177,6 +177,8 @@ cnake_charmer/pp/**/*.c
 cnake_charmer/pp/**/*.html
 cnake_charmer/cy_simd/**/*.c
 cnake_charmer/cy_simd/**/*.html
+cnake_charmer/engine/**/*.c
+cnake_charmer/engine/**/*.html
 
 # ART / training output
 .art/

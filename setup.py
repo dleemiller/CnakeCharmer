@@ -6,6 +6,22 @@ from setuptools import Extension, find_packages, setup
 
 SIMD_COMPILE_ARGS = ["-mavx2", "-mfma", "-O3"]
 SIMD_CATEGORIES = {"nn_ops"}
+ENGINE_DIRS = ["cnake_charmer/engine"]  # always compiled with SIMD flags
+
+
+def _get_engine_extensions():
+    """Collect engine .pyx files, all compiled with SIMD flags."""
+    extensions = []
+    for engine_dir in ENGINE_DIRS:
+        for root, _, files in os.walk(engine_dir):
+            for f in files:
+                if f.endswith(".pyx"):
+                    file_path = os.path.join(root, f)
+                    module_name = file_path.replace(os.path.sep, ".").replace(".pyx", "")
+                    extensions.append(
+                        Extension(module_name, [file_path], extra_compile_args=SIMD_COMPILE_ARGS)
+                    )
+    return extensions
 
 
 def get_cython_extensions(syntax: Literal["cy", "pp", "cy_simd"]):
@@ -51,7 +67,8 @@ setup(
     ext_modules=cythonize(
         get_cython_extensions(syntax="cy")
         + get_cython_extensions(syntax="pp")
-        + get_cython_extensions(syntax="cy_simd"),
+        + get_cython_extensions(syntax="cy_simd")
+        + _get_engine_extensions(),
         compiler_directives={
             "language_level": "3",
             "boundscheck": False,

@@ -138,7 +138,7 @@
     "pascal_triangle_row": "1c1855bdfa3bf17e",
     "attention_scores": "d82d137346f8394d",
     "totient_sum": "e49b15eee92ababc",
-    "gemm": "e1991ad23660ff49",
+    "gemm": "8846d80039811e0c",
     "batch_norm": "9b771e81b5d7198b",
     "layer_norm": "6e114deb6c67cec0",
     "conv1d": "de6a96d48e070606",
@@ -158,7 +158,7 @@
     "ewma": "aa5a4a7dcce52673",
     "great_circle": "ed234d63a349bfba",
     "histogram": "aaf120dd51f8895e",
-    "relu": "add18a411eeae2be",
+    "relu": "0f875290272973b2",
     "lagrange_interpolation": "7569eee14015ebde",
     "mandelbrot_count": "b9ba7a4a7aef2e9d",
     "fft_naive": "da55bc1a62a62f21",
@@ -1932,21 +1932,21 @@
         "benchmark": "gemm",
         "category": "nn_ops",
         "syntax": "cython",
-        "py_avg": 0.17991297119297087,
-        "py_std": 0.0010565252079553944,
-        "cy_avg": 0.0036087523913010955,
-        "cy_std": 1.9081446579841685e-05,
-        "speedup": 49.85461779717872
+        "py_avg": 0.17972300860565155,
+        "py_std": 0.0007710219753351925,
+        "cy_avg": 0.003573170374147594,
+        "cy_std": 2.8093111261277654e-05,
+        "speedup": 50.29791187847453
       },
       {
         "benchmark": "gemm",
         "category": "nn_ops",
         "syntax": "simd",
-        "py_avg": 0.17991297119297087,
-        "py_std": 0.0010565252079553944,
-        "cy_avg": 0.0011306307278573513,
-        "cy_std": 5.186244709532583e-06,
-        "speedup": 159.12619988130203
+        "py_avg": 0.17972300860565155,
+        "py_std": 0.0007710219753351925,
+        "cy_avg": 0.0002622718689963222,
+        "cy_std": 1.1303489092640653e-06,
+        "speedup": 685.2546149666238
       }
     ],
     "batch_norm": [
@@ -2182,21 +2182,21 @@
         "benchmark": "relu",
         "category": "nn_ops",
         "syntax": "cython",
-        "py_avg": 0.3657330732094124,
-        "py_std": 0.0017920298215913007,
-        "cy_avg": 0.001970214489847422,
-        "cy_std": 0.000919719240074018,
-        "speedup": 185.6310950376452
+        "py_avg": 0.4052278598770499,
+        "py_std": 0.0016263618675833832,
+        "cy_avg": 0.033144522667862476,
+        "cy_std": 0.0009707631151190084,
+        "speedup": 12.226088272194854
       },
       {
         "benchmark": "relu",
         "category": "nn_ops",
         "syntax": "simd",
-        "py_avg": 0.3657330732094124,
-        "py_std": 0.0017920298215913007,
-        "cy_avg": 0.0015378437703475357,
-        "cy_std": 4.643338896379026e-06,
-        "speedup": 237.8219948355097
+        "py_avg": 0.4052278598770499,
+        "py_std": 0.0016263618675833832,
+        "cy_avg": 0.02880048982333392,
+        "cy_std": 0.00014457559258224806,
+        "speedup": 14.070172499244704
       }
     ],
     "lagrange_interpolation": [

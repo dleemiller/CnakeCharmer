@@ -21,7 +21,8 @@ from Cython.Build import cythonize
 
 setup(
     ext_modules=cythonize(
-        [Extension("{module_name}", ["{module_name}.pyx"])],
+        [Extension("{module_name}", ["{module_name}.pyx"],
+                   extra_compile_args={extra_compile_args})],
         compiler_directives={{
             "language_level": "3",
             "boundscheck": {boundscheck},
@@ -51,6 +52,7 @@ def compile_cython(
     wraparound: bool = False,
     keep_build: bool = False,
     extra_deps: list | None = None,
+    extra_compile_args: list | None = None,
     timeout: int = 120,
 ) -> CompilationResult:
     """
@@ -64,6 +66,7 @@ def compile_cython(
         wraparound: Enable negative index wraparound.
         keep_build: If True, don't delete the temp directory (for debugging).
         extra_deps: Additional pip packages to install before compiling.
+        extra_compile_args: Extra compiler flags (e.g. ["-mavx2", "-mfma", "-O3"]).
         timeout: Subprocess timeout in seconds.
 
     Returns:
@@ -84,6 +87,7 @@ def compile_cython(
             boundscheck=boundscheck,
             wraparound=wraparound,
             annotate=annotate,
+            extra_compile_args=extra_compile_args or [],
         )
         setup_path = os.path.join(tmpdir, "setup.py")
         with open(setup_path, "w") as f:
