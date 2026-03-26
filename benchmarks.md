@@ -302,25 +302,26 @@ Compares portable Cython (scalar) vs platform-optimized SIMD.
 
 | Kernel | Size | Portable (ms) | SIMD (ms) | SIMD ISA | Speedup |
 |--------|------|--------------|-----------|----------|----------|
-| relu | 5,000,000 | 4.391 | 1.131 | avx2+fma | 3.9x |
-| sigmoid | 2,000,000 | 6.562 | 0.487 | avx2+fma | 13.5x |
-| gelu | 2,000,000 | 12.685 | 12.724 | avx2+fma | 1.0x |
-| silu | 2,000,000 | 5.687 | 5.675 | avx2+fma | 1.0x |
-| softmax | 1,000,000 | 3.410 | 2.792 | avx2+fma | 1.2x |
-| elementwise_add | 5,000,000 | 4.561 | 1.555 | avx2+fma | 2.9x |
-| elementwise_mul | 5,000,000 | 1.563 | 1.529 | avx2+fma | 1.0x |
-| residual_add | 5,000,000 | 1.521 | 1.555 | avx2+fma | 1.0x |
-| gemm | 200x200 | 3.342 | 0.234 | avx2+fma | 14.3x |
-| batch_norm | 5,000,000 | 4.064 | 0.977 | avx2+fma | 4.2x |
-| layer_norm | 1,000,000 | 1.522 | 0.223 | avx2+fma | 6.8x |
-| conv1d | 500,000 | 1.364 | 0.169 | avx2+fma | 8.1x |
-| max_pool_1d | 5,000,000 | 2.111 | 1.207 | avx2+fma | 1.7x |
-| attention_scores | 128x64d | 0.532 | 0.050 | avx2+fma | 10.7x |
-| avg_pool_1d | 5,000,000 | 1.496 | 1.502 | avx2+fma | 1.0x |
-| conv2d | 256x256 | 0.301 | 0.055 | avx2+fma | 5.5x |
-| cross_entropy | 100,000 | 0.347 | 0.348 | avx2+fma | 1.0x |
-| depthwise_conv | 64x10000 | 1.486 | 0.189 | avx2+fma | 7.8x |
-| dropout_mask | 5,000,000 | 5.541 | 3.598 | avx2+fma | 1.5x |
-| embedding_lookup | 10000v,64d,50000n | 1.260 | 0.272 | avx2+fma | 4.6x |
-| global_avg_pool | 256x10000 | 0.999 | 0.184 | avx2+fma | 5.4x |
-| instance_norm | 64x10000 | 0.756 | 0.146 | avx2+fma | 5.2x |
+| relu | 5,000,000 | 4.623 | 1.154 | avx2+fma | 4.0x |
+| sigmoid | 2,000,000 | 6.560 | 0.491 | avx2+fma | 13.4x |
+| gelu | 2,000,000 | 12.687 | 12.678 | avx2+fma | 1.0x |
+| silu | 2,000,000 | 5.684 | 5.677 | avx2+fma | 1.0x |
+| softmax | 1,000,000 | 3.441 | 2.762 | avx2+fma | 1.2x |
+| elementwise_add | 5,000,000 | 4.939 | 1.532 | avx2+fma | 3.2x |
+| elementwise_mul | 5,000,000 | 1.528 | 1.501 | avx2+fma | 1.0x |
+| residual_add | 5,000,000 | 1.532 | 1.513 | avx2+fma | 1.0x |
+| gemm | 200x200 | 3.402 | 0.244 | avx2+fma | 14.0x |
+| batch_norm | 5,000,000 | 4.066 | 1.035 | avx2+fma | 3.9x |
+| layer_norm | 1,000,000 | 1.549 | 0.222 | avx2+fma | 7.0x |
+| conv1d | 500,000 | 1.360 | 0.161 | avx2+fma | 8.4x |
+| max_pool_1d | 5,000,000 | 2.043 | 1.229 | avx2+fma | 1.7x |
+| attention_scores | 128x64d | 0.417 | 0.049 | avx2+fma | 8.5x |
+| avg_pool_1d | 5,000,000 | 1.505 | 1.513 | avx2+fma | 1.0x |
+| conv2d | 256x256 | 0.303 | 0.053 | avx2+fma | 5.7x |
+| cross_entropy | 100,000 | 0.348 | 0.346 | avx2+fma | 1.0x |
+| depthwise_conv | 64x10000 | 1.487 | 0.177 | avx2+fma | 8.4x |
+| dropout_mask | 5,000,000 | 5.538 | 3.531 | avx2+fma | 1.6x |
+| embedding_lookup | 10000v,64d,50000n | 1.276 | 0.193 | avx2+fma | 6.6x |
+| global_avg_pool | 256x10000 | 0.993 | 0.189 | avx2+fma | 5.3x |
+| instance_norm | 64x10000 | 0.745 | 0.167 | avx2+fma | 4.5x |
+
