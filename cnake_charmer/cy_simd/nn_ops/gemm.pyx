@@ -21,7 +21,7 @@ cdef extern from "immintrin.h":
     void _mm256_storeu_pd(double *mem, __m256d a)
 
 
-@cython_benchmark(syntax="cy_simd", args=(300,))
+@cython_benchmark(syntax="cy_simd", args=(200,))
 def gemm(int n):
     """Compute C = A * B for n×n matrices, return trace(C).
 
