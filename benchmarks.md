@@ -3,18 +3,16 @@
 | Category | Benchmark | Variant | Python (ms) | Cython (ms) | Speedup |
 |----------|-----------|---------|-------------|-------------|----------|
 | nn_ops | conv2d | cython | 232.440 | 0.170 | 1367.2x |
+| nn_ops | gemm | simd | 179.723 | 0.262 | 685.3x |
 | cryptography | siphash | cython | 277.196 | 0.420 | 659.8x |
 | nn_ops | max_pool_1d | cython | 166.446 | 0.529 | 314.8x |
-| nn_ops | relu | simd | 365.733 | 1.538 | 237.8x |
 | math_problems | matrix_power | cython | 370.464 | 1.977 | 187.4x |
-| nn_ops | relu | cython | 365.733 | 1.970 | 185.6x |
 | graph | topological_sort_dfs | cython | 56.070 | 0.308 | 181.8x |
 | statistics | weighted_percentile | cython | 234.112 | 1.333 | 175.6x |
 | image_processing | sobel_edge | cython | 127.930 | 0.732 | 174.7x |
 | nn_ops | attention_scores | cython | 236.664 | 1.370 | 172.8x |
 | simulation | diffusion_2d | cython | 319.785 | 1.877 | 170.4x |
 | dynamic_programming | matrix_chain | cython | 149.607 | 0.937 | 159.7x |
-| nn_ops | gemm | simd | 179.913 | 1.131 | 159.1x |
 | image_processing | box_blur | cython | 149.270 | 0.940 | 158.7x |
 | diff_equations | finite_difference_laplacian | cython | 482.093 | 3.137 | 153.7x |
 | dynamic_programming | egg_drop | cython | 271.495 | 1.810 | 150.0x |
@@ -116,7 +114,7 @@
 | numerical | lagrange_interpolation | cython | 188.221 | 3.703 | 50.8x |
 | numerical | nbody_energy | cython | 212.275 | 4.187 | 50.7x |
 | graph | euler_path | cython | 61.550 | 1.223 | 50.3x |
-| nn_ops | gemm | cython | 179.913 | 3.609 | 49.9x |
+| nn_ops | gemm | cython | 179.723 | 3.573 | 50.3x |
 | statistics | histogram_2d | cython | 84.625 | 1.699 | 49.8x |
 | algorithms | reservoir_sampling | cython | 193.192 | 3.896 | 49.6x |
 | dynamic_programming | partition_equal_sum | cython | 371.184 | 7.511 | 49.4x |
@@ -200,12 +198,14 @@
 | optimization | simplex_nelder_mead | cython | 301.420 | 20.954 | 14.4x |
 | optimization | newton_method_nd | cython | 270.150 | 18.962 | 14.2x |
 | diff_equations | adams_bashforth | cython | 340.786 | 24.134 | 14.1x |
+| nn_ops | relu | simd | 405.228 | 28.800 | 14.1x |
 | simulation | predator_prey | cython | 27.483 | 1.962 | 14.0x |
 | statistics | kernel_density | cython | 213.455 | 15.692 | 13.6x |
 | numerical | great_circle | cython | 39.248 | 2.945 | 13.3x |
 | simulation | epidemic_sir | cython | 0.044 | 0.003 | 13.2x |
 | diff_equations | shooting_method | cython | 207.357 | 15.860 | 13.1x |
 | optimization | gradient_descent | cython | 56.018 | 4.327 | 12.9x |
+| nn_ops | relu | cython | 405.228 | 33.145 | 12.2x |
 | numerical | gauss_legendre_pi | cython | 0.007 | 0.001 | 12.2x |
 | dsp | iir_biquad | cython | 386.109 | 32.084 | 12.0x |
 | string_processing | burrows_wheeler | cython | 837.695 | 70.106 | 11.9x |
@@ -261,3 +261,13 @@
 | string_processing | suffix_array_naive | cython | 11.998 | 5.623 | 2.1x |
 | math_problems | pascal_triangle_row | cython | 77.312 | 50.708 | 1.5x |
 | algorithms | max_flow | cython | 0.512 | 0.405 | 1.3x |
+
+
+## Kernel-Only Benchmark (vs XNNPACK C)
+
+Pre-allocated tensors, timing only the compute kernel.
+
+| Kernel | Size | XNNPACK C (ms) | Cython scalar (ms) | Cython AVX2+FMA (ms) | AVX vs C |
+|--------|------|----------------|--------------------|-----------------------|-----------|
+| relu | 5,000,000 | 1.091 | 3.099 | 1.023 | 0.9x |
+| gemm | 200 | 0.198 | 3.449 | 0.248 | 1.3x |
