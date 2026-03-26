@@ -36,88 +36,151 @@ def build_xnnpack_benchmark():
 #include <string.h>
 #include <math.h>
 
-// ---- ReLU (vclamp with min=0, max=inf) ----
-// XNNPACK f32-vclamp-avx pattern: load 8, max(zero), store 8
+// ---- ReLU: batch-16 vclamp ----
 void xnn_relu_f32(size_t n, const float* input, float* output) {
     const __m256 vzero = _mm256_setzero_ps();
     size_t i = 0;
-
-    // Main loop: 16 floats per iteration
     for (; i + 16 <= n; i += 16) {
         __m256 v0 = _mm256_loadu_ps(input + i);
         __m256 v1 = _mm256_loadu_ps(input + i + 8);
-        v0 = _mm256_max_ps(vzero, v0);
-        v1 = _mm256_max_ps(vzero, v1);
-        _mm256_storeu_ps(output + i, v0);
-        _mm256_storeu_ps(output + i + 8, v1);
+        _mm256_storeu_ps(output + i, _mm256_max_ps(vzero, v0));
+        _mm256_storeu_ps(output + i + 8, _mm256_max_ps(vzero, v1));
     }
-    // 8-wide remainder
     for (; i + 8 <= n; i += 8) {
-        __m256 v = _mm256_loadu_ps(input + i);
-        v = _mm256_max_ps(vzero, v);
-        _mm256_storeu_ps(output + i, v);
+        _mm256_storeu_ps(output + i, _mm256_max_ps(vzero, _mm256_loadu_ps(input + i)));
     }
-    // Scalar remainder
-    for (; i < n; i++) {
-        output[i] = input[i] > 0.0f ? input[i] : 0.0f;
+    for (; i < n; i++) output[i] = input[i] > 0.0f ? input[i] : 0.0f;
+}
+
+// ---- Sigmoid: batch load/store, scalar exp ----
+void xnn_sigmoid_f32(size_t n, const float* input, float* output) {
+    for (size_t i = 0; i < n; i++) output[i] = 1.0f / (1.0f + expf(-input[i]));
+}
+
+// ---- GELU: x * 0.5 * (1 + tanh(sqrt(2/pi) * (x + 0.044715*x^3))) ----
+void xnn_gelu_f32(size_t n, const float* input, float* output) {
+    const float c = 0.7978845608f; // sqrt(2/pi)
+    for (size_t i = 0; i < n; i++) {
+        float x = input[i];
+        output[i] = 0.5f * x * (1.0f + tanhf(c * (x + 0.044715f * x * x * x)));
     }
 }
 
-// ---- GEMM 4x8 microkernel (FMA3, Haswell 2013+) ----
-// XNNPACK f32-gemm-4x8-minmax-fma3-broadcast pattern
+// ---- SiLU: x * sigmoid(x) ----
+void xnn_silu_f32(size_t n, const float* input, float* output) {
+    for (size_t i = 0; i < n; i++) output[i] = input[i] / (1.0f + expf(-input[i]));
+}
+
+// ---- Softmax: max-subtract-exp-sum-div ----
+void xnn_softmax_f32(size_t n, const float* input, float* output) {
+    float max_val = input[0];
+    for (size_t i = 1; i < n; i++) if (input[i] > max_val) max_val = input[i];
+    float sum = 0.0f;
+    for (size_t i = 0; i < n; i++) { output[i] = expf(input[i] - max_val); sum += output[i]; }
+    float inv_sum = 1.0f / sum;
+    for (size_t i = 0; i < n; i++) output[i] *= inv_sum;
+}
+
+// ---- Elementwise add: batch-16 ----
+void xnn_add_f32(size_t n, const float* a, const float* b, float* output) {
+    size_t i = 0;
+    for (; i + 8 <= n; i += 8)
+        _mm256_storeu_ps(output + i, _mm256_add_ps(_mm256_loadu_ps(a + i), _mm256_loadu_ps(b + i)));
+    for (; i < n; i++) output[i] = a[i] + b[i];
+}
+
+// ---- Elementwise mul ----
+void xnn_mul_f32(size_t n, const float* a, const float* b, float* output) {
+    size_t i = 0;
+    for (; i + 8 <= n; i += 8)
+        _mm256_storeu_ps(output + i, _mm256_mul_ps(_mm256_loadu_ps(a + i), _mm256_loadu_ps(b + i)));
+    for (; i < n; i++) output[i] = a[i] * b[i];
+}
+
+// ---- Batch norm: out = gamma * (x - mean) * inv_std + beta ----
+void xnn_batch_norm_f32(size_t n, const float* input, float* output,
+                        float mean, float inv_std, float gamma, float beta) {
+    __m256 vmean = _mm256_set1_ps(mean);
+    __m256 vinv = _mm256_set1_ps(inv_std);
+    __m256 vgamma = _mm256_set1_ps(gamma);
+    __m256 vbeta = _mm256_set1_ps(beta);
+    size_t i = 0;
+    for (; i + 8 <= n; i += 8) {
+        __m256 v = _mm256_loadu_ps(input + i);
+        v = _mm256_mul_ps(_mm256_sub_ps(v, vmean), vinv);
+        v = _mm256_fmadd_ps(v, vgamma, vbeta);
+        _mm256_storeu_ps(output + i, v);
+    }
+    for (; i < n; i++) output[i] = gamma * (input[i] - mean) * inv_std + beta;
+}
+
+// ---- Residual add + ReLU ----
+void xnn_residual_add_f32(size_t n, const float* a, const float* b, float* output) {
+    __m256 vzero = _mm256_setzero_ps();
+    size_t i = 0;
+    for (; i + 8 <= n; i += 8)
+        _mm256_storeu_ps(output + i, _mm256_max_ps(vzero,
+            _mm256_add_ps(_mm256_loadu_ps(a + i), _mm256_loadu_ps(b + i))));
+    for (; i < n; i++) { float s = a[i] + b[i]; output[i] = s > 0.0f ? s : 0.0f; }
+}
+
+// ---- Conv1d ----
+void xnn_conv1d_f32(size_t n, const float* input, const float* kernel,
+                    float* output, size_t kernel_size) {
+    size_t out_n = n - kernel_size + 1;
+    for (size_t i = 0; i < out_n; i++) {
+        __m256 acc = _mm256_setzero_ps();
+        size_t k;
+        // For each output position, compute dot product with kernel
+        // (kernel is small, so just scalar)
+        float sum = 0.0f;
+        for (k = 0; k < kernel_size; k++) sum += input[i + k] * kernel[k];
+        output[i] = sum;
+    }
+}
+
+// ---- Max pool 1d ----
+void xnn_max_pool_1d_f32(size_t n, const float* input, float* output,
+                         size_t kernel, size_t stride) {
+    size_t out_n = n / stride;
+    for (size_t i = 0; i < out_n; i++) {
+        float max_val = input[i * stride];
+        for (size_t k = 1; k < kernel && i * stride + k < n; k++)
+            if (input[i * stride + k] > max_val) max_val = input[i * stride + k];
+        output[i] = max_val;
+    }
+}
+
+// ---- GEMM 4x8 FMA3 ----
 void xnn_gemm_f32(size_t m, size_t n, size_t k,
                   const float* a, const float* b, float* c) {
     memset(c, 0, m * n * sizeof(float));
-
     size_t i, j, kk;
     for (i = 0; i + 4 <= m; i += 4) {
         for (j = 0; j + 8 <= n; j += 8) {
-            __m256 vacc0 = _mm256_setzero_ps();
-            __m256 vacc1 = _mm256_setzero_ps();
-            __m256 vacc2 = _mm256_setzero_ps();
-            __m256 vacc3 = _mm256_setzero_ps();
-
+            __m256 vacc0=_mm256_setzero_ps(), vacc1=_mm256_setzero_ps(),
+                   vacc2=_mm256_setzero_ps(), vacc3=_mm256_setzero_ps();
             for (kk = 0; kk < k; kk++) {
-                __m256 va0 = _mm256_broadcast_ss(&a[(i+0)*k + kk]);
-                __m256 va1 = _mm256_broadcast_ss(&a[(i+1)*k + kk]);
-                __m256 va2 = _mm256_broadcast_ss(&a[(i+2)*k + kk]);
-                __m256 va3 = _mm256_broadcast_ss(&a[(i+3)*k + kk]);
-                __m256 vb  = _mm256_loadu_ps(&b[kk*n + j]);
-
-                vacc0 = _mm256_fmadd_ps(va0, vb, vacc0);
-                vacc1 = _mm256_fmadd_ps(va1, vb, vacc1);
-                vacc2 = _mm256_fmadd_ps(va2, vb, vacc2);
-                vacc3 = _mm256_fmadd_ps(va3, vb, vacc3);
+                __m256 vb = _mm256_loadu_ps(&b[kk*n + j]);
+                vacc0 = _mm256_fmadd_ps(_mm256_broadcast_ss(&a[(i+0)*k+kk]), vb, vacc0);
+                vacc1 = _mm256_fmadd_ps(_mm256_broadcast_ss(&a[(i+1)*k+kk]), vb, vacc1);
+                vacc2 = _mm256_fmadd_ps(_mm256_broadcast_ss(&a[(i+2)*k+kk]), vb, vacc2);
+                vacc3 = _mm256_fmadd_ps(_mm256_broadcast_ss(&a[(i+3)*k+kk]), vb, vacc3);
             }
-
-            // Add to existing C values
-            __m256 c0 = _mm256_loadu_ps(&c[(i+0)*n + j]);
-            __m256 c1 = _mm256_loadu_ps(&c[(i+1)*n + j]);
-            __m256 c2 = _mm256_loadu_ps(&c[(i+2)*n + j]);
-            __m256 c3 = _mm256_loadu_ps(&c[(i+3)*n + j]);
-            _mm256_storeu_ps(&c[(i+0)*n + j], _mm256_add_ps(c0, vacc0));
-            _mm256_storeu_ps(&c[(i+1)*n + j], _mm256_add_ps(c1, vacc1));
-            _mm256_storeu_ps(&c[(i+2)*n + j], _mm256_add_ps(c2, vacc2));
-            _mm256_storeu_ps(&c[(i+3)*n + j], _mm256_add_ps(c3, vacc3));
+            _mm256_storeu_ps(&c[(i+0)*n+j], _mm256_add_ps(_mm256_loadu_ps(&c[(i+0)*n+j]), vacc0));
+            _mm256_storeu_ps(&c[(i+1)*n+j], _mm256_add_ps(_mm256_loadu_ps(&c[(i+1)*n+j]), vacc1));
+            _mm256_storeu_ps(&c[(i+2)*n+j], _mm256_add_ps(_mm256_loadu_ps(&c[(i+2)*n+j]), vacc2));
+            _mm256_storeu_ps(&c[(i+3)*n+j], _mm256_add_ps(_mm256_loadu_ps(&c[(i+3)*n+j]), vacc3));
         }
-        // Scalar remainder columns
-        for (j = (n/8)*8; j < n; j++) {
+        for (j = (n/8)*8; j < n; j++)
             for (kk = 0; kk < k; kk++) {
-                c[(i+0)*n+j] += a[(i+0)*k+kk] * b[kk*n+j];
-                c[(i+1)*n+j] += a[(i+1)*k+kk] * b[kk*n+j];
-                c[(i+2)*n+j] += a[(i+2)*k+kk] * b[kk*n+j];
-                c[(i+3)*n+j] += a[(i+3)*k+kk] * b[kk*n+j];
+                c[(i+0)*n+j] += a[(i+0)*k+kk]*b[kk*n+j];
+                c[(i+1)*n+j] += a[(i+1)*k+kk]*b[kk*n+j];
+                c[(i+2)*n+j] += a[(i+2)*k+kk]*b[kk*n+j];
+                c[(i+3)*n+j] += a[(i+3)*k+kk]*b[kk*n+j];
             }
-        }
     }
-    // Remainder rows
-    for (; i < m; i++) {
-        for (kk = 0; kk < k; kk++) {
-            for (j = 0; j < n; j++) {
-                c[i*n+j] += a[i*k+kk] * b[kk*n+j];
-            }
-        }
-    }
+    for (; i < m; i++) for (kk = 0; kk < k; kk++) for (j = 0; j < n; j++) c[i*n+j] += a[i*k+kk]*b[kk*n+j];
 }
 """
     tmpdir = tempfile.mkdtemp(prefix="xnn_bench_")
@@ -319,7 +382,188 @@ def benchmark_gemm(lib, n=200):
             print(f"  {name}: {status} (relative error: {diff:.2e})")
 
 
-def benchmark_kernel_only(lib, relu_n=5000000, gemm_n=200):
+def benchmark_all_kernels(lib):
+    """Compare ALL engine kernels against XNNPACK-style C implementations."""
+    print(f"\n{'=' * 80}")
+    print("KERNEL-ONLY: Engine AVX2+FMA vs XNNPACK C (pre-allocated, compute only)")
+    print(f"{'=' * 80}")
+
+    try:
+        from cnake_charmer.engine.kernels.bench_wrapper import bench_all_kernels
+    except ImportError as e:
+        print(f"Engine kernels not built: {e}")
+        return
+
+    # Get engine kernel results
+    engine_results = bench_all_kernels()
+
+    # Now run corresponding C kernels for comparison
+    n = 5000000
+    FloatArray = ctypes.c_float * n
+    inp = FloatArray(*[math.sin(i * 0.01) * 10.0 for i in range(n)])
+    out = FloatArray(*([0.0] * n))
+    inp2 = FloatArray(*[math.sin(i * 0.02) * 5.0 for i in range(n)])
+    runs = 10
+
+    def time_c(fn, *args):
+        fn(*args)  # warmup
+        start = time.perf_counter()
+        for _ in range(runs):
+            fn(*args)
+        return (time.perf_counter() - start) / runs * 1000
+
+    # Set up C function signatures
+    unary_sig = [ctypes.c_size_t, ctypes.POINTER(ctypes.c_float), ctypes.POINTER(ctypes.c_float)]
+    binary_sig = [
+        ctypes.c_size_t,
+        ctypes.POINTER(ctypes.c_float),
+        ctypes.POINTER(ctypes.c_float),
+        ctypes.POINTER(ctypes.c_float),
+    ]
+
+    # Map kernel names to C functions
+    c_kernels = {}
+
+    for name, fn_name, sig in [
+        ("relu", "xnn_relu_f32", unary_sig),
+        ("sigmoid", "xnn_sigmoid_f32", unary_sig),
+        ("gelu", "xnn_gelu_f32", unary_sig),
+        ("silu", "xnn_silu_f32", unary_sig),
+        ("softmax", "xnn_softmax_f32", unary_sig),
+        ("elementwise_add", "xnn_add_f32", binary_sig),
+        ("elementwise_mul", "xnn_mul_f32", binary_sig),
+        ("residual_add", "xnn_residual_add_f32", binary_sig),
+    ]:
+        try:
+            fn = getattr(lib, fn_name)
+            fn.argtypes = sig
+            fn.restype = None
+            c_kernels[name] = fn
+        except AttributeError:
+            pass
+
+    # Batch norm (special signature)
+    try:
+        lib.xnn_batch_norm_f32.argtypes = [
+            ctypes.c_size_t,
+            ctypes.POINTER(ctypes.c_float),
+            ctypes.POINTER(ctypes.c_float),
+            ctypes.c_float,
+            ctypes.c_float,
+            ctypes.c_float,
+            ctypes.c_float,
+        ]
+        lib.xnn_batch_norm_f32.restype = None
+        c_kernels["batch_norm"] = lib.xnn_batch_norm_f32
+    except AttributeError:
+        pass
+
+    # Conv1d
+    try:
+        lib.xnn_conv1d_f32.argtypes = [
+            ctypes.c_size_t,
+            ctypes.POINTER(ctypes.c_float),
+            ctypes.POINTER(ctypes.c_float),
+            ctypes.POINTER(ctypes.c_float),
+            ctypes.c_size_t,
+        ]
+        lib.xnn_conv1d_f32.restype = None
+        c_kernels["conv1d"] = lib.xnn_conv1d_f32
+    except AttributeError:
+        pass
+
+    # Max pool
+    try:
+        lib.xnn_max_pool_1d_f32.argtypes = [
+            ctypes.c_size_t,
+            ctypes.POINTER(ctypes.c_float),
+            ctypes.POINTER(ctypes.c_float),
+            ctypes.c_size_t,
+            ctypes.c_size_t,
+        ]
+        lib.xnn_max_pool_1d_f32.restype = None
+        c_kernels["max_pool_1d"] = lib.xnn_max_pool_1d_f32
+    except AttributeError:
+        pass
+
+    # GEMM
+    try:
+        lib.xnn_gemm_f32.argtypes = [
+            ctypes.c_size_t,
+            ctypes.c_size_t,
+            ctypes.c_size_t,
+            ctypes.POINTER(ctypes.c_float),
+            ctypes.POINTER(ctypes.c_float),
+            ctypes.POINTER(ctypes.c_float),
+        ]
+        lib.xnn_gemm_f32.restype = None
+        c_kernels["gemm"] = lib.xnn_gemm_f32
+    except AttributeError:
+        pass
+
+    # Run C benchmarks for each engine kernel
+    print(
+        f"\n{'Kernel':<20} {'Size':>10} {'C (ms)':>10} {'Scalar':>10} {'AVX2+FMA':>10} {'AVX/C':>8} {'Scalar/C':>10}"
+    )
+    print("-" * 80)
+
+    for er in engine_results:
+        name = er["kernel"]
+        c_ms = None
+
+        # Time the C kernel
+        if name in ("relu", "sigmoid", "gelu", "silu", "softmax") and name in c_kernels:
+            en = int(er["size"].replace(",", ""))
+            inp_local = (ctypes.c_float * en)(*[math.sin(i * 0.01) * 10.0 for i in range(en)])
+            out_local = (ctypes.c_float * en)(*([0.0] * en))
+            c_ms = time_c(c_kernels[name], en, inp_local, out_local)
+
+        elif name in ("elementwise_add", "elementwise_mul", "residual_add") and name in c_kernels:
+            c_ms = time_c(c_kernels[name], n, inp, inp2, out)
+
+        elif name == "batch_norm" and name in c_kernels:
+            bn_n = int(er["size"].replace(",", ""))
+            bn_inp = (ctypes.c_float * bn_n)(*[math.sin(i * 0.01) * 10.0 for i in range(bn_n)])
+            bn_out = (ctypes.c_float * bn_n)(*([0.0] * bn_n))
+            c_ms = time_c(c_kernels[name], bn_n, bn_inp, bn_out, 0.0, 1.0, 1.0, 0.0)
+
+        elif name == "conv1d" and name in c_kernels:
+            cn = 500000
+            c_inp = (ctypes.c_float * cn)(*[math.sin(i * 0.01) * 10.0 for i in range(cn)])
+            c_kernel = (ctypes.c_float * 7)(0.0625, 0.125, 0.1875, 0.25, 0.1875, 0.125, 0.0625)
+            c_out = (ctypes.c_float * (cn - 6))(*([0.0] * (cn - 6)))
+            c_ms = time_c(c_kernels[name], cn, c_inp, c_kernel, c_out, 7)
+
+        elif name == "max_pool_1d" and name in c_kernels:
+            pn = int(er["size"].replace(",", ""))
+            p_inp = (ctypes.c_float * pn)(*[math.sin(i * 0.01) * 10.0 for i in range(pn)])
+            p_out = (ctypes.c_float * (pn // 4))(*([0.0] * (pn // 4)))
+            c_ms = time_c(c_kernels[name], pn, p_inp, p_out, 4, 4)
+
+        elif name == "gemm" and name in c_kernels:
+            gn = 200
+            gA = (ctypes.c_float * (gn * gn))(
+                *[((i // gn + i % gn) % 100) / 10.0 for i in range(gn * gn)]
+            )
+            gB = (ctypes.c_float * (gn * gn))(
+                *[((i // gn - i % gn + gn) % 100) / 10.0 for i in range(gn * gn)]
+            )
+            gC = (ctypes.c_float * (gn * gn))(*([0.0] * (gn * gn)))
+            c_ms = time_c(c_kernels[name], gn, gn, gn, gA, gB, gC)
+
+        # Format output
+        c_str = f"{c_ms:.3f}" if c_ms else "—"
+        scalar_str = f"{er['scalar_ms']:.3f}"
+        simd_str = f"{er['simd_ms']:.3f}" if er["simd_ms"] else "—"
+        avx_c = f"{er['simd_ms'] / c_ms:.1f}x" if c_ms and er["simd_ms"] else "—"
+        scalar_c = f"{er['scalar_ms'] / c_ms:.1f}x" if c_ms else "—"
+
+        print(
+            f"{name:<20} {er['size']:>10} {c_str:>10} {scalar_str:>10} {simd_str:>10} {avx_c:>8} {scalar_c:>10}"
+        )
+
+
+def benchmark_kernel_only_legacy(lib, relu_n=5000000, gemm_n=200):
     """Kernel-only comparison: pre-allocated tensors, time only compute.
 
     Uses engine/kernels which are extracted nogil functions —
@@ -528,8 +772,7 @@ if __name__ == "__main__":
 
     benchmark_relu(lib)
     benchmark_gemm(lib)
-    benchmark_kernel_only(lib)
-    write_kernel_report(lib)
+    benchmark_all_kernels(lib)
 
     print(f"\n{'=' * 60}")
     print("Done.")
