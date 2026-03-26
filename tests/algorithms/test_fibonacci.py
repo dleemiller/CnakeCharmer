@@ -2,8 +2,8 @@
 
 import pytest
 
-from cnake_charmer.cy.algorithms.fibonacci import fib as cy_fibonacci
-from cnake_charmer.py.algorithms.fibonacci import fib as py_fibonacci
+from cnake_charmer.cy.algorithms.fibonacci import fibonacci as cy_fibonacci
+from cnake_charmer.py.algorithms.fibonacci import fibonacci as py_fibonacci
 
 
 @pytest.mark.parametrize("n", [10, 100, 1000, 10000])

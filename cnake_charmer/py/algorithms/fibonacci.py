@@ -7,7 +7,7 @@ from cnake_charmer.benchmarks import python_benchmark
 
 
 @python_benchmark(args=(500000,))
-def fib(n: int) -> int:
+def fibonacci(n: int) -> int:
     """Compute sum of first n Fibonacci numbers modulo 10^9+7.
 
     Args:

@@ -8,7 +8,7 @@ from cnake_charmer.benchmarks import cython_benchmark
 
 
 @cython_benchmark(syntax="cy", args=(500000,))
-def fib(int n):
+def fibonacci(int n):
     """Compute sum of first n Fibonacci numbers modulo 10^9+7."""
     cdef long long mod = 1000000007
     cdef long long a = 0, b = 1, total = 0, temp
