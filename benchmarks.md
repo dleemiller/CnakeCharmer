@@ -128,6 +128,7 @@
 | bubble_sort | cython | 206.721 | 18.622 | 11.1x |
 | prime_factorization_sum | cython | 16.478 | 1.515 | 10.9x |
 | primes | cython | 0.650 | 0.062 | 10.5x |
+| burrows_wheeler | cython | 7.804 | 0.743 | 10.5x |
 | numerical_derivative | cython | 157.219 | 15.001 | 10.5x |
 | runge_kutta | cython | 168.758 | 16.337 | 10.3x |
 | sieve_of_eratosthenes | cython | 4.213 | 0.412 | 10.2x |
@@ -158,4 +159,3 @@
 | pascal_triangle_row | cython | 78.960 | 51.514 | 1.5x |
 | suffix_array_naive | cython | 7.789 | 5.471 | 1.4x |
 | max_flow | cython | 0.388 | 0.312 | 1.2x |
-| burrows_wheeler | cython | 2.814 | 421.833 | 0.0x |

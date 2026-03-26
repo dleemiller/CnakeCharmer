@@ -135,7 +135,7 @@
     "tim_sort_merge": "74cd532691f74ffc",
     "histogram_2d": "9a978bedbde74f24",
     "weighted_percentile": "a9759c4bc788ac96",
-    "burrows_wheeler": "58f99cd603103979",
+    "burrows_wheeler": "0b71d86c2beaa272",
     "longest_repeated_substring": "f2e596df0ad81a6a",
     "levenshtein_automaton": "b16cdc7b43e1d63f",
     "sparse_matrix_vector": "16cd5d5627069363",
@@ -1648,11 +1648,11 @@
       {
         "benchmark": "burrows_wheeler",
         "syntax": "cython",
-        "py_avg": 0.002813938446342945,
-        "py_std": 8.66813199060347e-05,
-        "cy_avg": 0.4218325768597424,
-        "cy_std": 0.002989813912697093,
-        "speedup": 0.006670747117946199
+        "py_avg": 0.007804170111194253,
+        "py_std": 0.00028722747812859865,
+        "cy_avg": 0.0007427197648212314,
+        "cy_std": 2.711298804939794e-06,
+        "speedup": 10.507556794415823
       }
     ],
     "longest_repeated_substring": [
