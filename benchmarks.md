@@ -263,11 +263,12 @@
 | algorithms | max_flow | cython | 0.512 | 0.405 | 1.3x |
 
 
-## Kernel-Only Benchmark (vs XNNPACK C)
+## Kernel-Only Benchmark (Inference Mode)
 
 Pre-allocated tensors, timing only the compute kernel.
+Compares portable Cython (scalar) vs platform-optimized SIMD.
 
-| Kernel | Size | XNNPACK C (ms) | Cython scalar (ms) | Cython AVX2+FMA (ms) | AVX vs C |
-|--------|------|----------------|--------------------|-----------------------|-----------|
-| relu | 5,000,000 | 1.091 | 3.099 | 1.023 | 0.9x |
-| gemm | 200 | 0.198 | 3.449 | 0.248 | 1.3x |
+| Kernel | Size | Portable (ms) | SIMD (ms) | SIMD ISA | Speedup |
+|--------|------|--------------|-----------|----------|----------|
+| relu | 5,000,000 | 2.862 | 1.149 | avx2+fma | 2.5x |
+| gemm | 200x200 | 3.359 | 0.236 | avx2+fma | 14.3x |
