@@ -8,13 +8,13 @@ SIMD_COMPILE_ARGS = ["-mavx2", "-mfma", "-O3"]
 SIMD_CATEGORIES = {"nn_ops"}
 
 
-def get_cython_extensions(syntax: Literal["cy", "pp"]):
+def get_cython_extensions(syntax: Literal["cy", "pp", "cy_simd"]):
     """
-    Walk through the cnake_charmer/cy directory (and its subdirectories)
-    and collect all .pyx files to compile as Cython extensions.
+    Walk through the cnake_charmer/{syntax} directory and collect
+    all .pyx or .py files to compile as Cython extensions.
     """
     extensions = []
-    file_extension = ".pyx" if syntax == "cy" else ".py"
+    file_extension = ".py" if syntax == "pp" else ".pyx"
     for root, _, files in os.walk(os.path.join("cnake_charmer", syntax)):
         for file in files:
             if file.endswith(file_extension):
