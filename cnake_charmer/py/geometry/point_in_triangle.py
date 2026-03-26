@@ -6,7 +6,7 @@ Keywords: geometry, point in triangle, barycentric, classification, benchmark
 from cnake_charmer.benchmarks import python_benchmark
 
 
-@python_benchmark(args=(5000000,))
+@python_benchmark(args=(2000000,))
 def point_in_triangle(n: int) -> int:
     """Count how many of n test points lie inside a fixed triangle.
 

@@ -11,7 +11,7 @@ import math
 from cnake_charmer.benchmarks import python_benchmark
 
 
-@python_benchmark(args=(10000,))
+@python_benchmark(args=(3000,))
 def cross_correlation(n: int) -> float:
     """Compute cross-correlation and return the maximum value.
 

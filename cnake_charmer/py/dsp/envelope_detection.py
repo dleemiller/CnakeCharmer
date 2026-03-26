@@ -11,7 +11,7 @@ import math
 from cnake_charmer.benchmarks import python_benchmark
 
 
-@python_benchmark(args=(50000,))
+@python_benchmark(args=(5000,))
 def envelope_detection(n: int) -> float:
     """Compute envelope via naive Hilbert transform and return sum.
 

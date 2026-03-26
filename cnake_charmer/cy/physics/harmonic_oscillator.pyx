@@ -9,7 +9,7 @@ from libc.math cimport sin
 from cnake_charmer.benchmarks import cython_benchmark
 
 
-@cython_benchmark(syntax="cy", args=(10000,))
+@cython_benchmark(syntax="cy", args=(3000,))
 def harmonic_oscillator(int n):
     """Simulate coupled oscillators using C arrays and Verlet integration."""
     cdef double *x = <double *>malloc(n * sizeof(double))

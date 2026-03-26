@@ -8,7 +8,7 @@ Keywords: cryptography, hash, fnv, rolling, cython, benchmark
 from cnake_charmer.benchmarks import cython_benchmark
 
 
-@cython_benchmark(syntax="cy", args=(10000000,))
+@cython_benchmark(syntax="cy", args=(3000000,))
 def simple_hash(int n):
     """Compute an FNV-1a style rolling hash over n bytes using typed arithmetic.
 

@@ -6,7 +6,7 @@ Keywords: siphash, hash, cryptography, bit operations, benchmark
 from cnake_charmer.benchmarks import python_benchmark
 
 
-@python_benchmark(args=(1000000,))
+@python_benchmark(args=(200000,))
 def siphash(n: int) -> int:
     """Compute SipHash-2-4 over n 8-byte blocks.
 

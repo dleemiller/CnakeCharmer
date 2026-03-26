@@ -9,7 +9,7 @@ from libc.math cimport sin, cos
 from cnake_charmer.benchmarks import cython_benchmark
 
 
-@cython_benchmark(syntax="cy", args=(50000,))
+@cython_benchmark(syntax="cy", args=(10000,))
 def gift_wrapping(int n):
     """Compute convex hull via gift wrapping and return number of hull vertices."""
     cdef int i, start, current, candidate, hull_count

@@ -8,7 +8,7 @@ import math
 from cnake_charmer.benchmarks import python_benchmark
 
 
-@python_benchmark(args=(5000,))
+@python_benchmark(args=(2000,))
 def lagrange_interpolation(n: int) -> float:
     """Interpolate at x=0.5 using n Lagrange basis polynomials.
 

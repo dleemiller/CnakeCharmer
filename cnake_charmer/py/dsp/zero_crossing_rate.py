@@ -10,7 +10,7 @@ import math
 from cnake_charmer.benchmarks import python_benchmark
 
 
-@python_benchmark(args=(10000000,))
+@python_benchmark(args=(3000000,))
 def zero_crossing_rate(n: int) -> int:
     """Count zero crossings in a signal.
 

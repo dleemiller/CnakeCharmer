@@ -6,7 +6,7 @@ Keywords: lbfgs, quasi-newton, optimization, minimization, benchmark
 from cnake_charmer.benchmarks import python_benchmark
 
 
-@python_benchmark(args=(10000,))
+@python_benchmark(args=(5000,))
 def lbfgs_simple(n: int) -> float:
     """L-BFGS minimization of sum_i (x_i - i)^2 + 0.1*sum(x_i * x_{i+1}).
 

@@ -6,7 +6,7 @@ Keywords: numerical, eigenvalue, power iteration, linear algebra, benchmark
 from cnake_charmer.benchmarks import python_benchmark
 
 
-@python_benchmark(args=(500,))
+@python_benchmark(args=(300,))
 def power_iteration(n: int) -> float:
     """Find dominant eigenvalue of an n x n matrix using power iteration.
 

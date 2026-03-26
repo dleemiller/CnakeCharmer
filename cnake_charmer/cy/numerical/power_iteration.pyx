@@ -9,7 +9,7 @@ from libc.math cimport fabs
 from cnake_charmer.benchmarks import cython_benchmark
 
 
-@cython_benchmark(syntax="cy", args=(500,))
+@cython_benchmark(syntax="cy", args=(300,))
 def power_iteration(int n):
     """Find dominant eigenvalue of an n x n matrix using power iteration."""
     cdef double *M = <double *>malloc(n * n * sizeof(double))

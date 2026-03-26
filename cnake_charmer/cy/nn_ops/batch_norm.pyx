@@ -9,7 +9,7 @@ from libc.math cimport sqrt
 from cnake_charmer.benchmarks import cython_benchmark
 
 
-@cython_benchmark(syntax="cy", args=(5000000,))
+@cython_benchmark(syntax="cy", args=(2000000,))
 def batch_norm(int n):
     """Batch normalize n values and return sum of normalized values."""
     cdef double *vals = <double *>malloc(n * sizeof(double))

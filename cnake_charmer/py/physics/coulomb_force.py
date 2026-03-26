@@ -6,7 +6,7 @@ Keywords: physics, coulomb, electrostatic, potential, pairwise, benchmark
 from cnake_charmer.benchmarks import python_benchmark
 
 
-@python_benchmark(args=(5000,))
+@python_benchmark(args=(3000,))
 def coulomb_force(n: int) -> float:
     """Compute total electrostatic potential energy of n charges in 1D.
 

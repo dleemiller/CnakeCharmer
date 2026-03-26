@@ -9,7 +9,7 @@ from libc.math cimport fabs
 from cnake_charmer.benchmarks import cython_benchmark
 
 
-@cython_benchmark(syntax="cy", args=(10000,))
+@cython_benchmark(syntax="cy", args=(5000,))
 def lbfgs_simple(int n):
     """L-BFGS minimization of sum_i (x_i - i)^2 + 0.1*sum(x_i * x_{i+1})."""
     cdef int m = 5  # history size

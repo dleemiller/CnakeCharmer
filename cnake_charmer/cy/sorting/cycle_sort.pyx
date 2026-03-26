@@ -8,7 +8,7 @@ from libc.stdlib cimport malloc, free
 from cnake_charmer.benchmarks import cython_benchmark
 
 
-@cython_benchmark(syntax="cy", args=(10000,))
+@cython_benchmark(syntax="cy", args=(3000,))
 def cycle_sort(int n):
     """Count the number of writes performed by cycle sort."""
     cdef int *arr = <int *>malloc(n * sizeof(int))

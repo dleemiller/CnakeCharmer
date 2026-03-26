@@ -8,7 +8,7 @@ import math
 from cnake_charmer.benchmarks import python_benchmark
 
 
-@python_benchmark(args=(500,))
+@python_benchmark(args=(200,))
 def nbody_verlet(n: int) -> float:
     """N-body simulation with Verlet integration for 100 timesteps.
 

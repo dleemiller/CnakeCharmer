@@ -12,7 +12,7 @@ from libc.math cimport exp
 from cnake_charmer.benchmarks import cython_benchmark
 
 
-@cython_benchmark(syntax="cy", args=(5000,))
+@cython_benchmark(syntax="cy", args=(2000,))
 def method_of_lines(int n):
     """Solve 1D advection equation using method of lines."""
     cdef int i, step

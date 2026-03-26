@@ -6,7 +6,7 @@ Keywords: compression, burrows-wheeler, bwt, rle, run length, benchmark
 from cnake_charmer.benchmarks import python_benchmark
 
 
-@python_benchmark(args=(5000,))
+@python_benchmark(args=(2000,))
 def burrows_wheeler_rle(n: int) -> int:
     """Compute BWT of a string then count RLE runs.
 

@@ -9,7 +9,7 @@ from libc.math cimport sin, cos, sqrt
 from cnake_charmer.benchmarks import cython_benchmark
 
 
-@cython_benchmark(syntax="cy", args=(500,))
+@cython_benchmark(syntax="cy", args=(200,))
 def nbody_verlet(int n):
     """N-body Verlet integration using C arrays."""
     cdef double dt = 0.001

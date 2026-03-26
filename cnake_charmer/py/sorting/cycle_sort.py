@@ -6,7 +6,7 @@ Keywords: sorting, cycle sort, minimal writes, in-place, benchmark
 from cnake_charmer.benchmarks import python_benchmark
 
 
-@python_benchmark(args=(10000,))
+@python_benchmark(args=(3000,))
 def cycle_sort(n: int) -> int:
     """Count the number of writes performed by cycle sort.
 

@@ -7,7 +7,7 @@ Keywords: algorithms, moore voting, majority element, counting, cython, benchmar
 from cnake_charmer.benchmarks import cython_benchmark
 
 
-@cython_benchmark(syntax="cy", args=(10000000,))
+@cython_benchmark(syntax="cy", args=(3000000,))
 def moore_voting(int n):
     """Find majority element in arr[i] = (i*7+3) % 5, return element + count."""
     cdef int candidate = 0

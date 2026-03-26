@@ -8,7 +8,7 @@ import math
 from cnake_charmer.benchmarks import python_benchmark
 
 
-@python_benchmark(args=(500000,))
+@python_benchmark(args=(200000,))
 def bisection_batch(n: int) -> float:
     """Find roots of f(x) = sin(x) - x/k for n values of k.
 

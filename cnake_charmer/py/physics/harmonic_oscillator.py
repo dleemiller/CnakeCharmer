@@ -8,7 +8,7 @@ import math
 from cnake_charmer.benchmarks import python_benchmark
 
 
-@python_benchmark(args=(10000,))
+@python_benchmark(args=(3000,))
 def harmonic_oscillator(n: int) -> float:
     """Simulate n coupled harmonic oscillators for 1000 steps.
 

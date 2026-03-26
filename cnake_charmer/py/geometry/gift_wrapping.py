@@ -8,7 +8,7 @@ import math
 from cnake_charmer.benchmarks import python_benchmark
 
 
-@python_benchmark(args=(50000,))
+@python_benchmark(args=(10000,))
 def gift_wrapping(n: int) -> int:
     """Compute convex hull via gift wrapping and return number of hull vertices.
 

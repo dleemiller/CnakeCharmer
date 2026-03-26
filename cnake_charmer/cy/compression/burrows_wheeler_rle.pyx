@@ -28,7 +28,7 @@ cdef int _compare_rotations(const void *a, const void *b) noexcept nogil:
     return 0
 
 
-@cython_benchmark(syntax="cy", args=(5000,))
+@cython_benchmark(syntax="cy", args=(2000,))
 def burrows_wheeler_rle(int n):
     """Compute BWT of a string then count RLE runs."""
     global _bwt_str, _bwt_len

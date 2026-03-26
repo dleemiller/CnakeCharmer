@@ -8,7 +8,7 @@ from libc.stdlib cimport malloc, free
 from cnake_charmer.benchmarks import cython_benchmark
 
 
-@cython_benchmark(syntax="cy", args=(10000,))
+@cython_benchmark(syntax="cy", args=(3000,))
 def longest_repeated_substring(int n):
     """Find longest repeated substring using suffix array + LCP with C arrays."""
     cdef char *s = <char *>malloc(n * sizeof(char))

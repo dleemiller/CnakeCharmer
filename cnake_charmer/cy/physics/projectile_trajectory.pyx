@@ -8,7 +8,7 @@ from libc.math cimport sin, cos, sqrt, M_PI
 from cnake_charmer.benchmarks import cython_benchmark
 
 
-@cython_benchmark(syntax="cy", args=(100000,))
+@cython_benchmark(syntax="cy", args=(10000,))
 def projectile_trajectory(int n):
     """Simulate projectile trajectories with typed variables and libc math."""
     cdef double dt = 0.01

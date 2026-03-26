@@ -6,7 +6,7 @@ Keywords: jacobi, iteration, linear algebra, tridiagonal, solver, numerical, ben
 from cnake_charmer.benchmarks import python_benchmark
 
 
-@python_benchmark(args=(10000,))
+@python_benchmark(args=(5000,))
 def jacobi_iteration(n: int) -> float:
     """Solve Ax=b with Jacobi iteration on a tridiagonal matrix.
 

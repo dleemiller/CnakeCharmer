@@ -8,7 +8,7 @@ from libc.stdlib cimport malloc, free
 from cnake_charmer.benchmarks import cython_benchmark
 
 
-@cython_benchmark(syntax="cy", args=(500,))
+@cython_benchmark(syntax="cy", args=(250,))
 def optimal_bst(int n):
     """Compute minimum cost of optimal BST using flat C arrays."""
     cdef int *freq = <int *>malloc(n * sizeof(int))

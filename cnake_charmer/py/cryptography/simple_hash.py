@@ -7,7 +7,7 @@ Keywords: cryptography, hash, fnv, rolling, benchmark
 from cnake_charmer.benchmarks import python_benchmark
 
 
-@python_benchmark(args=(10000000,))
+@python_benchmark(args=(3000000,))
 def simple_hash(n: int) -> int:
     """Compute an FNV-1a style rolling hash over n bytes.
 

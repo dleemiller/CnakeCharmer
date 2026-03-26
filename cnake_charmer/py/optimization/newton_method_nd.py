@@ -6,7 +6,7 @@ Keywords: newton, root finding, cubic, optimization, benchmark
 from cnake_charmer.benchmarks import python_benchmark
 
 
-@python_benchmark(args=(1000000,))
+@python_benchmark(args=(200000,))
 def newton_method_nd(n: int) -> int:
     """Find roots of f(x) = x^3 - 2x - 5 using Newton's method.
 

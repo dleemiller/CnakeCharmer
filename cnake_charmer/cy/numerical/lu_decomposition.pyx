@@ -8,7 +8,7 @@ from libc.stdlib cimport malloc, free
 from cnake_charmer.benchmarks import cython_benchmark
 
 
-@cython_benchmark(syntax="cy", args=(500,))
+@cython_benchmark(syntax="cy", args=(300,))
 def lu_decomposition(int n):
     """Compute LU decomposition and return sum of diagonal of U."""
     cdef double *A = <double *>malloc(n * n * sizeof(double))
