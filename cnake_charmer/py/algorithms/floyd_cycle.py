@@ -6,7 +6,7 @@ Keywords: algorithms, floyd, cycle detection, tortoise hare, benchmark
 from cnake_charmer.benchmarks import python_benchmark
 
 
-@python_benchmark(args=(50000,))
+@python_benchmark(args=(5000,))
 def floyd_cycle(n: int) -> int:
     """Sum cycle lengths for n different sequences f(x) = (x*x + c) % 1000003.
 
