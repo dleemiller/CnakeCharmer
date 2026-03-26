@@ -141,36 +141,12 @@ uv run pytest tests/ -q
 
 **This is the most important step.** Every new problem should be optimized by reviewing the HTML annotations — not just the low performers.
 
-Cython generates HTML annotation files that show which lines fall back to Python (yellow) vs run as pure C (white). The build step with `annotate=True` (default in `setup.py`) creates these at `cnake_charmer/cy/{category}/{name}.html`.
+Cython generates HTML annotation files showing which lines fall back to Python (yellow) vs run as pure C (white). The build step with `annotate=True` (default in `setup.py`) creates these at `cnake_charmer/cy/{category}/{name}.html`.
 
-**Using the MCP tools (recommended for Claude Code):**
-
-```
-# Use score_problem to get the full analysis from repo files:
-score_problem("numerical/great_circle")
-
-# Use annotate_cython to check code you're still iterating on:
-annotate_cython("<your .pyx code here>")
-```
-
-**Using the command line:**
+The project includes an MCP server with tools for scoring and annotating — see [MCP Tools](#mcp-tools-for-ai-assisted-development) below. You can also open the HTML directly:
 
 ```bash
-# Open the HTML annotation directly in a browser:
 xdg-open cnake_charmer/cy/{category}/{name}.html
-
-# Or use the validation tools:
-uv run python -c "
-from cnake_charmer.validate.compiler import compile_cython
-from cnake_charmer.validate.annotations import parse_annotations
-
-code = open('cnake_charmer/cy/{category}/{name}.pyx').read()
-result = compile_cython(code, annotate=True, keep_build=True)
-ann = parse_annotations(html_path=result.html_path)
-print(f'Score: {ann.score:.2f} ({ann.white_lines} C / {ann.total_lines} total)')
-for h in ann.hints:
-    print(f'  {h}')
-"
 ```
 
 **What to look for in the HTML:**
@@ -182,51 +158,19 @@ for h in ann.hints:
   - `arr[i]` on a Python list → use C array pointer access
   - Calling Python functions in a loop → use `cdef` functions or `libc`
   - String operations → work with `char *` bytes
+  - Python `sort()` on lists of tuples → use `libc.stdlib.qsort` with C structs
 
 **Target annotation score: >0.85** (85% of lines should be pure C)
 
-### 6. Run the full reward analysis
+### 6. Check quality targets
 
-**Using MCP tools (recommended):**
+Use the MCP tools or the CLI to verify the implementation meets these targets:
 
-```
-# Score an existing problem by name — no copy-pasting needed:
-score_problem("{category}/{name}")
-
-# Lists all available problems:
-list_problems()
-```
-
-**Using the command line:**
-
-```bash
-uv run python -c "
-from cnake_charmer.dataset.loader import discover_pairs
-from cnake_charmer.rewards.composite import composite_reward
-
-pairs = {p.problem_id: p for p in discover_pairs()}
-p = pairs['{category}/{name}']
-
-ns = {}
-exec(p.python_code, ns)
-scores = composite_reward(
-    cython_code=p.cython_code,
-    python_func=ns[p.func_name],
-    func_name=p.func_name,
-    test_cases=p.test_cases,
-    benchmark_args=p.benchmark_args,
-)
-for k, v in scores.items():
-    print(f'{k}: {v}')
-"
-```
-
-**Quality targets:**
 - `compiled`: must be True
 - `correctness`: must be 1.0
 - `annotations`: >0.85
 - `speedup`: >5x (varies by problem type)
-- `total`: >0.90
+- `total reward`: >0.90
 
 ### 7. Run benchmarks and commit
 
@@ -337,21 +281,13 @@ This is a newer syntax that runs as both Python and Cython. Add `pp/` implementa
 
 ## MCP Tools for AI-Assisted Development
 
-The project includes an MCP server that Claude Code can use during development. Set it up with:
+The project includes an MCP server with tools for compiling, annotating, and scoring Cython implementations. The tools are self-describing — AI assistants discover them automatically. Set it up with:
 
 ```bash
 claude mcp add cnake-charmer -- uv run python -m cnake_charmer.mcp_server
 ```
 
-| Tool | What it does |
-|------|-------------|
-| `score_problem(id)` | Score an existing problem by name — reads files from repo, runs full reward |
-| `list_problems()` | List all problem pairs with metadata |
-| `annotate_cython(code)` | Get annotation score + optimization hints for code you're iterating on |
-| `compile_check(code)` | Quick compile check during development |
-| `score_cython(cy, py, ...)` | Full reward for code not yet saved to files |
-
-These are the same tools used during GRPO training — the model learns to use them to iterate on its code, and contributors can use them to optimize their implementations.
+These are the same validation and reward functions used during GRPO training.
 
 ## Hardware Instructions in Cython
 
