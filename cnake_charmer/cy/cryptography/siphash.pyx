@@ -7,7 +7,7 @@ Keywords: siphash, hash, cryptography, bit operations, cython, benchmark
 from cnake_charmer.benchmarks import cython_benchmark
 
 
-@cython_benchmark(syntax="cy", args=(1000000,))
+@cython_benchmark(syntax="cy", args=(200000,))
 def siphash(int n):
     """Compute SipHash-2-4 using typed 64-bit arithmetic."""
     cdef unsigned long long MASK64 = 0xFFFFFFFFFFFFFFFF

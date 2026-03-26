@@ -8,7 +8,7 @@ import math
 from cnake_charmer.benchmarks import python_benchmark
 
 
-@python_benchmark(args=(500,))
+@python_benchmark(args=(300,))
 def cholesky_decompose(n: int) -> float:
     """Compute Cholesky decomposition and return sum of diagonal of L.
 

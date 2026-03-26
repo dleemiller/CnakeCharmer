@@ -6,7 +6,7 @@ Keywords: suffix array, lcp, longest repeated substring, string, benchmark
 from cnake_charmer.benchmarks import python_benchmark
 
 
-@python_benchmark(args=(10000,))
+@python_benchmark(args=(3000,))
 def longest_repeated_substring(n: int) -> int:
     """Find the length of the longest repeated substring.
 

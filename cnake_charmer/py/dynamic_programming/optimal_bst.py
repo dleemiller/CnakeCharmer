@@ -6,7 +6,7 @@ Keywords: optimal BST, binary search tree, dynamic programming, benchmark
 from cnake_charmer.benchmarks import python_benchmark
 
 
-@python_benchmark(args=(500,))
+@python_benchmark(args=(250,))
 def optimal_bst(n: int) -> int:
     """Compute the minimum cost of an optimal binary search tree for n keys.
 

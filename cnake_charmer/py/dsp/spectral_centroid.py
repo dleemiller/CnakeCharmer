@@ -11,7 +11,7 @@ import math
 from cnake_charmer.benchmarks import python_benchmark
 
 
-@python_benchmark(args=(10000,))
+@python_benchmark(args=(3000,))
 def spectral_centroid(n: int) -> float:
     """Compute spectral centroid and return as frequency bin float.
 

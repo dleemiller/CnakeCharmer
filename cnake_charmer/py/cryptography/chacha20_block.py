@@ -8,7 +8,7 @@ from cnake_charmer.benchmarks import python_benchmark
 MASK32 = 0xFFFFFFFF
 
 
-@python_benchmark(args=(100000,))
+@python_benchmark(args=(5000,))
 def chacha20_block(n: int) -> int:
     """Generate n ChaCha20 blocks and return sum of first word per block.
 

@@ -10,7 +10,7 @@ from libc.string cimport memset
 from cnake_charmer.benchmarks import cython_benchmark
 
 
-@cython_benchmark(syntax="cy", args=(10000,))
+@cython_benchmark(syntax="cy", args=(3000,))
 def rod_cutting(int n):
     """Compute maximum revenue using C arrays."""
     cdef int i, j, val, best

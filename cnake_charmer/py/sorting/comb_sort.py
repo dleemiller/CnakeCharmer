@@ -6,7 +6,7 @@ Keywords: sorting, comb sort, gap, shrink factor, benchmark
 from cnake_charmer.benchmarks import python_benchmark
 
 
-@python_benchmark(args=(500000,))
+@python_benchmark(args=(200000,))
 def comb_sort(n: int) -> list[int]:
     """Sort a deterministic array using comb sort.
 

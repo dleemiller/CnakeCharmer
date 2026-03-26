@@ -8,7 +8,7 @@ from libc.stdlib cimport malloc, free
 from cnake_charmer.benchmarks import cython_benchmark
 
 
-@cython_benchmark(syntax="cy", args=(500000,))
+@cython_benchmark(syntax="cy", args=(200000,))
 def comb_sort(int n):
     """Sort a deterministic array using comb sort."""
     cdef int *arr = <int *>malloc(n * sizeof(int))

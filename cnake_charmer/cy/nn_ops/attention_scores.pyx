@@ -9,7 +9,7 @@ from libc.stdlib cimport malloc, free
 from cnake_charmer.benchmarks import cython_benchmark
 
 
-@cython_benchmark(syntax="cy", args=(500,))
+@cython_benchmark(syntax="cy", args=(200,))
 def attention_scores(int n):
     """Compute scaled dot-product attention scores Q*K^T/sqrt(d)."""
     cdef int d = 64

@@ -8,7 +8,7 @@ from libc.math cimport fabs
 from cnake_charmer.benchmarks import cython_benchmark
 
 
-@cython_benchmark(syntax="cy", args=(1000000,))
+@cython_benchmark(syntax="cy", args=(200000,))
 def newton_method_nd(int n):
     """Find roots of f(x) = x^3 - 2x - 5 using Newton's method."""
     cdef int count = 0

@@ -8,7 +8,7 @@ from libc.math cimport fabs
 from cnake_charmer.benchmarks import cython_benchmark
 
 
-@cython_benchmark(syntax="cy", args=(5000,))
+@cython_benchmark(syntax="cy", args=(3000,))
 def coulomb_force(int n):
     """Compute Coulomb potential energy with O(n^2) typed loop."""
     cdef double k = 8.9875e9

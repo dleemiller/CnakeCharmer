@@ -6,7 +6,7 @@ Keywords: numerical, root finding, secant method, iterative, benchmark
 from cnake_charmer.benchmarks import python_benchmark
 
 
-@python_benchmark(args=(1000000,))
+@python_benchmark(args=(100000,))
 def secant_method(n: int) -> float:
     """Find roots of f(x) = x^3 - 2x - 5 using the secant method.
 

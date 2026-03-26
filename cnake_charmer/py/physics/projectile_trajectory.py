@@ -8,7 +8,7 @@ import math
 from cnake_charmer.benchmarks import python_benchmark
 
 
-@python_benchmark(args=(100000,))
+@python_benchmark(args=(10000,))
 def projectile_trajectory(n: int) -> float:
     """Simulate n projectile trajectories with air drag.
 

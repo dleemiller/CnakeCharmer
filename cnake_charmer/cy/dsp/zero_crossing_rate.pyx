@@ -10,7 +10,7 @@ from libc.math cimport sin, cos
 from cnake_charmer.benchmarks import cython_benchmark
 
 
-@cython_benchmark(syntax="cy", args=(10000000,))
+@cython_benchmark(syntax="cy", args=(3000000,))
 def zero_crossing_rate(int n):
     """Count zero crossings in a signal."""
     cdef int i, count

@@ -7,7 +7,7 @@ Keywords: geometry, point in triangle, barycentric, classification, cython, benc
 from cnake_charmer.benchmarks import cython_benchmark
 
 
-@cython_benchmark(syntax="cy", args=(5000000,))
+@cython_benchmark(syntax="cy", args=(2000000,))
 def point_in_triangle(int n):
     """Count how many of n test points lie inside a fixed triangle."""
     cdef double x1 = 0.0, y1 = 0.0

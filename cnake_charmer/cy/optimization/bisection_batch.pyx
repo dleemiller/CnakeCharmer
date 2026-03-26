@@ -8,7 +8,7 @@ from libc.math cimport sin, M_PI
 from cnake_charmer.benchmarks import cython_benchmark
 
 
-@cython_benchmark(syntax="cy", args=(500000,))
+@cython_benchmark(syntax="cy", args=(200000,))
 def bisection_batch(int n):
     """Find roots of f(x) = sin(x) - x/k for n values of k."""
     cdef double pi = M_PI

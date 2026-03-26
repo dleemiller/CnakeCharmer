@@ -8,7 +8,7 @@ from libc.stdlib cimport malloc, free
 from cnake_charmer.benchmarks import cython_benchmark
 
 
-@cython_benchmark(syntax="cy", args=(10000,))
+@cython_benchmark(syntax="cy", args=(5000,))
 def jacobi_iteration(int n):
     """Solve Ax=b with Jacobi iteration on a tridiagonal matrix."""
     cdef int iterations = 1000

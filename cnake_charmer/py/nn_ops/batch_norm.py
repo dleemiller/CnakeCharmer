@@ -8,7 +8,7 @@ import math
 from cnake_charmer.benchmarks import python_benchmark
 
 
-@python_benchmark(args=(5000000,))
+@python_benchmark(args=(2000000,))
 def batch_norm(n: int) -> float:
     """Batch normalize n values and return sum of normalized values.
 

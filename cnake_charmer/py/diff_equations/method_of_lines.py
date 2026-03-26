@@ -11,7 +11,7 @@ import math
 from cnake_charmer.benchmarks import python_benchmark
 
 
-@python_benchmark(args=(5000,))
+@python_benchmark(args=(2000,))
 def method_of_lines(n: int) -> float:
     """Solve 1D advection equation using method of lines.
 

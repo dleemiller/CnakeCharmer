@@ -6,7 +6,7 @@ Keywords: algorithms, moore voting, majority element, counting, benchmark
 from cnake_charmer.benchmarks import python_benchmark
 
 
-@python_benchmark(args=(10000000,))
+@python_benchmark(args=(3000000,))
 def moore_voting(n: int) -> int:
     """Find majority element in arr[i] = (i*7+3) % 5, return element + count.
 

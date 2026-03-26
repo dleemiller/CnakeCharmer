@@ -8,7 +8,7 @@ import math
 from cnake_charmer.benchmarks import python_benchmark
 
 
-@python_benchmark(args=(500,))
+@python_benchmark(args=(200,))
 def attention_scores(n: int) -> float:
     """Compute scaled dot-product attention scores Q*K^T/sqrt(d).
 

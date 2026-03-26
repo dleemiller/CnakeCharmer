@@ -9,7 +9,7 @@ from libc.math cimport sqrt, fabs
 from cnake_charmer.benchmarks import cython_benchmark
 
 
-@cython_benchmark(syntax="cy", args=(500,))
+@cython_benchmark(syntax="cy", args=(300,))
 def cholesky_decompose(int n):
     """Compute Cholesky decomposition and return sum of diagonal of L."""
     cdef double *A = <double *>malloc(n * n * sizeof(double))

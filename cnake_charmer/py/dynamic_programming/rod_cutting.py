@@ -7,7 +7,7 @@ Keywords: dynamic programming, rod cutting, optimization, benchmark
 from cnake_charmer.benchmarks import python_benchmark
 
 
-@python_benchmark(args=(10000,))
+@python_benchmark(args=(3000,))
 def rod_cutting(n: int) -> int:
     """Compute maximum revenue from cutting a rod of length n.
 

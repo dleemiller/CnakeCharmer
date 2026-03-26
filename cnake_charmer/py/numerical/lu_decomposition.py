@@ -6,7 +6,7 @@ Keywords: numerical, lu decomposition, linear algebra, matrix, benchmark
 from cnake_charmer.benchmarks import python_benchmark
 
 
-@python_benchmark(args=(500,))
+@python_benchmark(args=(300,))
 def lu_decomposition(n: int) -> float:
     """Compute LU decomposition and return sum of diagonal of U.
 

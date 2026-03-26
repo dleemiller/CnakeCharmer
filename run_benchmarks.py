@@ -97,9 +97,20 @@ def run_benchmark(item: BenchmarkItem) -> tuple[float, float]:
     func = item.func
     args = item.args
     kwargs = item.kwargs
-    num_runs = item.num_runs
 
-    func(*args, **kwargs)  # warmup
+    # Adaptive runs: time a single warmup, then decide how many runs
+    start = time.perf_counter()
+    func(*args, **kwargs)
+    warmup_time = time.perf_counter() - start
+
+    # Scale runs: aim for ~1 second total benchmark time
+    if warmup_time > 0.5:
+        num_runs = 3
+    elif warmup_time > 0.1:
+        num_runs = 5
+    else:
+        num_runs = item.num_runs  # default (10)
+
     times: list[float] = []
     for _ in range(num_runs):
         start = time.perf_counter()
