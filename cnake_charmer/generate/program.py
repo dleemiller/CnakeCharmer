@@ -1,19 +1,20 @@
+import json
+import logging
 import os
 import re
 import subprocess
 import sys
 import tempfile
+import textwrap
+import time
 import traceback
 import venv
-import textwrap
+
 import dspy
-import time
-import logging
-import json
+from dotenv import load_dotenv
 from dspy.primitives import Module
 from dspy.signatures import InputField, OutputField
 from dspy.signatures.signature import Signature, ensure_signature
-from dotenv import load_dotenv
 
 ###############################################################################
 # 1) ENHANCED LOGGING CONFIGURATION
@@ -21,7 +22,9 @@ from dotenv import load_dotenv
 # Configure logger with more detailed formatting
 logger = logging.getLogger("EphemeralCodeGenerator")
 handler = logging.StreamHandler()
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - [%(funcName)s:%(lineno)d] - %(message)s')
+formatter = logging.Formatter(
+    "%(asctime)s - %(name)s - %(levelname)s - [%(funcName)s:%(lineno)d] - %(message)s"
+)
 handler.setFormatter(formatter)
 logger.addHandler(handler)
 logger.setLevel(logging.INFO)  # Set to logging.DEBUG for more verbose output
@@ -35,12 +38,14 @@ try:
 except Exception as e:
     logger.warning(f"Could not initialize file logging: {str(e)}")
 
+
 # Add debug context information to log messages
 def log_context(message, context=None):
     """Add context information to log messages for better debugging"""
     if context:
         return f"{message} | Context: {context}"
     return message
+
 
 ###############################################################################
 # 2) CONFIGURE DSPY / LLM
@@ -55,6 +60,7 @@ logger.info(f"Configured DSPy with LM: {lm.__class__.__name__}")
 # 3) CODE GENERATOR CLASS
 ###############################################################################
 
+
 class EphemeralCodeGenerator(Module):
     """
     Demonstrates:
@@ -64,6 +70,7 @@ class EphemeralCodeGenerator(Module):
       - automatic install + compile
       - regeneration on error
     """
+
     def __init__(self, signature, max_iters=3):
         super().__init__()
         self.signature = ensure_signature(signature)
@@ -75,19 +82,17 @@ class EphemeralCodeGenerator(Module):
             Signature(
                 {
                     "prompt": self.signature.fields["prompt"],
-                    "generated_code": self.signature.fields["generated_code"]
+                    "generated_code": self.signature.fields["generated_code"],
                 },
                 instructions=(
                     "You are given `prompt` describing a user request. "
                     "Generate code in either Python or Cython that solves the request. "
                     "Your response must be enclosed in triple backticks (```), with NO language indicator after the opening backticks. "
                     "Include ONLY the code itself, no additional commentary before or after the code block.\n\n"
-                    
                     "Code quality requirements:\n"
                     "1. Follow PEP 8 style guidelines (proper spacing, naming conventions, max line length of 79 characters)\n"
                     "2. Include Google-style docstrings for all functions, classes, and modules\n"
                     "3. Add appropriate comments for complex logic\n\n"
-                    
                     "For Cython code:\n"
                     "- Add comment-based directives at the top of the file to optimize performance:\n"
                     "  # cython: boundscheck=False\n"
@@ -95,7 +100,7 @@ class EphemeralCodeGenerator(Module):
                     "- Include ALL necessary imports and cimports explicitly\n"
                     "- Add proper type declarations for all functions and variables\n"
                     "- Remember that Python standard library modules (collections, threading, etc.) don't need external installation\n\n"
-                )
+                ),
             ),
         )
         logger.debug("Initialized code_generate chain")
@@ -108,14 +113,14 @@ class EphemeralCodeGenerator(Module):
                     "previous_code": InputField(
                         prefix="Previous Code:",
                         desc="Previously generated code that errored",
-                        format=str
+                        format=str,
                     ),
                     "error": InputField(
                         prefix="Error:",
                         desc="Error message from compilation or runtime",
-                        format=str
+                        format=str,
                     ),
-                    "generated_code": self.signature.fields["generated_code"]
+                    "generated_code": self.signature.fields["generated_code"],
                 },
                 instructions=(
                     "You generated code previously that failed to run/compile. "
@@ -125,7 +130,7 @@ class EphemeralCodeGenerator(Module):
                     "with no extra commentary.\n\n"
                     "Make sure to include ALL necessary imports and cimports.\n"
                     "Make sure all required libraries are properly imported."
-                )
+                ),
             )
         )
         logger.debug("Initialized code_regenerate chain")
@@ -138,43 +143,65 @@ class EphemeralCodeGenerator(Module):
         4) If error => regeneration loop up to max_iters.
         """
         request_id = id(kwargs)
-        logger.info(log_context(f"Forward called with prompt [ID: {request_id}]: {kwargs.get('prompt', '')[:100]}...", 
-                              {"request_id": request_id}))
-        
+        logger.info(
+            log_context(
+                f"Forward called with prompt [ID: {request_id}]: {kwargs.get('prompt', '')[:100]}...",
+                {"request_id": request_id},
+            )
+        )
+
         # Step 1: get initial code
         try:
             logger.debug(f"Request {request_id}: Calling code_generate")
             code_data = self.code_generate(**kwargs)
             logger.debug(f"Request {request_id}: code_generate returned {type(code_data)}")
-            
+
             raw_code = ""
-            if hasattr(code_data, 'generated_code'):
+            if hasattr(code_data, "generated_code"):
                 raw_code = code_data.generated_code
                 logger.debug(f"Request {request_id}: Extracted code from Prediction object")
             else:
                 raw_code = code_data.get("generated_code", "")
                 logger.debug(f"Request {request_id}: Extracted code from dictionary")
-                
-            logger.debug(log_context(f"Request {request_id}: Initial generation raw output: {raw_code[:200]}...", 
-                                   {"raw_output_length": len(raw_code)}))
+
+            logger.debug(
+                log_context(
+                    f"Request {request_id}: Initial generation raw output: {raw_code[:200]}...",
+                    {"raw_output_length": len(raw_code)},
+                )
+            )
         except Exception as e:
             logger.error(f"Request {request_id}: Initial code generation failed: {str(e)}")
-            logger.debug(f"Request {request_id}: Generation error details: {traceback.format_exc()}")
+            logger.debug(
+                f"Request {request_id}: Generation error details: {traceback.format_exc()}"
+            )
             return {"generated_code": "", "error": f"Code generation failed: {str(e)}"}
 
         # Step 2: parse
         code_block, parse_err = self._extract_code(raw_code, request_id)
         if parse_err:
-            logger.warning(log_context(f"Request {request_id}: Parse error => regeneration: {parse_err}", 
-                                      {"parse_error": parse_err}))
-            return self._try_regeneration(kwargs, previous_code="", error=parse_err, request_id=request_id)
+            logger.warning(
+                log_context(
+                    f"Request {request_id}: Parse error => regeneration: {parse_err}",
+                    {"parse_error": parse_err},
+                )
+            )
+            return self._try_regeneration(
+                kwargs, previous_code="", error=parse_err, request_id=request_id
+            )
 
         # Step 3: ephemeral build/run
         error = self._ephemeral_build_and_run(code_block, request_id)
         if error:
-            logger.warning(log_context(f"Request {request_id}: Ephemeral build error => regeneration: {error[:1000]}...", 
-                                      {"error_length": len(error)}))
-            return self._try_regeneration(kwargs, previous_code=code_block, error=error, request_id=request_id)
+            logger.warning(
+                log_context(
+                    f"Request {request_id}: Ephemeral build error => regeneration: {error[:1000]}...",
+                    {"error_length": len(error)},
+                )
+            )
+            return self._try_regeneration(
+                kwargs, previous_code=code_block, error=error, request_id=request_id
+            )
 
         logger.info(f"Request {request_id}: Successfully generated and built code")
         return {"generated_code": code_block, "error": None}
@@ -185,59 +212,77 @@ class EphemeralCodeGenerator(Module):
         """
         if request_id is None:
             request_id = id(kwargs)
-            
+
         attempts = 0
         while attempts < self.max_iters:
             attempts += 1
-            logger.info(f"Request {request_id}: Attempting regeneration, attempt #{attempts}/{self.max_iters}")
-            
+            logger.info(
+                f"Request {request_id}: Attempting regeneration, attempt #{attempts}/{self.max_iters}"
+            )
+
             # Log the inputs to regeneration for debugging
-            logger.debug(f"Request {request_id}: Regeneration input prompt: {kwargs.get('prompt', '')[:50]}...")
-            logger.debug(f"Request {request_id}: Regeneration previous code length: {len(previous_code)}")
-            logger.debug(f"Request {request_id}: Regeneration error: {error[:100]}..." if len(error) > 100 else error)
-            
+            logger.debug(
+                f"Request {request_id}: Regeneration input prompt: {kwargs.get('prompt', '')[:50]}..."
+            )
+            logger.debug(
+                f"Request {request_id}: Regeneration previous code length: {len(previous_code)}"
+            )
+            logger.debug(
+                f"Request {request_id}: Regeneration error: {error[:100]}..."
+                if len(error) > 100
+                else error
+            )
+
             try:
                 regen_data = self.code_regenerate(
-                    prompt=kwargs["prompt"],
-                    previous_code=previous_code,
-                    error=error
+                    prompt=kwargs["prompt"], previous_code=previous_code, error=error
                 )
-                
+
                 # Handle Prediction objects from DSPy
-                logger.debug(f"Request {request_id}: Regeneration returned type: {type(regen_data)}")
-                
+                logger.debug(
+                    f"Request {request_id}: Regeneration returned type: {type(regen_data)}"
+                )
+
                 new_raw = ""
-                if hasattr(regen_data, 'generated_code'):
+                if hasattr(regen_data, "generated_code"):
                     new_raw = regen_data.generated_code
                     logger.debug(f"Request {request_id}: Used generated_code attribute")
                 else:
                     new_raw = regen_data.get("generated_code", "")
                     logger.debug(f"Request {request_id}: Used dictionary access")
-                
+
                 logger.debug(f"Request {request_id}: Regenerated code length: {len(new_raw)}")
-                
+
             except Exception as e:
-                logger.error(f"Request {request_id}: Regeneration attempt #{attempts} failed: {str(e)}")
-                logger.debug(f"Request {request_id}: Regeneration error details: {traceback.format_exc()}")
+                logger.error(
+                    f"Request {request_id}: Regeneration attempt #{attempts} failed: {str(e)}"
+                )
+                logger.debug(
+                    f"Request {request_id}: Regeneration error details: {traceback.format_exc()}"
+                )
                 continue
-            
+
             new_code, parse_err = self._extract_code(new_raw, request_id)
             if parse_err:
                 # next iteration
-                logger.warning(log_context(
-                    f"Request {request_id}: Parse error on regenerated code (attempt #{attempts}) => continuing: {parse_err}",
-                    {"parse_error": parse_err}
-                ))
+                logger.warning(
+                    log_context(
+                        f"Request {request_id}: Parse error on regenerated code (attempt #{attempts}) => continuing: {parse_err}",
+                        {"parse_error": parse_err},
+                    )
+                )
                 previous_code = new_raw
                 error = parse_err
                 continue
 
             build_err = self._ephemeral_build_and_run(new_code, request_id)
             if build_err:
-                logger.warning(log_context(
-                    f"Request {request_id}: Ephemeral build error again (attempt #{attempts}) => continuing: {build_err[:300]}...",
-                    {"error_length": len(build_err)}
-                ))
+                logger.warning(
+                    log_context(
+                        f"Request {request_id}: Ephemeral build error again (attempt #{attempts}) => continuing: {build_err[:300]}...",
+                        {"error_length": len(build_err)},
+                    )
+                )
                 error = build_err
                 previous_code = new_code
             else:
@@ -246,7 +291,9 @@ class EphemeralCodeGenerator(Module):
                 return {"generated_code": new_code, "error": None}
 
         # if we exhaust attempts
-        logger.error(f"Request {request_id}: Exhausted all {self.max_iters} regeneration attempts, still has error")
+        logger.error(
+            f"Request {request_id}: Exhausted all {self.max_iters} regeneration attempts, still has error"
+        )
         return {"generated_code": previous_code, "error": error}
 
     ############################################################################
@@ -259,46 +306,61 @@ class EphemeralCodeGenerator(Module):
         """
         if request_id is None:
             request_id = id(text)
-            
+
         logger.debug(f"Request {request_id}: Extracting code from text of length {len(text)}")
-        
+
         # Handle empty or None text
         if not text:
             logger.error(f"Request {request_id}: Empty text input to code extraction")
             return ("", "ERROR: Empty code text input.")
-            
+
         try:
             match = re.search(r"```[\w\s]*\n?(.*?)```", text, re.DOTALL)
             if not match:
-                logger.debug(f"Request {request_id}: No triple backticks found, first 100 chars: {text[:100]}...")
+                logger.debug(
+                    f"Request {request_id}: No triple backticks found, first 100 chars: {text[:100]}..."
+                )
                 code_block = text.strip()
                 if not code_block:
-                    logger.error(f"Request {request_id}: Could not parse code block - empty content")
+                    logger.error(
+                        f"Request {request_id}: Could not parse code block - empty content"
+                    )
                     return ("", "ERROR: Could not parse code block.")
-                logger.warning(f"Request {request_id}: No triple backticks found, using entire text as code")
+                logger.warning(
+                    f"Request {request_id}: No triple backticks found, using entire text as code"
+                )
                 return (code_block, None)
-            
+
             code_block = match.group(1).strip()
             if not code_block:
                 logger.error(f"Request {request_id}: Empty code block after triple backticks")
                 return ("", "ERROR: Empty code block after triple backticks.")
-            
+
             # Check if we need to handle multiple code blocks
             all_code_blocks = re.findall(r"```[\w\s]*\n?(.*?)```", text, re.DOTALL)
             if len(all_code_blocks) > 1:
-                logger.info(f"Request {request_id}: Found {len(all_code_blocks)} code blocks, using the first one")
-                
-            logger.info(log_context(
-                f"Request {request_id}: Successfully extracted code block ({len(code_block)} characters)",
-                {"num_blocks": len(all_code_blocks) if 'all_code_blocks' in locals() else 1}
-            ))
-            
-            logger.debug(f"Request {request_id}: Code block begins with: {code_block[:100]}..." 
-                      if len(code_block) > 100 else code_block)
+                logger.info(
+                    f"Request {request_id}: Found {len(all_code_blocks)} code blocks, using the first one"
+                )
+
+            logger.info(
+                log_context(
+                    f"Request {request_id}: Successfully extracted code block ({len(code_block)} characters)",
+                    {"num_blocks": len(all_code_blocks) if "all_code_blocks" in locals() else 1},
+                )
+            )
+
+            logger.debug(
+                f"Request {request_id}: Code block begins with: {code_block[:100]}..."
+                if len(code_block) > 100
+                else code_block
+            )
             return (code_block, None)
         except Exception as e:
             logger.error(f"Request {request_id}: Exception during code extraction: {str(e)}")
-            logger.debug(f"Request {request_id}: Extraction error details: {traceback.format_exc()}")
+            logger.debug(
+                f"Request {request_id}: Extraction error details: {traceback.format_exc()}"
+            )
             return ("", f"ERROR: Code extraction failed: {str(e)}")
 
     ############################################################################
@@ -314,11 +376,13 @@ class EphemeralCodeGenerator(Module):
         """
         if request_id is None:
             request_id = id(code_str)
-            
+
         # Are we dealing with Cython or Python?
         is_cython = self._is_cython(code_str)
-        logger.info(f"Request {request_id}: Code identified as {'Cython' if is_cython else 'Python'}")
-        
+        logger.info(
+            f"Request {request_id}: Code identified as {'Cython' if is_cython else 'Python'}"
+        )
+
         if is_cython:
             return self._build_and_run_cython(code_str, request_id)
         else:
@@ -328,10 +392,12 @@ class EphemeralCodeGenerator(Module):
         """Check if code is Cython based on key indicators"""
         low = code_str.lower()
         cython_indicators = ["cdef", ".pyx", "cimport", "cython"]
-        
+
         # Check each indicator and log which ones were found
-        found_indicators = [ind for ind in cython_indicators if ind in (code_str if ind != "cython" else low)]
-        
+        found_indicators = [
+            ind for ind in cython_indicators if ind in (code_str if ind != "cython" else low)
+        ]
+
         if found_indicators:
             logger.debug(f"Identified as Cython due to: {', '.join(found_indicators)}")
             return True
@@ -343,10 +409,12 @@ class EphemeralCodeGenerator(Module):
         """
         if request_id is None:
             request_id = id(code_str)
-            
+
         with tempfile.TemporaryDirectory() as tmpdir:
             # 1) create ephemeral venv
-            logger.info(f"Request {request_id}: Creating ephemeral venv for Python execution in {tmpdir}")
+            logger.info(
+                f"Request {request_id}: Creating ephemeral venv for Python execution in {tmpdir}"
+            )
             venv_dir = os.path.join(tmpdir, "venv")
             try:
                 venv.create(venv_dir, with_pip=True)
@@ -358,17 +426,19 @@ class EphemeralCodeGenerator(Module):
             # 2) parse dependencies (imported libs) -> pip install
             try:
                 deps = self._parse_imports_for_python(code_str)
-                logger.info(log_context(
-                    f"Request {request_id}: Detected dependencies: {deps}",
-                    {"num_dependencies": len(deps)}
-                ))
+                logger.info(
+                    log_context(
+                        f"Request {request_id}: Detected dependencies: {deps}",
+                        {"num_dependencies": len(deps)},
+                    )
+                )
             except Exception as e:
                 logger.error(f"Request {request_id}: Error parsing dependencies: {str(e)}")
                 return f"Failed to parse dependencies: {str(e)}"
 
             commands = [
                 # upgrade pip
-                f"pip install --upgrade pip wheel setuptools",
+                "pip install --upgrade pip wheel setuptools",
             ]
             if deps:
                 commands.append(f"pip install {' '.join(deps)}")
@@ -378,32 +448,40 @@ class EphemeralCodeGenerator(Module):
             try:
                 with open(py_path, "w") as f:
                     f.write(code_str)
-                logger.info(f"Request {request_id}: Wrote Python code ({len(code_str)} bytes) to {py_path}")
+                logger.info(
+                    f"Request {request_id}: Wrote Python code ({len(code_str)} bytes) to {py_path}"
+                )
             except Exception as e:
                 logger.error(f"Request {request_id}: Error writing code to file: {str(e)}")
                 return f"Failed to write code to file: {str(e)}"
 
             # 4) run
             for i, cmd in enumerate(commands):
-                logger.info(f"Request {request_id}: Running command [{i+1}/{len(commands)}]: {cmd}")
+                logger.info(
+                    f"Request {request_id}: Running command [{i + 1}/{len(commands)}]: {cmd}"
+                )
                 err = self._run_in_venv(venv_dir, cmd, request_id=request_id)
                 if err:
-                    logger.error(log_context(
-                        f"Request {request_id}: Dependency installation failed: {err[:100]}...",
-                        {"error_full_length": len(err)}
-                    ))
+                    logger.error(
+                        log_context(
+                            f"Request {request_id}: Dependency installation failed: {err[:100]}...",
+                            {"error_full_length": len(err)},
+                        )
+                    )
                     return f"Python ephemeral venv install error: {err}"
 
             logger.info(f"Request {request_id}: Executing Python code")
             run_cmd = f"python {py_path}"
             err = self._run_in_venv(venv_dir, run_cmd, request_id=request_id)
             if err:
-                logger.error(log_context(
-                    f"Request {request_id}: Python execution failed: {err[:100]}...",
-                    {"error_full_length": len(err)}
-                ))
+                logger.error(
+                    log_context(
+                        f"Request {request_id}: Python execution failed: {err[:100]}...",
+                        {"error_full_length": len(err)},
+                    )
+                )
                 return f"Python run error: {err}"
-                
+
             logger.info(f"Request {request_id}: Python execution completed successfully")
         return None
 
@@ -416,10 +494,10 @@ class EphemeralCodeGenerator(Module):
         """
         if request_id is None:
             request_id = id(code_str)
-            
+
         with tempfile.TemporaryDirectory() as tmpdir:
             logger.debug(f"Request {request_id}: Created temporary directory: {tmpdir}")
-            
+
             try:
                 venv_dir = os.path.join(tmpdir, "venv")
                 logger.debug(f"Request {request_id}: Creating venv at {venv_dir}")
@@ -436,7 +514,7 @@ class EphemeralCodeGenerator(Module):
             except Exception as e:
                 logger.error(f"Request {request_id}: Error parsing dependencies: {str(e)}")
                 return f"Failed to parse dependencies: {str(e)}"
-            
+
             # always need cython
             if not any(d.lower() == "cython" for d in deps):
                 deps.append("cython")
@@ -445,37 +523,43 @@ class EphemeralCodeGenerator(Module):
             # Install dependencies with retries
             max_install_attempts = 3
             for attempt in range(max_install_attempts):
-                logger.debug(log_context(
-                    f"Request {request_id}: Installing dependencies (attempt {attempt+1}/{max_install_attempts}): {deps}",
-                    {"num_dependencies": len(deps)}
-                ))
-                
+                logger.debug(
+                    log_context(
+                        f"Request {request_id}: Installing dependencies (attempt {attempt + 1}/{max_install_attempts}): {deps}",
+                        {"num_dependencies": len(deps)},
+                    )
+                )
+
                 commands = [
-                    f"pip install --upgrade pip wheel setuptools",
+                    "pip install --upgrade pip wheel setuptools",
                     f"pip install {' '.join(deps)}",
                 ]
                 install_error = None
-                
+
                 for i, cmd in enumerate(commands):
-                    logger.debug(f"Request {request_id}: Running command [{i+1}/{len(commands)}]: {cmd}")
+                    logger.debug(
+                        f"Request {request_id}: Running command [{i + 1}/{len(commands)}]: {cmd}"
+                    )
                     err = self._run_in_venv(venv_dir, cmd, request_id=request_id)
                     if err:
                         install_error = f"Cython ephemeral venv install error: {err}"
                         logger.warning(f"Request {request_id}: Command failed: {err[:300]}...")
                         break
-                
+
                 if not install_error:
                     logger.debug(f"Request {request_id}: Successfully installed all dependencies")
                     break
-                    
+
                 # Wait before retry
                 if attempt < max_install_attempts - 1:
                     sleep_time = (attempt + 1) * 2  # Exponential backoff
                     logger.debug(f"Request {request_id}: Waiting {sleep_time}s before retry")
                     time.sleep(sleep_time)
-            
+
             if install_error:
-                logger.error(f"Request {request_id}: Failed to install dependencies after {max_install_attempts} attempts")
+                logger.error(
+                    f"Request {request_id}: Failed to install dependencies after {max_install_attempts} attempts"
+                )
                 return install_error
 
             # write the .pyx
@@ -483,7 +567,9 @@ class EphemeralCodeGenerator(Module):
             try:
                 with open(pyx_path, "w") as f:
                     f.write(code_str)
-                logger.debug(f"Request {request_id}: Wrote Cython code ({len(code_str)} bytes) to {pyx_path}")
+                logger.debug(
+                    f"Request {request_id}: Wrote Cython code ({len(code_str)} bytes) to {pyx_path}"
+                )
             except Exception as e:
                 logger.error(f"Request {request_id}: Error writing Cython code to file: {str(e)}")
                 return f"Failed to write Cython code to file: {str(e)}"
@@ -492,7 +578,8 @@ class EphemeralCodeGenerator(Module):
             setup_helper_path = os.path.join(tmpdir, "setup_helper.py")
             try:
                 with open(setup_helper_path, "w") as f:
-                    f.write(textwrap.dedent("""
+                    f.write(
+                        textwrap.dedent("""
                     import sys
                     import importlib
                     import json
@@ -539,7 +626,8 @@ class EphemeralCodeGenerator(Module):
 
                     # Print result as JSON for the parent process
                     print(json.dumps(result))
-                    """))
+                    """)
+                    )
                 logger.debug(f"Request {request_id}: Wrote dependency helper script")
             except Exception as e:
                 logger.error(f"Request {request_id}: Error writing helper script: {str(e)}")
@@ -548,32 +636,48 @@ class EphemeralCodeGenerator(Module):
             # Run the helper to get dependency information
             logger.debug(f"Request {request_id}: Running dependency analysis helper")
             helper_cmd = f"python {setup_helper_path} {' '.join(deps)}"
-            helper_output = self._run_in_venv(venv_dir, helper_cmd, capture_stdout=True, request_id=request_id)
-            
-            compile_info = {'include_dirs': [], 'library_dirs': [], 'libraries': [], 
-                           'compile_args': [], 'define_macros': []}
-            
+            helper_output = self._run_in_venv(
+                venv_dir, helper_cmd, capture_stdout=True, request_id=request_id
+            )
+
+            compile_info = {
+                "include_dirs": [],
+                "library_dirs": [],
+                "libraries": [],
+                "compile_args": [],
+                "define_macros": [],
+            }
+
             if helper_output:
                 try:
-                    lines = helper_output.strip().split('\n')
+                    lines = helper_output.strip().split("\n")
                     # Get the last line which should be the JSON output
                     json_line = lines[-1]
                     compile_info = json.loads(json_line)
-                    logger.debug(log_context(
-                        f"Request {request_id}: Dependency analysis result: {compile_info}",
-                        {"include_dirs_count": len(compile_info['include_dirs'])}
-                    ))
+                    logger.debug(
+                        log_context(
+                            f"Request {request_id}: Dependency analysis result: {compile_info}",
+                            {"include_dirs_count": len(compile_info["include_dirs"])},
+                        )
+                    )
                 except Exception as e:
-                    logger.warning(log_context(
-                        f"Request {request_id}: Error parsing dependency analysis output: {str(e)}",
-                        {"raw_output": helper_output[:300] + "..." if len(helper_output) > 300 else helper_output}
-                    ))
+                    logger.warning(
+                        log_context(
+                            f"Request {request_id}: Error parsing dependency analysis output: {str(e)}",
+                            {
+                                "raw_output": helper_output[:300] + "..."
+                                if len(helper_output) > 300
+                                else helper_output
+                            },
+                        )
+                    )
 
             # Generate adaptive pyximport test script
             test_script_path = os.path.join(tmpdir, "test_script.py")
             try:
                 with open(test_script_path, "w") as f:
-                    f.write(textwrap.dedent(f"""
+                    f.write(
+                        textwrap.dedent(f"""
                     import sys
                     import os
                     import importlib
@@ -582,7 +686,7 @@ class EphemeralCodeGenerator(Module):
                     import pyximport
                     
                     # Setup include paths from dependency analysis
-                    include_dirs = {compile_info['include_dirs']}
+                    include_dirs = {compile_info["include_dirs"]}
                     
                     if include_dirs:
                         pyximport.install(setup_args={{"include_dirs": include_dirs}})
@@ -609,29 +713,38 @@ class EphemeralCodeGenerator(Module):
                         print(f"Pyximport failed: {{e}}")
                         print("Falling back to manual compilation")
                         sys.exit(1)
-                    """))
+                    """)
+                    )
                 logger.debug(f"Request {request_id}: Wrote pyximport test script")
             except Exception as e:
                 logger.error(f"Request {request_id}: Error writing test script: {str(e)}")
                 return f"Failed to write test script: {str(e)}"
-                
+
             # Try using pyximport first
             logger.debug(f"Request {request_id}: Attempting compilation with pyximport")
             pyximport_cmd = f"python {test_script_path}"
-            pyximport_err = self._run_in_venv(venv_dir, pyximport_cmd, cwd=tmpdir, request_id=request_id)
-            
+            pyximport_err = self._run_in_venv(
+                venv_dir, pyximport_cmd, cwd=tmpdir, request_id=request_id
+            )
+
             if not pyximport_err:
                 logger.debug(f"Request {request_id}: pyximport compilation succeeded")
                 return None
-            
-            logger.debug(log_context(
-                f"Request {request_id}: pyximport compilation failed, falling back to setup.py",
-                {"error": pyximport_err[:300] + "..." if len(pyximport_err) > 300 else pyximport_err}
-            ))
-            
+
+            logger.debug(
+                log_context(
+                    f"Request {request_id}: pyximport compilation failed, falling back to setup.py",
+                    {
+                        "error": pyximport_err[:300] + "..."
+                        if len(pyximport_err) > 300
+                        else pyximport_err
+                    },
+                )
+            )
+
             # Fall back to setup.py if pyximport fails
             setup_path = os.path.join(tmpdir, "setup.py")
-            
+
             # Generate a setup.py with the dependency information
             setup_code = textwrap.dedent(f"""
             import sys
@@ -640,11 +753,11 @@ class EphemeralCodeGenerator(Module):
             from Cython.Build import cythonize
 
             # Include paths from dependency analysis
-            include_dirs = {compile_info['include_dirs']}
-            library_dirs = {compile_info['library_dirs']}
-            libraries = {compile_info['libraries']}
-            extra_compile_args = {compile_info['compile_args']}
-            define_macros = {compile_info['define_macros']}
+            include_dirs = {compile_info["include_dirs"]}
+            library_dirs = {compile_info["library_dirs"]}
+            libraries = {compile_info["libraries"]}
+            extra_compile_args = {compile_info["compile_args"]}
+            define_macros = {compile_info["define_macros"]}
             
             # Define the extension with our dependency information
             extensions = [
@@ -664,7 +777,7 @@ class EphemeralCodeGenerator(Module):
                 ext_modules=cythonize(extensions, language_level=3),
             )
             """)
-            
+
             try:
                 with open(setup_path, "w") as f:
                     f.write(setup_code)
@@ -675,22 +788,25 @@ class EphemeralCodeGenerator(Module):
 
             # compile directly, not using args
             logger.info(f"Request {request_id}: Compiling Cython code with setup.py")
-            compile_cmd = f"python setup.py build_ext --inplace"
+            compile_cmd = "python setup.py build_ext --inplace"
             err = self._run_in_venv(venv_dir, compile_cmd, cwd=tmpdir, request_id=request_id)
             if err:
-                logger.error(log_context(
-                    f"Request {request_id}: Cython compilation failed",
-                    {"error": err[:1000] + "..." if len(err) > 1000 else err}
-                ))
+                logger.error(
+                    log_context(
+                        f"Request {request_id}: Cython compilation failed",
+                        {"error": err[:1000] + "..." if len(err) > 1000 else err},
+                    )
+                )
                 return f"Cython compile error:\n{err}"
-                
+
             logger.info(f"Request {request_id}: Cython compilation successful")
-                
+
             # Create a generic test runner script
             test_runner_path = os.path.join(tmpdir, "run_tests.py")
             try:
                 with open(test_runner_path, "w") as f:
-                    f.write(textwrap.dedent("""
+                    f.write(
+                        textwrap.dedent("""
                     import sys
                     import inspect
                     import time
@@ -782,22 +898,25 @@ class EphemeralCodeGenerator(Module):
                     except Exception as e:
                         log("Critical error during testing: " + str(e))
                         sys.exit(1)
-                    """))
+                    """)
+                    )
                 logger.debug(f"Request {request_id}: Wrote test runner script")
             except Exception as e:
                 logger.error(f"Request {request_id}: Error writing test runner: {str(e)}")
                 # Continue despite this error since it's just testing
-            
+
             # Run the test script
             logger.debug(f"Request {request_id}: Running execution tests on compiled module")
             test_cmd = f"python {test_runner_path}"
             test_err = self._run_in_venv(venv_dir, test_cmd, cwd=tmpdir, request_id=request_id)
-            
+
             if test_err:
-                logger.warning(log_context(
-                    f"Request {request_id}: Execution tests failed, but module compiled successfully",
-                    {"error": test_err[:300] + "..." if len(test_err) > 300 else test_err}
-                ))
+                logger.warning(
+                    log_context(
+                        f"Request {request_id}: Execution tests failed, but module compiled successfully",
+                        {"error": test_err[:300] + "..." if len(test_err) > 300 else test_err},
+                    )
+                )
                 # We don't fail the build here since the module compiled successfully
                 # Just log the execution failure
             else:
@@ -812,7 +931,7 @@ class EphemeralCodeGenerator(Module):
         """
         if request_id is None:
             request_id = id(command)
-            
+
         # Determine the Python executable path in the virtual environment
         if sys.platform == "win32":
             bin_dir = os.path.join(venv_dir, "Scripts")
@@ -833,17 +952,19 @@ class EphemeralCodeGenerator(Module):
 
         real_cmd = [exe] + args
         cmd_str = " ".join(real_cmd)
-        
+
         # Check if the executable exists
         if not os.path.exists(exe):
             logger.error(f"Request {request_id}: Executable not found: {exe}")
             return f"Command execution failed: executable not found at {exe}"
-        
-        logger.debug(log_context(
-            f"Request {request_id}: Running in venv: {cmd_str}",
-            {"cwd": cwd, "capture_stdout": capture_stdout}
-        ))
-        
+
+        logger.debug(
+            log_context(
+                f"Request {request_id}: Running in venv: {cmd_str}",
+                {"cwd": cwd, "capture_stdout": capture_stdout},
+            )
+        )
+
         try:
             proc = subprocess.run(
                 real_cmd,
@@ -851,45 +972,59 @@ class EphemeralCodeGenerator(Module):
                 capture_output=True,
                 text=True,
             )
-            
+
             # Always log some basic info about the execution
             logger.debug(f"Request {request_id}: Command returned with code {proc.returncode}")
-            
+
             if proc.returncode != 0:
                 error_output = f"Command failed with code {proc.returncode}\n"
                 if proc.stdout:
                     error_output += f"STDOUT:\n{proc.stdout}\n"
                 if proc.stderr:
                     error_output += f"STDERR:\n{proc.stderr}"
-                logger.error(log_context(
-                    f"Request {request_id}: Command failed: {cmd_str}",
-                    {"returncode": proc.returncode}
-                ))
-                logger.debug(log_context(
-                    f"Request {request_id}: Error output",
-                    {"stdout_len": len(proc.stdout) if proc.stdout else 0, 
-                     "stderr_len": len(proc.stderr) if proc.stderr else 0}
-                ))
+                logger.error(
+                    log_context(
+                        f"Request {request_id}: Command failed: {cmd_str}",
+                        {"returncode": proc.returncode},
+                    )
+                )
+                logger.debug(
+                    log_context(
+                        f"Request {request_id}: Error output",
+                        {
+                            "stdout_len": len(proc.stdout) if proc.stdout else 0,
+                            "stderr_len": len(proc.stderr) if proc.stderr else 0,
+                        },
+                    )
+                )
                 return error_output.strip()
-            
+
             # Return stdout if requested
             if capture_stdout and proc.stdout:
-                logger.debug(f"Request {request_id}: Command captured stdout ({len(proc.stdout)} chars)")
+                logger.debug(
+                    f"Request {request_id}: Command captured stdout ({len(proc.stdout)} chars)"
+                )
                 return proc.stdout.strip()
-                
+
             # Otherwise just log the stdout for debugging
             elif proc.stdout and proc.stdout.strip():
-                logger.debug(log_context(
-                    f"Request {request_id}: Command output",
-                    {"stdout_len": len(proc.stdout), 
-                     "stdout_snippet": proc.stdout[:300] + "..." if len(proc.stdout) > 300 else proc.stdout.strip()}
-                ))
-                
+                logger.debug(
+                    log_context(
+                        f"Request {request_id}: Command output",
+                        {
+                            "stdout_len": len(proc.stdout),
+                            "stdout_snippet": proc.stdout[:300] + "..."
+                            if len(proc.stdout) > 300
+                            else proc.stdout.strip(),
+                        },
+                    )
+                )
+
         except Exception as e:
             logger.error(f"Request {request_id}: Exception executing command: {str(e)}")
             logger.debug(f"Request {request_id}: Execution error details: {traceback.format_exc()}")
             return f"Command execution failed with exception: {str(e)}"
-            
+
         return None
 
     ############################################################################
@@ -906,40 +1041,89 @@ class EphemeralCodeGenerator(Module):
         # Skip known builtins (Python standard library modules)
         builtins = {
             # Basic Python modules
-            "sys", "os", "typing", "re", "subprocess", "traceback", "math", "time",
+            "sys",
+            "os",
+            "typing",
+            "re",
+            "subprocess",
+            "traceback",
+            "math",
+            "time",
             # Collections and data structures
-            "collections", "array", "dataclasses", "enum", "heapq", "queue", "bisect",
+            "collections",
+            "array",
+            "dataclasses",
+            "enum",
+            "heapq",
+            "queue",
+            "bisect",
             # Threading and concurrency
-            "threading", "multiprocessing", "concurrent", "asyncio", "_thread",
+            "threading",
+            "multiprocessing",
+            "concurrent",
+            "asyncio",
+            "_thread",
             # IO and file handling
-            "io", "pathlib", "tempfile", "shutil", "fileinput", 
+            "io",
+            "pathlib",
+            "tempfile",
+            "shutil",
+            "fileinput",
             # Data format handling
-            "json", "csv", "pickle", "shelve", "sqlite3", "xml", "html",
+            "json",
+            "csv",
+            "pickle",
+            "shelve",
+            "sqlite3",
+            "xml",
+            "html",
             # Network and internet
-            "socket", "ssl", "http", "urllib", "ftplib", "poplib", "imaplib", "smtplib", "email",
+            "socket",
+            "ssl",
+            "http",
+            "urllib",
+            "ftplib",
+            "poplib",
+            "imaplib",
+            "smtplib",
+            "email",
             # Date and time
-            "datetime", "calendar", "zoneinfo",
+            "datetime",
+            "calendar",
+            "zoneinfo",
             # Text processing
-            "string", "textwrap", "difflib", "unicodedata",
+            "string",
+            "textwrap",
+            "difflib",
+            "unicodedata",
             # Others
-            "random", "itertools", "functools", "contextlib", "abc", "argparse", 
-            "copy", "hashlib", "logging", "platform", "uuid", "weakref"
+            "random",
+            "itertools",
+            "functools",
+            "contextlib",
+            "abc",
+            "argparse",
+            "copy",
+            "hashlib",
+            "logging",
+            "platform",
+            "uuid",
+            "weakref",
         }
-        
+
         # System libraries that don't need to be installed
         system_libs = {"libc", "cpython", "libcpp", "posix"}
-        
+
         libs = set()
 
         try:
             # Pattern for regular imports and cimports
             import_pattern = re.compile(
-                r"^(?:cimport|import|from)\s+([a-zA-Z0-9_\.]+)",
-                re.MULTILINE
+                r"^(?:cimport|import|from)\s+([a-zA-Z0-9_\.]+)", re.MULTILINE
             )
             matches = import_pattern.findall(code_str)
             logger.debug(f"Found {len(matches)} import statements in code")
-            
+
             for m in matches:
                 top_level = m.split(".")[0]
                 if top_level not in builtins and top_level not in system_libs:
@@ -954,9 +1138,9 @@ class EphemeralCodeGenerator(Module):
                 "tf": "tensorflow",
                 "torch": "torch",
                 "sk": "scikit-learn",
-                "sp": "scipy"
+                "sp": "scipy",
             }
-            
+
             # Check for common library aliases that might not be explicitly imported
             if self._is_cython(code_str):
                 for alias, lib_name in common_aliases.items():
@@ -973,22 +1157,23 @@ class EphemeralCodeGenerator(Module):
             # Return a minimal set to avoid complete failure
             return ["cython"] if self._is_cython(code_str) else []
 
+
 ###############################################################################
 # MAIN
 ###############################################################################
 if __name__ == "__main__":
-    code_signature = Signature({
-        "prompt": InputField(
-            prefix="User Prompt:",
-            desc="The user request describing what code to generate",
-            format=str
-        ),
-        "generated_code": OutputField(
-            prefix="Code:",
-            desc="The code snippet that solves the user request",
-            format=str
-        ),
-    })
+    code_signature = Signature(
+        {
+            "prompt": InputField(
+                prefix="User Prompt:",
+                desc="The user request describing what code to generate",
+                format=str,
+            ),
+            "generated_code": OutputField(
+                prefix="Code:", desc="The code snippet that solves the user request", format=str
+            ),
+        }
+    )
 
     # Configure log level from environment or default to INFO
     log_level = os.environ.get("LOG_LEVEL", "INFO").upper()
@@ -1001,20 +1186,20 @@ if __name__ == "__main__":
             # Let keyboard interrupts pass through
             sys.__excepthook__(exc_type, exc_value, exc_traceback)
             return
-        
+
         logger.critical("Uncaught exception", exc_info=(exc_type, exc_value, exc_traceback))
-    
+
     # Install the exception handler
     sys.excepthook = handle_exception
     logger.info("Installed global exception handler")
-    
+
     generator = EphemeralCodeGenerator(signature=code_signature, max_iters=3)
     prompt = "Write an efficient cython method for calculating a dot product of 2 vectors using typed memoryviews from numpy."
     logger.info("Generating code for prompt: %s", prompt)
-    
+
     try:
         result = generator.forward(prompt=prompt)
-        
+
         if result["error"] is None:
             logger.info("Code generation successful!")
             logger.info("Generated code:\n%s", result["generated_code"])
@@ -1030,7 +1215,7 @@ if __name__ == "__main__":
         prompt = "Write an efficient cython method for performance-optimized FizzBuzz example as part of the living dataset."
         logger.info("Generating code for prompt: %s", prompt)
         result = generator.forward(prompt=prompt)
-        
+
         if result["error"] is None:
             logger.info("Code generation successful!")
             logger.info("Generated code:\n%s", result["generated_code"])

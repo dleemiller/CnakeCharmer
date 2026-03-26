@@ -170,5 +170,23 @@ cython_debug/
 # PyPI configuration file
 .pypirc
 
-# Generated C files
+# Cython generated files
 cnake_charmer/cy/**/*.c
+cnake_charmer/cy/**/*.html
+cnake_charmer/pp/**/*.c
+cnake_charmer/pp/**/*.html
+
+# ART / training output
+.art/
+output/
+
+# uv lock
+uv.lock
+
+
+# Unsloth cache
+unsloth_compiled_cache/
+
+# Large data files (tracked separately or downloaded)
+utils/stack_data/*.duckdb
+utils/stack_data/*.parquet

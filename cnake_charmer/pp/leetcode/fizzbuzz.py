@@ -7,8 +7,10 @@ This module provides a performance-optimized FizzBuzz example as part of the liv
 Keywords: fizzbuzz, leetcode, cython, benchmark, example
 
 """
-from cnake_charmer.benchmarks import cython_benchmark
+
 import cython
+
+from cnake_charmer.benchmarks import cython_benchmark
 
 
 @cython_benchmark(syntax="pp", args=(10000,))

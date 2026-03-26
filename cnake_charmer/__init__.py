@@ -1,2 +1,2 @@
-from . import py
-from . import cy
+from . import cy as cy
+from . import py as py
