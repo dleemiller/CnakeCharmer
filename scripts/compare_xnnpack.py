@@ -431,6 +431,91 @@ def benchmark_kernel_only(lib, relu_n=5000000, gemm_n=200):
         print(f"  {name} correctness: {status} (rel err: {diff:.2e})")
 
 
+def write_kernel_report(lib, filename="benchmarks.md"):
+    """Append a kernel-only comparison table to the benchmark report."""
+    try:
+        from cnake_charmer.engine.kernels.bench_wrapper import (
+            bench_gemm_kernel,
+            bench_relu_kernel,
+        )
+    except ImportError:
+        print("Engine kernels not built, skipping kernel report")
+        return
+
+    # Collect kernel-only results
+    rows = []
+
+    # ReLU
+    relu_n = 5000000
+    FloatArray = ctypes.c_float * relu_n
+    inp = FloatArray(*[math.sin(i * 0.01) * 10.0 for i in range(relu_n)])
+    out = FloatArray(*([0.0] * relu_n))
+    lib.xnn_relu_f32.argtypes = [
+        ctypes.c_size_t,
+        ctypes.POINTER(ctypes.c_float),
+        ctypes.POINTER(ctypes.c_float),
+    ]
+    lib.xnn_relu_f32.restype = None
+    lib.xnn_relu_f32(relu_n, inp, out)
+    runs = 20
+    start = time.perf_counter()
+    for _ in range(runs):
+        lib.xnn_relu_f32(relu_n, inp, out)
+    xnn_ms = (time.perf_counter() - start) / runs * 1000
+
+    _, _ = bench_relu_kernel(1000, use_avx=False)
+    scalar_ms, _ = bench_relu_kernel(relu_n, use_avx=False)
+    _, _ = bench_relu_kernel(1000, use_avx=True)
+    avx_ms, _ = bench_relu_kernel(relu_n, use_avx=True)
+    rows.append(("relu", relu_n, xnn_ms, scalar_ms, avx_ms))
+
+    # GEMM
+    gemm_n = 200
+    FloatArray2 = ctypes.c_float * (gemm_n * gemm_n)
+    A = FloatArray2(*[((i // gemm_n) + (i % gemm_n)) % 100 / 10.0 for i in range(gemm_n * gemm_n)])
+    B = FloatArray2(
+        *[((i // gemm_n) - (i % gemm_n) + gemm_n) % 100 / 10.0 for i in range(gemm_n * gemm_n)]
+    )
+    C = FloatArray2(*([0.0] * (gemm_n * gemm_n)))
+    lib.xnn_gemm_f32.argtypes = [
+        ctypes.c_size_t,
+        ctypes.c_size_t,
+        ctypes.c_size_t,
+        ctypes.POINTER(ctypes.c_float),
+        ctypes.POINTER(ctypes.c_float),
+        ctypes.POINTER(ctypes.c_float),
+    ]
+    lib.xnn_gemm_f32.restype = None
+    lib.xnn_gemm_f32(gemm_n, gemm_n, gemm_n, A, B, C)
+    start = time.perf_counter()
+    for _ in range(runs):
+        lib.xnn_gemm_f32(gemm_n, gemm_n, gemm_n, A, B, C)
+    xnn_ms = (time.perf_counter() - start) / runs * 1000
+
+    _, _ = bench_gemm_kernel(10, use_avx=False)
+    scalar_ms, _ = bench_gemm_kernel(gemm_n, use_avx=False)
+    _, _ = bench_gemm_kernel(10, use_avx=True)
+    avx_ms, _ = bench_gemm_kernel(gemm_n, use_avx=True)
+    rows.append(("gemm", gemm_n, xnn_ms, scalar_ms, avx_ms))
+
+    # Append to benchmarks.md
+    with open(filename, "a") as f:
+        f.write("\n\n## Kernel-Only Benchmark (vs XNNPACK C)\n\n")
+        f.write("Pre-allocated tensors, timing only the compute kernel.\n\n")
+        f.write(
+            "| Kernel | Size | XNNPACK C (ms) | Cython scalar (ms) | Cython AVX2+FMA (ms) | AVX vs C |\n"
+        )
+        f.write(
+            "|--------|------|----------------|--------------------|-----------------------|-----------|\n"
+        )
+        for name, size, xnn, scalar, avx in rows:
+            f.write(
+                f"| {name} | {size:,} | {xnn:.3f} | {scalar:.3f} | {avx:.3f} | {avx / xnn:.1f}x |\n"
+            )
+
+    print(f"\nKernel-only results appended to {filename}")
+
+
 if __name__ == "__main__":
     if not os.path.exists(XNNPACK_DIR):
         print(f"XNNPACK not found at {XNNPACK_DIR}")
@@ -444,6 +529,7 @@ if __name__ == "__main__":
     benchmark_relu(lib)
     benchmark_gemm(lib)
     benchmark_kernel_only(lib)
+    write_kernel_report(lib)
 
     print(f"\n{'=' * 60}")
     print("Done.")
