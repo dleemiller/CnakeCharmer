@@ -254,13 +254,10 @@ def benchmark_gemm(lib, n=200):
     # Warmup
     lib.xnn_gemm_f32(n, n, n, A, B, C)
 
-    # Time XNNPACK C
+    # Time XNNPACK C (memset is inside xnn_gemm_f32)
     runs = 10
     start = time.perf_counter()
     for _ in range(runs):
-        # Reset C
-        for i in range(n * n):
-            C[i] = 0.0
         lib.xnn_gemm_f32(n, n, n, A, B, C)
     xnn_time = (time.perf_counter() - start) / runs
 
