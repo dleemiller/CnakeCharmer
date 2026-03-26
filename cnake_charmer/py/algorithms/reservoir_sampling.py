@@ -7,7 +7,7 @@ Keywords: algorithms, reservoir sampling, random, LCG, streaming, benchmark
 from cnake_charmer.benchmarks import python_benchmark
 
 
-@python_benchmark(args=(5000000,))
+@python_benchmark(args=(2000000,))
 def reservoir_sampling(n: int) -> int:
     """Deterministic reservoir sampling over n items, return sum of reservoir.
 

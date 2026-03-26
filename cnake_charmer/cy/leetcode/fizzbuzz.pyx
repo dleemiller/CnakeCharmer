@@ -10,7 +10,7 @@ Keywords: fizzbuzz, leetcode, cython, benchmark, example
 from cnake_charmer.benchmarks import cython_benchmark
 import cython
 
-@cython_benchmark(syntax="cy", args=(10000,))
+@cython_benchmark(syntax="cy", args=(1000000,))
 def fizzbuzz(int n):
     """FizzBuzz written in Cython syntax."""
     cdef list result = [None] * n

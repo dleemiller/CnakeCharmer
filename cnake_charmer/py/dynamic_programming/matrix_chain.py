@@ -7,7 +7,7 @@ Keywords: dynamic programming, matrix chain, optimization, benchmark
 from cnake_charmer.benchmarks import python_benchmark
 
 
-@python_benchmark(args=(300,))
+@python_benchmark(args=(200,))
 def matrix_chain(n: int) -> int:
     """Find minimum number of scalar multiplications to multiply a chain of n matrices.
 

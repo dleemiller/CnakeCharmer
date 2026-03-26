@@ -8,7 +8,7 @@ from libc.stdlib cimport malloc, free
 from cnake_charmer.benchmarks import cython_benchmark
 
 
-@cython_benchmark(syntax="cy", args=(10000,))
+@cython_benchmark(syntax="cy", args=(3000,))
 def spring_mass(int n):
     """Simulate n masses connected by springs in 1D for 1000 timesteps.
 

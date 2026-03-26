@@ -9,7 +9,7 @@ from libc.stdlib cimport malloc, free
 from cnake_charmer.benchmarks import cython_benchmark
 
 
-@cython_benchmark(syntax="cy", args=(10000000,))
+@cython_benchmark(syntax="cy", args=(3000000,))
 def caesar_cipher(int n):
     """Caesar-cipher encrypt n bytes, verify round-trip, return checksum.
 

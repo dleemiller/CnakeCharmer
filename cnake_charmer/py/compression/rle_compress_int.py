@@ -6,7 +6,7 @@ Keywords: run-length encoding, RLE, compression, benchmark
 from cnake_charmer.benchmarks import python_benchmark
 
 
-@python_benchmark(args=(10000000,))
+@python_benchmark(args=(3000000,))
 def rle_compress_int(n: int) -> int:
     """Run-length encode n integers and return the total number of runs.
 

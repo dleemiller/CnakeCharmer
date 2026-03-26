@@ -9,7 +9,7 @@ from libc.stdlib cimport malloc, free
 from cnake_charmer.benchmarks import cython_benchmark
 
 
-@cython_benchmark(syntax="cy", args=(5000,))
+@cython_benchmark(syntax="cy", args=(2000,))
 def lagrange_interpolation(int n):
     """Interpolate at x=0.5 using n Lagrange basis polynomials with C arrays."""
     if n < 2:

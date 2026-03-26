@@ -7,7 +7,7 @@ Keywords: primes, algorithms, cython, benchmark
 from cnake_charmer.benchmarks import cython_benchmark
 
 
-@cython_benchmark(syntax="cy", args=(300,))
+@cython_benchmark(syntax="cy", args=(3000,))
 def primes(int nb_primes):
     """Generate a list of prime numbers using trial division.
 

@@ -7,7 +7,7 @@ Keywords: levenshtein, edit distance, string matching, cython, benchmark
 from cnake_charmer.benchmarks import cython_benchmark
 
 
-@cython_benchmark(syntax="cy", args=(500000,))
+@cython_benchmark(syntax="cy", args=(200000,))
 def levenshtein_automaton(int n):
     """Count strings within edit distance 2 of HELLO using typed DP."""
     cdef int i, si, ti, cost, ins, dele, sub, val, row_min

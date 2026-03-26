@@ -9,7 +9,7 @@ from cnake_charmer.benchmarks import cython_benchmark
 DEF MOD = 1000000007
 
 
-@cython_benchmark(syntax="cy", args=(10000000,))
+@cython_benchmark(syntax="cy", args=(3000000,))
 def fibonacci_matrix(int n):
     """Compute sum F(1)+F(2)+...+F(n) mod 10^9+7."""
     cdef long long a, b, tmp, total

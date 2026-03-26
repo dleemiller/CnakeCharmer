@@ -8,7 +8,7 @@ import math
 from cnake_charmer.benchmarks import python_benchmark
 
 
-@python_benchmark(args=(10000000,))
+@python_benchmark(args=(3000000,))
 def simpson_integration(n: int) -> float:
     """Integrate f(x) = sin(x) * exp(-x/100) from 0 to 10 using Simpson's rule.
 

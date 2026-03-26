@@ -10,7 +10,7 @@ DEF DELTA = 0x9E3779B9
 DEF MASK32 = 0xFFFFFFFF
 
 
-@cython_benchmark(syntax="cy", args=(500000,))
+@cython_benchmark(syntax="cy", args=(50000,))
 def tea_encrypt(int n):
     """Encrypt n blocks with TEA and return sum of encrypted values."""
     cdef unsigned long long v0, v1, s, a, b, c

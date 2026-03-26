@@ -8,7 +8,7 @@ from libc.math cimport sin, exp
 from cnake_charmer.benchmarks import cython_benchmark
 
 
-@cython_benchmark(syntax="cy", args=(10000000,))
+@cython_benchmark(syntax="cy", args=(3000000,))
 def simpson_integration(int n):
     """Integrate f(x) = sin(x) * exp(-x/100) from 0 to 10 using Simpson's rule."""
     cdef int i

@@ -8,7 +8,7 @@ import math
 from cnake_charmer.benchmarks import python_benchmark
 
 
-@python_benchmark(args=(50,))
+@python_benchmark(args=(100,))
 def gauss_legendre_pi(n: int) -> float:
     """Compute pi using n iterations of the Gauss-Legendre algorithm.
 

@@ -7,7 +7,7 @@ Keywords: cryptography, caesar, cipher, encryption, decryption, checksum, benchm
 from cnake_charmer.benchmarks import python_benchmark
 
 
-@python_benchmark(args=(10000000,))
+@python_benchmark(args=(3000000,))
 def caesar_cipher(n: int) -> int:
     """Caesar-cipher encrypt n bytes with shift=13, decrypt, verify round-trip,
     and return the checksum (sum) of the encrypted bytes.

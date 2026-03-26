@@ -8,7 +8,7 @@ from libc.math cimport sqrt
 from cnake_charmer.benchmarks import cython_benchmark
 
 
-@cython_benchmark(syntax="cy", args=(50,))
+@cython_benchmark(syntax="cy", args=(100,))
 def gauss_legendre_pi(int n):
     """Compute pi using n iterations of the Gauss-Legendre algorithm."""
     cdef double a, b, t, p, a_next, result

@@ -6,7 +6,7 @@ Keywords: levenshtein, edit distance, string matching, benchmark
 from cnake_charmer.benchmarks import python_benchmark
 
 
-@python_benchmark(args=(500000,))
+@python_benchmark(args=(200000,))
 def levenshtein_automaton(n: int) -> int:
     """Compute Levenshtein distance of n generated strings against HELLO.
 
