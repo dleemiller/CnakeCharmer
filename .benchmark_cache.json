@@ -116,7 +116,27 @@
     "epidemic_sir": "bb9de16b864d48e2",
     "wave_equation": "42a9f01a23585b19",
     "chi_squared": "29268f7f54cfba8b",
-    "covariance_matrix": "5ae2f57d6b53ad8f"
+    "covariance_matrix": "5ae2f57d6b53ad8f",
+    "dutch_national_flag": "f53b496d0c17204e",
+    "patience_sort": "5b45c6512de2c43c",
+    "delta_encoding": "63d784b2acde3de3",
+    "siphash": "86552cf703aff8bb",
+    "wildcard_matching": "a2b6298263e261fd",
+    "word_break": "2f3ce3ae6b14f82f",
+    "articulation_points": "faf63b5af11701c5",
+    "bipartite_check": "c1cc31b7e18ee4f0",
+    "gaussian_blur": "bd738c9ec4091022",
+    "lucas_numbers": "51face4d831c373f",
+    "mobius_sieve": "337455e793d812af",
+    "chebyshev_nodes": "8ede7af39f15daa9",
+    "gauss_legendre_pi": "c156d5686e97e5c4",
+    "lagrange_interpolation": "0982ae7ba41f807a",
+    "langtons_ant": "f1bb76ab81ec53c5",
+    "tim_sort_merge": "74cd532691f74ffc",
+    "histogram_2d": "9a978bedbde74f24",
+    "weighted_percentile": "a9759c4bc788ac96",
+    "burrows_wheeler": "58f99cd603103979",
+    "longest_repeated_substring": "f2e596df0ad81a6a"
   },
   "results": {
     "binary_search_count": [
@@ -1404,6 +1424,226 @@
         "cy_avg": 0.016593117895536125,
         "cy_std": 0.000170816800881843,
         "speedup": 17.840331177481136
+      }
+    ],
+    "dutch_national_flag": [
+      {
+        "benchmark": "dutch_national_flag",
+        "syntax": "cython",
+        "py_avg": 0.34467379953712224,
+        "py_std": 0.0038357366103369305,
+        "cy_avg": 0.036016944143921134,
+        "cy_std": 0.0005335326747439819,
+        "speedup": 9.569768000300924
+      }
+    ],
+    "patience_sort": [
+      {
+        "benchmark": "patience_sort",
+        "syntax": "cython",
+        "py_avg": 0.08383803078904747,
+        "py_std": 0.007874097198443498,
+        "cy_avg": 0.028795520146377384,
+        "cy_std": 0.0003344401050381766,
+        "speedup": 2.9114956202517046
+      }
+    ],
+    "delta_encoding": [
+      {
+        "benchmark": "delta_encoding",
+        "syntax": "cython",
+        "py_avg": 0.48252822938375173,
+        "py_std": 0.0033632776344074402,
+        "cy_avg": 0.0043369106017053126,
+        "cy_std": 2.7025290209192103e-05,
+        "speedup": 111.26081990115665
+      }
+    ],
+    "siphash": [
+      {
+        "benchmark": "siphash",
+        "syntax": "cython",
+        "py_avg": 1.46231856176164,
+        "py_std": 0.005124495934722947,
+        "cy_avg": 0.002111071487888694,
+        "cy_std": 2.4015279926747827e-05,
+        "speedup": 692.6902144958252
+      }
+    ],
+    "wildcard_matching": [
+      {
+        "benchmark": "wildcard_matching",
+        "syntax": "cython",
+        "py_avg": 0.6143825365230441,
+        "py_std": 0.008152248953995179,
+        "cy_avg": 0.007301079924218357,
+        "cy_std": 0.0001360208257595864,
+        "speedup": 84.1495426567076
+      }
+    ],
+    "word_break": [
+      {
+        "benchmark": "word_break",
+        "syntax": "cython",
+        "py_avg": 0.0031427093083038924,
+        "py_std": 1.564218734884897e-05,
+        "cy_avg": 0.00011594328097999095,
+        "cy_std": 4.412436889379024e-07,
+        "speedup": 27.10557508585814
+      }
+    ],
+    "articulation_points": [
+      {
+        "benchmark": "articulation_points",
+        "syntax": "cython",
+        "py_avg": 0.09743103806395084,
+        "py_std": 0.01494475420800959,
+        "cy_avg": 0.002096446673385799,
+        "cy_std": 2.7809154921996473e-05,
+        "speedup": 46.474369847241555
+      }
+    ],
+    "bipartite_check": [
+      {
+        "benchmark": "bipartite_check",
+        "syntax": "cython",
+        "py_avg": 0.46997819798998536,
+        "py_std": 0.01997418960210341,
+        "cy_avg": 0.014418396214023233,
+        "cy_std": 0.0006727004215329594,
+        "speedup": 32.59573332662948
+      }
+    ],
+    "gaussian_blur": [
+      {
+        "benchmark": "gaussian_blur",
+        "syntax": "cython",
+        "py_avg": 0.26807714949827643,
+        "py_std": 0.0016198276656441025,
+        "cy_avg": 0.0022204051492735744,
+        "cy_std": 2.741211499247932e-05,
+        "speedup": 120.73343893387218
+      }
+    ],
+    "lucas_numbers": [
+      {
+        "benchmark": "lucas_numbers",
+        "syntax": "cython",
+        "py_avg": 0.5170698821544647,
+        "py_std": 0.005714017354911608,
+        "cy_avg": 0.02694040273781866,
+        "cy_std": 0.0003461757662696787,
+        "speedup": 19.19310142415233
+      }
+    ],
+    "mobius_sieve": [
+      {
+        "benchmark": "mobius_sieve",
+        "syntax": "cython",
+        "py_avg": 0.1345204524928704,
+        "py_std": 0.007038725077844829,
+        "cy_avg": 0.05412616585381329,
+        "cy_std": 0.0002114242869461246,
+        "speedup": 2.485312794114959
+      }
+    ],
+    "chebyshev_nodes": [
+      {
+        "benchmark": "chebyshev_nodes",
+        "syntax": "cython",
+        "py_avg": 0.23657415970228612,
+        "py_std": 0.0021527545146085114,
+        "cy_avg": 0.00802898637484759,
+        "cy_std": 1.5919903430587055e-05,
+        "speedup": 29.46500948655264
+      }
+    ],
+    "gauss_legendre_pi": [
+      {
+        "benchmark": "gauss_legendre_pi",
+        "syntax": "cython",
+        "py_avg": 3.2940879464149475e-06,
+        "py_std": 2.722064512919403e-07,
+        "cy_avg": 2.7657952159643175e-07,
+        "cy_std": 2.120462469914067e-08,
+        "speedup": 11.91009344220894
+      }
+    ],
+    "lagrange_interpolation": [
+      {
+        "benchmark": "lagrange_interpolation",
+        "syntax": "cython",
+        "py_avg": 1.1087760100141169,
+        "py_std": 0.004452234195547277,
+        "cy_avg": 0.022312797699123622,
+        "cy_std": 0.00028044048245069617,
+        "speedup": 49.69237945708915
+      }
+    ],
+    "langtons_ant": [
+      {
+        "benchmark": "langtons_ant",
+        "syntax": "cython",
+        "py_avg": 0.02329343685414642,
+        "py_std": 8.277223047741291e-05,
+        "cy_avg": 0.0011943853227421642,
+        "cy_std": 5.003731361766109e-06,
+        "speedup": 19.50244733472403
+      }
+    ],
+    "tim_sort_merge": [
+      {
+        "benchmark": "tim_sort_merge",
+        "syntax": "cython",
+        "py_avg": 0.37053158588241786,
+        "py_std": 0.002838353866042981,
+        "cy_avg": 0.012314502894878388,
+        "cy_std": 0.00012044381435026205,
+        "speedup": 30.08904127478197
+      }
+    ],
+    "histogram_2d": [
+      {
+        "benchmark": "histogram_2d",
+        "syntax": "cython",
+        "py_avg": 0.07529554259963334,
+        "py_std": 0.0005934381984050804,
+        "cy_avg": 0.001603806810453534,
+        "cy_std": 2.4460286450228574e-05,
+        "speedup": 46.948012758681834
+      }
+    ],
+    "weighted_percentile": [
+      {
+        "benchmark": "weighted_percentile",
+        "syntax": "cython",
+        "py_avg": 0.19611227721907198,
+        "py_std": 0.00044982744471807777,
+        "cy_avg": 0.0012485418934375047,
+        "cy_std": 1.3927131619025397e-05,
+        "speedup": 157.07304516561527
+      }
+    ],
+    "burrows_wheeler": [
+      {
+        "benchmark": "burrows_wheeler",
+        "syntax": "cython",
+        "py_avg": 0.002813938446342945,
+        "py_std": 8.66813199060347e-05,
+        "cy_avg": 0.4218325768597424,
+        "cy_std": 0.002989813912697093,
+        "speedup": 0.006670747117946199
+      }
+    ],
+    "longest_repeated_substring": [
+      {
+        "benchmark": "longest_repeated_substring",
+        "syntax": "cython",
+        "py_avg": 2.886906096711755,
+        "py_std": 0.007609117239443167,
+        "cy_avg": 0.022653985675424336,
+        "cy_std": 0.0014988161990091113,
+        "speedup": 127.43479836502014
       }
     ]
   }
