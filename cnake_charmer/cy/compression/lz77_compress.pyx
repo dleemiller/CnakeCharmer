@@ -17,6 +17,7 @@ def lz77_compress(int n):
 
     cdef int i, j, length, best_length, window_start
     cdef int match_count = 0
+    cdef int total_match_len = 0
     cdef int max_window = 100
 
     # Generate deterministic string
@@ -39,9 +40,12 @@ def lz77_compress(int n):
 
         if best_length >= 2:
             match_count += 1
+            total_match_len += best_length
             i += best_length
         else:
             i += 1
 
+    cdef int result_count = match_count
+    cdef int result_len = total_match_len
     free(s)
-    return match_count
+    return (result_count, result_len)

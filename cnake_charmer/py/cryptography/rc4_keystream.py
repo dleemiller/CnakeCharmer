@@ -30,6 +30,7 @@ def rc4_keystream(n: int) -> int:
 
     # Pseudo-Random Generation Algorithm (PRGA)
     total = 0
+    last_byte = 0
     i = 0
     j = 0
     for _ in range(n):
@@ -38,5 +39,6 @@ def rc4_keystream(n: int) -> int:
         S[i], S[j] = S[j], S[i]
         k = S[(S[i] + S[j]) % 256]
         total += k
+        last_byte = k
 
-    return total
+    return (total, last_byte)

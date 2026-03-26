@@ -17,7 +17,7 @@ def line_segment_intersections(int n):
         n: Number of line segments.
 
     Returns:
-        Number of intersecting segment pairs.
+        Tuple of (number of intersecting segment pairs, last_i, last_j indices).
     """
     cdef int i, j_idx, k
     cdef double ex, ey, fx, fy, gx, gy, hx, hy
@@ -25,6 +25,8 @@ def line_segment_intersections(int n):
     cdef double dx_i, dy_i, dx_j, dy_j
     cdef double ax_i, ay_i
     cdef int count = 0
+    cdef int last_i = -1
+    cdef int last_j = -1
 
     cdef double *ax = <double *>malloc(n * sizeof(double))
     cdef double *ay = <double *>malloc(n * sizeof(double))
@@ -76,9 +78,11 @@ def line_segment_intersections(int n):
                 continue
 
             count += 1
+            last_i = i
+            last_j = j_idx
 
     free(ax)
     free(ay)
     free(bx)
     free(by)
-    return count
+    return (count, last_i, last_j)

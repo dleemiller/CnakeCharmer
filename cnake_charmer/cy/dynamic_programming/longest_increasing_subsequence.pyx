@@ -17,7 +17,7 @@ def longest_increasing_subsequence(int n):
     cdef int *tails = <int *>malloc(n * sizeof(int))
     cdef int tails_len = 0
     cdef int i, val, lo, hi, mid
-    cdef int result
+    cdef int result, last_tail
 
     if seq == NULL or tails == NULL:
         if seq != NULL:
@@ -46,6 +46,7 @@ def longest_increasing_subsequence(int n):
             tails[lo] = val
 
     result = tails_len
+    last_tail = tails[tails_len - 1] if tails_len > 0 else 0
     free(seq)
     free(tails)
-    return result
+    return (result, last_tail)

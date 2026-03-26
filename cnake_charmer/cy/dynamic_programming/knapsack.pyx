@@ -19,7 +19,7 @@ def knapsack(int n):
     cdef int *dp = <int *>malloc((capacity + 1) * sizeof(int))
     cdef int *weights = <int *>malloc(n * sizeof(int))
     cdef int *values = <int *>malloc(n * sizeof(int))
-    cdef int result
+    cdef int result, result_mid
 
     if dp == NULL or weights == NULL or values == NULL:
         if dp != NULL:
@@ -45,7 +45,8 @@ def knapsack(int n):
                 dp[c] = new_val
 
     result = dp[capacity]
+    result_mid = dp[capacity // 2]
     free(dp)
     free(weights)
     free(values)
-    return result
+    return (result, result_mid)

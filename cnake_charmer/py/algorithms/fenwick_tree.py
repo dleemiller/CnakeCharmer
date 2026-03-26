@@ -19,7 +19,7 @@ def fenwick_tree(n: int) -> int:
         n: Number of values.
 
     Returns:
-        Sum of all prefix sums.
+        Tuple of (sum of all prefix sums, prefix sum at n//2).
     """
     # Build Fenwick tree (1-indexed)
     tree = [0] * (n + 1)
@@ -32,6 +32,8 @@ def fenwick_tree(n: int) -> int:
 
     # Query all prefix sums and accumulate
     total = 0
+    prefix_at_n_half = 0
+    n_half = n // 2
     for i in range(n):
         idx = i + 1
         s = 0
@@ -39,5 +41,7 @@ def fenwick_tree(n: int) -> int:
             s += tree[idx]
             idx -= idx & (-idx)
         total += s
+        if i == n_half:
+            prefix_at_n_half = s
 
-    return total
+    return (total, prefix_at_n_half)

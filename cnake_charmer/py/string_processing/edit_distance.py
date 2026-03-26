@@ -35,4 +35,4 @@ def edit_distance(n: int) -> int:
                 curr[j] = 1 + min(prev[j], curr[j - 1], prev[j - 1])
         prev, curr = curr, prev
 
-    return prev[len2]
+    return (prev[len2], prev[len2 // 2])

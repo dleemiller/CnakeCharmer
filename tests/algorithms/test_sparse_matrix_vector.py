@@ -10,4 +10,5 @@ from cnake_charmer.py.algorithms.sparse_matrix_vector import sparse_matrix_vecto
 def test_sparse_matrix_vector_equivalence(n):
     py_result = py_func(n)
     cy_result = cy_func(n)
-    assert abs(py_result - cy_result) < 1e-3, f"Mismatch: py={py_result}, cy={cy_result}"
+    for p, c in zip(py_result, cy_result, strict=False):
+        assert abs(p - c) < 1e-3, f"Mismatch: py={py_result}, cy={cy_result}"

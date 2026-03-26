@@ -23,7 +23,7 @@ def dijkstra(n: int) -> int:
         n: Number of nodes in the graph.
 
     Returns:
-        Sum of shortest path distances from node 0 to all reachable nodes.
+        Tuple of (total distance sum, max distance, reachable node count).
     """
     INF = 10**18
 
@@ -56,7 +56,12 @@ def dijkstra(n: int) -> int:
                 dist[v] = nd
 
     total = 0
+    max_dist = 0
+    reachable_count = 0
     for i in range(n):
         if dist[i] < INF:
             total += dist[i]
-    return total
+            if dist[i] > max_dist:
+                max_dist = dist[i]
+            reachable_count += 1
+    return (total, max_dist, reachable_count)

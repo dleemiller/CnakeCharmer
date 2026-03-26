@@ -25,6 +25,7 @@ def kmp_search(int n):
 
     cdef int i, k
     cdef int count = 0
+    cdef int last_match_pos = -1
 
     # Build text and pattern
     for i in range(n):
@@ -51,9 +52,10 @@ def kmp_search(int n):
             k += 1
         if k == m:
             count += 1
+            last_match_pos = i - m + 1
             k = fail[k - 1]
 
     free(text)
     free(pattern)
     free(fail)
-    return count
+    return (count, last_match_pos)

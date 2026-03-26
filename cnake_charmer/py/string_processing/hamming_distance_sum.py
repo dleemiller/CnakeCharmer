@@ -23,6 +23,7 @@ def hamming_distance_sum(n: int) -> int:
     strings = [bytes([(i * j + 3) % 256 for j in range(8)]) for i in range(n)]
 
     total = 0
+    max_dist = 0
     for i in range(n - 1):
         s1 = strings[i]
         s2 = strings[i + 1]
@@ -31,5 +32,7 @@ def hamming_distance_sum(n: int) -> int:
             if s1[k] != s2[k]:
                 dist += 1
         total += dist
+        if dist > max_dist:
+            max_dist = dist
 
-    return total
+    return (total, max_dist)

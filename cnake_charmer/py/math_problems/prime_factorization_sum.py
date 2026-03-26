@@ -33,10 +33,15 @@ def prime_factorization_sum(n: int) -> int:
 
     # Sum prime factors for each number
     total = 0
+    max_factor_sum = 0
     for num in range(2, n + 1):
         x = num
+        factor_sum = 0
         while x > 1:
-            total += spf[x]
+            factor_sum += spf[x]
             x //= spf[x]
+        total += factor_sum
+        if factor_sum > max_factor_sum:
+            max_factor_sum = factor_sum
 
-    return total
+    return (total, max_factor_sum)

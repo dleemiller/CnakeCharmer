@@ -18,10 +18,11 @@ def binary_search_count(n: int) -> int:
         n: Size of both arrays.
 
     Returns:
-        Number of query values found in the sorted array.
+        Tuple of (count of found values, index of last found match or -1).
     """
     arr = [i * 3 for i in range(n)]
     count = 0
+    last_found_idx = -1
 
     for j in range(n):
         target = j * 5
@@ -31,10 +32,11 @@ def binary_search_count(n: int) -> int:
             mid = (lo + hi) // 2
             if arr[mid] == target:
                 count += 1
+                last_found_idx = mid
                 break
             elif arr[mid] < target:
                 lo = mid + 1
             else:
                 hi = mid - 1
 
-    return count
+    return (count, last_found_idx)

@@ -17,7 +17,7 @@ def dijkstra(int n):
         n: Number of nodes in the graph.
 
     Returns:
-        Sum of shortest path distances from node 0 to all reachable nodes.
+        Tuple of (total distance sum, max distance, reachable node count).
     """
     cdef long long INF = 10**18
     cdef int i, u, v, w, best_u
@@ -72,12 +72,17 @@ def dijkstra(int n):
                 dist[v] = nd
 
     cdef long long total = 0
+    cdef long long max_dist = 0
+    cdef int reachable_count = 0
     for i in range(n):
         if dist[i] < INF:
             total += dist[i]
+            if dist[i] > max_dist:
+                max_dist = dist[i]
+            reachable_count += 1
 
     free(adj_v)
     free(adj_w)
     free(dist)
     free(visited)
-    return total
+    return (total, max_dist, reachable_count)

@@ -39,4 +39,4 @@ def longest_increasing_subsequence(n: int) -> int:
         else:
             tails[lo] = val
 
-    return len(tails)
+    return (len(tails), tails[-1] if tails else 0)

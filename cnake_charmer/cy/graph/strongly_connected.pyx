@@ -12,9 +12,10 @@ from cnake_charmer.benchmarks import cython_benchmark
 @cython_benchmark(syntax="cy", args=(100000,))
 def strongly_connected(int n):
     """Count strongly connected components using Tarjan's algorithm."""
-    cdef int i, v, w, ei, parent
+    cdef int i, v, w, ei, parent, scc_size
     cdef int idx_counter = 0
     cdef int scc_count = 0
+    cdef int largest_scc_size = 0
     cdef int stack_top = -1
     cdef int work_top = -1
 
@@ -97,13 +98,17 @@ def strongly_connected(int n):
 
             if lowlink[v] == index_arr[v]:
                 scc_count += 1
+                scc_size = 0
                 while True:
                     w = stack[stack_top]
                     stack_top -= 1
                     on_stack[w] = 0
+                    scc_size += 1
                     if w == v:
                         break
+                if scc_size > largest_scc_size:
+                    largest_scc_size = scc_size
 
     free(adj0); free(adj1); free(index_arr); free(lowlink)
     free(on_stack); free(stack); free(work_v); free(work_ei)
-    return scc_count
+    return (scc_count, largest_scc_size)

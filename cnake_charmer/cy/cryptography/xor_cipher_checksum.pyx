@@ -22,6 +22,7 @@ def xor_cipher_checksum(int n):
     cdef int i, j
     cdef unsigned char plaintext, encrypted
     cdef long long checksum = 0
+    cdef int last_byte = 0
 
     cdef unsigned char *key = <unsigned char *>malloc(16 * sizeof(unsigned char))
     if key == NULL:
@@ -36,6 +37,7 @@ def xor_cipher_checksum(int n):
         plaintext = (i * 7 + 3) % 256
         encrypted = plaintext ^ key[i % 16]
         checksum += encrypted
+        last_byte = encrypted
 
     free(key)
-    return checksum
+    return (checksum, last_byte)

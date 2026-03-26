@@ -42,4 +42,4 @@ def longest_palindrome(n: int) -> int:
         prev, curr = curr, prev
 
     # After last swap, result is in prev (which was the last curr)
-    return prev[n - 1]
+    return (prev[n - 1], prev[n // 2])

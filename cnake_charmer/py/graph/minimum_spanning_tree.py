@@ -18,7 +18,7 @@ def minimum_spanning_tree(n: int) -> int:
         n: Number of nodes.
 
     Returns:
-        Total weight of the minimum spanning tree.
+        Tuple of (total MST weight, edge count, max edge weight in MST).
     """
     # Build edges
     edges = []
@@ -41,7 +41,8 @@ def minimum_spanning_tree(n: int) -> int:
         return x
 
     total_weight = 0
-    edges_added = 0
+    edge_count = 0
+    max_edge_weight = 0
 
     for w, u, v in edges:
         ru = find(u)
@@ -55,8 +56,10 @@ def minimum_spanning_tree(n: int) -> int:
                 parent[rv] = ru
                 rank[ru] += 1
             total_weight += w
-            edges_added += 1
-            if edges_added == n - 1:
+            edge_count += 1
+            if w > max_edge_weight:
+                max_edge_weight = w
+            if edge_count == n - 1:
                 break
 
-    return total_weight
+    return (total_weight, edge_count, max_edge_weight)

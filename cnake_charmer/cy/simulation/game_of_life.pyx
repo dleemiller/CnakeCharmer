@@ -22,6 +22,7 @@ def game_of_life(int n):
         raise MemoryError()
 
     cdef int i, j, di, dj, ni, nj, neighbors, idx, gen, total
+    cdef long cell_checksum = 0
 
     # Initialize
     for i in range(n):
@@ -59,9 +60,11 @@ def game_of_life(int n):
         nxt = tmp
 
     total = 0
+    cell_checksum = 0
     for i in range(size):
         total += current[i]
+        cell_checksum += current[i] * ((i * 31 + 7) % 10000)
 
     free(current)
     free(nxt)
-    return total
+    return (total, cell_checksum)
