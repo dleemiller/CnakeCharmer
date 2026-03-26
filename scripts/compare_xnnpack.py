@@ -375,7 +375,7 @@ def benchmark_kernel_only(lib, relu_n=5000000, gemm_n=200):
         f"  {'engine scalar':<20} {scalar_ms:>8.2f}ms  sum={scalar_sum:.2f}  ({scalar_ms / xnn_relu_ms:.1f}x vs C)"
     )
     print(
-        f"  {'engine AVX':<20} {avx_ms:>8.2f}ms  sum={avx_sum:.2f}  ({avx_ms / xnn_relu_ms:.1f}x vs C)"
+        f"  {'engine avx2+fma':<20} {avx_ms:>8.2f}ms  sum={avx_sum:.2f}  ({avx_ms / xnn_relu_ms:.1f}x vs C)"
     )
 
     # Correctness
@@ -422,7 +422,7 @@ def benchmark_kernel_only(lib, relu_n=5000000, gemm_n=200):
         f"  {'engine scalar':<20} {scalar_ms:>8.2f}ms  trace={scalar_trace:.2f}  ({scalar_ms / xnn_gemm_ms:.1f}x vs C)"
     )
     print(
-        f"  {'engine AVX':<20} {avx_ms:>8.2f}ms  trace={avx_trace:.2f}  ({avx_ms / xnn_gemm_ms:.1f}x vs C)"
+        f"  {'engine avx2+fma':<20} {avx_ms:>8.2f}ms  trace={avx_trace:.2f}  ({avx_ms / xnn_gemm_ms:.1f}x vs C)"
     )
 
     for name, val in [("scalar", scalar_trace), ("avx", avx_trace)]:
