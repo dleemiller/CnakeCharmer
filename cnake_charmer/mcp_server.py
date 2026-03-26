@@ -133,13 +133,27 @@ def list_problems() -> str:
 # File-based tools (for iterating on implementations)
 # ---------------------------------------------------------------------------
 
+SIMD_FLAGS = ["-mavx2", "-mfma", "-O3"]
+
+
+def _detect_compile_flags(pyx_path: str) -> list:
+    """Auto-detect compiler flags from file path.
+
+    Files in cy_simd/ or nn_ops/ get SIMD flags automatically.
+    """
+    if "cy_simd" in pyx_path or "nn_ops" in pyx_path:
+        return SIMD_FLAGS
+    return []
+
 
 @mcp.tool()
 def compile_file(pyx_path: str) -> str:
     """Compile a .pyx file and check for errors.
 
+    Auto-detects SIMD flags for cy_simd/ and nn_ops/ files.
+
     Args:
-        pyx_path: Path to a .pyx file, e.g. 'cnake_charmer/cy/numerical/great_circle.pyx'.
+        pyx_path: Path to a .pyx file, e.g. 'cnake_charmer/cy_simd/nn_ops/relu.pyx'.
 
     Returns:
         JSON with success status and any error messages.
@@ -148,9 +162,15 @@ def compile_file(pyx_path: str) -> str:
     if not path.exists():
         return json.dumps({"success": False, "errors": f"File not found: {pyx_path}"})
 
+    flags = _detect_compile_flags(pyx_path)
     code = path.read_text()
-    result = compile_cython(code, annotate=False)
-    output = {"success": result.success, "errors": result.errors, "warnings": result.warnings}
+    result = compile_cython(code, annotate=False, extra_compile_args=flags)
+    output = {
+        "success": result.success,
+        "errors": result.errors,
+        "warnings": result.warnings,
+        "flags": flags,
+    }
     cleanup_build(result)
     return json.dumps(output, indent=2)
 
@@ -159,8 +179,7 @@ def compile_file(pyx_path: str) -> str:
 def annotate_file(pyx_path: str) -> str:
     """Compile a .pyx file and analyze HTML annotations for optimization quality.
 
-    Returns a score (0.0 = all Python, 1.0 = all C) and hints about
-    lines that fall back to Python object interactions.
+    Auto-detects SIMD flags for cy_simd/ and nn_ops/ files.
 
     Args:
         pyx_path: Path to a .pyx file, e.g. 'cnake_charmer/cy/numerical/great_circle.pyx'.
@@ -172,8 +191,9 @@ def annotate_file(pyx_path: str) -> str:
     if not path.exists():
         return json.dumps({"success": False, "errors": f"File not found: {pyx_path}"})
 
+    flags = _detect_compile_flags(pyx_path)
     code = path.read_text()
-    result = compile_cython(code, annotate=True, keep_build=True)
+    result = compile_cython(code, annotate=True, keep_build=True, extra_compile_args=flags)
 
     if not result.success:
         output = {"success": False, "errors": result.errors, "score": 0.0, "hints": []}
