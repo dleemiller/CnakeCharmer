@@ -97,20 +97,9 @@ def run_benchmark(item: BenchmarkItem) -> tuple[float, float]:
     func = item.func
     args = item.args
     kwargs = item.kwargs
+    num_runs = item.num_runs
 
-    # Adaptive runs: time a single warmup, then decide how many runs
-    start = time.perf_counter()
-    func(*args, **kwargs)
-    warmup_time = time.perf_counter() - start
-
-    # Scale runs: aim for ~1 second total benchmark time
-    if warmup_time > 0.5:
-        num_runs = 3
-    elif warmup_time > 0.1:
-        num_runs = 5
-    else:
-        num_runs = item.num_runs  # default (10)
-
+    func(*args, **kwargs)  # warmup
     times: list[float] = []
     for _ in range(num_runs):
         start = time.perf_counter()
@@ -165,6 +154,11 @@ def run_all_benchmarks(force_all: bool = False) -> list[dict[str, Any]]:
                 or python_variant.kwargs != variant_item.kwargs
             ):
                 continue
+
+            log.info(
+                f"[{idx}/{total}] [dim]starting[/dim] {benchmark_id} ({label})...",
+                extra={"markup": True},
+            )
 
             if py_results is None:
                 py_results = run_benchmark(python_variant)
