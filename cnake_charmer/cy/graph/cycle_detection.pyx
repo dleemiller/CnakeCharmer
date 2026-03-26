@@ -17,10 +17,11 @@ def cycle_detection(int n):
         n: Number of nodes in the graph.
 
     Returns:
-        Number of back edges found during DFS.
+        Tuple of (number of back edges, source node of last back edge or -1).
     """
     cdef int i, start, u, v, ei
     cdef int back_edges = 0
+    cdef int last_back_src = -1
     cdef int WHITE = 0, GRAY = 1, BLACK = 2
 
     cdef int *adj_0 = <int *>malloc(n * sizeof(int))
@@ -71,6 +72,7 @@ def cycle_detection(int n):
                     stack_ei[top] = 0
                 elif color[v] == GRAY:
                     back_edges += 1
+                    last_back_src = u
             else:
                 color[u] = BLACK
                 top -= 1
@@ -80,4 +82,4 @@ def cycle_detection(int n):
     free(color)
     free(stack_node)
     free(stack_ei)
-    return back_edges
+    return (back_edges, last_back_src)

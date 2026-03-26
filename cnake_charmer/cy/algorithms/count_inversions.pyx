@@ -68,6 +68,12 @@ def count_inversions(int n):
 
     cdef long long result = merge_count_impl(arr, temp, 0, n)
 
+    # Compute checksum from sorted array (merge sort sorted it in-place)
+    cdef long long checksum = 0
+    cdef long long MOD = 1000000007
+    for i in range(n):
+        checksum = (checksum + <long long>i * <long long>arr[i]) % MOD
+
     free(arr)
     free(temp)
-    return result
+    return (result, int(checksum))

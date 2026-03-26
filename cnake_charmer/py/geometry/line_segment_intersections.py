@@ -18,7 +18,7 @@ def line_segment_intersections(n: int) -> int:
         n: Number of line segments.
 
     Returns:
-        Number of intersecting segment pairs.
+        Tuple of (number of intersecting segment pairs, last_i, last_j indices).
     """
     # Precompute segment endpoints
     ax = [0.0] * n
@@ -33,6 +33,8 @@ def line_segment_intersections(n: int) -> int:
         by[i] = j * 1.3
 
     count = 0
+    last_i = -1
+    last_j = -1
     for i in range(n):
         ax_i = ax[i]
         ay_i = ay[i]
@@ -67,5 +69,7 @@ def line_segment_intersections(n: int) -> int:
                 continue
 
             count += 1
+            last_i = i
+            last_j = j
 
-    return count
+    return (count, last_i, last_j)

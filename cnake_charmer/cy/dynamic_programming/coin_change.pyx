@@ -16,7 +16,7 @@ def coin_change(int n):
     if not dp:
         raise MemoryError()
 
-    cdef int i, val, result
+    cdef int i, val, result, result_mid
     cdef int coins[4]
     coins[0] = 1
     coins[1] = 5
@@ -44,5 +44,6 @@ def coin_change(int n):
                 dp[i] = val
 
     result = dp[n]
+    result_mid = dp[n // 2]
     free(dp)
-    return result
+    return (result, result_mid)

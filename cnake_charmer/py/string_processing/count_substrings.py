@@ -31,4 +31,6 @@ def count_substrings(n: int) -> int:
     for v in counts.values():
         total += v
 
-    return total
+    unique_pairs = len(counts)
+
+    return (total, unique_pairs)

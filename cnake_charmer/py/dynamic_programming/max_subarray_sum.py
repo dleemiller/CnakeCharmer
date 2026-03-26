@@ -24,6 +24,7 @@ def max_subarray_sum(n: int) -> int:
     chunk_size = 100
     k = n // chunk_size
     total = 0
+    max_single = -101
 
     for chunk in range(k):
         offset = chunk * chunk_size
@@ -39,5 +40,7 @@ def max_subarray_sum(n: int) -> int:
                 max_so_far = max_ending_here
 
         total += max_so_far
+        if max_so_far > max_single:
+            max_single = max_so_far
 
-    return total
+    return (total, max_single)

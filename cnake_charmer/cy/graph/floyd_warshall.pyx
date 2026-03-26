@@ -16,7 +16,7 @@ def floyd_warshall(int n):
         n: Number of nodes.
 
     Returns:
-        Sum of all finite shortest-path distances.
+        Tuple of (total distance sum, dist[0][n-1], max finite distance).
     """
     cdef int INF = 1000000000
     cdef int i, j, k, w, jj
@@ -48,10 +48,14 @@ def floyd_warshall(int n):
                 if new_dist < dist[i * n + j]:
                     dist[i * n + j] = new_dist
 
+    cdef int dist_0_to_last = dist[0 * n + n - 1]
+    cdef int max_dist = 0
     total = 0
     for i in range(n * n):
         if dist[i] < INF:
             total += dist[i]
+            if dist[i] > max_dist:
+                max_dist = dist[i]
 
     free(dist)
-    return total
+    return (total, dist_0_to_last, max_dist)

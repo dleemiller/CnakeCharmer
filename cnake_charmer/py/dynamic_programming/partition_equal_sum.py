@@ -28,7 +28,7 @@ def partition_equal_sum(n: int) -> int:
 
     # If total is odd, no equal partition possible
     if total % 2 != 0:
-        return 0
+        return (0, 0)
 
     target = total // 2
 
@@ -42,4 +42,5 @@ def partition_equal_sum(n: int) -> int:
             if dp[j - val]:
                 dp[j] = True
 
-    return 1 if dp[target] else 0
+    reachable_count = sum(1 for x in dp if x)
+    return (1 if dp[target] else 0, reachable_count)

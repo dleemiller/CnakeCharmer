@@ -18,7 +18,7 @@ def graph_coloring_greedy(n: int) -> int:
         n: Number of nodes.
 
     Returns:
-        Number of distinct colors used.
+        Tuple of (number of distinct colors used, color checksum).
     """
     # Build adjacency list
     adj = [[] for _ in range(n)]
@@ -46,4 +46,6 @@ def graph_coloring_greedy(n: int) -> int:
         if color > max_color:
             max_color = color
 
-    return max_color + 1
+    num_colors = max_color + 1
+    color_checksum = sum(colors[i] * ((i * 31 + 7) % 1000) for i in range(n)) % (10**9 + 7)
+    return (num_colors, color_checksum)

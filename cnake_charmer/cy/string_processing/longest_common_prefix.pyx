@@ -14,6 +14,7 @@ def longest_common_prefix(int n):
     """Find total LCP length using char* comparison in C."""
     cdef int i, j, k, lcp
     cdef long long total = 0
+    cdef int max_lcp = 0
     cdef int str_len = 20
     cdef unsigned char *data = <unsigned char *>malloc(n * str_len * sizeof(unsigned char))
     cdef unsigned char *s1
@@ -38,6 +39,10 @@ def longest_common_prefix(int n):
             else:
                 break
         total += lcp
+        if lcp > max_lcp:
+            max_lcp = lcp
 
+    cdef long long result_total = total
+    cdef int result_max = max_lcp
     free(data)
-    return total
+    return (result_total, result_max)

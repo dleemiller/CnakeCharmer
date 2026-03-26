@@ -16,7 +16,7 @@ def articulation_points(n: int) -> int:
         n: Number of nodes.
 
     Returns:
-        Number of articulation points.
+        Tuple of (count of articulation points, sum of AP node indices).
     """
     if n < 2:
         return 0
@@ -84,4 +84,6 @@ def articulation_points(n: int) -> int:
         if child_count[start] > 1:
             is_ap[start] = True
 
-    return sum(1 for x in is_ap if x)
+    count = sum(1 for x in is_ap if x)
+    ap_index_sum = sum(i for i in range(n) if is_ap[i])
+    return (count, ap_index_sum)

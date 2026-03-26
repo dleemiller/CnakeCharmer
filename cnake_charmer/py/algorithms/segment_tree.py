@@ -19,7 +19,7 @@ def segment_tree(n: int) -> int:
         n: Number of values.
 
     Returns:
-        Sum of range-max query results for all prefixes.
+        Tuple of (sum of range-max query results, query result at n//2).
     """
     size = 4 * n
     tree = [0] * size
@@ -48,7 +48,12 @@ def segment_tree(n: int) -> int:
     build(1, 0, n - 1)
 
     total = 0
+    query_at_n_half = 0
+    n_half = n // 2
     for i in range(n):
-        total += query(1, 0, n - 1, i)
+        q = query(1, 0, n - 1, i)
+        total += q
+        if i == n_half:
+            query_at_n_half = q
 
-    return total
+    return (total, query_at_n_half)

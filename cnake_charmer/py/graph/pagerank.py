@@ -18,7 +18,7 @@ def pagerank(n: int) -> float:
         n: Number of nodes.
 
     Returns:
-        Sum of top-10 PageRank values.
+        Tuple of (sum of top-10 PageRank values, PageRank of node 0).
     """
     damping = 0.85
     iterations = 20
@@ -45,9 +45,12 @@ def pagerank(n: int) -> float:
 
         rank, new_rank = new_rank, rank
 
+    # Capture rank of node 0 before sorting
+    rank_at_0 = rank[0]
+
     # Find top 10
     rank.sort(reverse=True)
     total = 0.0
     for i in range(min(10, n)):
         total += rank[i]
-    return total
+    return (total, rank_at_0)

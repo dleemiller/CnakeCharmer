@@ -21,7 +21,6 @@ def edit_distance(int n):
     cdef int *prev = <int *>malloc((len2 + 1) * sizeof(int))
     cdef int *curr = <int *>malloc((len2 + 1) * sizeof(int))
     cdef int *tmp
-    cdef int result
 
     if prev == NULL or curr == NULL:
         if prev != NULL:
@@ -47,7 +46,8 @@ def edit_distance(int n):
         prev = curr
         curr = tmp
 
-    result = prev[len2]
+    cdef int result = prev[len2]
+    cdef int result_mid = prev[len2 // 2]
     free(prev)
     free(curr)
-    return result
+    return (result, result_mid)

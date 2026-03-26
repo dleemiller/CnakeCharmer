@@ -17,7 +17,7 @@ def kmp_search(n: int) -> int:
         n: Length of the text.
 
     Returns:
-        Number of pattern occurrences found.
+        Tuple of (count of occurrences, position of last match or -1).
     """
     # Build text and pattern
     text = [65 + (i * 7 + 3) % 26 for i in range(n)]
@@ -36,6 +36,7 @@ def kmp_search(n: int) -> int:
 
     # Search
     count = 0
+    last_match_pos = -1
     k = 0
     for i in range(n):
         while k > 0 and pattern[k] != text[i]:
@@ -44,6 +45,7 @@ def kmp_search(n: int) -> int:
             k += 1
         if k == m:
             count += 1
+            last_match_pos = i - m + 1
             k = fail[k - 1]
 
-    return count
+    return (count, last_match_pos)

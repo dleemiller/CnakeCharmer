@@ -23,6 +23,7 @@ def longest_common_prefix(n: int) -> int:
     strings = ["".join(chr(65 + (i * j + 3) % 26) for j in range(20)) for i in range(n)]
 
     total = 0
+    max_lcp = 0
     for i in range(n - 1):
         s1 = strings[i]
         s2 = strings[i + 1]
@@ -33,5 +34,7 @@ def longest_common_prefix(n: int) -> int:
             else:
                 break
         total += lcp
+        if lcp > max_lcp:
+            max_lcp = lcp
 
-    return total
+    return (total, max_lcp)

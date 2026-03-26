@@ -28,4 +28,4 @@ def coin_change(n: int) -> int:
             if c <= i and dp[i - c] + 1 < dp[i]:
                 dp[i] = dp[i - c] + 1
 
-    return dp[n]
+    return (dp[n], dp[n // 2])

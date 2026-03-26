@@ -14,6 +14,8 @@ def prime_factorization_sum(int n):
     """Compute total sum of prime factors using SPF sieve with C arrays."""
     cdef int i, j, x
     cdef long long total = 0
+    cdef int max_factor_sum = 0
+    cdef int factor_sum
     cdef int *spf = <int *>malloc((n + 1) * sizeof(int))
 
     if spf == NULL:
@@ -37,9 +39,15 @@ def prime_factorization_sum(int n):
     # Sum prime factors for each number
     for i in range(2, n + 1):
         x = i
+        factor_sum = 0
         while x > 1:
-            total += spf[x]
+            factor_sum += spf[x]
             x = x / spf[x]
+        total += factor_sum
+        if factor_sum > max_factor_sum:
+            max_factor_sum = factor_sum
 
+    cdef long long result_total = total
+    cdef int result_max = max_factor_sum
     free(spf)
-    return total
+    return (result_total, result_max)

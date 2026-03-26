@@ -24,6 +24,7 @@ def lz77_compress(n: int) -> int:
     s = [chr(65 + (i * 7 + 3) % 26) for i in range(n)]
 
     match_count = 0
+    total_match_len = 0
     max_window = 100
     i = 0
 
@@ -40,8 +41,9 @@ def lz77_compress(n: int) -> int:
 
         if best_length >= 2:
             match_count += 1
+            total_match_len += best_length
             i += best_length
         else:
             i += 1
 
-    return match_count
+    return (match_count, total_match_len)
