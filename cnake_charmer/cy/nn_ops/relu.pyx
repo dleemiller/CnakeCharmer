@@ -11,7 +11,7 @@ from libc.stdlib cimport malloc, free
 from cnake_charmer.benchmarks import cython_benchmark
 
 
-@cython_benchmark(syntax="cy", args=(10000000,))
+@cython_benchmark(syntax="cy", args=(5000000,))
 def relu(int n):
     """Allocate C array tensor, apply ReLU in-place, return sum."""
     cdef int *data = <int *>malloc(n * sizeof(int))

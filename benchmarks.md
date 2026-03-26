@@ -11,8 +11,8 @@
 | image_processing | sobel_edge | cython | 127.930 | 0.732 | 174.7x |
 | nn_ops | attention_scores | cython | 236.664 | 1.370 | 172.8x |
 | simulation | diffusion_2d | cython | 319.785 | 1.877 | 170.4x |
-| nn_ops | relu | cython | 450.087 | 2.770 | 162.5x |
 | dynamic_programming | matrix_chain | cython | 149.607 | 0.937 | 159.7x |
+| nn_ops | gemm | simd | 179.913 | 1.131 | 159.1x |
 | image_processing | box_blur | cython | 149.270 | 0.940 | 158.7x |
 | diff_equations | finite_difference_laplacian | cython | 482.093 | 3.137 | 153.7x |
 | dynamic_programming | egg_drop | cython | 271.495 | 1.810 | 150.0x |
@@ -89,9 +89,11 @@
 | compression | huffman_frequency | cython | 40.324 | 0.610 | 66.1x |
 | simulation | nbody_verlet | cython | 283.213 | 4.322 | 65.5x |
 | image_processing | median_filter | cython | 97.132 | 1.491 | 65.1x |
+| nn_ops | relu | simd | 734.752 | 11.283 | 65.1x |
 | string_processing | edit_distance | cython | 86.902 | 1.344 | 64.7x |
 | simulation | forest_fire | cython | 187.986 | 2.912 | 64.5x |
 | algorithms | kadane_2d | cython | 242.230 | 3.756 | 64.5x |
+| nn_ops | relu | cython | 734.752 | 11.733 | 62.6x |
 | algorithms | levenshtein_automaton | cython | 304.982 | 5.023 | 60.7x |
 | simulation | reaction_diffusion | cython | 161.091 | 2.677 | 60.2x |
 | math_problems | digit_sum | cython | 368.383 | 6.126 | 60.1x |
@@ -114,6 +116,7 @@
 | numerical | lagrange_interpolation | cython | 188.221 | 3.703 | 50.8x |
 | numerical | nbody_energy | cython | 212.275 | 4.187 | 50.7x |
 | graph | euler_path | cython | 61.550 | 1.223 | 50.3x |
+| nn_ops | gemm | cython | 179.913 | 3.609 | 49.9x |
 | statistics | histogram_2d | cython | 84.625 | 1.699 | 49.8x |
 | algorithms | reservoir_sampling | cython | 193.192 | 3.896 | 49.6x |
 | dynamic_programming | partition_equal_sum | cython | 371.184 | 7.511 | 49.4x |
@@ -129,7 +132,6 @@
 | math_problems | number_theoretic_transform | cython | 23.081 | 0.524 | 44.1x |
 | dynamic_programming | max_subarray_sum | cython | 52.132 | 1.188 | 43.9x |
 | statistics | exponential_histogram | cython | 164.897 | 3.767 | 43.8x |
-| nn_ops | relu | simd | 450.087 | 10.390 | 43.3x |
 | nn_ops | softmax_stable | cython | 195.945 | 4.556 | 43.0x |
 | simulation | ising_model | cython | 208.322 | 4.850 | 43.0x |
 | statistics | bootstrap_mean | cython | 526.530 | 12.299 | 42.8x |
@@ -137,7 +139,6 @@
 | dynamic_programming | longest_palindrome | cython | 148.357 | 3.524 | 42.1x |
 | numerical | newton_sqrt | cython | 168.323 | 4.018 | 41.9x |
 | geometry | closest_pair_distance | cython | 387.090 | 9.360 | 41.4x |
-| nn_ops | gemm | cython | 5.933 | 0.145 | 41.0x |
 | physics | relativistic_energy | cython | 236.942 | 5.812 | 40.8x |
 | numerical | cubic_spline_eval | cython | 18.401 | 0.471 | 39.1x |
 | algorithms | stable_marriage | cython | 369.854 | 9.559 | 38.7x |
@@ -258,5 +259,5 @@
 | math_problems | mobius_sieve | cython | 134.582 | 55.412 | 2.4x |
 | leetcode | fizzbuzz | cython | 57.239 | 25.056 | 2.3x |
 | string_processing | suffix_array_naive | cython | 11.998 | 5.623 | 2.1x |
-| nn_ops | gemm | simd | 5.933 | 3.788 | 1.6x |
 | math_problems | pascal_triangle_row | cython | 77.312 | 50.708 | 1.5x |
+| algorithms | max_flow | cython | 0.512 | 0.405 | 1.3x |
