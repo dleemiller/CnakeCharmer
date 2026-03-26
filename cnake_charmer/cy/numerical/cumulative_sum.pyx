@@ -7,7 +7,6 @@ Keywords: cumulative sum, prefix sum, numerical, cython, benchmark
 
 from libc.stdlib cimport malloc, free
 from cnake_charmer.benchmarks import cython_benchmark
-import cython
 
 
 @cython_benchmark(syntax="cy", args=(500000,))
@@ -15,6 +14,7 @@ def cumulative_sum(int n):
     """Compute the cumulative sum using C-typed accumulation and C array."""
     cdef long long total = 0
     cdef int i
+    cdef long long val
     cdef long long *arr = <long long *>malloc(n * sizeof(long long))
 
     if arr == NULL:
@@ -25,5 +25,6 @@ def cumulative_sum(int n):
         arr[i] = total
 
     cdef list result = [arr[i] for i in range(n)]
+
     free(arr)
     return result

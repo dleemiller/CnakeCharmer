@@ -33,6 +33,7 @@ dependencies = [
     "cython>=3.0",
     "dspy>=2.6",
     "duckdb>=1.5.1",
+    "mcp>=1.26.0",
     "numpy>=2.2",
     "peft>=0.14",
     "setuptools>=75",
