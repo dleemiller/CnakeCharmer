@@ -179,10 +179,10 @@
 | diff_equations | crank_nicolson | cython | 136.443 | 6.752 | 20.2x |
 | numerical | tridiagonal_solve | cython | 157.936 | 7.832 | 20.2x |
 | simulation | langtons_ant | cython | 24.698 | 1.241 | 19.9x |
-| algorithms | fib | cython | 25.849 | 1.300 | 19.9x |
 | physics | blackbody_radiation | cython | 87.990 | 4.451 | 19.8x |
 | math_problems | lucas_numbers | cython | 163.226 | 8.257 | 19.8x |
 | optimization | levenberg_marquardt | cython | 69.916 | 3.553 | 19.7x |
+| algorithms | fibonacci | cython | 25.518 | 1.300 | 19.6x |
 | sorting | introsort | cython | 145.159 | 7.607 | 19.1x |
 | dsp | spectral_centroid | cython | 689.344 | 36.380 | 18.9x |
 | algorithms | heap_sort | cython | 261.863 | 14.002 | 18.7x |
