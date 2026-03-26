@@ -15,6 +15,8 @@ tests/
 
 Categories: `algorithms`, `numerical`, `sorting`, `string_processing`, `math_problems`, `dynamic_programming`
 
+> **Note:** New category directories need an `__init__.py` in `py/`, `cy/`, and `tests/`.
+
 ## Adding a New Problem
 
 ### 1. Write the Python implementation
@@ -91,9 +93,13 @@ def func_name(int n):
 - Use `from libc.string cimport memset, memcpy` for memory ops
 - Use `cdivision=True` to avoid Python's zero-division checks
 - Use hardware-appropriate types: `int`, `long long`, `double`
-- Consider SIMD-friendly patterns (sequential memory access, no branching)
 - Convert to Python objects only at the very end when returning
 - For strings, work with `char *` or `bytes` instead of Python `str`
+
+**Do NOT use:**
+- `PyList_SET_ITEM` / `PyList_New` / `Py_INCREF` — causes segfaults due to reference counting bugs. Use `[arr[i] for i in range(n)]` list comprehensions instead, which are safe and nearly as fast.
+- `import cython` with annotation syntax (`cython.int`, `cython.double`) in `.pyx` files — use native `cdef` syntax instead. The dataset loader strips `import cython`.
+- Python `list.append()` in hot loops — pre-allocate with `malloc` or `[None] * n`.
 
 ### 3. Write the equivalence test
 
@@ -124,7 +130,7 @@ def test_{name}_equivalence(n):
 # Build all Cython extensions
 uv run python setup.py build_ext --inplace
 
-# Run tests
+# Run your test
 uv run pytest tests/{category}/test_{name}.py -v
 
 # Run all tests
@@ -133,13 +139,27 @@ uv run pytest tests/ -q
 
 ### 5. Review HTML annotations and optimize
 
-This is the most important step. Cython generates HTML annotation files that show which lines fall back to Python (yellow) vs run as pure C (white).
+**This is the most important step.** Every new problem should be optimized by reviewing the HTML annotations — not just the low performers.
+
+Cython generates HTML annotation files that show which lines fall back to Python (yellow) vs run as pure C (white). The build step with `annotate=True` (default in `setup.py`) creates these at `cnake_charmer/cy/{category}/{name}.html`.
+
+**Using the MCP tools (recommended for Claude Code):**
+
+```
+# Use score_problem to get the full analysis from repo files:
+score_problem("numerical/great_circle")
+
+# Use annotate_cython to check code you're still iterating on:
+annotate_cython("<your .pyx code here>")
+```
+
+**Using the command line:**
 
 ```bash
-# The build step with annotate=True (default in setup.py) generates HTML files
-# Open the annotation: cnake_charmer/cy/{category}/{name}.html
+# Open the HTML annotation directly in a browser:
+xdg-open cnake_charmer/cy/{category}/{name}.html
 
-# Or use our reward tools:
+# Or use the validation tools:
 uv run python -c "
 from cnake_charmer.validate.compiler import compile_cython
 from cnake_charmer.validate.annotations import parse_annotations
@@ -167,20 +187,34 @@ for h in ann.hints:
 
 ### 6. Run the full reward analysis
 
+**Using MCP tools (recommended):**
+
+```
+# Score an existing problem by name — no copy-pasting needed:
+score_problem("{category}/{name}")
+
+# Lists all available problems:
+list_problems()
+```
+
+**Using the command line:**
+
 ```bash
 uv run python -c "
+from cnake_charmer.dataset.loader import discover_pairs
 from cnake_charmer.rewards.composite import composite_reward
 
-# Load the Python reference
-exec(open('cnake_charmer/py/{category}/{name}.py').read())
+pairs = {p.problem_id: p for p in discover_pairs()}
+p = pairs['{category}/{name}']
 
-code = open('cnake_charmer/cy/{category}/{name}.pyx').read()
+ns = {}
+exec(p.python_code, ns)
 scores = composite_reward(
-    cython_code=code,
-    python_func=func_name,
-    func_name='func_name',
-    test_cases=[((10,),), ((100,),)],
-    benchmark_args=(10000,),
+    cython_code=p.cython_code,
+    python_func=ns[p.func_name],
+    func_name=p.func_name,
+    test_cases=p.test_cases,
+    benchmark_args=p.benchmark_args,
 )
 for k, v in scores.items():
     print(f'{k}: {v}')
@@ -197,17 +231,20 @@ for k, v in scores.items():
 ### 7. Run benchmarks and commit
 
 ```bash
-# Run benchmarks
+# Run benchmarks (only re-runs changed problems via hash caching)
 uv run python run_benchmarks.py
+
+# Force re-run all benchmarks
+uv run python run_benchmarks.py --all
 
 # Check results
 cat benchmarks.md
 
-# Commit
+# Commit (include the benchmark cache so future runs skip unchanged)
 git add cnake_charmer/py/{category}/{name}.py \
        cnake_charmer/cy/{category}/{name}.pyx \
        tests/{category}/test_{name}.py \
-       benchmarks.md
+       benchmarks.md .benchmark_cache.json
 git commit -m "Add {name} problem pair ({Nx speedup})"
 ```
 
@@ -231,15 +268,19 @@ This is a newer syntax that runs as both Python and Cython. Add `pp/` implementa
 
 ## MCP Tools for AI-Assisted Development
 
-The validation and reward functions are designed to work as MCP tools, so AI coding assistants (Claude Code, etc.) can call them during development:
+The project includes an MCP server that Claude Code can use during development. Set it up with:
+
+```bash
+claude mcp add cnake-charmer -- uv run python -m cnake_charmer.mcp_server
+```
 
 | Tool | What it does |
 |------|-------------|
-| `compile(code)` | Check if Cython compiles, return errors |
-| `annotate(code)` | Get annotation score + optimization hints |
-| `test(code)` | Run correctness tests against Python reference |
-| `benchmark(code)` | Measure speedup vs Python |
-| `composite_reward(code, ...)` | Full reward score (compilation + correctness + speed + annotations) |
+| `score_problem(id)` | Score an existing problem by name — reads files from repo, runs full reward |
+| `list_problems()` | List all problem pairs with metadata |
+| `annotate_cython(code)` | Get annotation score + optimization hints for code you're iterating on |
+| `compile_check(code)` | Quick compile check during development |
+| `score_cython(cy, py, ...)` | Full reward for code not yet saved to files |
 
 These are the same tools used during GRPO training — the model learns to use them to iterate on its code, and contributors can use them to optimize their implementations.
 
