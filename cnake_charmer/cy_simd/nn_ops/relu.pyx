@@ -23,7 +23,7 @@ cdef extern from "immintrin.h":
     __m256i _mm256_setzero_si256()
 
 
-@cython_benchmark(syntax="cy_simd", args=(10000000,))
+@cython_benchmark(syntax="cy_simd", args=(5000000,))
 def relu(int n):
     """Allocate C array tensor, apply ReLU in-place with AVX2, return sum."""
     cdef int *data = <int *>malloc(n * sizeof(int))

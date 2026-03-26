@@ -10,7 +10,7 @@ Keywords: relu, activation, neural network, elementwise, tensor, benchmark
 from cnake_charmer.benchmarks import python_benchmark
 
 
-@python_benchmark(args=(10000000,))
+@python_benchmark(args=(5000000,))
 def relu(n: int) -> int:
     """Allocate a tensor of n values, apply ReLU in-place, return sum.
 
