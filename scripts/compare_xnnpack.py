@@ -124,17 +124,22 @@ void xnn_residual_add_f32(size_t n, const float* a, const float* b, float* outpu
     for (; i < n; i++) { float s = a[i] + b[i]; output[i] = s > 0.0f ? s : 0.0f; }
 }
 
-// ---- Conv1d ----
+// ---- Conv1d (FMA, 8 output positions at a time) ----
 void xnn_conv1d_f32(size_t n, const float* input, const float* kernel,
                     float* output, size_t kernel_size) {
     size_t out_n = n - kernel_size + 1;
-    for (size_t i = 0; i < out_n; i++) {
+    size_t i = 0;
+    for (; i + 8 <= out_n; i += 8) {
         __m256 acc = _mm256_setzero_ps();
-        size_t k;
-        // For each output position, compute dot product with kernel
-        // (kernel is small, so just scalar)
+        for (size_t k = 0; k < kernel_size; k++) {
+            __m256 vk = _mm256_broadcast_ss(&kernel[k]);
+            acc = _mm256_fmadd_ps(vk, _mm256_loadu_ps(&input[i + k]), acc);
+        }
+        _mm256_storeu_ps(&output[i], acc);
+    }
+    for (; i < out_n; i++) {
         float sum = 0.0f;
-        for (k = 0; k < kernel_size; k++) sum += input[i + k] * kernel[k];
+        for (size_t k = 0; k < kernel_size; k++) sum += input[i + k] * kernel[k];
         output[i] = sum;
     }
 }
