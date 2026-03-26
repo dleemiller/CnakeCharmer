@@ -1,7 +1,11 @@
 import os
-from setuptools import setup, find_packages, Extension
 from typing import Literal
+
 from Cython.Build import cythonize
+from setuptools import Extension, find_packages, setup
+
+SIMD_COMPILE_ARGS = ["-mavx2", "-mfma", "-O3"]
+SIMD_CATEGORIES = {"nn_ops"}
 
 
 def get_cython_extensions(syntax: Literal["cy", "pp"]):
@@ -15,12 +19,17 @@ def get_cython_extensions(syntax: Literal["cy", "pp"]):
         for file in files:
             if file.endswith(file_extension):
                 file_path = os.path.join(root, file)
-                # Convert file path to module name:
-                # e.g., "cnake_charmer/cy/math/add.pyx" => "cnake_charmer.cy.math.add"
-                module_name = file_path.replace(os.path.sep, ".").replace(
-                    file_extension, ""
+                module_name = file_path.replace(os.path.sep, ".").replace(file_extension, "")
+                # Add SIMD flags for nn_ops category
+                category = os.path.basename(root)
+                extra_args = SIMD_COMPILE_ARGS if category in SIMD_CATEGORIES else []
+                extensions.append(
+                    Extension(
+                        module_name,
+                        [file_path],
+                        extra_compile_args=extra_args,
+                    )
                 )
-                extensions.append(Extension(module_name, [file_path]))
 
     return extensions
 
