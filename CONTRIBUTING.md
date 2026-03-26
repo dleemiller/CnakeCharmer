@@ -248,6 +248,75 @@ git add cnake_charmer/py/{category}/{name}.py \
 git commit -m "Add {name} problem pair ({Nx speedup})"
 ```
 
+## Finding New Problems to Implement
+
+### From the Stack v2 DuckDB
+
+The repo includes ~1,000 real-world Cython files from The Stack v2 in `utils/stack_data/stack_cython_1k.duckdb`. Browse it for inspiration:
+
+```bash
+# Find short, self-contained functions (best candidates for the dataset)
+uv run python -c "
+import duckdb
+con = duckdb.connect('utils/stack_data/stack_cython_1k.duckdb', read_only=True)
+rows = con.execute('''
+    SELECT filename, path, content, length_bytes
+    FROM stack_cython
+    WHERE content IS NOT NULL
+      AND length_bytes BETWEEN 200 AND 2000
+      AND is_generated = false
+      AND content LIKE '%def %'
+    ORDER BY length_bytes ASC
+    LIMIT 30
+''').fetchall()
+for fn, path, content, size in rows:
+    defs = [l.strip() for l in content.split(chr(10)) if l.strip().startswith(('def ','cpdef '))]
+    print(f'{size:5d}B  {fn:30s}  {defs[0][:80] if defs else \"(no def)\"}')
+con.close()
+"
+```
+
+**What to look for:**
+- Functions using `libc.math` (trig, sqrt, exp) — great speedups from C math
+- Numerical loops with `cdef double` / `cdef int` — classic Cython wins
+- Algorithms using `malloc`/`free` for C arrays — shows real optimization patterns
+- Functions with memoryviews (`double[:]`) — teaches typed array access
+
+**What to skip:**
+- Files wrapping C/C++ libraries (`cdef extern from`) — not self-contained
+- Classes (`cdef class`) — focus on functions for now
+- Files with many imports from other Cython modules — dependency issues
+
+### From the algorithmic catalog
+
+The `cnake_charmer/sources/algorithmic.py` loader reads from `data/problems.jsonl`. You can add problems there too:
+
+```json
+{"problem_id": "algo_042", "description": "Compute N-body gravitational forces", "python_code": "def nbody(n):\n    ...", "func_name": "nbody", "test_cases": [[[10]], [[50]]], "benchmark_args": [200], "category": "numerical", "difficulty": "hard"}
+```
+
+### Good problem categories to expand
+
+| Category | What to look for | Example patterns from Stack |
+|----------|-----------------|----------------------------|
+| numerical | Pairwise distances, integration, FFT, interpolation | `libc.math` trig loops, memoryview dot products |
+| algorithms | Graph algorithms, string matching, tree traversals | `malloc`-based adjacency lists, C array BFS |
+| sorting | Heap sort, counting sort, Tim sort | In-place C array sorting with typed comparisons |
+| dynamic_programming | Sequence alignment, path finding, optimization | 2D DP tables via flat `malloc` arrays |
+| string_processing | Pattern matching, compression, encoding | `char *` iteration, byte-level comparison |
+| math_problems | Number theory sieves, polynomial evaluation, GCD chains | Pure integer arithmetic in typed loops |
+
+### Adapting Stack code into dataset pairs
+
+When you find an interesting Cython file in the DuckDB:
+
+1. **Read the full source**: `SELECT content FROM stack_cython WHERE filename = 'name.pyx'`
+2. **Identify the core algorithm** — strip away imports, classes, and library wrappers
+3. **Write a pure Python version** that's self-contained and deterministic
+4. **Write a clean Cython version** using the patterns from the Stack code as inspiration (not copy-paste — adapt to our conventions)
+5. **Make it parameterized by `n`** so benchmark args control the workload
+6. Follow steps 3-7 above to test, annotate, score, and commit
+
 ## Optional: Pure Python Cython syntax (`pp/`)
 
 The `pp/` directory uses Cython's [pure Python syntax](https://cython.readthedocs.io/en/latest/src/tutorial/pure.html) — regular `.py` files that compile as Cython using decorators and annotations:
