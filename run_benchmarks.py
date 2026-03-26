@@ -3,11 +3,12 @@
 Benchmark Runner for Python vs. Cython Implementations.
 
 Uses source file hashing to skip unchanged benchmarks.
-Saves cache incrementally after each benchmark so kills don't lose progress.
+Saves cache incrementally. Runs up to 4 benchmarks in parallel.
 
 Usage:
-    uv run python run_benchmarks.py          # only run changed benchmarks
-    uv run python run_benchmarks.py --all    # force re-run everything
+    uv run --no-sync run_benchmarks.py          # only changed, 4 workers
+    uv run --no-sync run_benchmarks.py --all    # force re-run everything
+    uv run --no-sync run_benchmarks.py -j 1     # single-threaded
 """
 
 import contextlib
@@ -19,6 +20,7 @@ import pkgutil
 import statistics
 import sys
 import time
+from concurrent.futures import ProcessPoolExecutor, as_completed
 from pathlib import Path
 from typing import Any
 
@@ -110,14 +112,64 @@ def run_benchmark(item: BenchmarkItem) -> tuple[float, float]:
     return avg, std
 
 
-def run_all_benchmarks(force_all: bool = False) -> list[dict[str, Any]]:
+def _run_single_benchmark(benchmark_id: str) -> dict:
+    """Run a single benchmark in a subprocess. Returns results dict."""
+    # Re-import everything in this process
+    import_all_submodules("cnake_charmer")
+    from cnake_charmer.benchmarks.registry import Variant
+    from cnake_charmer.benchmarks.registry import benchmark_registry as reg
+
+    variants = reg.get(benchmark_id, {})
+    python_variant = variants.get(Variant.PYTHON)
+    cython_variant = variants.get(Variant.CYTHON)
+    purepy_variant = variants.get(Variant.CYTHON_PP)
+    simd_variant = variants.get(Variant.CYTHON_SIMD)
+
+    if python_variant is None:
+        return {"benchmark_id": benchmark_id, "results": [], "error": "no python variant"}
+
+    py_results = None
+    new_results = []
+    cat = python_variant.category if python_variant.category else ""
+
+    for label, variant_item in [
+        ("cython", cython_variant),
+        ("pure py", purepy_variant),
+        ("simd", simd_variant),
+    ]:
+        if variant_item is None:
+            continue
+        if python_variant.args != variant_item.args or python_variant.kwargs != variant_item.kwargs:
+            continue
+
+        if py_results is None:
+            py_results = run_benchmark(python_variant)
+
+        variant_avg, variant_std = run_benchmark(variant_item)
+        speedup = py_results[0] / variant_avg if variant_avg > 0 else float("inf")
+        new_results.append(
+            {
+                "benchmark": benchmark_id,
+                "category": cat,
+                "syntax": label,
+                "py_avg": py_results[0],
+                "py_std": py_results[1],
+                "cy_avg": variant_avg,
+                "cy_std": variant_std,
+                "speedup": speedup,
+            }
+        )
+
+    return {"benchmark_id": benchmark_id, "results": new_results}
+
+
+def run_all_benchmarks(force_all: bool = False, num_workers: int = 4) -> list[dict[str, Any]]:
     cache = load_cache()
     results: list[dict[str, Any]] = []
+    to_run: list[str] = []
     skipped = 0
-    ran = 0
-    total = len(benchmark_registry)
 
-    for idx, (benchmark_id, variants) in enumerate(benchmark_registry.items(), 1):
+    for benchmark_id, variants in benchmark_registry.items():
         python_variant = variants.get(Variant.PYTHON)
         cython_variant = variants.get(Variant.CYTHON)
         purepy_variant = variants.get(Variant.CYTHON_PP)
@@ -128,11 +180,9 @@ def run_all_benchmarks(force_all: bool = False) -> list[dict[str, Any]]:
         ):
             continue
 
-        # Check if sources changed
         current_hash = _compute_hash(benchmark_id)
         cached_hash = cache["hashes"].get(benchmark_id, "")
 
-        # Check cache: hash must match AND all registered variants must have results
         cached_results = cache["results"].get(benchmark_id, [])
         cached_labels = {r["syntax"] for r in cached_results}
         expected_labels = {
@@ -151,65 +201,53 @@ def run_all_benchmarks(force_all: bool = False) -> list[dict[str, Any]]:
             skipped += 1
             continue
 
-        # Run the benchmark
-        py_results = None
-        new_results = []
+        to_run.append(benchmark_id)
 
-        for label, variant_item in [
-            ("cython", cython_variant),
-            ("pure py", purepy_variant),
-            ("simd", simd_variant),
-        ]:
-            if variant_item is None:
-                continue
-            if (
-                python_variant.args != variant_item.args
-                or python_variant.kwargs != variant_item.kwargs
-            ):
-                continue
+    if not to_run:
+        log.info(f"Skipped all {skipped} benchmarks (use --all to force)")
+        return results
 
-            log.info(
-                f"[{idx}/{total}] [dim]starting[/dim] {benchmark_id} ({label})...",
-                extra={"markup": True},
-            )
+    log.info(f"Running {len(to_run)} benchmarks with {num_workers} workers, {skipped} cached")
 
-            if py_results is None:
-                py_results = run_benchmark(python_variant)
+    if num_workers <= 1:
+        # Single-threaded fallback
+        for idx, bid in enumerate(to_run, 1):
+            log.info(f"[{idx}/{len(to_run)}] [dim]starting[/dim] {bid}...", extra={"markup": True})
+            result = _run_single_benchmark(bid)
+            for entry in result["results"]:
+                results.append(entry)
+                log.info(
+                    f"[{idx}/{len(to_run)}] {bid} ({entry['syntax']}): "
+                    f"{entry['py_avg'] * 1000:.1f}ms → {entry['cy_avg'] * 1000:.1f}ms = "
+                    f"[bold]{entry['speedup']:.1f}x[/bold]",
+                    extra={"markup": True},
+                )
+            cache["hashes"][bid] = _compute_hash(bid)
+            cache["results"][bid] = result["results"]
+            save_cache(cache)
+    else:
+        # Parallel execution
+        with ProcessPoolExecutor(max_workers=num_workers) as executor:
+            futures = {executor.submit(_run_single_benchmark, bid): bid for bid in to_run}
+            for done_count, future in enumerate(as_completed(futures), 1):
+                bid = futures[future]
+                try:
+                    result = future.result()
+                    for entry in result["results"]:
+                        results.append(entry)
+                        log.info(
+                            f"[{done_count}/{len(to_run)}] {bid} ({entry['syntax']}): "
+                            f"{entry['py_avg'] * 1000:.1f}ms → {entry['cy_avg'] * 1000:.1f}ms = "
+                            f"[bold]{entry['speedup']:.1f}x[/bold]",
+                            extra={"markup": True},
+                        )
+                    cache["hashes"][bid] = _compute_hash(bid)
+                    cache["results"][bid] = result["results"]
+                    save_cache(cache)
+                except Exception as e:
+                    log.error(f"[{done_count}/{len(to_run)}] {bid} FAILED: {e}")
 
-            variant_avg, variant_std = run_benchmark(variant_item)
-            speedup = py_results[0] / variant_avg if variant_avg > 0 else float("inf")
-            # Get category from the python variant
-            cat = python_variant.category if python_variant.category else ""
-            entry = {
-                "benchmark": benchmark_id,
-                "category": cat,
-                "syntax": label,
-                "py_avg": py_results[0],
-                "py_std": py_results[1],
-                "cy_avg": variant_avg,
-                "cy_std": variant_std,
-                "speedup": speedup,
-            }
-            new_results.append(entry)
-            results.append(entry)
-
-            ran += 1
-            log.info(
-                f"[{idx}/{total}] {benchmark_id} ({label}): "
-                f"{py_results[0] * 1000:.1f}ms → {variant_avg * 1000:.1f}ms = "
-                f"[bold]{speedup:.1f}x[/bold]",
-                extra={"markup": True},
-            )
-
-        # Save cache incrementally after each benchmark
-        cache["hashes"][benchmark_id] = current_hash
-        cache["results"][benchmark_id] = new_results
-        save_cache(cache)
-
-    if skipped:
-        log.info(f"Skipped {skipped} unchanged benchmarks (use --all to force)")
-    log.info(f"Ran {ran} benchmarks, {skipped} cached")
-
+    log.info(f"Ran {len(to_run)} benchmarks, {skipped} cached")
     return results
 
 
@@ -230,7 +268,6 @@ def generate_markdown_report(
                 f"| {res['speedup']:.1f}x |\n"
             )
 
-    # Also print a rich table summary
     table = Table(title=f"Benchmarks ({len(results)} results)")
     table.add_column("Category", style="dim")
     table.add_column("Benchmark", style="cyan")
@@ -259,7 +296,13 @@ def generate_markdown_report(
 if __name__ == "__main__":
     force = "--all" in sys.argv
 
+    # Parse -j N for worker count
+    num_workers = 4
+    for i, arg in enumerate(sys.argv):
+        if arg == "-j" and i + 1 < len(sys.argv):
+            num_workers = int(sys.argv[i + 1])
+
     import_all_submodules("cnake_charmer")
 
-    results = run_all_benchmarks(force_all=force)
+    results = run_all_benchmarks(force_all=force, num_workers=num_workers)
     generate_markdown_report(results)
