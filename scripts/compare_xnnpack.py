@@ -319,6 +319,118 @@ def benchmark_gemm(lib, n=200):
             print(f"  {name}: {status} (relative error: {diff:.2e})")
 
 
+def benchmark_kernel_only(lib, relu_n=5000000, gemm_n=200):
+    """Kernel-only comparison: pre-allocated tensors, time only compute.
+
+    Uses engine/kernels which are extracted nogil functions —
+    same code that a future inference engine would call.
+    """
+    print(f"\n{'=' * 60}")
+    print("KERNEL-ONLY benchmarks (no allocation in timing loop)")
+    print(f"{'=' * 60}")
+
+    try:
+        from cnake_charmer.engine.kernels.bench_wrapper import (
+            bench_gemm_kernel,
+            bench_relu_kernel,
+        )
+    except ImportError as e:
+        print(f"Engine kernels not built: {e}")
+        print("Run: python setup.py build_ext --inplace")
+        return
+
+    # ---- ReLU kernel-only ----
+    print(f"\n--- ReLU kernel-only: n={relu_n:,} ---")
+
+    # XNNPACK C (kernel only — data already in ctypes array)
+    FloatArray = ctypes.c_float * relu_n
+    inp = FloatArray(*[math.sin(i * 0.01) * 10.0 for i in range(relu_n)])
+    out = FloatArray(*([0.0] * relu_n))
+
+    lib.xnn_relu_f32.argtypes = [
+        ctypes.c_size_t,
+        ctypes.POINTER(ctypes.c_float),
+        ctypes.POINTER(ctypes.c_float),
+    ]
+    lib.xnn_relu_f32.restype = None
+    lib.xnn_relu_f32(relu_n, inp, out)  # warmup
+
+    runs = 20
+    start = time.perf_counter()
+    for _ in range(runs):
+        lib.xnn_relu_f32(relu_n, inp, out)
+    xnn_relu_ms = (time.perf_counter() - start) / runs * 1000
+    xnn_relu_sum = sum(out[i] for i in range(relu_n))
+
+    # Engine scalar kernel
+    _, _ = bench_relu_kernel(min(relu_n, 1000), use_avx=False)  # warmup
+    scalar_ms, scalar_sum = bench_relu_kernel(relu_n, use_avx=False)
+
+    # Engine AVX kernel
+    _, _ = bench_relu_kernel(min(relu_n, 1000), use_avx=True)  # warmup
+    avx_ms, avx_sum = bench_relu_kernel(relu_n, use_avx=True)
+
+    print(f"  {'XNNPACK C':<20} {xnn_relu_ms:>8.2f}ms  sum={xnn_relu_sum:.2f}")
+    print(
+        f"  {'engine scalar':<20} {scalar_ms:>8.2f}ms  sum={scalar_sum:.2f}  ({scalar_ms / xnn_relu_ms:.1f}x vs C)"
+    )
+    print(
+        f"  {'engine AVX':<20} {avx_ms:>8.2f}ms  sum={avx_sum:.2f}  ({avx_ms / xnn_relu_ms:.1f}x vs C)"
+    )
+
+    # Correctness
+    for name, val in [("scalar", scalar_sum), ("avx", avx_sum)]:
+        diff = abs(val - xnn_relu_sum) / max(abs(xnn_relu_sum), 1.0)
+        status = "PASS" if diff < 1e-3 else "FAIL"
+        print(f"  {name} correctness: {status} (rel err: {diff:.2e})")
+
+    # ---- GEMM kernel-only ----
+    print(f"\n--- GEMM kernel-only: {gemm_n}x{gemm_n} ---")
+
+    FloatArray2 = ctypes.c_float * (gemm_n * gemm_n)
+    A = FloatArray2(*[((i // gemm_n) + (i % gemm_n)) % 100 / 10.0 for i in range(gemm_n * gemm_n)])
+    B = FloatArray2(
+        *[((i // gemm_n) - (i % gemm_n) + gemm_n) % 100 / 10.0 for i in range(gemm_n * gemm_n)]
+    )
+    C = FloatArray2(*([0.0] * (gemm_n * gemm_n)))
+
+    lib.xnn_gemm_f32.argtypes = [
+        ctypes.c_size_t,
+        ctypes.c_size_t,
+        ctypes.c_size_t,
+        ctypes.POINTER(ctypes.c_float),
+        ctypes.POINTER(ctypes.c_float),
+        ctypes.POINTER(ctypes.c_float),
+    ]
+    lib.xnn_gemm_f32.restype = None
+    lib.xnn_gemm_f32(gemm_n, gemm_n, gemm_n, A, B, C)  # warmup
+
+    start = time.perf_counter()
+    for _ in range(runs):
+        lib.xnn_gemm_f32(gemm_n, gemm_n, gemm_n, A, B, C)
+    xnn_gemm_ms = (time.perf_counter() - start) / runs * 1000
+    xnn_trace = sum(C[i * gemm_n + i] for i in range(gemm_n))
+
+    _, _ = bench_gemm_kernel(10, use_avx=False)  # warmup
+    scalar_ms, scalar_trace = bench_gemm_kernel(gemm_n, use_avx=False)
+
+    _, _ = bench_gemm_kernel(10, use_avx=True)  # warmup
+    avx_ms, avx_trace = bench_gemm_kernel(gemm_n, use_avx=True)
+
+    print(f"  {'XNNPACK C':<20} {xnn_gemm_ms:>8.2f}ms  trace={xnn_trace:.2f}")
+    print(
+        f"  {'engine scalar':<20} {scalar_ms:>8.2f}ms  trace={scalar_trace:.2f}  ({scalar_ms / xnn_gemm_ms:.1f}x vs C)"
+    )
+    print(
+        f"  {'engine AVX':<20} {avx_ms:>8.2f}ms  trace={avx_trace:.2f}  ({avx_ms / xnn_gemm_ms:.1f}x vs C)"
+    )
+
+    for name, val in [("scalar", scalar_trace), ("avx", avx_trace)]:
+        diff = abs(val - xnn_trace) / max(abs(xnn_trace), 1.0)
+        status = "PASS" if diff < 1e-2 else "FAIL"
+        print(f"  {name} correctness: {status} (rel err: {diff:.2e})")
+
+
 if __name__ == "__main__":
     if not os.path.exists(XNNPACK_DIR):
         print(f"XNNPACK not found at {XNNPACK_DIR}")
@@ -331,8 +443,7 @@ if __name__ == "__main__":
 
     benchmark_relu(lib)
     benchmark_gemm(lib)
+    benchmark_kernel_only(lib)
 
     print(f"\n{'=' * 60}")
-    print("Done. The XNNPACK C column is a direct C implementation of the")
-    print("same microkernel patterns (4x8 broadcast GEMM, batch-16 vclamp).")
-    print("Our cy_simd should approach this — any gap is Cython overhead.")
+    print("Done.")
