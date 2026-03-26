@@ -52,37 +52,33 @@ void xnn_relu_f32(size_t n, const float* input, float* output) {
     for (; i < n; i++) output[i] = input[i] > 0.0f ? input[i] : 0.0f;
 }
 
-// ---- Sigmoid: XNNPACK-style polynomial exp, batch-8 AVX ----
+// ---- Sigmoid: XNNPACK AVX2 rr1-p5-div (FMA + correct hex float constants) ----
 void xnn_sigmoid_f32(size_t n, const float* input, float* output) {
     const __m256 vsign_mask = _mm256_set1_ps(-0.0f);
-    const __m256 vlog2e = _mm256_set1_ps(1.4426950216293335f);
-    const __m256 vmagic_bias = _mm256_set1_ps(12582912.5f);
-    const __m256 vminus_ln2_hi = _mm256_set1_ps(-0.693145751953125f);
-    const __m256 vminus_ln2_lo = _mm256_set1_ps(-1.4286067653e-6f);
-    const __m256 vc5 = _mm256_set1_ps(0.008513249971270561f);
-    const __m256 vc4 = _mm256_set1_ps(0.04166689515113831f);
-    const __m256 vc3 = _mm256_set1_ps(0.16666664183139801f);
-    const __m256 vc2 = _mm256_set1_ps(0.49999985098838806f);
-    const __m256 vc1 = _mm256_set1_ps(0.9999998807907104f);
+    const __m256 vlog2e = _mm256_set1_ps(0x1.715476p0f);
+    const __m256 vmagic_bias = _mm256_set1_ps(0x1.8000FEp23f);
+    const __m256 vminus_ln2 = _mm256_set1_ps(-0x1.62E430p-1f);
+    const __m256 vc5 = _mm256_set1_ps(0x1.0F9F9Cp-7f);
+    const __m256 vc4 = _mm256_set1_ps(0x1.573A1Ap-5f);
+    const __m256 vc3 = _mm256_set1_ps(0x1.555A80p-3f);
+    const __m256 vc2 = _mm256_set1_ps(0x1.FFFDC6p-2f);
+    const __m256 vc1 = _mm256_set1_ps(0x1.FFFFF6p-1f);
     const __m256 vone = _mm256_set1_ps(1.0f);
-    const __m256 vdenorm_cutoff = _mm256_set1_ps(-87.33654022216797f);
+    const __m256 vdenorm_cutoff = _mm256_set1_ps(-0x1.5D589Ep+6f);
     size_t i = 0;
     for (; i + 8 <= n; i += 8) {
         __m256 vx = _mm256_loadu_ps(input + i);
         __m256 vz = _mm256_or_ps(vx, vsign_mask);
-        __m256 vn = _mm256_add_ps(_mm256_mul_ps(vz, vlog2e), vmagic_bias);
-        __m128 vs_lo = _mm_castsi128_ps(_mm_slli_epi32(_mm_castps_si128(_mm256_castps256_ps128(vn)), 23));
-        __m128 vs_hi = _mm_castsi128_ps(_mm_slli_epi32(_mm_castps_si128(_mm256_extractf128_ps(vn, 1)), 23));
-        __m256 vs = _mm256_insertf128_ps(_mm256_castps128_ps256(vs_lo), vs_hi, 1);
+        __m256 vn = _mm256_fmadd_ps(vz, vlog2e, vmagic_bias);
+        __m256 vs = _mm256_castsi256_ps(_mm256_slli_epi32(_mm256_castps_si256(vn), 23));
         vn = _mm256_sub_ps(vn, vmagic_bias);
-        __m256 vt = _mm256_add_ps(_mm256_mul_ps(vn, vminus_ln2_hi), vz);
-        vt = _mm256_add_ps(_mm256_mul_ps(vn, vminus_ln2_lo), vt);
-        __m256 vp = _mm256_add_ps(_mm256_mul_ps(vc5, vt), vc4);
-        vp = _mm256_add_ps(_mm256_mul_ps(vp, vt), vc3);
-        vp = _mm256_add_ps(_mm256_mul_ps(vp, vt), vc2);
-        vp = _mm256_add_ps(_mm256_mul_ps(vp, vt), vc1);
+        __m256 vt = _mm256_fmadd_ps(vn, vminus_ln2, vz);
+        __m256 vp = _mm256_fmadd_ps(vc5, vt, vc4);
+        vp = _mm256_fmadd_ps(vp, vt, vc3);
+        vp = _mm256_fmadd_ps(vp, vt, vc2);
+        vp = _mm256_fmadd_ps(vp, vt, vc1);
         vt = _mm256_mul_ps(vt, vs);
-        __m256 ve = _mm256_add_ps(_mm256_mul_ps(vt, vp), vs);
+        __m256 ve = _mm256_fmadd_ps(vt, vp, vs);
         __m256 vd = _mm256_add_ps(ve, vone);
         __m256 vf = _mm256_div_ps(ve, vd);
         vf = _mm256_andnot_ps(_mm256_cmp_ps(vz, vdenorm_cutoff, 1), vf);

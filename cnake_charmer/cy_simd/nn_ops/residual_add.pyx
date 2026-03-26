@@ -7,7 +7,8 @@ Keywords: residual, add, relu, neural network, tensor, f32, simd, avx, cython
 """
 
 from libc.stdlib cimport malloc, free
-from libc.math cimport sin, cos
+from libc.math cimport sin
+from libc.math cimport cos
 from cnake_charmer.benchmarks import cython_benchmark
 
 cdef extern from "immintrin.h":
