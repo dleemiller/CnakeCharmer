@@ -1,95 +1,106 @@
 # CnakeCharmer
 
-A "living dataset" of python -> cython pair implementations
+A living dataset of parallel Python/Cython implementations for training AI models to translate Python → optimized Cython.
 
+## Quickstart
+
+```bash
+# Install dependencies (first time only — also compiles all Cython extensions)
+uv sync
+
+# Run tests
+uv run pytest tests/ -q
+
+# Run benchmarks (parallel, with hash caching)
+uv run run_benchmarks.py
+```
+
+After the initial `uv sync`, use `--no-sync` to skip recompiling everything:
+
+```bash
+# Day-to-day development — skip the full package rebuild
+uv run --no-sync pytest tests/ -q
+uv run --no-sync run_benchmarks.py
+
+# Only rebuild when you change .pyx files
+uv run --no-sync python setup.py build_ext --inplace
+```
+
+> **Why `--no-sync`?** `uv run` without it triggers `uv sync` which rebuilds the
+> entire package including all 250+ Cython extensions. This takes several minutes.
+> Use `--no-sync` for code-only changes and rebuild extensions separately when needed.
 
 ## Project Goals
 
-Due to the vast amount of python code available for training language models,
-LLMs are pretty good at generating it. Not coincidentally, LLMs are also capable
-of writing good, but *not-quite-there* cython code. This is strictly a training data
-gap.
+LLMs can write decent Python but struggle with efficient Cython. This is a training data gap.
 
-The intentional similarity between Python and Cython syntax is fortuitous:
-- translation from python to cython is more straightforward
-- has advantages in LLM reasoning patterns for thinking between syntaxes
-- interoperability creates an easy testing environment
+This repo is both the **dataset** and the **training infrastructure**:
 
-This is a desirable capability, as it would facilitate tools that can
-profile and automate performance improving-capabilities to existing codebases.
+- **Dataset**: 250+ matched Python/Cython pairs across 19 categories, version-controlled and CI-testable
+- **Training**: Multi-turn GRPO with TRL GRPOTrainer where the model iteratively compiles, reviews HTML annotations, and optimizes its Cython output
+- **Tools**: MCP server for AI-assisted development (compile, annotate, benchmark, score)
 
-Currently however, automated translation capability seems to **underperform**, with simple syntax mistakes that
-could be easily improved with example data, and ideally, supervised fine-tuning.
-
-To that end, we set a target of **10,000 Python->Cython implementations** as a "living codebase" that can be
-compiled, benchmarked and tested. This allows us to write the dataset as code, while testing performance,
-correctness and making implementation changes that can progress toward a gold standard benchmark.
+The Python/Cython syntax similarity makes translation tractable, and the compilation + benchmarking loop provides dense reward signal for RL training.
 
 ## Project Structure
 
-The dataset goal is to create mirror implementations between python and cython. These implementations go into
-modules mirroring one another at `cnake_charmer/(py | cy)/...`. Due to the size, and potential usefulness of a
-taxonomy, it should be organizing implementations into an appropriately submodule.
+```
+cnake_charmer/
+  py/{category}/{name}.py       ← Pure Python (training prompt)
+  cy/{category}/{name}.pyx      ← Cython (ground truth baseline)
+  cy_simd/{category}/{name}.pyx ← SIMD-optimized Cython (AVX2/FMA)
+  pp/{category}/{name}.py       ← Pure Python Cython syntax (optional)
+  validate/                     ← Compilation, annotation, correctness, benchmark tools
+  rewards/                      ← Reward functions for GRPO training
+  training/                     ← TRL GRPOTrainer integration
+  dataset/                      ← Loader that discovers pairs from repo structure
+  mcp_server.py                 ← MCP server for Claude Code
+tests/
+  {category}/test_{name}.py     ← Equivalence tests (Python == Cython output)
+```
 
-### Testing
+### Categories
 
-Testing should be done for correctness. More importantly, it should be done to check that the twin implementations have
-**equivalent** inputs and outputs.
+`algorithms`, `numerical`, `sorting`, `string_processing`, `math_problems`, `dynamic_programming`, `geometry`, `simulation`, `graph`, `statistics`, `cryptography`, `nn_ops`, `image_processing`, `compression`, `leetcode`, `physics`, `diff_equations`, `dsp`, `optimization`
+
+### Three Tiers
+
+For compute-intensive operations (e.g. `nn_ops`), we provide three implementations:
+
+| Tier | Directory | What it teaches |
+|------|-----------|----------------|
+| Python | `py/` | Naive baseline |
+| Basic Cython | `cy/` | `cdef` types, C arrays, `libc.math` |
+| SIMD Cython | `cy_simd/` | AVX2 intrinsics, cache tiling, FMA |
 
 ### Benchmarking
 
-There are many ways to optimizing both python and cython code. Therefore, we'd like to ensure that implementation
-optimizations do not regress in performance. For each implementation, we need to benchmark the results. Given our
-goal of a large number of implementations, benchmarks should generally run in less than 1s, and use inputs
-that would be demonstrative of a typical workload (if applicable).
-
-The benchmarking decorators should be applied:
-```python
-from cnake_charmer.benchmarks import python_benchmark
-from typing import List
-
-@python_benchmark(args=(10000,))
-def fizzbuzz(n: int) -> List[str]:
+```bash
+uv run --no-sync run_benchmarks.py         # 4 parallel workers, hash caching
+uv run --no-sync run_benchmarks.py --all   # force re-run everything
+uv run --no-sync run_benchmarks.py -j 8    # 8 workers
 ```
 
-Or perhaps:
-```cython
-from cnake_charmer.benchmarks import cython_benchmark
-
-from libc.stdio cimport printf
-import cython
-
-@cython.boundscheck(False)
-@cython.wraparound(False)
-@cython_benchmark(args=(10000,))
-def fizzbuzz(int n):
-```
-
-Note that the decorators use the `__name__` property. For matching purposes, this means the script name should be
-globally unique, but mirrored across the py/cy implementation mirror.
-
-
-## External Libraries
-
-"Python" implementations should be "pure python". Where it makes sense that a library should be added to the project,
-we should ask:
-
-- is this a library that would commonly benefit from being used in *cython* code?
-- can our script be reasonably implemented without it?
-- will it be useful for multiple different code implementations?
-
-## Changes to existing implementations
-
-Changes to any existing implementation are welcome. "Best practice" improvements are encouraged.
-Changes should not regress in benchmarks. It is probable that we will use an implementation's history,
-along with Cython's annotations to create additional Cython optimization datasets.
-Therefore, it is actually beneficial to have committed *inefficient* Cython implementations that are improved over time.
-
-Example: [Cython: Determining where to add types](https://cython.readthedocs.io/en/latest/src/quickstart/cythonize.html#determining-where-to-add-types)
-
+Benchmarks use source file hashing — only changed problems re-run. Results saved to `benchmarks.md`.
 
 ## Contributing
 
-*Please do not contribute to the project at this point.* Our first priority will be to setup CI tools that
-can enable us to automatically benchmark and test PRs. Once we are settled on the bones of the project,
-we will open it up for contributions.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the full guide to adding new problem pairs.
+
+## Training
+
+The training pipeline uses TRL's GRPOTrainer with `environment_factory` for multi-turn tool-calling RL:
+
+```python
+from cnake_charmer.training.grpo import create_trainer
+from cnake_charmer.dataset.loader import discover_pairs
+
+trainer = create_trainer(
+    model="Qwen/Qwen3-0.6B",
+    problems=discover_pairs(),
+    environment_factory=CythonToolEnvironment,
+)
+trainer.train()
+```
+
+The model learns to call `compile`, `annotate`, `test`, and `benchmark` tools to iteratively improve its Cython output.
