@@ -5,7 +5,9 @@
 | nn_ops | conv2d | cython | 232.440 | 0.170 | 1367.2x |
 | cryptography | siphash | cython | 277.196 | 0.420 | 659.8x |
 | nn_ops | max_pool_1d | cython | 166.446 | 0.529 | 314.8x |
+| nn_ops | relu | simd | 365.733 | 1.538 | 237.8x |
 | math_problems | matrix_power | cython | 370.464 | 1.977 | 187.4x |
+| nn_ops | relu | cython | 365.733 | 1.970 | 185.6x |
 | graph | topological_sort_dfs | cython | 56.070 | 0.308 | 181.8x |
 | statistics | weighted_percentile | cython | 234.112 | 1.333 | 175.6x |
 | image_processing | sobel_edge | cython | 127.930 | 0.732 | 174.7x |
@@ -89,11 +91,9 @@
 | compression | huffman_frequency | cython | 40.324 | 0.610 | 66.1x |
 | simulation | nbody_verlet | cython | 283.213 | 4.322 | 65.5x |
 | image_processing | median_filter | cython | 97.132 | 1.491 | 65.1x |
-| nn_ops | relu | simd | 734.752 | 11.283 | 65.1x |
 | string_processing | edit_distance | cython | 86.902 | 1.344 | 64.7x |
 | simulation | forest_fire | cython | 187.986 | 2.912 | 64.5x |
 | algorithms | kadane_2d | cython | 242.230 | 3.756 | 64.5x |
-| nn_ops | relu | cython | 734.752 | 11.733 | 62.6x |
 | algorithms | levenshtein_automaton | cython | 304.982 | 5.023 | 60.7x |
 | simulation | reaction_diffusion | cython | 161.091 | 2.677 | 60.2x |
 | math_problems | digit_sum | cython | 368.383 | 6.126 | 60.1x |
