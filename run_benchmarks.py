@@ -82,8 +82,10 @@ def load_cache() -> dict:
 
 
 def save_cache(cache: dict) -> None:
-    """Save benchmark cache."""
-    CACHE_FILE.write_text(json.dumps(cache, indent=2))
+    """Save benchmark cache atomically (write to temp, then rename)."""
+    tmp = CACHE_FILE.with_suffix(".tmp")
+    tmp.write_text(json.dumps(cache, indent=2))
+    tmp.rename(CACHE_FILE)
 
 
 def run_benchmark(item: BenchmarkItem) -> tuple[float, float]:
