@@ -6,18 +6,22 @@ This repo is a **living dataset** of parallel Python/Cython implementations. Eac
 
 ```
 cnake_charmer/
-  py/{category}/{name}.py     ← Pure Python implementation (training prompt)
-  cy/{category}/{name}.pyx    ← Cython implementation (ground truth baseline)
-  pp/{category}/{name}.py     ← Pure Python Cython syntax (optional, third style)
+  py/{category}/{name}.py       ← Pure Python implementation (training prompt)
+  cy/{category}/{name}.pyx      ← Cython implementation (portable, scalar)
+  cy_simd/{category}/{name}.pyx ← SIMD-optimized Cython (AVX2+FMA / NEON)
+  pp/{category}/{name}.py       ← Pure Python Cython syntax (optional)
+  engine/
+    tensor.pxd                  ← TensorView struct (future inference engine)
+    kernels/                    ← Extracted nogil kernels (shared by cy_simd + engine)
 tests/
-  {category}/test_{name}.py   ← Equivalence tests
+  {category}/test_{name}.py     ← Equivalence tests
 ```
 
 Categories: `algorithms`, `numerical`, `sorting`, `string_processing`, `math_problems`, `dynamic_programming`, `geometry`, `simulation`, `graph`, `statistics`, `cryptography`, `nn_ops`, `image_processing`, `compression`, `leetcode`, `physics`, `diff_equations`, `dsp`, `optimization`
 
-> **Note:** New category directories need an `__init__.py` in `py/`, `cy/`, and `tests/`.
+> New category directories need `__init__.py` in `py/`, `cy/`, and `tests/`.
 
-## Adding a New Problem
+## Adding a Standard Problem
 
 ### 1. Write the Python implementation
 
@@ -32,7 +36,7 @@ Keywords: relevant, search, terms
 from cnake_charmer.benchmarks import python_benchmark
 
 
-@python_benchmark(args=(10000,))  # args for benchmarking (should take ~10-500ms)
+@python_benchmark(args=(10000,))  # should take ~10-500ms in Python
 def func_name(n: int) -> return_type:
     """What this function does.
 
@@ -42,16 +46,9 @@ def func_name(n: int) -> return_type:
     Returns:
         The result.
     """
-    # Pure Python implementation — no Cython, no C extensions
-    # Must be deterministic (same input → same output)
+    # Pure Python, no external deps, deterministic
     ...
 ```
-
-**Guidelines:**
-- Function must be self-contained (no external deps beyond stdlib)
-- Must be deterministic — same `n` always produces the same output
-- Choose benchmark args so Python version takes 10-500ms
-- The function signature is what the model sees as its translation target
 
 ### 2. Write the Cython implementation
 
@@ -77,10 +74,8 @@ def func_name(int n):
     if not arr:
         raise MemoryError()
 
-    # C-optimized implementation
-    # ...
+    # C-optimized implementation ...
 
-    # Convert to Python only at the end
     cdef list result = [arr[i] for i in range(n)]
     free(arr)
     return result
@@ -92,13 +87,12 @@ def func_name(int n):
 - Use `from libc.math cimport sqrt, exp, log` for math functions
 - Use `from libc.string cimport memset, memcpy` for memory ops
 - Use `cdivision=True` to avoid Python's zero-division checks
-- Use hardware-appropriate types: `int`, `long long`, `double`
 - Convert to Python objects only at the very end when returning
 - For strings, work with `char *` or `bytes` instead of Python `str`
 
 **Do NOT use:**
-- `PyList_SET_ITEM` / `PyList_New` / `Py_INCREF` — causes segfaults due to reference counting bugs. Use `[arr[i] for i in range(n)]` list comprehensions instead, which are safe and nearly as fast.
-- `import cython` with annotation syntax (`cython.int`, `cython.double`) in `.pyx` files — use native `cdef` syntax instead. The dataset loader strips `import cython`.
+- `PyList_SET_ITEM` / `PyList_New` / `Py_INCREF` — causes segfaults. Use list comprehensions instead.
+- `import cython` with annotation syntax (`cython.int`) in `.pyx` files — use native `cdef` syntax. The dataset loader strips `import cython`.
 - Python `list.append()` in hot loops — pre-allocate with `malloc` or `[None] * n`.
 
 ### 3. Write the equivalence test
@@ -116,90 +110,109 @@ from cnake_charmer.cy.{category}.{name} import func_name as cy_func
 
 @pytest.mark.parametrize("n", [10, 100, 500, 1000])
 def test_{name}_equivalence(n):
-    py_result = py_func(n)
-    cy_result = cy_func(n)
-    # For floats: assert abs(py_result - cy_result) < 1e-6
-    # For float lists: assert all(abs(a-b) < 1e-6 for a,b in zip(py, cy))
+    # For floats: assert abs(py - cy) / max(abs(py), 1.0) < 1e-4
     # For ints/lists: assert py_result == cy_result
-    assert py_result == cy_result
+    assert py_func(n) == cy_func(n)
 ```
 
-### 4. Compile and test
+### 4. Compile, test, review annotations
 
 ```bash
-# Build all Cython extensions
 uv run python setup.py build_ext --inplace
-
-# Run your test
 uv run pytest tests/{category}/test_{name}.py -v
-
-# Run all tests
-uv run pytest tests/ -q
 ```
 
-### 5. Review HTML annotations and optimize
+**Review the HTML annotation** (`cnake_charmer/cy/{category}/{name}.html`):
+- **Yellow lines** = Python interactions (slow) — minimize
+- **White lines** = pure C (fast) — maximize
+- Target score: **>0.85** (85% C lines)
+- Common culprits: `list.append()`, Python list indexing, `sort()` on tuples, string ops
 
-**This is the most important step.** Every new problem should be optimized by reviewing the HTML annotations — not just the low performers.
-
-Cython generates HTML annotation files showing which lines fall back to Python (yellow) vs run as pure C (white). The build step with `annotate=True` (default in `setup.py`) creates these at `cnake_charmer/cy/{category}/{name}.html`.
-
-The project includes an MCP server with tools for scoring and annotating — see [MCP Tools](#mcp-tools-for-ai-assisted-development) below. You can also open the HTML directly:
-
-```bash
-xdg-open cnake_charmer/cy/{category}/{name}.html
-```
-
-**What to look for in the HTML:**
-- **Yellow lines** = Python object interactions (SLOW) — minimize these
-- **White lines** = pure C operations (FAST) — maximize these
-- Click the `+` to expand and see the generated C code for each line
-- Common yellow culprits:
-  - `list.append()` → pre-allocate with `malloc` instead
-  - `arr[i]` on a Python list → use C array pointer access
-  - Calling Python functions in a loop → use `cdef` functions or `libc`
-  - String operations → work with `char *` bytes
-  - Python `sort()` on lists of tuples → use `libc.stdlib.qsort` with C structs
-
-**Target annotation score: >0.85** (85% of lines should be pure C)
-
-### 6. Check quality targets
-
-Use the MCP tools or the CLI to verify the implementation meets these targets:
-
-- `compiled`: must be True
-- `correctness`: must be 1.0
-- `annotations`: >0.85
-- `speedup`: >5x (varies by problem type)
-- `total reward`: >0.90
-
-### 7. Run benchmarks and commit
+### 5. Run benchmarks and commit
 
 ```bash
-# Run benchmarks (only re-runs changed problems via hash caching)
-uv run python run_benchmarks.py
-
-# Force re-run all benchmarks
-uv run python run_benchmarks.py --all
-
-# Check results
+uv run run_benchmarks.py    # parallel, hash-cached, only re-runs changed
 cat benchmarks.md
-
-# Commit (include the benchmark cache so future runs skip unchanged)
-git add cnake_charmer/py/{category}/{name}.py \
-       cnake_charmer/cy/{category}/{name}.pyx \
-       tests/{category}/test_{name}.py \
-       benchmarks.md .benchmark_cache.json
-git commit -m "Add {name} problem pair ({Nx speedup})"
+git add cnake_charmer/py/ cnake_charmer/cy/ tests/ benchmarks.md .benchmark_cache.json
 ```
 
-## Finding New Problems to Implement
+---
+
+## Adding nn_ops (Neural Network Operations)
+
+The `nn_ops` category is special — these are building blocks for a future CPU inference engine (like XNNPACK). They follow a different pattern:
+
+### Three-tier architecture
+
+| Tier | Directory | Purpose | Compiler flags |
+|------|-----------|---------|----------------|
+| Python | `py/nn_ops/` | Naive baseline | standard |
+| Portable Cython | `cy/nn_ops/` | Scalar C arrays, no SIMD | `-mavx2 -mfma -O3`* |
+| SIMD Cython | `cy_simd/nn_ops/` | AVX2+FMA intrinsics | `-mavx2 -mfma -O3` |
+
+\* nn_ops in `cy/` also get SIMD flags since the compiler may auto-vectorize scalar loops.
+
+### Design for inference
+
+nn_ops should be written as if they'll be used in a real inference engine:
+
+1. **Use `float` (f32)**, not `double` or `int` — matches ML inference precision
+2. **Operate on pre-allocated tensors** — the benchmark wrapper handles allocation, the kernel takes pointers
+3. **Extract the kernel as a `cdef void ... noexcept nogil` function** in `engine/kernels/` so it can be shared between the benchmark and a future engine
+
+### Engine kernel pattern
+
+The core compute goes in `engine/kernels/{name}_f32.pxd` / `.pyx`:
+
+```cython
+# engine/kernels/relu_f32.pxd
+cdef void relu_f32(const float *inp, float *out, int n) noexcept nogil
+cdef void relu_f32_avx(const float *inp, float *out, int n) noexcept nogil
+```
+
+The benchmark wrapper (`cy_simd/nn_ops/relu.pyx`) calls these via `cimport`. A future inference engine graph executor would call the same kernels.
+
+### SIMD intrinsics pattern (XNNPACK-style)
+
+```cython
+cdef extern from "immintrin.h" nogil:
+    ctypedef float __m256
+    __m256 _mm256_loadu_ps(const float *mem) noexcept
+    __m256 _mm256_max_ps(__m256 a, __m256 b) noexcept
+    __m256 _mm256_fmadd_ps(__m256 a, __m256 b, __m256 c) noexcept
+    # ... all intrinsics must be declared noexcept nogil
+```
+
+Key patterns from XNNPACK:
+- **ReLU (vclamp)**: `_mm256_max_ps(zero, x)` — batch 16 floats per iteration
+- **GEMM (4x8 microkernel)**: broadcast A, load packed B, `_mm256_fmadd_ps` — 4 row accumulators × 8-wide
+- **Remainder handling**: scalar fallback for elements not divisible by 8
+
+### Hardware floor
+
+**FMA3 (Haswell 2013+)** is the minimum target. All SIMD kernels can use `_mm256_fmadd_ps`. NEON support (ARM) is planned for future — kernel files will split by architecture when added.
+
+### f32 precision in tests
+
+nn_ops use `float` (32-bit) internally but Python uses `double` (64-bit). Tests need relative tolerance:
+
+```python
+assert abs(py_result - cy_result) / max(abs(py_result), 1.0) < 1e-4
+```
+
+### Benchmarks
+
+The benchmark report has two sections:
+1. **Full Operation** — includes tensor allocation + compute + reduce (standard benchmark table)
+2. **Kernel-Only (Inference Mode)** — pre-allocated tensors, times only the compute kernel. Compares portable Cython vs SIMD. Generated automatically by `run_benchmarks.py`.
+
+---
+
+## Finding New Problems
 
 ### From the Stack v2 DuckDB
 
-The repo includes ~1,000 real-world Cython files from The Stack v2 in `utils/stack_data/stack_cython_1k.duckdb`. Browse it for inspiration:
-
 ```bash
-# Find short, self-contained functions (best candidates for the dataset)
 uv run python -c "
 import duckdb
 con = duckdb.connect('utils/stack_data/stack_cython_1k.duckdb', read_only=True)
@@ -210,8 +223,7 @@ rows = con.execute('''
       AND length_bytes BETWEEN 200 AND 2000
       AND is_generated = false
       AND content LIKE '%def %'
-    ORDER BY length_bytes ASC
-    LIMIT 30
+    ORDER BY length_bytes ASC LIMIT 30
 ''').fetchall()
 for fn, path, content, size in rows:
     defs = [l.strip() for l in content.split(chr(10)) if l.strip().startswith(('def ','cpdef '))]
@@ -220,83 +232,23 @@ con.close()
 "
 ```
 
-**What to look for:**
-- Functions using `libc.math` (trig, sqrt, exp) — great speedups from C math
-- Numerical loops with `cdef double` / `cdef int` — classic Cython wins
-- Algorithms using `malloc`/`free` for C arrays — shows real optimization patterns
-- Functions with memoryviews (`double[:]`) — teaches typed array access
+**Look for:** `libc.math` functions, numerical loops, `malloc`/`free` patterns, memoryviews.
+**Skip:** C/C++ library wrappers, `cdef class`, multi-module imports.
 
-**What to skip:**
-- Files wrapping C/C++ libraries (`cdef extern from`) — not self-contained
-- Classes (`cdef class`) — focus on functions for now
-- Files with many imports from other Cython modules — dependency issues
+### Adapting Stack code
 
-### From the algorithmic catalog
+1. Read the source, identify the core algorithm
+2. Write a pure Python version (self-contained, deterministic)
+3. Write a Cython version using our conventions
+4. Parameterize by `n`, tune benchmark args to 10-500ms Python time
+5. Test, annotate, benchmark, commit
 
-The `cnake_charmer/sources/algorithmic.py` loader reads from `data/problems.jsonl`. You can add problems there too:
+## MCP Tools
 
-```json
-{"problem_id": "algo_042", "description": "Compute N-body gravitational forces", "python_code": "def nbody(n):\n    ...", "func_name": "nbody", "test_cases": [[[10]], [[50]]], "benchmark_args": [200], "category": "numerical", "difficulty": "hard"}
-```
-
-### Good problem categories to expand
-
-| Category | What to look for | Example patterns from Stack |
-|----------|-----------------|----------------------------|
-| numerical | Pairwise distances, integration, FFT, interpolation | `libc.math` trig loops, memoryview dot products |
-| algorithms | Graph algorithms, string matching, tree traversals | `malloc`-based adjacency lists, C array BFS |
-| sorting | Heap sort, counting sort, Tim sort | In-place C array sorting with typed comparisons |
-| dynamic_programming | Sequence alignment, path finding, optimization | 2D DP tables via flat `malloc` arrays |
-| string_processing | Pattern matching, compression, encoding | `char *` iteration, byte-level comparison |
-| math_problems | Number theory sieves, polynomial evaluation, GCD chains | Pure integer arithmetic in typed loops |
-
-### Adapting Stack code into dataset pairs
-
-When you find an interesting Cython file in the DuckDB:
-
-1. **Read the full source**: `SELECT content FROM stack_cython WHERE filename = 'name.pyx'`
-2. **Identify the core algorithm** — strip away imports, classes, and library wrappers
-3. **Write a pure Python version** that's self-contained and deterministic
-4. **Write a clean Cython version** using the patterns from the Stack code as inspiration (not copy-paste — adapt to our conventions)
-5. **Make it parameterized by `n`** so benchmark args control the workload
-6. Follow steps 3-7 above to test, annotate, score, and commit
-
-## Optional: Pure Python Cython syntax (`pp/`)
-
-The `pp/` directory uses Cython's [pure Python syntax](https://cython.readthedocs.io/en/latest/src/tutorial/pure.html) — regular `.py` files that compile as Cython using decorators and annotations:
-
-```python
-import cython
-
-@cython.cfunc
-@cython.locals(i=cython.int, total=cython.double)
-def helper(n: cython.int) -> cython.double:
-    total = 0.0
-    for i in range(n):
-        total += i * 0.5
-    return total
-```
-
-This is a newer syntax that runs as both Python and Cython. Add `pp/` implementations for problems where the pure Python syntax is a natural fit.
-
-## MCP Tools for AI-Assisted Development
-
-The project includes an MCP server with tools for compiling, annotating, and scoring Cython implementations. The tools are self-describing — AI assistants discover them automatically. Set it up with:
+The project includes an MCP server for AI-assisted development:
 
 ```bash
 claude mcp add cnake-charmer -- uv run python -m cnake_charmer.mcp_server
 ```
 
-These are the same validation and reward functions used during GRPO training.
-
-## Hardware Instructions in Cython
-
-Using hardware-level operations is explicitly in scope. Cython can access:
-
-- **SIMD via C intrinsics**: `cdef extern from "immintrin.h"` for SSE/AVX
-- **OpenMP parallelism**: `from cython.parallel cimport prange` with `nogil`
-- **Cache-friendly patterns**: sequential memory access, struct-of-arrays
-- **libc functions**: `memcpy`, `memset`, `qsort` — these compile to optimized machine code
-- **Math intrinsics**: `libc.math` functions (`sqrt`, `exp`, `log`) use hardware FPU
-
-The goal is to teach the model the full range of optimization techniques available in Cython, from basic type declarations to hardware-level optimization.
+Tools are self-describing. Auto-detects SIMD flags for `cy_simd/` and `nn_ops/` files.
