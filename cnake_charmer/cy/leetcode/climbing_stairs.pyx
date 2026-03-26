@@ -7,7 +7,7 @@ Keywords: leetcode, climbing stairs, fibonacci, dynamic programming, cython, ben
 from cnake_charmer.benchmarks import cython_benchmark
 
 
-@cython_benchmark(syntax="cy", args=(10000000,))
+@cython_benchmark(syntax="cy", args=(3000000,))
 def climbing_stairs(int n):
     """Compute sum of ways(1) + ways(2) + ... + ways(n) mod 10^9+7."""
     cdef long long MOD = 1000000007

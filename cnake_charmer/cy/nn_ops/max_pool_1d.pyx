@@ -7,7 +7,7 @@ Keywords: max pool, pooling, neural network, downsampling, cython
 from cnake_charmer.benchmarks import cython_benchmark
 
 
-@cython_benchmark(syntax="cy", args=(10000000,))
+@cython_benchmark(syntax="cy", args=(3000000,))
 def max_pool_1d(int n):
     """Max pool with kernel=4, stride=4 and return sum of pooled values."""
     cdef long long total = 0

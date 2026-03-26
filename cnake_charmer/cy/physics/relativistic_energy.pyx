@@ -8,7 +8,7 @@ from libc.math cimport sqrt
 from cnake_charmer.benchmarks import cython_benchmark
 
 
-@cython_benchmark(syntax="cy", args=(5000000,))
+@cython_benchmark(syntax="cy", args=(2000000,))
 def relativistic_energy(int n):
     """Compute relativistic kinetic energy with typed loop and libc sqrt."""
     cdef double c = 299792458.0

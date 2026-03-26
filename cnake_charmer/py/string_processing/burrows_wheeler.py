@@ -6,7 +6,7 @@ Keywords: string processing, burrows-wheeler, bwt, transform, benchmark
 from cnake_charmer.benchmarks import python_benchmark
 
 
-@python_benchmark(args=(5000,))
+@python_benchmark(args=(50000,))
 def burrows_wheeler(n: int) -> int:
     """Compute BWT of a deterministic string and return sum of output bytes.
 

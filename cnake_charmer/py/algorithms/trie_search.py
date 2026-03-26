@@ -7,7 +7,7 @@ Keywords: algorithms, trie, search, data structure, benchmark
 from cnake_charmer.benchmarks import python_benchmark
 
 
-@python_benchmark(args=(10000,))
+@python_benchmark(args=(100000,))
 def trie_search(n: int) -> int:
     """Build a trie from n deterministic words, then count how many queries match.
 

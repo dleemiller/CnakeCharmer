@@ -7,7 +7,7 @@ Keywords: matrix, multiply, linear algebra, numerical, benchmark
 from cnake_charmer.benchmarks import python_benchmark
 
 
-@python_benchmark(args=(50,))
+@python_benchmark(args=(150,))
 def matrix_multiply(n: int) -> list[list[float]]:
     """Multiply two n×n identity-like matrices and return the result.
 

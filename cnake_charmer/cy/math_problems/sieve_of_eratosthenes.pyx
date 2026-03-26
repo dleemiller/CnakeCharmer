@@ -9,7 +9,7 @@ from cnake_charmer.benchmarks import cython_benchmark
 import cython
 
 
-@cython_benchmark(syntax="cy", args=(100000,))
+@cython_benchmark(syntax="cy", args=(1000000,))
 def sieve_of_eratosthenes(int n):
     """Find all primes up to n using a C-typed Sieve of Eratosthenes."""
     cdef int i, j

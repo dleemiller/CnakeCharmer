@@ -9,7 +9,7 @@ to compute a specified number of prime numbers.
 from cnake_charmer.benchmarks import python_benchmark
 
 
-@python_benchmark(args=(300,))
+@python_benchmark(args=(3000,))
 def primes(nb_primes: int) -> list[int]:
     """Generate a list of prime numbers.
 

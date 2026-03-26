@@ -6,7 +6,7 @@ Keywords: leetcode, two sum, hash map, counting, pairs, benchmark
 from cnake_charmer.benchmarks import python_benchmark
 
 
-@python_benchmark(args=(50000,))
+@python_benchmark(args=(200000,))
 def two_sum_count(n: int) -> int:
     """Count pairs (i, j) with i < j where arr[i] + arr[j] == target.
 

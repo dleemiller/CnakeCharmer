@@ -26,7 +26,7 @@ cdef int _cmp_suffix(const void *a, const void *b) noexcept nogil:
     return la - lb  # shorter suffix is "smaller"
 
 
-@cython_benchmark(syntax="cy", args=(5000,))
+@cython_benchmark(syntax="cy", args=(50000,))
 def burrows_wheeler(int n):
     """Compute BWT of a deterministic string and return sum of output bytes."""
     global _bwt_str, _bwt_len

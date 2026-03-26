@@ -9,7 +9,7 @@ from libc.math cimport sin, M_PI
 from cnake_charmer.benchmarks import cython_benchmark
 
 
-@cython_benchmark(syntax="cy", args=(25,))
+@cython_benchmark(syntax="cy", args=(20,))
 def romberg_integration(int n):
     """Compute Romberg integration of sin(x) from 0 to pi with n levels."""
     cdef double a = 0.0

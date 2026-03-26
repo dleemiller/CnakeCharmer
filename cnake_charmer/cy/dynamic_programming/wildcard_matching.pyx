@@ -9,7 +9,7 @@ from libc.string cimport memset
 from cnake_charmer.benchmarks import cython_benchmark
 
 
-@cython_benchmark(syntax="cy", args=(500000,))
+@cython_benchmark(syntax="cy", args=(200000,))
 def wildcard_matching(int n):
     """Count how many generated strings match pattern 'D*?D' using DP."""
     cdef int count = 0

@@ -8,7 +8,7 @@ from cnake_charmer.benchmarks import python_benchmark
 MOD = 10**9 + 7
 
 
-@python_benchmark(args=(10000000,))
+@python_benchmark(args=(3000000,))
 def fibonacci_matrix(n: int) -> int:
     """Compute sum F(1)+F(2)+...+F(n) mod 10^9+7.
 
