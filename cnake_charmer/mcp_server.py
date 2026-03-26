@@ -130,20 +130,25 @@ def list_problems() -> str:
 
 
 # ---------------------------------------------------------------------------
-# Code-level tools (for iterating on implementations)
+# File-based tools (for iterating on implementations)
 # ---------------------------------------------------------------------------
 
 
 @mcp.tool()
-def compile_check(code: str) -> str:
-    """Compile Cython (.pyx) code and check for errors.
+def compile_file(pyx_path: str) -> str:
+    """Compile a .pyx file and check for errors.
 
     Args:
-        code: Complete .pyx source code to compile.
+        pyx_path: Path to a .pyx file, e.g. 'cnake_charmer/cy/numerical/great_circle.pyx'.
 
     Returns:
         JSON with success status and any error messages.
     """
+    path = Path(pyx_path)
+    if not path.exists():
+        return json.dumps({"success": False, "errors": f"File not found: {pyx_path}"})
+
+    code = path.read_text()
     result = compile_cython(code, annotate=False)
     output = {"success": result.success, "errors": result.errors, "warnings": result.warnings}
     cleanup_build(result)
@@ -151,18 +156,23 @@ def compile_check(code: str) -> str:
 
 
 @mcp.tool()
-def annotate_cython(code: str) -> str:
-    """Compile Cython code and analyze HTML annotations for optimization quality.
+def annotate_file(pyx_path: str) -> str:
+    """Compile a .pyx file and analyze HTML annotations for optimization quality.
 
     Returns a score (0.0 = all Python, 1.0 = all C) and hints about
     lines that fall back to Python object interactions.
 
     Args:
-        code: Complete .pyx source code to analyze.
+        pyx_path: Path to a .pyx file, e.g. 'cnake_charmer/cy/numerical/great_circle.pyx'.
 
     Returns:
         JSON with score, yellow/white line counts, and optimization hints.
     """
+    path = Path(pyx_path)
+    if not path.exists():
+        return json.dumps({"success": False, "errors": f"File not found: {pyx_path}"})
+
+    code = path.read_text()
     result = compile_cython(code, annotate=True, keep_build=True)
 
     if not result.success:
@@ -187,67 +197,6 @@ def annotate_cython(code: str) -> str:
         )
 
     return json.dumps({"success": True, "score": 0.0, "hints": ["Could not parse annotations"]})
-
-
-@mcp.tool()
-def score_cython(
-    cython_code: str, python_code: str, func_name: str, test_inputs: str, benchmark_args: str
-) -> str:
-    """Run the full composite reward on Cython code against a Python reference.
-
-    Use score_problem() instead when the files already exist in the repo.
-    This tool is for scoring code that hasn't been saved to files yet.
-
-    Args:
-        cython_code: Complete .pyx source code.
-        python_code: Python reference implementation (will be exec'd).
-        func_name: Name of the function.
-        test_inputs: JSON array of test inputs, e.g. '[[10], [20], [50]]'.
-        benchmark_args: JSON array of benchmark args, e.g. '[10000]'.
-
-    Returns:
-        JSON with compiled, correctness, speedup, annotation score, and total reward.
-    """
-    try:
-        inputs = json.loads(test_inputs)
-        test_cases = [((tuple(tc),) if isinstance(tc, list) else ((tc,),)) for tc in inputs]
-    except (json.JSONDecodeError, TypeError) as e:
-        return json.dumps({"error": f"Invalid test_inputs: {e}"})
-
-    try:
-        b_args = tuple(json.loads(benchmark_args))
-    except (json.JSONDecodeError, TypeError) as e:
-        return json.dumps({"error": f"Invalid benchmark_args: {e}"})
-
-    namespace = {}
-    try:
-        exec(python_code, namespace)  # noqa: S102
-        py_func = namespace[func_name]
-    except Exception as e:
-        return json.dumps({"error": f"Failed to load Python function: {e}"})
-
-    scores = _composite_reward(
-        cython_code=cython_code,
-        python_func=py_func,
-        func_name=func_name,
-        test_cases=test_cases,
-        benchmark_args=b_args,
-        benchmark_runs=3,
-    )
-
-    return json.dumps(
-        {
-            "compiled": scores["compiled"],
-            "correctness": scores["correctness"],
-            "speedup": round(scores["speedup"], 2),
-            "annotation_score": round(scores["annotations"], 3),
-            "total_reward": round(scores["total"], 3),
-            "annotation_hints": scores["annotation_hints"],
-            "correctness_failures": scores["correctness_failures"],
-            "compilation_errors": scores["compilation_errors"],
-        },
-        indent=2,
-    )
 
 
 if __name__ == "__main__":
