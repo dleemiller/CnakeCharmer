@@ -63,8 +63,8 @@ void xnn_relu_f32(size_t n, const float* input, float* output) {
     }
 }
 
-// ---- GEMM 4x8 microkernel ----
-// XNNPACK f32-gemm-4x8-avx-broadcast pattern
+// ---- GEMM 4x8 microkernel (FMA3, Haswell 2013+) ----
+// XNNPACK f32-gemm-4x8-minmax-fma3-broadcast pattern
 void xnn_gemm_f32(size_t m, size_t n, size_t k,
                   const float* a, const float* b, float* c) {
     memset(c, 0, m * n * sizeof(float));
