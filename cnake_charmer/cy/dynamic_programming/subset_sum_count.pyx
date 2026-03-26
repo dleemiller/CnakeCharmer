@@ -39,6 +39,7 @@ def subset_sum_count(int n):
             dp[j] = (dp[j] + dp[j - v]) % MOD
 
     result = dp[target]
+    cdef long long result_mid = dp[target // 2]
     free(dp)
     free(items)
-    return int(result)
+    return (int(result), int(result_mid))

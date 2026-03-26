@@ -19,7 +19,7 @@ def hash_table_ops(int n):
     if not table:
         raise MemoryError()
 
-    cdef int i, key, query, slot, hits
+    cdef int i, key, query, slot, hits, occupied
 
     # Initialize table to EMPTY
     for i in range(table_size):
@@ -46,5 +46,11 @@ def hash_table_ops(int n):
                 break
             slot = (slot + 1) % table_size
 
+    # Count occupied slots
+    occupied = 0
+    for i in range(table_size):
+        if table[i] != EMPTY:
+            occupied += 1
+
     free(table)
-    return hits
+    return (hits, occupied)

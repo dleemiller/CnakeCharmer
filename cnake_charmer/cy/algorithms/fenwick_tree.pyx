@@ -19,8 +19,8 @@ def fenwick_tree(int n):
 
     memset(tree, 0, (n + 1) * sizeof(long long))
 
-    cdef int i, idx, val
-    cdef long long s, total
+    cdef int i, idx, val, n_half
+    cdef long long s, total, prefix_at_n_half
 
     # Build Fenwick tree (1-indexed)
     for i in range(n):
@@ -32,6 +32,8 @@ def fenwick_tree(int n):
 
     # Query all prefix sums and accumulate
     total = 0
+    prefix_at_n_half = 0
+    n_half = n / 2
     for i in range(n):
         idx = i + 1
         s = 0
@@ -39,6 +41,8 @@ def fenwick_tree(int n):
             s += tree[idx]
             idx -= idx & (-idx)
         total += s
+        if i == n_half:
+            prefix_at_n_half = s
 
     free(tree)
-    return int(total)
+    return (int(total), int(prefix_at_n_half))

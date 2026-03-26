@@ -23,11 +23,18 @@ def run_length_encode(n: int) -> int:
     s = "".join(chr(65 + (i * 3) % 5) for i in range(n))
 
     if n == 0:
-        return 0
+        return (0, 0)
 
     runs = 1
+    current_run_len = 1
+    max_run_len = 1
     for i in range(1, n):
         if s[i] != s[i - 1]:
             runs += 1
+            current_run_len = 1
+        else:
+            current_run_len += 1
+            if current_run_len > max_run_len:
+                max_run_len = current_run_len
 
-    return runs
+    return (runs, max_run_len)

@@ -33,4 +33,4 @@ def subset_sum_count(n: int) -> int:
         for j in range(target, v - 1, -1):
             dp[j] = (dp[j] + dp[j - v]) % MOD
 
-    return dp[target]
+    return (dp[target], dp[target // 2])

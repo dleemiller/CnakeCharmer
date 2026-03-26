@@ -10,4 +10,5 @@ from cnake_charmer.py.graph.pagerank import pagerank as py_func
 def test_pagerank_equivalence(n):
     py_result = py_func(n)
     cy_result = cy_func(n)
-    assert abs(py_result - cy_result) < 1e-6
+    for p, c in zip(py_result, cy_result, strict=False):
+        assert abs(p - c) < 1e-6

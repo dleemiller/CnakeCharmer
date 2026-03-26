@@ -11,6 +11,7 @@ from cnake_charmer.benchmarks import cython_benchmark
 def mandelbrot_count(int n):
     """Count Mandelbrot set points in an n x n grid using pure C arithmetic."""
     cdef int row, col, iteration, count
+    cdef long iteration_sum = 0
     cdef int max_iter = 100
     cdef double cr, ci, zr, zi, zr2, zi2
     cdef double x_min = -2.0
@@ -36,7 +37,8 @@ def mandelbrot_count(int n):
                 zi = 2.0 * zr * zi + ci
                 zr = zr2 - zi2 + cr
                 iteration += 1
+            iteration_sum += iteration
             if iteration == max_iter:
                 count += 1
 
-    return count
+    return (count, iteration_sum)

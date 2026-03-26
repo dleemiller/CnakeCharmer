@@ -16,7 +16,7 @@ def hash_table_ops(n: int) -> int:
         n: Number of keys to insert and queries to perform.
 
     Returns:
-        Number of queries that found a matching key.
+        Tuple of (number of query hits, number of occupied slots).
     """
     table_size = 2 * n
     EMPTY = -1
@@ -43,4 +43,5 @@ def hash_table_ops(n: int) -> int:
                 break
             slot = (slot + 1) % table_size
 
-    return hits
+    occupied = sum(1 for x in table if x != -1)
+    return (hits, occupied)

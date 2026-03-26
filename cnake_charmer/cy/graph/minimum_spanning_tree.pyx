@@ -39,11 +39,12 @@ def minimum_spanning_tree(int n):
         n: Number of nodes.
 
     Returns:
-        Total weight of the minimum spanning tree.
+        Tuple of (total MST weight, edge count, max edge weight in MST).
     """
     cdef int m = 3 * n
-    cdef int i, j, ru, rv, edges_added
+    cdef int i, j, ru, rv, edge_count
     cdef long long total_weight
+    cdef int max_edge_weight
 
     cdef Edge *edges = <Edge *>malloc(m * sizeof(Edge))
     cdef int *parent = <int *>malloc(n * sizeof(int))
@@ -73,7 +74,8 @@ def minimum_spanning_tree(int n):
         rank_arr[i] = 0
 
     total_weight = 0
-    edges_added = 0
+    edge_count = 0
+    max_edge_weight = 0
 
     for i in range(m):
         ru = _find(parent, edges[i].u)
@@ -87,11 +89,13 @@ def minimum_spanning_tree(int n):
                 parent[rv] = ru
                 rank_arr[ru] += 1
             total_weight += edges[i].weight
-            edges_added += 1
-            if edges_added == n - 1:
+            edge_count += 1
+            if edges[i].weight > max_edge_weight:
+                max_edge_weight = edges[i].weight
+            if edge_count == n - 1:
                 break
 
     free(edges)
     free(parent)
     free(rank_arr)
-    return total_weight
+    return (total_weight, edge_count, max_edge_weight)

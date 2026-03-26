@@ -15,13 +15,14 @@ def binary_search_count(int n):
     if not arr:
         raise MemoryError()
 
-    cdef int i, j, target, lo, hi, mid, count
+    cdef int i, j, target, lo, hi, mid, count, last_found_idx
 
     # Build sorted array: arr[i] = i * 3
     for i in range(n):
         arr[i] = i * 3
 
     count = 0
+    last_found_idx = -1
     for j in range(n):
         target = j * 5
         lo = 0
@@ -30,6 +31,7 @@ def binary_search_count(int n):
             mid = (lo + hi) / 2
             if arr[mid] == target:
                 count += 1
+                last_found_idx = mid
                 break
             elif arr[mid] < target:
                 lo = mid + 1
@@ -37,4 +39,4 @@ def binary_search_count(int n):
                 hi = mid - 1
 
     free(arr)
-    return count
+    return (count, last_found_idx)

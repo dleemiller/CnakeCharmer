@@ -23,6 +23,7 @@ def point_in_polygon(int n):
     cdef double tx, ty, yi, yj, xi, xj
     cdef int inside
     cdef int count = 0
+    cdef int last_inside_idx = -1
 
     # Build 12-gon
     for k in range(num_verts):
@@ -47,7 +48,8 @@ def point_in_polygon(int n):
 
         if inside:
             count += 1
+            last_inside_idx = i
 
     free(poly_x)
     free(poly_y)
-    return count
+    return (count, last_inside_idx)

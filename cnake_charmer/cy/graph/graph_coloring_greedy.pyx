@@ -32,6 +32,8 @@ def graph_coloring_greedy(int n):
         raise MemoryError()
 
     cdef int i, j, target, color, max_color, neighbor, base
+    cdef long color_checksum = 0
+    cdef int num_colors
 
     memset(deg, 0, n * sizeof(int))
 
@@ -77,9 +79,15 @@ def graph_coloring_greedy(int n):
         if color > max_color:
             max_color = color
 
+    num_colors = max_color + 1
+    color_checksum = 0
+    for i in range(n):
+        color_checksum += colors[i] * ((i * 31 + 7) % 1000)
+    color_checksum = color_checksum % (10**9 + 7)
+
     free(adj_list)
     free(deg)
     free(colors)
     free(used)
 
-    return max_color + 1
+    return (num_colors, color_checksum)

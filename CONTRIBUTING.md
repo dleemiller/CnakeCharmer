@@ -95,7 +95,45 @@ def func_name(int n):
 - `import cython` with annotation syntax (`cython.int`) in `.pyx` files — use native `cdef` syntax. The dataset loader strips `import cython`.
 - Python `list.append()` in hot loops — pre-allocate with `malloc` or `[None] * n`.
 
-### 3. Write the equivalence test
+### 3. Choose a discriminating return value
+
+Return values are how tests verify that py and cy implementations are equivalent. A good return value **changes when the algorithm is wrong**. A bad return value can accidentally match even with bugs.
+
+**Preferred patterns (in order):**
+
+1. **Return the full data structure** when n is small enough (n < ~10,000):
+   ```python
+   return sorted_array      # GOOD: any sorting bug changes the output
+   return dp_table_row       # GOOD: any DP bug changes cell values
+   ```
+
+2. **Return a tuple of 2-4 independent indicators** when the full structure is too large:
+   ```python
+   return (total, dp[n//2])          # GOOD: samples an intermediate DP cell
+   return (count, max_dist, reachable)  # GOOD: multiple independent checks
+   ```
+
+3. **Pair any aggregate with a sample or checksum** — never return a bare count/sum alone:
+   ```python
+   return count                        # BAD: broken search could still find same count
+   return (count, last_match_pos)      # GOOD: position tracks where matches were found
+
+   return total                        # BAD: errors in individual values can cancel out
+   return (total, max_val, val_at_n_half)  # GOOD: spot-checks prevent cancellation
+
+   return dp[n]                        # BAD: only checks the final cell
+   return (dp[n], dp[n//2])            # GOOD: probes an intermediate subproblem
+   ```
+
+**Anti-patterns to avoid:**
+- `return len(result)` — lengths are trivially predictable
+- `return 1 if condition else 0` — boolean indicators are nearly useless
+- `return n` or `return n - 1` — returning the input back
+- `return sum(...)` alone — errors cancel out in sums
+
+The same return structure must match exactly between py, cy, and cy_simd implementations.
+
+### 4. Write the equivalence test
 
 Create `tests/{category}/test_{name}.py`:
 

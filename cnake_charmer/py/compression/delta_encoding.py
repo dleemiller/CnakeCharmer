@@ -35,14 +35,15 @@ def delta_encoding(n: int) -> int:
 
     prev = (0 * 7 + 3) % 1000
     abs_delta_sum = prev  # first delta is the value itself
+    max_delta = prev
 
     for i in range(1, n):
         curr = (i * 7 + 3) % 1000
         delta = curr - prev
-        if delta < 0:
-            abs_delta_sum -= delta
-        else:
-            abs_delta_sum += delta
+        abs_delta = -delta if delta < 0 else delta
+        abs_delta_sum += abs_delta
+        if abs_delta > max_delta:
+            max_delta = abs_delta
         prev = curr
 
-    return abs_delta_sum
+    return (abs_delta_sum, max_delta)

@@ -22,7 +22,7 @@ def cycle_detection(n: int) -> int:
         n: Number of nodes in the graph.
 
     Returns:
-        Number of back edges found during DFS.
+        Tuple of (number of back edges, source node of last back edge or -1).
     """
     # Build adjacency list
     adj_0 = [(i * 3 + 1) % n for i in range(n)]
@@ -31,6 +31,7 @@ def cycle_detection(n: int) -> int:
     WHITE, GRAY, BLACK = 0, 1, 2
     color = [WHITE] * n
     back_edges = 0
+    last_back_src = -1
 
     for start in range(n):
         if color[start] != WHITE:
@@ -49,8 +50,9 @@ def cycle_detection(n: int) -> int:
                     stack.append((v, 0))
                 elif color[v] == GRAY:
                     back_edges += 1
+                    last_back_src = u
             else:
                 color[u] = BLACK
                 stack.pop()
 
-    return back_edges
+    return (back_edges, last_back_src)

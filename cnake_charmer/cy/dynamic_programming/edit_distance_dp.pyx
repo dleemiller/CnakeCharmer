@@ -16,7 +16,7 @@ def edit_distance_dp(int n):
     cdef int *s1 = <int *>malloc(n * sizeof(int))
     cdef int *s2 = <int *>malloc(n * sizeof(int))
     cdef int *dp = <int *>malloc((n + 1) * (n + 1) * sizeof(int))
-    cdef int result
+    cdef int result, result_mid
     cdef int w = n + 1  # row width
 
     if s1 == NULL or s2 == NULL or dp == NULL:
@@ -53,7 +53,8 @@ def edit_distance_dp(int n):
                 dp[i * w + j] = 1 + val
 
     result = dp[n * w + n]
+    result_mid = dp[(n // 2) * w + (n // 2)]
     free(s1)
     free(s2)
     free(dp)
-    return result
+    return (result, result_mid)

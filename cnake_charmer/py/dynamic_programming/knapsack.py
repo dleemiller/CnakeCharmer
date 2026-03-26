@@ -34,4 +34,4 @@ def knapsack(n: int) -> int:
             if dp[c - w] + v > dp[c]:
                 dp[c] = dp[c - w] + v
 
-    return dp[capacity]
+    return (dp[capacity], dp[capacity // 2])

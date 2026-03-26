@@ -14,6 +14,7 @@ def hamming_distance_sum(int n):
     """Compute sum of Hamming distances using unsigned char* byte comparison."""
     cdef int i, j, k, dist
     cdef long long total = 0
+    cdef int max_dist = 0
     cdef int str_len = 8
     cdef unsigned char *data = <unsigned char *>malloc(n * str_len * sizeof(unsigned char))
     cdef unsigned char *s1
@@ -36,6 +37,10 @@ def hamming_distance_sum(int n):
             if s1[k] != s2[k]:
                 dist += 1
         total += dist
+        if dist > max_dist:
+            max_dist = dist
 
+    cdef long long result_total = total
+    cdef int result_max = max_dist
     free(data)
-    return total
+    return (result_total, result_max)

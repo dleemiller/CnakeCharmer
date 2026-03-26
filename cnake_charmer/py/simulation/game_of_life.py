@@ -17,7 +17,7 @@ def game_of_life(n: int) -> int:
         n: Grid dimension (n x n).
 
     Returns:
-        Number of live cells after 50 generations.
+        Tuple of (number of live cells after 50 generations, cell checksum).
     """
     generations = 50
 
@@ -54,6 +54,8 @@ def game_of_life(n: int) -> int:
         current, nxt = nxt, current
 
     total = 0
+    cell_checksum = 0
     for i in range(size):
         total += current[i]
-    return total
+        cell_checksum += current[i] * ((i * 31 + 7) % 10000)
+    return (total, cell_checksum)

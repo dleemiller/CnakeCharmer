@@ -20,7 +20,7 @@ def point_in_polygon(n: int) -> int:
         n: Number of test points.
 
     Returns:
-        Count of points inside the polygon.
+        Tuple of (count of points inside the polygon, index of last inside point).
     """
     # Build the 12-gon vertices
     num_verts = 12
@@ -28,6 +28,7 @@ def point_in_polygon(n: int) -> int:
     poly_y = [50.0 * math.sin(2.0 * math.pi * k / num_verts) for k in range(num_verts)]
 
     count = 0
+    last_inside_idx = -1
     for i in range(n):
         tx = (i * 17 + 3) % 200 - 100
         ty = (i * 13 + 7) % 200 - 100
@@ -47,5 +48,6 @@ def point_in_polygon(n: int) -> int:
 
         if inside:
             count += 1
+            last_inside_idx = i
 
-    return count
+    return (count, last_inside_idx)

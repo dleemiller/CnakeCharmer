@@ -38,4 +38,4 @@ def edit_distance_dp(n: int) -> int:
             else:
                 dp[i][j] = 1 + min(dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1])
 
-    return dp[n][n]
+    return (dp[n][n], dp[n // 2][n // 2])
