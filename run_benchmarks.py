@@ -293,6 +293,79 @@ def generate_markdown_report(
     log.info(f"Report saved to {filename}")
 
 
+def append_kernel_report(filename: str = "benchmarks.md") -> None:
+    """Append kernel-only benchmark table to the report.
+
+    Uses engine kernels (pre-allocated tensors, no allocation in timing).
+    Compares portable Cython (scalar) vs platform SIMD (AVX2+FMA or NEON).
+    Silently skips if engine kernels are not built.
+    """
+    try:
+        from cnake_charmer.engine.kernels.bench_wrapper import bench_all_kernels
+    except ImportError:
+        log.info("Engine kernels not built, skipping kernel-only table")
+        return
+
+    log.info("Running kernel-only benchmarks (inference mode)...")
+    kernel_results = bench_all_kernels()
+
+    if not kernel_results:
+        return
+
+    with open(filename, "a") as f:
+        f.write("\n\n## Kernel-Only Benchmark (Inference Mode)\n\n")
+        f.write("Pre-allocated tensors, timing only the compute kernel.\n")
+        f.write("Compares portable Cython (scalar) vs platform-optimized SIMD.\n\n")
+        f.write("| Kernel | Size | Portable (ms) | SIMD (ms) | SIMD ISA | Speedup |\n")
+        f.write("|--------|------|--------------|-----------|----------|----------|\n")
+        for r in kernel_results:
+            if r["simd_ms"] is not None:
+                speedup = r["scalar_ms"] / r["simd_ms"] if r["simd_ms"] > 0 else 0
+                f.write(
+                    f"| {r['kernel']} "
+                    f"| {r['size']} "
+                    f"| {r['scalar_ms']:.3f} "
+                    f"| {r['simd_ms']:.3f} "
+                    f"| {r['simd_label']} "
+                    f"| {speedup:.1f}x |\n"
+                )
+            else:
+                f.write(
+                    f"| {r['kernel']} "
+                    f"| {r['size']} "
+                    f"| {r['scalar_ms']:.3f} "
+                    f"| — "
+                    f"| {r['simd_label']} "
+                    f"| — |\n"
+                )
+
+    # Print to console
+    ktable = Table(title="Kernel-Only (Inference Mode)")
+    ktable.add_column("Kernel", style="cyan")
+    ktable.add_column("Size")
+    ktable.add_column("Portable (ms)", justify="right")
+    ktable.add_column("SIMD (ms)", justify="right")
+    ktable.add_column("ISA", style="dim")
+    ktable.add_column("Speedup", justify="right", style="bold green")
+
+    for r in kernel_results:
+        simd_str = f"{r['simd_ms']:.3f}" if r["simd_ms"] is not None else "—"
+        speedup_str = (
+            f"{r['scalar_ms'] / r['simd_ms']:.1f}x" if r["simd_ms"] and r["simd_ms"] > 0 else "—"
+        )
+        ktable.add_row(
+            r["kernel"],
+            r["size"],
+            f"{r['scalar_ms']:.3f}",
+            simd_str,
+            r["simd_label"],
+            speedup_str,
+        )
+
+    console.print(ktable)
+    log.info("Kernel-only results appended to benchmarks.md")
+
+
 if __name__ == "__main__":
     force = "--all" in sys.argv
 
@@ -306,3 +379,4 @@ if __name__ == "__main__":
 
     results = run_all_benchmarks(force_all=force, num_workers=num_workers)
     generate_markdown_report(results)
+    append_kernel_report()
