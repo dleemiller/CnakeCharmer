@@ -8,7 +8,7 @@ from libc.stdlib cimport malloc, free
 from cnake_charmer.benchmarks import cython_benchmark
 
 
-@cython_benchmark(syntax="cy", args=(10000,))
+@cython_benchmark(syntax="cy", args=(100000,))
 def word_break(int n):
     """Count word break ways using C array for DP table."""
     cdef long long MOD = 1000000007

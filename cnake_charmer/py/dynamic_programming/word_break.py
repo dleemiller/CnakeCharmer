@@ -6,7 +6,7 @@ Keywords: word break, dynamic programming, string, counting, benchmark
 from cnake_charmer.benchmarks import python_benchmark
 
 
-@python_benchmark(args=(10000,))
+@python_benchmark(args=(100000,))
 def word_break(n: int) -> int:
     """Count ways to segment a string of n characters into words of length 1-5.
 

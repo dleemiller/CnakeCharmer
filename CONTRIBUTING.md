@@ -13,7 +13,7 @@ tests/
   {category}/test_{name}.py   ← Equivalence tests
 ```
 
-Categories: `algorithms`, `numerical`, `sorting`, `string_processing`, `math_problems`, `dynamic_programming`, `geometry`, `simulation`, `graph`, `statistics`, `cryptography`
+Categories: `algorithms`, `numerical`, `sorting`, `string_processing`, `math_problems`, `dynamic_programming`, `geometry`, `simulation`, `graph`, `statistics`, `cryptography`, `nn_ops`, `image_processing`, `compression`, `leetcode`, `physics`, `diff_equations`, `dsp`, `optimization`
 
 > **Note:** New category directories need an `__init__.py` in `py/`, `cy/`, and `tests/`.
 

@@ -1,26 +1,37 @@
 import os
-from setuptools import setup, find_packages, Extension
 from typing import Literal
+
 from Cython.Build import cythonize
+from setuptools import Extension, find_packages, setup
+
+SIMD_COMPILE_ARGS = ["-mavx2", "-mfma", "-O3"]
+SIMD_CATEGORIES = {"nn_ops"}
 
 
-def get_cython_extensions(syntax: Literal["cy", "pp"]):
+def get_cython_extensions(syntax: Literal["cy", "pp", "cy_simd"]):
     """
-    Walk through the cnake_charmer/cy directory (and its subdirectories)
-    and collect all .pyx files to compile as Cython extensions.
+    Walk through the cnake_charmer/{syntax} directory and collect
+    all .pyx or .py files to compile as Cython extensions.
     """
     extensions = []
-    file_extension = ".pyx" if syntax == "cy" else ".py"
+    file_extension = ".py" if syntax == "pp" else ".pyx"
     for root, _, files in os.walk(os.path.join("cnake_charmer", syntax)):
         for file in files:
             if file.endswith(file_extension):
                 file_path = os.path.join(root, file)
-                # Convert file path to module name:
-                # e.g., "cnake_charmer/cy/math/add.pyx" => "cnake_charmer.cy.math.add"
-                module_name = file_path.replace(os.path.sep, ".").replace(
-                    file_extension, ""
+                module_name = file_path.replace(os.path.sep, ".").replace(file_extension, "")
+                # Add SIMD flags for cy_simd/ tree or nn_ops category
+                category = os.path.basename(root)
+                extra_args = (
+                    SIMD_COMPILE_ARGS if syntax == "cy_simd" or category in SIMD_CATEGORIES else []
                 )
-                extensions.append(Extension(module_name, [file_path]))
+                extensions.append(
+                    Extension(
+                        module_name,
+                        [file_path],
+                        extra_compile_args=extra_args,
+                    )
+                )
 
     return extensions
 
@@ -38,7 +49,9 @@ setup(
     packages=find_packages(),
     # ext_modules=extensions,
     ext_modules=cythonize(
-        get_cython_extensions(syntax="cy") + get_cython_extensions(syntax="pp"),
+        get_cython_extensions(syntax="cy")
+        + get_cython_extensions(syntax="pp")
+        + get_cython_extensions(syntax="cy_simd"),
         compiler_directives={
             "language_level": "3",
             "boundscheck": False,

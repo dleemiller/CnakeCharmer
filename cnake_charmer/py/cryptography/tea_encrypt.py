@@ -9,7 +9,7 @@ MASK32 = 0xFFFFFFFF
 DELTA = 0x9E3779B9
 
 
-@python_benchmark(args=(500000,))
+@python_benchmark(args=(50000,))
 def tea_encrypt(n: int) -> int:
     """Encrypt n blocks with TEA and return sum of encrypted values.
 

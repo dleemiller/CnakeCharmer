@@ -10,7 +10,7 @@ Keywords: fizzbuzz, leetcode, python, benchmark, example
 from cnake_charmer.benchmarks import python_benchmark
 
 
-@python_benchmark(args=(10000,))
+@python_benchmark(args=(1000000,))
 def fizzbuzz(n: int) -> list[str]:
     """Generate the FizzBuzz sequence for numbers from 1 to n.
 

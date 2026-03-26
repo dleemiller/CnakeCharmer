@@ -11,7 +11,7 @@ from libc.stdlib cimport malloc, free
 from cnake_charmer.benchmarks import cython_benchmark
 
 
-@cython_benchmark(syntax="cy", args=(5000,))
+@cython_benchmark(syntax="cy", args=(50000,))
 def cubic_spline_eval(int n):
     """Evaluate natural cubic spline at n midpoints and return their sum."""
     cdef int i, m

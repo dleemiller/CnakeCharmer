@@ -6,7 +6,7 @@ Keywords: dynamic programming, wildcard, pattern matching, string, benchmark
 from cnake_charmer.benchmarks import python_benchmark
 
 
-@python_benchmark(args=(500000,))
+@python_benchmark(args=(200000,))
 def wildcard_matching(n: int) -> int:
     """Count how many generated strings match pattern "D*?D".
 

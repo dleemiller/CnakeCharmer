@@ -6,7 +6,7 @@ Keywords: simulation, spring, mass, physics, Hooke's law, benchmark
 from cnake_charmer.benchmarks import python_benchmark
 
 
-@python_benchmark(args=(10000,))
+@python_benchmark(args=(3000,))
 def spring_mass(n: int) -> float:
     """Simulate n masses connected by springs in 1D for 1000 timesteps.
 

@@ -6,7 +6,7 @@ Keywords: brownian motion, simulation, random walk, particle, displacement, benc
 from cnake_charmer.benchmarks import python_benchmark
 
 
-@python_benchmark(args=(50000,))
+@python_benchmark(args=(10000,))
 def brownian_motion(n: int) -> float:
     """Simulate n particles doing Brownian motion for 100 steps.
 

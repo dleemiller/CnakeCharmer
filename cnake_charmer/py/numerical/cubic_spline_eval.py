@@ -9,7 +9,7 @@ Keywords: numerical, interpolation, cubic spline, tridiagonal, benchmark
 from cnake_charmer.benchmarks import python_benchmark
 
 
-@python_benchmark(args=(5000,))
+@python_benchmark(args=(50000,))
 def cubic_spline_eval(n: int) -> float:
     """Evaluate natural cubic spline at n midpoints and return their sum.
 

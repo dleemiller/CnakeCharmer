@@ -1,4 +1,4 @@
-# cython: boundscheck=False, wraparound=False, language_level=3
+# cython: boundscheck=False, wraparound=False, cdivision=True, language_level=3
 """Fibonacci sequence generator (Cython-optimized).
 
 Keywords: fibonacci, algorithms, cython, benchmark
@@ -7,22 +7,17 @@ Keywords: fibonacci, algorithms, cython, benchmark
 from cnake_charmer.benchmarks import cython_benchmark
 
 
-@cython_benchmark(syntax="cy", args=(1e18,))
-def fib(long long n):
-    """Compute Fibonacci numbers less than n.
+@cython_benchmark(syntax="cy", args=(500000,))
+def fibonacci(int n):
+    """Compute sum of first n Fibonacci numbers modulo 10^9+7."""
+    cdef long long mod = 1000000007
+    cdef long long a = 0, b = 1, total = 0, temp
+    cdef int i
 
-    Args:
-        n: Upper limit for the sequence (exclusive).
+    for i in range(n):
+        total = (total + b) % mod
+        temp = (a + b) % mod
+        a = b
+        b = temp
 
-    Returns:
-        List of Fibonacci numbers less than n.
-    """
-    cdef long long a = 0
-    cdef long long b = 1
-    cdef list result = []
-
-    while b < n:
-        result.append(b)
-        a, b = b, a + b
-
-    return result
+    return int(total)

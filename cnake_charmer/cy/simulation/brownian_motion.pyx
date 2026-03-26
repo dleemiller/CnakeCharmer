@@ -7,7 +7,7 @@ Keywords: brownian motion, simulation, random walk, particle, displacement, cyth
 from cnake_charmer.benchmarks import cython_benchmark
 
 
-@cython_benchmark(syntax="cy", args=(50000,))
+@cython_benchmark(syntax="cy", args=(10000,))
 def brownian_motion(int n):
     """Simulate n particles doing Brownian motion for 100 steps."""
     cdef int steps = 100
