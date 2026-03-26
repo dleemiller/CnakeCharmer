@@ -1,35 +1,36 @@
-"""ReLU activation function on a pre-allocated tensor.
+"""ReLU activation on a float tensor.
 
-Simulates a real NN forward pass: allocate tensor, apply ReLU in-place,
-reduce to verify. All three tiers (py/cy/cy_simd) operate on the same
-array pattern — only the inner loop changes.
+Simulates a real NN forward pass: allocate f32 tensor, apply ReLU
+in-place, reduce. Matches XNNPACK f32-vclamp pattern.
 
-Keywords: relu, activation, neural network, elementwise, tensor, benchmark
+Keywords: relu, activation, neural network, tensor, f32, benchmark
 """
+
+import math
 
 from cnake_charmer.benchmarks import python_benchmark
 
 
 @python_benchmark(args=(5000000,))
-def relu(n: int) -> int:
-    """Allocate a tensor of n values, apply ReLU in-place, return sum.
+def relu(n: int) -> float:
+    """Allocate f32 tensor, apply ReLU in-place, return sum.
 
     Args:
-        n: Tensor size (number of elements).
+        n: Tensor size (number of float elements).
 
     Returns:
         Sum of activated values.
     """
-    # Allocate tensor (simulates receiving a tensor from previous layer)
-    data = [(i * 17 + 5) % 201 - 100 for i in range(n)]
+    # Simulate receiving tensor from previous layer
+    data = [math.sin(i * 0.01) * 10.0 for i in range(n)]
 
-    # Apply ReLU in-place
+    # ReLU in-place: max(0, x)
     for i in range(n):
-        if data[i] < 0:
-            data[i] = 0
+        if data[i] < 0.0:
+            data[i] = 0.0
 
-    # Reduce (simulates passing to next layer or loss computation)
-    total = 0
+    # Reduce
+    total = 0.0
     for i in range(n):
         total += data[i]
 

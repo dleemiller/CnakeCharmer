@@ -10,4 +10,5 @@ from cnake_charmer.py.nn_ops.relu import relu as py_func
 def test_relu_equivalence(n):
     py_result = py_func(n)
     cy_result = cy_func(n)
-    assert py_result == cy_result, f"Mismatch: py={py_result}, cy={cy_result}"
+    # f32 Cython vs f64 Python — relative tolerance
+    assert abs(py_result - cy_result) / max(abs(py_result), 1.0) < 1e-4

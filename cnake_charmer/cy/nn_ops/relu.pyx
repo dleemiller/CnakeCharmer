@@ -1,38 +1,38 @@
 # cython: boundscheck=False, wraparound=False, cdivision=True, language_level=3
-"""ReLU on a C array tensor (basic Cython, scalar loop).
+"""ReLU on f32 tensor (basic Cython, scalar loop).
 
-Same algorithm as Python but with cdef types and C array.
-This is the baseline that SIMD should beat.
+Same pattern as XNNPACK vclamp but without SIMD — scalar max(0,x).
 
-Keywords: relu, activation, neural network, tensor, cython, benchmark
+Keywords: relu, activation, neural network, tensor, f32, cython, benchmark
 """
 
 from libc.stdlib cimport malloc, free
+from libc.math cimport sin
 from cnake_charmer.benchmarks import cython_benchmark
 
 
 @cython_benchmark(syntax="cy", args=(5000000,))
 def relu(int n):
-    """Allocate C array tensor, apply ReLU in-place, return sum."""
-    cdef int *data = <int *>malloc(n * sizeof(int))
+    """Allocate f32 C array tensor, apply ReLU in-place, return sum."""
+    cdef float *data = <float *>malloc(n * sizeof(float))
     if not data:
         raise MemoryError()
 
     cdef int i
-    cdef long long total = 0
+    cdef double total = 0.0
 
     # Allocate tensor
     for i in range(n):
-        data[i] = (i * 17 + 5) % 201 - 100
+        data[i] = sin(i * 0.01) * 10.0
 
-    # Apply ReLU in-place (scalar)
+    # ReLU in-place (scalar)
     for i in range(n):
-        if data[i] < 0:
-            data[i] = 0
+        if data[i] < 0.0:
+            data[i] = 0.0
 
     # Reduce
     for i in range(n):
         total += data[i]
 
     free(data)
-    return int(total)
+    return total
