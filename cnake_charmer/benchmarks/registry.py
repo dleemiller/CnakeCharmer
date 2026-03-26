@@ -55,7 +55,7 @@ class BenchmarkItem:
     func: Callable
     args: tuple[Any, ...] = field(default_factory=tuple)
     kwargs: dict[str, Any] = field(default_factory=dict)
-    num_runs: int = 100
+    num_runs: int = 10
 
 
 # Global registry mapping benchmark IDs to a dict of Variant to BenchmarkItem.
@@ -69,7 +69,7 @@ def _register_benchmark(
     benchmark_id: str | None = None,
     args: tuple[Any, ...] = (),
     kwargs: dict[str, Any] | None = None,
-    num_runs: int = 100,
+    num_runs: int = 10,
 ) -> Callable:
     """Base decorator to register a benchmark.
 
@@ -111,7 +111,7 @@ def python_benchmark(
     benchmark_id: str | None = None,
     args: tuple[Any, ...] = (),
     kwargs: dict[str, Any] | None = None,
-    num_runs: int = 100,
+    num_runs: int = 10,
 ) -> Callable[[Callable], Callable]:
     """Decorator to register a Python benchmark implementation.
 
@@ -141,7 +141,7 @@ def cython_benchmark(
     benchmark_id: str | None = None,
     args: tuple[Any, ...] = (),
     kwargs: dict[str, Any] | None = None,
-    num_runs: int = 100,
+    num_runs: int = 10,
 ) -> Callable[[Callable], Callable]:
     """Decorator to register a Cython benchmark implementation.
 
