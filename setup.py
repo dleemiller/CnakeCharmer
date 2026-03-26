@@ -20,9 +20,11 @@ def get_cython_extensions(syntax: Literal["cy", "pp"]):
             if file.endswith(file_extension):
                 file_path = os.path.join(root, file)
                 module_name = file_path.replace(os.path.sep, ".").replace(file_extension, "")
-                # Add SIMD flags for nn_ops category
+                # Add SIMD flags for cy_simd/ tree or nn_ops category
                 category = os.path.basename(root)
-                extra_args = SIMD_COMPILE_ARGS if category in SIMD_CATEGORIES else []
+                extra_args = (
+                    SIMD_COMPILE_ARGS if syntax == "cy_simd" or category in SIMD_CATEGORIES else []
+                )
                 extensions.append(
                     Extension(
                         module_name,
@@ -47,7 +49,9 @@ setup(
     packages=find_packages(),
     # ext_modules=extensions,
     ext_modules=cythonize(
-        get_cython_extensions(syntax="cy") + get_cython_extensions(syntax="pp"),
+        get_cython_extensions(syntax="cy")
+        + get_cython_extensions(syntax="pp")
+        + get_cython_extensions(syntax="cy_simd"),
         compiler_directives={
             "language_level": "3",
             "boundscheck": False,

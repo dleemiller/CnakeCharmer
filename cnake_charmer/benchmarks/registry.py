@@ -35,6 +35,7 @@ class Variant(Enum):
     PYTHON = auto()
     CYTHON = auto()
     CYTHON_PP = auto()
+    CYTHON_SIMD = auto()
 
 
 @dataclass
@@ -155,10 +156,11 @@ def cython_benchmark(
     Returns:
         Callable: A decorator that registers the function as a Cython benchmark.
     """
-    assert syntax in ["cy", "pp"]
+    assert syntax in ["cy", "pp", "cy_simd"]
+    variant_map = {"cy": Variant.CYTHON, "pp": Variant.CYTHON_PP, "cy_simd": Variant.CYTHON_SIMD}
     return partial(
         _register_benchmark,
-        Variant.CYTHON if syntax == "cy" else Variant.CYTHON_PP,
+        variant_map[syntax],
         benchmark_id=benchmark_id,
         args=args,
         kwargs=kwargs,
