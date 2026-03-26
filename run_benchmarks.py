@@ -11,14 +11,14 @@ all benchmarks.
 Each row in the report corresponds to one benchmark pair.
 """
 
-import time
-import statistics
+import importlib
 import logging
 import pkgutil
-import importlib
-from typing import Tuple, Dict, Any, List
+import statistics
+import time
+from typing import Any
 
-from cnake_charmer.benchmarks.registry import benchmark_registry, Variant, BenchmarkItem
+from cnake_charmer.benchmarks.registry import BenchmarkItem, Variant, benchmark_registry
 
 # Configure logging.
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
@@ -34,7 +34,7 @@ def import_all_submodules(package_name: str) -> None:
         package_name (str): The package name to import, e.g., "cnake_charmer".
     """
     package = importlib.import_module(package_name)
-    for loader, module_name, is_pkg in pkgutil.walk_packages(
+    for _loader, module_name, _is_pkg in pkgutil.walk_packages(
         package.__path__, package.__name__ + "."
     ):
         try:
@@ -43,7 +43,7 @@ def import_all_submodules(package_name: str) -> None:
             logging.warning(f"Could not import module {module_name}: {e}")
 
 
-def run_benchmark(item: BenchmarkItem) -> Tuple[float, float]:
+def run_benchmark(item: BenchmarkItem) -> tuple[float, float]:
     """Run a benchmark implementation repeatedly.
 
     Args:
@@ -60,7 +60,7 @@ def run_benchmark(item: BenchmarkItem) -> Tuple[float, float]:
 
     # Warm-up run.
     func(*args, **kwargs)
-    times: List[float] = []
+    times: list[float] = []
     for _ in range(num_runs):
         start = time.perf_counter()
         func(*args, **kwargs)
@@ -70,7 +70,7 @@ def run_benchmark(item: BenchmarkItem) -> Tuple[float, float]:
     return avg, std
 
 
-def run_all_benchmarks() -> List[Dict[str, Any]]:
+def run_all_benchmarks() -> list[dict[str, Any]]:
     """Iterate over all benchmark pairs in the registry and run them.
 
     Only benchmark pairs where both the Python and Cython variants are registered
@@ -87,7 +87,7 @@ def run_all_benchmarks() -> List[Dict[str, Any]]:
           - 'cy_std': Standard deviation for the Cython implementation.
           - 'speedup': Speedup factor (py_avg / cy_avg).
     """
-    results: List[Dict[str, Any]] = []
+    results: list[dict[str, Any]] = []
 
     for benchmark_id, variants in benchmark_registry.items():
         python_variant = variants.get(Variant.PYTHON)
@@ -95,35 +95,28 @@ def run_all_benchmarks() -> List[Dict[str, Any]]:
         purepy_variant = variants.get(Variant.CYTHON_PP)
 
         # Skip if the Python variant or both Cython variants are missing.
-        if python_variant is None or (
-            cython_variant is None and purepy_variant is None
-        ):
-            logging.warning(
-                f"Skipping benchmark '{benchmark_id}': Missing one variant."
-            )
+        if python_variant is None or (cython_variant is None and purepy_variant is None):
+            logging.warning(f"Skipping benchmark '{benchmark_id}': Missing one variant.")
             continue
 
         # Cache Python results in case multiple variants are run.
         py_results = None
 
-        def run_variant(label: str, variant_item) -> None:
-            nonlocal py_results
-            # Ensure that the Python and variant inputs match.
+        for label, variant_item in [("cython", cython_variant), ("pure py", purepy_variant)]:
+            if variant_item is None:
+                continue
             if (
                 python_variant.args != variant_item.args
                 or python_variant.kwargs != variant_item.kwargs
             ):
                 logging.warning(
-                    f"Skipping benchmark '{benchmark_id}' ({label}): Mismatched input parameters between Python and {label} variants."
+                    f"Skipping benchmark '{benchmark_id}' ({label}): Mismatched input parameters."
                 )
-                return
+                continue
 
-            # Run the Python benchmark only once.
+            logging.info(f"Running benchmark: {benchmark_id} ({label})")
             if py_results is None:
-                logging.info(f"Running benchmark: {benchmark_id} ({label})")
                 py_results = run_benchmark(python_variant)
-            else:
-                logging.info(f"Running benchmark: {benchmark_id} ({label})")
             variant_avg, variant_std = run_benchmark(variant_item)
             speedup = py_results[0] / variant_avg if variant_avg > 0 else float("inf")
             results.append(
@@ -138,17 +131,11 @@ def run_all_benchmarks() -> List[Dict[str, Any]]:
                 }
             )
 
-        # Run the available variants.
-        if cython_variant is not None:
-            run_variant("cython", cython_variant)
-        if purepy_variant is not None:
-            run_variant("pure py", purepy_variant)
-
     return results
 
 
 def generate_markdown_report(
-    results: List[Dict[str, Any]], filename: str = "benchmarks.md"
+    results: list[dict[str, Any]], filename: str = "benchmarks.md"
 ) -> None:
     """Write out a Markdown report summarizing the benchmark results in a table.
 
@@ -158,21 +145,15 @@ def generate_markdown_report(
     """
     with open(filename, "w") as f:
         f.write("# Benchmark Report\n\n")
-        f.write(
-            "| Benchmark | Variant | Python Avg (s) | Python Std (s) | Cython Avg (s) | Cython Std (s) | Speedup |\n"
-        )
-        f.write(
-            "|-----------|-----------|----------------|----------------|----------------|----------------|---------|\n"
-        )
-        for res in results:
+        f.write("| Benchmark | Variant | Python (ms) | Cython (ms) | Speedup |\n")
+        f.write("|-----------|---------|-------------|-------------|----------|\n")
+        for res in sorted(results, key=lambda r: r["speedup"], reverse=True):
             f.write(
                 f"| {res['benchmark']} "
                 f"| {res['syntax']} "
-                f"| {res['py_avg']:.6f} "
-                f"| {res['py_std']:.6f} "
-                f"| {res['cy_avg']:.6f} "
-                f"| {res['cy_std']:.6f} "
-                f"| {res['speedup']:.2f}x |\n"
+                f"| {res['py_avg'] * 1000:.3f} "
+                f"| {res['cy_avg'] * 1000:.3f} "
+                f"| {res['speedup']:.1f}x |\n"
             )
     logging.info(f"Benchmark report saved to {filename}")
 
