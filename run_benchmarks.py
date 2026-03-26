@@ -2,15 +2,15 @@
 """
 Benchmark Runner for Python vs. Cython Implementations.
 
-Dynamically imports all submodules under 'cnake_charmer' to populate the
-benchmark registry, then runs each pair. Uses source file hashing to skip
-benchmarks that haven't changed since the last run.
+Uses source file hashing to skip unchanged benchmarks.
+Saves cache incrementally after each benchmark so kills don't lose progress.
 
 Usage:
     uv run python run_benchmarks.py          # only run changed benchmarks
     uv run python run_benchmarks.py --all    # force re-run everything
 """
 
+import contextlib
 import hashlib
 import importlib
 import json
@@ -22,14 +22,25 @@ import time
 from pathlib import Path
 from typing import Any
 
+from rich.console import Console
+from rich.logging import RichHandler
+from rich.table import Table
+
 from cnake_charmer.benchmarks.registry import BenchmarkItem, Variant, benchmark_registry
 
-logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
+console = Console()
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(message)s",
+    handlers=[RichHandler(console=console, show_time=False, show_path=False)],
+)
+log = logging.getLogger("benchmark")
 
 CACHE_FILE = Path(".benchmark_cache.json")
 PY_DIR = Path("cnake_charmer/py")
 CY_DIR = Path("cnake_charmer/cy")
 PP_DIR = Path("cnake_charmer/pp")
+SIMD_DIR = Path("cnake_charmer/cy_simd")
 
 
 def import_all_submodules(package_name: str) -> None:
@@ -38,23 +49,19 @@ def import_all_submodules(package_name: str) -> None:
     for _loader, module_name, _is_pkg in pkgutil.walk_packages(
         package.__path__, package.__name__ + "."
     ):
-        try:
+        with contextlib.suppress(Exception):
             importlib.import_module(module_name)
-        except Exception as e:
-            logging.warning(f"Could not import module {module_name}: {e}")
 
 
 def _hash_file(path: Path) -> str:
-    """SHA256 hash of a file's contents."""
     if not path.exists():
         return ""
     return hashlib.sha256(path.read_bytes()).hexdigest()[:16]
 
 
 def _find_source_files(benchmark_id: str) -> list[Path]:
-    """Find the .py and .pyx source files for a benchmark by name."""
     files = []
-    for base_dir in [PY_DIR, CY_DIR, PP_DIR]:
+    for base_dir in [PY_DIR, CY_DIR, PP_DIR, SIMD_DIR]:
         for ext in ["*.py", "*.pyx"]:
             for f in base_dir.rglob(ext):
                 if f.stem == benchmark_id and f.name != "__init__.py":
@@ -63,7 +70,6 @@ def _find_source_files(benchmark_id: str) -> list[Path]:
 
 
 def _compute_hash(benchmark_id: str) -> str:
-    """Compute a combined hash of all source files for a benchmark."""
     files = sorted(_find_source_files(benchmark_id))
     if not files:
         return ""
@@ -72,7 +78,6 @@ def _compute_hash(benchmark_id: str) -> str:
 
 
 def load_cache() -> dict:
-    """Load cached benchmark results and hashes."""
     if CACHE_FILE.exists():
         try:
             return json.loads(CACHE_FILE.read_text())
@@ -82,14 +87,13 @@ def load_cache() -> dict:
 
 
 def save_cache(cache: dict) -> None:
-    """Save benchmark cache atomically (write to temp, then rename)."""
+    """Save benchmark cache atomically."""
     tmp = CACHE_FILE.with_suffix(".tmp")
     tmp.write_text(json.dumps(cache, indent=2))
     tmp.rename(CACHE_FILE)
 
 
 def run_benchmark(item: BenchmarkItem) -> tuple[float, float]:
-    """Run a benchmark and return (avg_time, std_dev)."""
     func = item.func
     args = item.args
     kwargs = item.kwargs
@@ -107,18 +111,21 @@ def run_benchmark(item: BenchmarkItem) -> tuple[float, float]:
 
 
 def run_all_benchmarks(force_all: bool = False) -> list[dict[str, Any]]:
-    """Run benchmarks, skipping unchanged ones unless force_all is set."""
     cache = load_cache()
     results: list[dict[str, Any]] = []
     skipped = 0
+    ran = 0
+    total = len(benchmark_registry)
 
-    for benchmark_id, variants in benchmark_registry.items():
+    for idx, (benchmark_id, variants) in enumerate(benchmark_registry.items(), 1):
         python_variant = variants.get(Variant.PYTHON)
         cython_variant = variants.get(Variant.CYTHON)
         purepy_variant = variants.get(Variant.CYTHON_PP)
+        simd_variant = variants.get(Variant.CYTHON_SIMD)
 
-        if python_variant is None or (cython_variant is None and purepy_variant is None):
-            logging.warning(f"Skipping benchmark '{benchmark_id}': Missing one variant.")
+        if python_variant is None or (
+            cython_variant is None and purepy_variant is None and simd_variant is None
+        ):
             continue
 
         # Check if sources changed
@@ -126,7 +133,6 @@ def run_all_benchmarks(force_all: bool = False) -> list[dict[str, Any]]:
         cached_hash = cache["hashes"].get(benchmark_id, "")
 
         if not force_all and current_hash == cached_hash and benchmark_id in cache["results"]:
-            # Use cached results
             for cached_result in cache["results"][benchmark_id]:
                 results.append(cached_result)
             skipped += 1
@@ -136,21 +142,22 @@ def run_all_benchmarks(force_all: bool = False) -> list[dict[str, Any]]:
         py_results = None
         new_results = []
 
-        for label, variant_item in [("cython", cython_variant), ("pure py", purepy_variant)]:
+        for label, variant_item in [
+            ("cython", cython_variant),
+            ("pure py", purepy_variant),
+            ("simd", simd_variant),
+        ]:
             if variant_item is None:
                 continue
             if (
                 python_variant.args != variant_item.args
                 or python_variant.kwargs != variant_item.kwargs
             ):
-                logging.warning(
-                    f"Skipping benchmark '{benchmark_id}' ({label}): Mismatched input parameters."
-                )
                 continue
 
-            logging.info(f"Running benchmark: {benchmark_id} ({label})")
             if py_results is None:
                 py_results = run_benchmark(python_variant)
+
             variant_avg, variant_std = run_benchmark(variant_item)
             speedup = py_results[0] / variant_avg if variant_avg > 0 else float("inf")
             entry = {
@@ -165,21 +172,29 @@ def run_all_benchmarks(force_all: bool = False) -> list[dict[str, Any]]:
             new_results.append(entry)
             results.append(entry)
 
-        # Update cache
+            ran += 1
+            log.info(
+                f"[{idx}/{total}] {benchmark_id} ({label}): "
+                f"{py_results[0] * 1000:.1f}ms → {variant_avg * 1000:.1f}ms = "
+                f"[bold]{speedup:.1f}x[/bold]",
+                extra={"markup": True},
+            )
+
+        # Save cache incrementally after each benchmark
         cache["hashes"][benchmark_id] = current_hash
         cache["results"][benchmark_id] = new_results
+        save_cache(cache)
 
     if skipped:
-        logging.info(f"Skipped {skipped} unchanged benchmarks (use --all to force)")
+        log.info(f"Skipped {skipped} unchanged benchmarks (use --all to force)")
+    log.info(f"Ran {ran} benchmarks, {skipped} cached")
 
-    save_cache(cache)
     return results
 
 
 def generate_markdown_report(
     results: list[dict[str, Any]], filename: str = "benchmarks.md"
 ) -> None:
-    """Write a Markdown report sorted by speedup."""
     with open(filename, "w") as f:
         f.write("# Benchmark Report\n\n")
         f.write("| Benchmark | Variant | Python (ms) | Cython (ms) | Speedup |\n")
@@ -192,7 +207,29 @@ def generate_markdown_report(
                 f"| {res['cy_avg'] * 1000:.3f} "
                 f"| {res['speedup']:.1f}x |\n"
             )
-    logging.info(f"Benchmark report saved to {filename}")
+
+    # Also print a rich table summary
+    table = Table(title=f"Benchmarks ({len(results)} results)")
+    table.add_column("Benchmark", style="cyan")
+    table.add_column("Variant", style="dim")
+    table.add_column("Python (ms)", justify="right")
+    table.add_column("Cython (ms)", justify="right")
+    table.add_column("Speedup", justify="right", style="bold green")
+
+    for res in sorted(results, key=lambda r: r["speedup"], reverse=True)[:20]:
+        table.add_row(
+            res["benchmark"],
+            res["syntax"],
+            f"{res['py_avg'] * 1000:.1f}",
+            f"{res['cy_avg'] * 1000:.1f}",
+            f"{res['speedup']:.1f}x",
+        )
+
+    if len(results) > 20:
+        table.add_row("...", "", "", "", f"({len(results) - 20} more)")
+
+    console.print(table)
+    log.info(f"Report saved to {filename}")
 
 
 if __name__ == "__main__":
