@@ -1,5 +1,5 @@
 # cython: boundscheck=False, wraparound=False, cdivision=True, language_level=3
-"""Detect cycle length using Floyd's tortoise and hare algorithm.
+"""Detect cycle lengths using Floyd's tortoise and hare algorithm.
 
 Keywords: algorithms, floyd, cycle detection, tortoise hare, cython, benchmark
 """
@@ -7,26 +7,29 @@ Keywords: algorithms, floyd, cycle detection, tortoise hare, cython, benchmark
 from cnake_charmer.benchmarks import cython_benchmark
 
 
-@cython_benchmark(syntax="cy", args=(100000000,))
+@cython_benchmark(syntax="cy", args=(500000,))
 def floyd_cycle(int n):
-    """Detect cycle length in sequence f(x) = (x*x + 1) % n starting from x=2."""
-    cdef long long tortoise, hare
-    cdef long long mod = n
-    cdef int cycle_len
+    """Sum cycle lengths for n different sequences f(x) = (x*x + c) % 1000003."""
+    cdef long long tortoise, hare, c
+    cdef long long mod = 1000003
+    cdef int cycle_len, i
+    cdef long long total = 0
 
-    # Phase 1: find meeting point
-    tortoise = (2 * 2 + 1) % mod
-    hare = (tortoise * tortoise + 1) % mod
-    while tortoise != hare:
-        tortoise = (tortoise * tortoise + 1) % mod
-        hare = (hare * hare + 1) % mod
-        hare = (hare * hare + 1) % mod
+    for i in range(n):
+        c = i + 1
+        tortoise = (2 * 2 + c) % mod
+        hare = (tortoise * tortoise + c) % mod
+        while tortoise != hare:
+            tortoise = (tortoise * tortoise + c) % mod
+            hare = (hare * hare + c) % mod
+            hare = (hare * hare + c) % mod
 
-    # Phase 2: find cycle length
-    cycle_len = 1
-    hare = (tortoise * tortoise + 1) % mod
-    while tortoise != hare:
-        hare = (hare * hare + 1) % mod
-        cycle_len += 1
+        cycle_len = 1
+        hare = (tortoise * tortoise + c) % mod
+        while tortoise != hare:
+            hare = (hare * hare + c) % mod
+            cycle_len += 1
 
-    return cycle_len
+        total += cycle_len
+
+    return int(total)
