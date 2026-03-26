@@ -160,8 +160,11 @@ def run_all_benchmarks(force_all: bool = False) -> list[dict[str, Any]]:
 
             variant_avg, variant_std = run_benchmark(variant_item)
             speedup = py_results[0] / variant_avg if variant_avg > 0 else float("inf")
+            # Get category from the python variant
+            cat = python_variant.category if python_variant.category else ""
             entry = {
                 "benchmark": benchmark_id,
+                "category": cat,
                 "syntax": label,
                 "py_avg": py_results[0],
                 "py_std": py_results[1],
@@ -197,10 +200,11 @@ def generate_markdown_report(
 ) -> None:
     with open(filename, "w") as f:
         f.write("# Benchmark Report\n\n")
-        f.write("| Benchmark | Variant | Python (ms) | Cython (ms) | Speedup |\n")
-        f.write("|-----------|---------|-------------|-------------|----------|\n")
+        f.write("| Category | Benchmark | Variant | Python (ms) | Cython (ms) | Speedup |\n")
+        f.write("|----------|-----------|---------|-------------|-------------|----------|\n")
         for res in sorted(results, key=lambda r: r["speedup"], reverse=True):
             f.write(
+                f"| {res.get('category', '')} "
                 f"| {res['benchmark']} "
                 f"| {res['syntax']} "
                 f"| {res['py_avg'] * 1000:.3f} "
@@ -210,6 +214,7 @@ def generate_markdown_report(
 
     # Also print a rich table summary
     table = Table(title=f"Benchmarks ({len(results)} results)")
+    table.add_column("Category", style="dim")
     table.add_column("Benchmark", style="cyan")
     table.add_column("Variant", style="dim")
     table.add_column("Python (ms)", justify="right")
@@ -218,6 +223,7 @@ def generate_markdown_report(
 
     for res in sorted(results, key=lambda r: r["speedup"], reverse=True)[:20]:
         table.add_row(
+            res.get("category", ""),
             res["benchmark"],
             res["syntax"],
             f"{res['py_avg'] * 1000:.1f}",
@@ -226,7 +232,7 @@ def generate_markdown_report(
         )
 
     if len(results) > 20:
-        table.add_row("...", "", "", "", f"({len(results) - 20} more)")
+        table.add_row("", "...", "", "", "", f"({len(results) - 20} more)")
 
     console.print(table)
     log.info(f"Report saved to {filename}")
