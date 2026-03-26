@@ -183,8 +183,6 @@ output/
 # uv lock
 uv.lock
 
-# Benchmark cache
-.benchmark_cache.json
 
 # Unsloth cache
 unsloth_compiled_cache/
