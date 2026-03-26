@@ -14,13 +14,12 @@ uv run python setup.py build_ext --inplace
 # Run tests
 uv run pytest tests/ -q
 
-# Run benchmarks (parallel, with hash caching)
+# Run benchmarks (parallel, hash-cached)
 uv run run_benchmarks.py
 ```
 
-> **Note:** `uv sync` only installs Python dependencies — it does **not** compile
-> Cython extensions. The `setup.py build_ext --inplace` step is always explicit.
-> Re-run it when you add or change `.pyx` files.
+> `uv sync` only installs Python dependencies — it does **not** compile Cython.
+> Run `setup.py build_ext --inplace` when you add or change `.pyx` files.
 
 ## Project Goals
 
@@ -28,27 +27,28 @@ LLMs can write decent Python but struggle with efficient Cython. This is a train
 
 This repo is both the **dataset** and the **training infrastructure**:
 
-- **Dataset**: 250+ matched Python/Cython pairs across 19 categories, version-controlled and CI-testable
-- **Training**: Multi-turn GRPO with TRL GRPOTrainer where the model iteratively compiles, reviews HTML annotations, and optimizes its Cython output
+- **Dataset**: 257 matched Python/Cython pairs across 19 categories, version-controlled and CI-testable
+- **Training**: Multi-turn GRPO with TRL GRPOTrainer — the model iteratively compiles, reviews HTML annotations, and optimizes its Cython output
+- **nn_ops**: XNNPACK-style SIMD kernels (AVX2+FMA) for neural network operations, within 1.3x of hand-written C
 - **Tools**: MCP server for AI-assisted development (compile, annotate, benchmark, score)
-
-The Python/Cython syntax similarity makes translation tractable, and the compilation + benchmarking loop provides dense reward signal for RL training.
 
 ## Project Structure
 
 ```
 cnake_charmer/
   py/{category}/{name}.py       ← Pure Python (training prompt)
-  cy/{category}/{name}.pyx      ← Cython (ground truth baseline)
-  cy_simd/{category}/{name}.pyx ← SIMD-optimized Cython (AVX2/FMA)
-  pp/{category}/{name}.py       ← Pure Python Cython syntax (optional)
-  validate/                     ← Compilation, annotation, correctness, benchmark tools
+  cy/{category}/{name}.pyx      ← Portable Cython (scalar, ground truth)
+  cy_simd/{category}/{name}.pyx ← SIMD-optimized Cython (AVX2+FMA)
+  engine/
+    tensor.pxd                  ← TensorView struct (future inference)
+    kernels/                    ← Extracted nogil kernels (shared compute)
+  validate/                     ← Compilation, annotation, correctness tools
   rewards/                      ← Reward functions for GRPO training
   training/                     ← TRL GRPOTrainer integration
-  dataset/                      ← Loader that discovers pairs from repo structure
+  dataset/                      ← Loader that discovers pairs from repo
   mcp_server.py                 ← MCP server for Claude Code
 tests/
-  {category}/test_{name}.py     ← Equivalence tests (Python == Cython output)
+  {category}/test_{name}.py     ← Equivalence tests
 ```
 
 ### Categories
@@ -57,27 +57,43 @@ tests/
 
 ### Three Tiers
 
-For compute-intensive operations (e.g. `nn_ops`), we provide three implementations:
+For compute-intensive operations (e.g. `nn_ops`), three implementations exist:
 
 | Tier | Directory | What it teaches |
 |------|-----------|----------------|
 | Python | `py/` | Naive baseline |
-| Basic Cython | `cy/` | `cdef` types, C arrays, `libc.math` |
-| SIMD Cython | `cy_simd/` | AVX2 intrinsics, cache tiling, FMA |
+| Portable Cython | `cy/` | `cdef` types, C arrays, `libc.math` |
+| SIMD Cython | `cy_simd/` | AVX2+FMA intrinsics, cache tiling, XNNPACK-style microkernels |
 
-### Benchmarking
+The SIMD kernels are extracted into `engine/kernels/` as `cdef void ... noexcept nogil` functions, ready for a future inference engine.
+
+### Benchmarks
 
 ```bash
-uv run --no-sync run_benchmarks.py         # 4 parallel workers, hash caching
-uv run --no-sync run_benchmarks.py --all   # force re-run everything
-uv run --no-sync run_benchmarks.py -j 8    # 8 workers
+uv run run_benchmarks.py         # 4 parallel workers, hash caching
+uv run run_benchmarks.py --all   # force re-run everything
+uv run run_benchmarks.py -j 8    # 8 workers
 ```
 
-Benchmarks use source file hashing — only changed problems re-run. Results saved to `benchmarks.md`.
+Two benchmark tables in `benchmarks.md`:
+1. **Full Operation** — allocation + compute + reduce (standard Python vs Cython comparison)
+2. **Kernel-Only (Inference Mode)** — pre-allocated tensors, compute only. Compares portable Cython vs platform SIMD (AVX2+FMA on x86, NEON on ARM in future)
+
+### XNNPACK Comparison
+
+```bash
+# Clone XNNPACK for reference comparison
+git clone --depth 1 https://github.com/google/XNNPACK /tmp/xnnpack
+
+# Run comparison (builds C microkernels, compares against our Cython)
+uv run python scripts/compare_xnnpack.py
+```
+
+Current results: GEMM kernel within **1.3x** of hand-written C, ReLU kernel **matches C speed**.
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for the full guide to adding new problem pairs.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the full guide to adding new problem pairs and nn_ops.
 
 ## Training
 
@@ -90,7 +106,6 @@ from cnake_charmer.dataset.loader import discover_pairs
 trainer = create_trainer(
     model="Qwen/Qwen3-0.6B",
     problems=discover_pairs(),
-    environment_factory=CythonToolEnvironment,
 )
 trainer.train()
 ```
