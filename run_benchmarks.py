@@ -132,8 +132,21 @@ def run_all_benchmarks(force_all: bool = False) -> list[dict[str, Any]]:
         current_hash = _compute_hash(benchmark_id)
         cached_hash = cache["hashes"].get(benchmark_id, "")
 
-        if not force_all and current_hash == cached_hash and benchmark_id in cache["results"]:
-            for cached_result in cache["results"][benchmark_id]:
+        # Check cache: hash must match AND all registered variants must have results
+        cached_results = cache["results"].get(benchmark_id, [])
+        cached_labels = {r["syntax"] for r in cached_results}
+        expected_labels = {
+            label
+            for label, v in [
+                ("cython", cython_variant),
+                ("pure py", purepy_variant),
+                ("simd", simd_variant),
+            ]
+            if v is not None
+        }
+
+        if not force_all and current_hash == cached_hash and expected_labels <= cached_labels:
+            for cached_result in cached_results:
                 results.append(cached_result)
             skipped += 1
             continue
