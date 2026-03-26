@@ -5,7 +5,6 @@
     "counting_sort": "7c80962b20dec6b2",
     "dutch_national_flag": "f53b496d0c17204e",
     "fenwick_tree": "21e183daaf6dda69",
-    "fib": "",
     "floyd_cycle": "fe91cd68db7d1b4c",
     "hash_table_ops": "84294e517254a2f5",
     "heap_sort": "48cadb5937c9ce9c",
@@ -256,7 +255,8 @@
     "string_hash_compare": "3055e4452fd6260c",
     "z_function": "bacc64b86a4bff0f",
     "suffix_array_lcp": "45e0e23092894bec",
-    "burrows_wheeler": "f9a776b188ae6762"
+    "burrows_wheeler": "f9a776b188ae6762",
+    "fibonacci": "1f435999fab97ba1"
   },
   "results": {
     "binary_search_count": [
@@ -3361,6 +3361,18 @@
         "cy_avg": 0.07010562340728939,
         "cy_std": 0.00022379895809348027,
         "speedup": 11.949036626037847
+      }
+    ],
+    "fibonacci": [
+      {
+        "benchmark": "fibonacci",
+        "category": "algorithms",
+        "syntax": "cython",
+        "py_avg": 0.02551798408385366,
+        "py_std": 0.00028176855517592,
+        "cy_avg": 0.0013003939762711524,
+        "cy_std": 6.012672465508004e-07,
+        "speedup": 19.623271523470024
       }
     ]
   }
