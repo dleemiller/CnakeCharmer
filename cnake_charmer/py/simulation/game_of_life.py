@@ -6,7 +6,7 @@ Keywords: game of life, cellular automaton, simulation, grid, benchmark
 from cnake_charmer.benchmarks import python_benchmark
 
 
-@python_benchmark(args=(200,))
+@python_benchmark(args=(120,))
 def game_of_life(n: int) -> int:
     """Run Conway's Game of Life on an n x n grid for 50 generations.
 

@@ -7,7 +7,7 @@ Keywords: random walk, mean squared displacement, simulation, stochastic, cython
 from cnake_charmer.benchmarks import cython_benchmark
 
 
-@cython_benchmark(syntax="cy", args=(10000,))
+@cython_benchmark(syntax="cy", args=(2000,))
 def random_walk_distance(int n):
     """Compute mean squared displacement of n deterministic pseudo-random walks."""
     cdef int steps = 1000

@@ -9,7 +9,7 @@ from libc.string cimport memset
 from cnake_charmer.benchmarks import cython_benchmark
 
 
-@cython_benchmark(syntax="cy", args=(200,))
+@cython_benchmark(syntax="cy", args=(120,))
 def game_of_life(int n):
     """Run Conway's Game of Life on an n x n grid for 50 generations."""
     cdef int generations = 50

@@ -6,7 +6,7 @@ Keywords: random walk, mean squared displacement, simulation, stochastic, benchm
 from cnake_charmer.benchmarks import python_benchmark
 
 
-@python_benchmark(args=(10000,))
+@python_benchmark(args=(2000,))
 def random_walk_distance(n: int) -> float:
     """Compute mean squared displacement of n deterministic pseudo-random walks.
 
