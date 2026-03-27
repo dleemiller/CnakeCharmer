@@ -1,5 +1,5 @@
 # cython: boundscheck=False, wraparound=False, cdivision=True, language_level=3
-"""Matrix multiplication (Cython-optimized with C arrays).
+"""Matrix multiplication returning trace, corner sum, and mid element.
 
 Keywords: matrix, multiply, linear algebra, numerical, cython, benchmark
 """
@@ -11,7 +11,7 @@ from cnake_charmer.benchmarks import cython_benchmark
 
 @cython_benchmark(syntax="cy", args=(150,))
 def matrix_multiply(int n):
-    """Multiply two n×n matrices using flat C arrays."""
+    """Multiply two n x n matrices using flat C arrays and return summary."""
     cdef double *A = <double *>malloc(n * n * sizeof(double))
     cdef double *B = <double *>malloc(n * n * sizeof(double))
     cdef double *C = <double *>malloc(n * n * sizeof(double))
@@ -21,10 +21,9 @@ def matrix_multiply(int n):
         if C: free(C)
         raise MemoryError()
 
-    cdef int i, j, k
-    cdef double s
+    cdef int i, j, k, mid_idx
+    cdef double s, trace, corner_sum, mid_element
 
-    # Initialize A[i][j] = i + j, B[i][j] = i - j
     for i in range(n):
         for j in range(n):
             A[i * n + j] = <double>(i + j)
@@ -32,7 +31,6 @@ def matrix_multiply(int n):
 
     memset(C, 0, n * n * sizeof(double))
 
-    # Multiply
     for i in range(n):
         for j in range(n):
             s = 0.0
@@ -40,14 +38,15 @@ def matrix_multiply(int n):
                 s += A[i * n + k] * B[k * n + j]
             C[i * n + j] = s
 
-    # Convert to Python list of lists
-    cdef list result = []
-    cdef list row
+    trace = 0.0
     for i in range(n):
-        row = [C[i * n + j] for j in range(n)]
-        result.append(row)
+        trace += C[i * n + i]
+
+    corner_sum = C[0] + C[n - 1] + C[(n - 1) * n] + C[(n - 1) * n + n - 1]
+    mid_idx = n // 2
+    mid_element = C[mid_idx * n + mid_idx]
 
     free(A)
     free(B)
     free(C)
-    return result
+    return (trace, corner_sum, mid_element)

@@ -1,4 +1,4 @@
-"""Burrows-Wheeler Transform and byte sum of output.
+"""Burrows-Wheeler Transform returning character codes and primary index.
 
 Keywords: string processing, burrows-wheeler, bwt, transform, benchmark
 """
@@ -7,16 +7,18 @@ from cnake_charmer.benchmarks import python_benchmark
 
 
 @python_benchmark(args=(50000,))
-def burrows_wheeler(n: int) -> int:
-    """Compute BWT of a deterministic string and return sum of output bytes.
+def burrows_wheeler(n: int) -> tuple:
+    """Compute BWT of a deterministic string.
 
-    String: s[i] = chr(65 + (i*7+3) % 4) for i in 0..n-1.
+    String: s[i] = chr(65 + (i*7+3) % 4) for i in 0..n-1, with null sentinel.
 
     Args:
-        n: Length of input string.
+        n: Length of input string (before sentinel).
 
     Returns:
-        Sum of byte values of BWT output.
+        Tuple of (first_char_code, last_char_code, primary_index).
+        first/last are ord() of first/last char in BWT output.
+        primary_index is the position of the original string in sorted rotations.
     """
     s = ""
     for i in range(n):
@@ -29,8 +31,14 @@ def burrows_wheeler(n: int) -> int:
     indices.sort(key=lambda idx: s[idx:] + s[:idx])
 
     # BWT is the last column: char before each sorted rotation
-    total = 0
-    for idx in indices:
-        total += ord(s[(idx - 1) % length])
+    bwt_first = ord(s[(indices[0] - 1) % length])
+    bwt_last = ord(s[(indices[length - 1] - 1) % length])
 
-    return total
+    # Primary index: where does rotation 0 appear?
+    primary_index = 0
+    for i in range(length):
+        if indices[i] == 0:
+            primary_index = i
+            break
+
+    return (bwt_first, bwt_last, primary_index)

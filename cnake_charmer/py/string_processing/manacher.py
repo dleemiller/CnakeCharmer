@@ -1,5 +1,4 @@
-"""
-Count total palindromic substrings using Manacher's algorithm.
+"""Count total palindromic substrings and find longest using Manacher's algorithm.
 
 Keywords: string processing, palindrome, manacher, algorithm, benchmark
 """
@@ -8,27 +7,33 @@ from cnake_charmer.benchmarks import python_benchmark
 
 
 @python_benchmark(args=(500000,))
-def manacher(n: int) -> int:
-    """Count total palindromic substrings using Manacher's algorithm.
+def manacher(n: int) -> tuple:
+    """Find longest palindrome and count all palindromic substrings.
 
-    String: s[i] = chr(65 + (i * 7 + 3) % 26).
+    String generated using xorshift PRNG (seed=42) over 3-symbol alphabet
+    for meaningful palindrome occurrences.
 
     Args:
         n: Length of the string.
 
     Returns:
-        Total number of palindromic substrings.
+        Tuple of (max_length, center_pos, total_palindrome_count).
     """
     if n <= 0:
-        return 0
+        return (0, 0, 0)
 
-    # Build the string
-    s = [chr(65 + (i * 7 + 3) % 26) for i in range(n)]
+    # Build the string using xorshift PRNG
+    s = [None] * n
+    seed = 42
+    for i in range(n):
+        seed ^= (seed << 13) & 0xFFFFFFFF
+        seed ^= (seed >> 17) & 0xFFFFFFFF
+        seed ^= (seed << 5) & 0xFFFFFFFF
+        s[i] = seed % 3
 
-    # Transform: insert '#' between chars and at ends
-    # "#a#b#c#" allows uniform handling of odd/even palindromes
+    # Transform: insert sentinel (99) between chars and at ends
     t_len = 2 * n + 1
-    t = ["#"] * t_len
+    t = [99] * t_len
     for i in range(n):
         t[2 * i + 1] = s[i]
 
@@ -54,12 +59,17 @@ def manacher(n: int) -> int:
             center = i
             right = i + p[i]
 
-    # Count palindromic substrings
-    # Each p[i] at an original character position contributes (p[i]+1)//2 odd palindromes
-    # Each p[i] at a '#' position contributes p[i]//2 even palindromes
+    # Find max palindrome length and its center position in original string
+    max_len = 0
+    max_center_t = 0
     total = 0
     for i in range(t_len):
-        # Number of palindromic substrings centered here
         total += (p[i] + 1) // 2
+        if p[i] > max_len:
+            max_len = p[i]
+            max_center_t = i
 
-    return total
+    # Convert center from transformed to original index
+    center_pos = max_center_t // 2
+
+    return (max_len, center_pos, total)

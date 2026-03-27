@@ -1,4 +1,6 @@
-"""Bilinear interpolation upsampling of a grayscale image.
+"""Bilinear interpolation upsampling of a grayscale image by 2x.
+
+Returns discriminating tuple of output pixel metrics.
 
 Keywords: image processing, bilinear, interpolation, upsampling, benchmark
 """
@@ -7,17 +9,16 @@ from cnake_charmer.benchmarks import python_benchmark
 
 
 @python_benchmark(args=(300,))
-def bilinear_interpolation(n: int) -> int:
+def bilinear_interpolation(n: int) -> tuple:
     """Upsample n x n image to (2n-1) x (2n-1) using bilinear interpolation.
 
-    Source pixel[i][j] = (i*7 + j*13 + 3) % 256. Returns sum of all
-    pixels in the interpolated image.
+    Source pixel[i][j] = (i*7 + j*13 + 3) % 256.
 
     Args:
         n: Source image dimension (n x n).
 
     Returns:
-        Sum of all pixels in the upsampled image.
+        Tuple of (corner_sum, center_val, total_sum).
     """
     # Generate source image
     src = [0] * (n * n)
@@ -26,7 +27,7 @@ def bilinear_interpolation(n: int) -> int:
             src[i * n + j] = (i * 7 + j * 13 + 3) % 256
 
     out_n = 2 * n - 1
-    total = 0
+    out = [0] * (out_n * out_n)
 
     for oi in range(out_n):
         for oj in range(out_n):
@@ -49,6 +50,19 @@ def bilinear_interpolation(n: int) -> int:
                 + src[i1 * n + j1] * fi * fj
             )
 
-            total += int(val + 0.5)
+            out[oi * out_n + oj] = int(val + 0.5)
 
-    return total
+    # corner_sum = sum of 4 corners
+    corner_sum = (
+        out[0] + out[out_n - 1] + out[(out_n - 1) * out_n] + out[(out_n - 1) * out_n + out_n - 1]
+    )
+
+    # center_val
+    center = out[(out_n // 2) * out_n + out_n // 2]
+
+    # total_sum
+    total_sum = 0
+    for i in range(out_n * out_n):
+        total_sum += out[i]
+
+    return (corner_sum, center, total_sum)

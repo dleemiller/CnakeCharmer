@@ -1,5 +1,5 @@
 # cython: boundscheck=False, wraparound=False, cdivision=True, language_level=3
-"""Count primes up to n using deterministic Miller-Rabin (Cython-optimized).
+"""Deterministic Miller-Rabin primality test for numbers 2..n.
 
 Keywords: math, primes, miller-rabin, primality, number theory, cython, benchmark
 """
@@ -69,17 +69,24 @@ cdef int is_prime_mr(long long num):
 
 @cython_benchmark(syntax="cy", args=(100000,))
 def miller_rabin(int n):
-    """Count primes up to n using typed Miller-Rabin."""
-    cdef int i, count
+    """Test primality of all numbers 2..n using deterministic Miller-Rabin."""
+    cdef int i, count, largest, prime_at_mid, mid
     cdef long long num
 
     if n < 2:
-        return 0
+        return (0, 0, 0)
 
     count = 0
+    largest = 0
+    mid = n // 2
+    prime_at_mid = 0
+
     for i in range(2, n + 1):
         num = i
         if is_prime_mr(num):
             count += 1
+            largest = i
+            if i <= mid:
+                prime_at_mid = i
 
-    return count
+    return (count, largest, prime_at_mid)
