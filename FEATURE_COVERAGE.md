@@ -2,10 +2,10 @@
 
 Tracks which Cython user-guide features are represented in py/cy/test problem triplets.
 
-**Last updated:** 2026-03-26
-**Total problems:** 492 matched pairs
-**Categories complete:** 15 of 18
-**Remaining gaps:** ~18 (C++ interop, NumPy ufuncs, Pythran)
+**Last updated:** 2026-03-27
+**Total problems:** 523 matched pairs
+**Categories complete:** 18 of 18
+**Remaining gaps:** 0
 
 ---
 
@@ -145,15 +145,21 @@ Build support: `setup.py` auto-detects `cython.parallel` imports and adds `-fope
 
 ---
 
-## N. C++ Interop — Not Started
+## N. C++ Interop — **Complete**
 
-- [ ] STL containers (`libcpp.vector`, `libcpp.map`, `libcpp.set`) — **4 problems**
-- [ ] `cdef cppclass` wrapping — **2 problems**
-- [ ] C++ exception handling (`except +`) — **2 problems**
-- [ ] C++ templates — **2 problems**
-- [ ] C++ scoped enums (`enum class`) — **1 problem**
+- [x] `libcpp.vector` (stl_vector_sieve)
+- [x] `libcpp.map` with iterator (stl_map_interval_count)
+- [x] `libcpp.set` / sorted vector (stl_set_kth_largest)
+- [x] `libcpp.unordered_map` (stl_unordered_map_group_sum)
+- [x] `cdef cppclass` wrapping with inline C++ (cppclass_min_heap)
+- [x] `cdef cppclass` with operator overloading (cppclass_vec2d_ops)
+- [x] `except +` for C++ exception translation (cpp_except_bounds_check)
+- [x] `except +ValueError` mapped exception (cpp_except_safe_divide)
+- [x] C++ template function `std::sort` with comparator (cpp_sort_by_popcount)
+- [x] C++ template container `std::priority_queue` (cpp_priority_queue_drain)
+- [x] C++ `enum class` / `cpdef enum class` (cpp_enum_state_machine)
 
-**Remaining: ~11 problems** (requires `language=c++` build support)
+Build support: `setup.py` auto-detects `from libcpp`, `cdef cppclass`, or `# distutils: language = c++` and adds `language='c++'` to Extension().
 
 ---
 
@@ -182,24 +188,26 @@ Ref: [numpy_tutorial](https://cython.readthedocs.io/en/latest/src/userguide/nump
 
 ---
 
-## Q. NumPy Ufuncs — Not Started
+## Q. NumPy Ufuncs — **Complete**
 
 Ref: [numpy_ufuncs](https://cython.readthedocs.io/en/latest/src/userguide/numpy_ufuncs.html)
 
-- [ ] Custom ufuncs via `@cython.ufunc` decorator — **3 problems**
-- [ ] Fused-type ufuncs — **2 problems**
-
-**Remaining: ~5 problems**
+- [x] `@cython.ufunc` basic scalar ufunc (ufunc_clamp)
+- [x] `@cython.ufunc` with math (ufunc_smoothstep)
+- [x] `@cython.ufunc` with integer return type (ufunc_classify_bin)
+- [x] `@cython.ufunc` with `cython.floating` fused type (ufunc_fused_sigmoid)
+- [x] `@cython.ufunc` with custom fused type (ufunc_fused_abs_diff)
 
 ---
 
-## R. NumPy + Pythran — Not Started
+## R. NumPy + Pythran — **Complete**
 
 Ref: [numpy_pythran](https://cython.readthedocs.io/en/latest/src/userguide/numpy_pythran.html)
 
-- [ ] Pythran-optimized NumPy expressions (`# cython: np_pythran=True`) — **2 problems**
+- [x] Pythran fused expression `a*b + c*d` (pythran_fused_expr)
+- [x] Pythran fused reduction `sqrt(sum(w * (a-b)**2))` (pythran_weighted_dist)
 
-**Remaining: ~2 problems** (requires pythran installed)
+Uses old buffer syntax (`cnp.ndarray[...]`) as required by Pythran. Build support: `setup.py` auto-detects `np_pythran=True` and adds `pythran.config.get_include()` to include path.
 
 ---
 
@@ -220,12 +228,12 @@ Ref: [numpy_pythran](https://cython.readthedocs.io/en/latest/src/userguide/numpy
 | K. Buffer protocol | **Complete** | 0 |
 | L. cpdef functions | **Complete** | 0 |
 | M. C-tuples | **Complete** | 0 |
-| N. C++ interop | Not started | ~11 |
+| N. C++ interop | **Complete** | 0 |
 | O. Miscellaneous | **Complete** | 0 |
 | P. NumPy interop | **Complete** | 0 |
-| Q. NumPy ufuncs | Not started | ~5 |
-| R. NumPy + Pythran | Not started | ~2 |
-| **Total remaining** | | **~18** |
+| Q. NumPy ufuncs | **Complete** | 0 |
+| R. NumPy + Pythran | **Complete** | 0 |
+| **Total remaining** | | **0** |
 
 ## Build Changes Required
 
