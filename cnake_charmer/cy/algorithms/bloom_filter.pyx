@@ -22,7 +22,6 @@ def bloom_filter(int n):
 
     cdef unsigned int h1, h2, val_u
     cdef int i, j, pos, val
-    cdef int hashes[5]
     cdef int found, in_set
     cdef int true_positives = 0
     cdef int false_positives = 0

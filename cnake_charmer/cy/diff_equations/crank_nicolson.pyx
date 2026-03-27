@@ -17,7 +17,7 @@ def crank_nicolson(int n):
     cdef int i, step
     cdef int num_steps = 1000
     cdef double dx, dt, r, alpha, beta, gamma
-    cdef double alpha_rhs, beta_rhs, gamma_rhs, m, total
+    cdef double alpha_rhs, beta_rhs, gamma_rhs, total
     cdef double *u
     cdef double *cp
     cdef double *dp
@@ -64,7 +64,6 @@ def crank_nicolson(int n):
         cp[0] = gamma / beta
         dp[0] = rhs[0] / beta
         for i in range(1, n):
-            m = alpha / (beta - alpha * cp[i - 1])
             cp[i] = gamma / (beta - alpha * cp[i - 1])
             dp[i] = (rhs[i] - alpha * dp[i - 1]) / (beta - alpha * cp[i - 1])
 

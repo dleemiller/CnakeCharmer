@@ -14,8 +14,8 @@ def valid_parentheses_gen(int n):
     cdef long long mod = 1000000007
     cdef int total = 2 * n
     cdef int size = (total + 1) * (n + 1)
-    cdef int i, j, mid_i, mid_j, quarter_i, quarter_j
-    cdef long long val, count, dp_mid, dp_quarter
+    cdef int i, j
+    cdef long long val, count
     cdef int stride = n + 1
 
     cdef long long *dp = <long long *>malloc(size * sizeof(long long))

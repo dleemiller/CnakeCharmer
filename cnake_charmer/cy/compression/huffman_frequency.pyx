@@ -185,7 +185,7 @@ def huffman_frequency(int n):
     for i in range(count2):
         leaf_depth[i] = 0
 
-    cdef int g1, g2, min1_idx, min2_idx
+    cdef int min1_idx, min2_idx
     cdef long long min1_freq, min2_freq
 
     for _ in range(count2 - 1):

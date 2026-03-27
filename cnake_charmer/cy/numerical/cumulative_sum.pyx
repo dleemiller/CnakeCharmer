@@ -14,7 +14,6 @@ def cumulative_sum(int n):
     """Compute the cumulative sum using C-typed accumulation and C array."""
     cdef long long total = 0
     cdef int i
-    cdef long long val
     cdef long long *arr = <long long *>malloc(n * sizeof(long long))
 
     if arr == NULL:

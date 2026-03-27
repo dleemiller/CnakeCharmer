@@ -7,7 +7,6 @@ Keywords: PDE, Laplace equation, Jacobi iteration, finite difference, numerical,
 """
 
 from libc.stdlib cimport malloc, free
-from libc.string cimport memcpy
 from cnake_charmer.benchmarks import cython_benchmark
 
 

@@ -12,7 +12,7 @@ from cnake_charmer.benchmarks import cython_benchmark
 def edit_distance_full(int n):
     """Compute edit distance between two deterministic strings of length n."""
     cdef int i, j, mid, stride, num_subs
-    cdef int sub, ins, dlt, best, current, diag, up, left, distance, dp_mid_mid
+    cdef int sub, ins, dlt, best, diag, up, left, distance, dp_mid_mid
 
     cdef int *a = <int *>malloc(n * sizeof(int))
     cdef int *b = <int *>malloc(n * sizeof(int))
@@ -59,7 +59,6 @@ def edit_distance_full(int n):
     i = n
     j = n
     while i > 0 and j > 0:
-        current = dp[i * stride + j]
         diag = dp[(i - 1) * stride + (j - 1)]
         up = dp[(i - 1) * stride + j]
         left = dp[i * stride + (j - 1)]

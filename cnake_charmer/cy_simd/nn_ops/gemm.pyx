@@ -54,7 +54,7 @@ def gemm(int n):
     # Process 4 rows × 8 columns of C at a time
     cdef __m256 vacc0, vacc1, vacc2, vacc3
     cdef __m256 va0, va1, va2, va3, vb
-    cdef int i0, col_end
+    cdef int i0
     cdef int nr = (n // 8) * 8  # columns rounded down to 8
 
     for i0 in range(0, n - 3, 4):

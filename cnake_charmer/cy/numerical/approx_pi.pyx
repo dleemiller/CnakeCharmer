@@ -6,7 +6,6 @@ Keywords: monte carlo, pi, numerical, random, cython, benchmark
 """
 
 from cnake_charmer.benchmarks import cython_benchmark
-import cython
 
 
 @cython_benchmark(syntax="cy", args=(100000,))

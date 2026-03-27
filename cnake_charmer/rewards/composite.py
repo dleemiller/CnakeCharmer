@@ -13,9 +13,10 @@ logger = logging.getLogger(__name__)
 
 # Default weights
 DEFAULT_WEIGHTS = {
-    "correctness": 0.4,
-    "performance": 0.3,
-    "annotations": 0.3,
+    "correctness": 0.35,
+    "performance": 0.25,
+    "annotations": 0.25,
+    "lint": 0.15,
 }
 
 
@@ -42,10 +43,12 @@ def composite_reward(
             "correctness": float,
             "performance": float,
             "annotations": float,
+            "lint": float,
             "speedup": float,
             "compilation_errors": str,
             "correctness_failures": list,
             "annotation_hints": list,
+            "lint_violations": list,
         }
     """
     w = weights or DEFAULT_WEIGHTS
@@ -66,9 +69,11 @@ def composite_reward(
         "correctness": 0.0,
         "performance": 0.0,
         "annotations": 0.0,
+        "lint": 0.0,
         "speedup": 0.0,
         "correctness_failures": [],
         "annotation_hints": [],
+        "lint_violations": [],
         "total": 0.0,
     }
 
@@ -95,11 +100,17 @@ def composite_reward(
         scores["annotations"] = result.annotations.score
         scores["annotation_hints"] = result.annotations.hints
 
+    # Lint score
+    if result.lint is not None and result.lint.success:
+        scores["lint"] = result.lint.score
+        scores["lint_violations"] = result.lint.violations
+
     # Weighted total
     scores["total"] = (
-        w.get("correctness", 0.4) * scores["correctness"]
-        + w.get("performance", 0.3) * scores["performance"]
-        + w.get("annotations", 0.3) * scores["annotations"]
+        w.get("correctness", 0.35) * scores["correctness"]
+        + w.get("performance", 0.25) * scores["performance"]
+        + w.get("annotations", 0.25) * scores["annotations"]
+        + w.get("lint", 0.15) * scores["lint"]
     )
 
     return scores

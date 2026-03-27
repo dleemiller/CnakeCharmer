@@ -21,7 +21,7 @@ def levenberg_marquardt(int n):
             free(y_data)
         raise MemoryError()
 
-    cdef int i, it, k
+    cdef int i, it
     cdef double xi, yi, arg, sin_val, cos_val, pred, ri
     cdef double j0, j1, j2, noise
     cdef double a, b, c, lam

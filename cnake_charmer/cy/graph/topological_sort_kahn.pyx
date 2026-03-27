@@ -22,7 +22,7 @@ def topological_sort_kahn(int n):
         free(adj); free(adj_count); free(in_degree); free(queue); free(order)
         raise MemoryError()
 
-    cdef int i, t, t1, t2, t3, u, v, j
+    cdef int i, t1, t2, t3, u, v, j
     cdef int head = 0, tail = 0, idx = 0
     cdef int mid
     cdef int limit
