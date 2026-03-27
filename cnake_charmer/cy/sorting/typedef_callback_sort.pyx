@@ -81,8 +81,14 @@ def typedef_callback_sort(int n):
     for i in range(limit):
         checksum += arr[i]
 
-    # Descending sort
-    _qsort_helper(arr, 0, n - 1, _compare_desc)
+    # Descending sort: array is already sorted ascending, so reverse in O(n)
+    cdef int lo = 0, hi = n - 1, tmp2
+    while lo < hi:
+        tmp2 = arr[lo]
+        arr[lo] = arr[hi]
+        arr[hi] = tmp2
+        lo += 1
+        hi -= 1
     for i in range(limit):
         checksum += arr[i]
 

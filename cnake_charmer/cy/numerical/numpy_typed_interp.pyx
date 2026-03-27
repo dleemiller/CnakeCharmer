@@ -36,23 +36,15 @@ def numpy_typed_interp(int n):
     """Interpolate n query points and return sum."""
     rng = np.random.RandomState(42)
     cdef int num_knots = 1000
-    cdef cnp.ndarray[cnp.float64_t, ndim=1] xp_arr = (
-        np.linspace(0.0, 1.0, num_knots).astype(
-            np.float64
-        )
-    )
+    cdef cnp.ndarray[cnp.float64_t, ndim=1] xp_arr = np.linspace(0.0, 1.0, num_knots)
     cdef cnp.float64_t[::1] xp = xp_arr
 
-    cdef cnp.ndarray[cnp.float64_t, ndim=1] fp_arr = (
-        np.cumsum(
-            rng.standard_normal(num_knots)
-        ).astype(np.float64)
+    cdef cnp.ndarray[cnp.float64_t, ndim=1] fp_arr = np.cumsum(
+        rng.standard_normal(num_knots)
     )
     cdef cnp.float64_t[::1] fp = fp_arr
 
-    cdef cnp.ndarray[cnp.float64_t, ndim=1] xq_arr = (
-        rng.random(n).astype(np.float64)
-    )
+    cdef cnp.ndarray[cnp.float64_t, ndim=1] xq_arr = rng.random(n)
     cdef cnp.float64_t[::1] xq = xq_arr
 
     cdef cnp.float64_t total = 0.0
