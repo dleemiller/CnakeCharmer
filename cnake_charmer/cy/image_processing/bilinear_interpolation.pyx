@@ -1,5 +1,7 @@
 # cython: boundscheck=False, wraparound=False, cdivision=True, language_level=3
-"""Bilinear interpolation upsampling of a grayscale image (Cython-optimized).
+"""Bilinear interpolation upsampling of a grayscale image by 2x (Cython-optimized).
+
+Returns discriminating tuple of output pixel metrics.
 
 Keywords: image processing, bilinear, interpolation, upsampling, cython, benchmark
 """
@@ -13,7 +15,8 @@ def bilinear_interpolation(int n):
     """Upsample n x n image to (2n-1) x (2n-1) using bilinear interpolation."""
     cdef int i, j, oi, oj, i0, j0, i1, j1, out_n
     cdef double si, sj, fi, fj, val
-    cdef long long total
+    cdef long long total_sum, corner_sum
+    cdef int center
 
     cdef int *src = <int *>malloc(n * n * sizeof(int))
     if not src:
@@ -25,7 +28,10 @@ def bilinear_interpolation(int n):
             src[i * n + j] = (i * 7 + j * 13 + 3) % 256
 
     out_n = 2 * n - 1
-    total = 0
+    cdef int *out = <int *>malloc(out_n * out_n * sizeof(int))
+    if not out:
+        free(src)
+        raise MemoryError()
 
     for oi in range(out_n):
         for oj in range(out_n):
@@ -49,7 +55,22 @@ def bilinear_interpolation(int n):
                    src[i0 * n + j1] * (1.0 - fi) * fj +
                    src[i1 * n + j1] * fi * fj)
 
-            total += <int>(val + 0.5)
+            out[oi * out_n + oj] = <int>(val + 0.5)
+
+    # corner_sum = sum of 4 corners
+    corner_sum = (out[0] +
+                  out[out_n - 1] +
+                  out[(out_n - 1) * out_n] +
+                  out[(out_n - 1) * out_n + out_n - 1])
+
+    # center_val
+    center = out[(out_n // 2) * out_n + out_n // 2]
+
+    # total_sum
+    total_sum = 0
+    for i in range(out_n * out_n):
+        total_sum += out[i]
 
     free(src)
-    return total
+    free(out)
+    return (corner_sum, center, total_sum)

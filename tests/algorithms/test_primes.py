@@ -21,11 +21,11 @@ Keywords:
 
 import pytest
 
-# Import the Python prime number implementation
-from cnake_charmer.py.algorithms.primes import primes as py_primes
-
 # Import the Cython prime number implementation
 from cnake_charmer.cy.algorithms.primes import primes as cy_primes
+
+# Import the Python prime number implementation
+from cnake_charmer.py.algorithms.primes import primes as py_primes
 
 
 @pytest.mark.parametrize("n", [10, 15, 20, 30])

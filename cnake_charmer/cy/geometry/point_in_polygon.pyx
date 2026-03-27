@@ -1,5 +1,5 @@
 # cython: boundscheck=False, wraparound=False, cdivision=True, language_level=3
-"""Count how many test points lie inside a regular 12-gon (Cython-optimized).
+"""Count how many test points lie inside a regular 12-gon using ray casting (Cython).
 
 Keywords: point in polygon, ray casting, geometry, containment, cython, benchmark
 """
@@ -23,6 +23,7 @@ def point_in_polygon(int n):
     cdef double tx, ty, yi, yj, xi, xj
     cdef int inside
     cdef int count = 0
+    cdef int first_inside_idx = -1
     cdef int last_inside_idx = -1
 
     # Build 12-gon
@@ -48,8 +49,10 @@ def point_in_polygon(int n):
 
         if inside:
             count += 1
+            if first_inside_idx == -1:
+                first_inside_idx = i
             last_inside_idx = i
 
     free(poly_x)
     free(poly_y)
-    return (count, last_inside_idx)
+    return (count, first_inside_idx, last_inside_idx)

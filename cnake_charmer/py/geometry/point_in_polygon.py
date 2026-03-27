@@ -9,7 +9,7 @@ from cnake_charmer.benchmarks import python_benchmark
 
 
 @python_benchmark(args=(500000,))
-def point_in_polygon(n: int) -> int:
+def point_in_polygon(n: int) -> tuple:
     """Count how many of n test points lie inside a regular 12-gon.
 
     The polygon is a regular 12-gon of radius 50 centered at the origin.
@@ -20,7 +20,7 @@ def point_in_polygon(n: int) -> int:
         n: Number of test points.
 
     Returns:
-        Tuple of (count of points inside the polygon, index of last inside point).
+        Tuple of (inside_count, first_inside_idx, last_inside_idx).
     """
     # Build the 12-gon vertices
     num_verts = 12
@@ -28,6 +28,7 @@ def point_in_polygon(n: int) -> int:
     poly_y = [50.0 * math.sin(2.0 * math.pi * k / num_verts) for k in range(num_verts)]
 
     count = 0
+    first_inside_idx = -1
     last_inside_idx = -1
     for i in range(n):
         tx = (i * 17 + 3) % 200 - 100
@@ -48,6 +49,8 @@ def point_in_polygon(n: int) -> int:
 
         if inside:
             count += 1
+            if first_inside_idx == -1:
+                first_inside_idx = i
             last_inside_idx = i
 
-    return (count, last_inside_idx)
+    return (count, first_inside_idx, last_inside_idx)

@@ -6,11 +6,11 @@ Keywords: fizzbuzz, leetcode, python, cython, test, benchmark
 
 import pytest
 
-# Import the Python FizzBuzz implementation.
-from cnake_charmer.py.leetcode.fizzbuzz import fizzbuzz as py_fizzbuzz
-
 # Import the Cython FizzBuzz implementation.
 from cnake_charmer.cy.leetcode.fizzbuzz import fizzbuzz as cy_fizzbuzz
+
+# Import the Python FizzBuzz implementation.
+from cnake_charmer.py.leetcode.fizzbuzz import fizzbuzz as py_fizzbuzz
 
 
 @pytest.mark.parametrize("n", [10, 15, 20, 30])
