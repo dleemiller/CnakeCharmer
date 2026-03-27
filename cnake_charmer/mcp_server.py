@@ -19,6 +19,7 @@ from cnake_charmer.dataset.loader import discover_pairs
 from cnake_charmer.rewards.composite import composite_reward as _composite_reward
 from cnake_charmer.validate.annotations import parse_annotations
 from cnake_charmer.validate.compiler import cleanup_build, compile_cython
+from cnake_charmer.validate.memory_safety import check_memory_safety
 
 logger = logging.getLogger(__name__)
 
@@ -98,9 +99,11 @@ def score_problem(problem_id: str) -> str:
             "speedup": round(scores["speedup"], 2),
             "annotation_score": round(scores["annotations"], 3),
             "lint_score": round(scores.get("lint", 0.0), 3),
+            "memory_safety_score": round(scores.get("memory_safety", 1.0), 3),
             "total_reward": round(scores["total"], 3),
             "annotation_hints": scores["annotation_hints"],
             "lint_violations": scores.get("lint_violations", []),
+            "memory_safety_errors": scores.get("memory_safety_errors", []),
             "correctness_failures": scores["correctness_failures"],
             "compilation_errors": scores["compilation_errors"],
         },
@@ -219,6 +222,54 @@ def annotate_file(pyx_path: str) -> str:
         )
 
     return json.dumps({"success": True, "score": 0.0, "hints": ["Could not parse annotations"]})
+
+
+@mcp.tool()
+def check_memory(pyx_path: str, func_name: str, test_args: str = "(100,)") -> str:
+    """Run AddressSanitizer on a .pyx file to detect memory errors.
+
+    Compiles with -fsanitize=address and runs the function with small inputs.
+    Detects leaks, buffer overflows, use-after-free, and double-free.
+
+    Args:
+        pyx_path: Path to a .pyx file.
+        func_name: Name of the function to test.
+        test_args: Python tuple literal for test arguments, e.g. '(100,)'.
+
+    Returns:
+        JSON with score (1.0 = clean, 0.0 = errors), error details, and leak bytes.
+    """
+    path = Path(pyx_path)
+    if not path.exists():
+        return json.dumps({"success": False, "errors": [f"File not found: {pyx_path}"]})
+
+    try:
+        args = eval(test_args)  # noqa: S307
+        if not isinstance(args, tuple):
+            args = (args,)
+    except Exception as e:
+        return json.dumps({"success": False, "errors": [f"Invalid test_args: {e}"]})
+
+    code = path.read_text()
+    flags = _detect_compile_flags(pyx_path)
+    result = check_memory_safety(
+        cython_code=code,
+        func_name=func_name,
+        test_args=args,
+        extra_compile_args=flags,
+    )
+
+    return json.dumps(
+        {
+            "success": result.success,
+            "score": result.score,
+            "error_count": result.error_count,
+            "leak_bytes": result.leak_bytes,
+            "error_types": result.error_types,
+            "errors": result.errors,
+        },
+        indent=2,
+    )
 
 
 if __name__ == "__main__":

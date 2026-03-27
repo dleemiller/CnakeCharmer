@@ -231,3 +231,17 @@ Ref: [numpy_pythran](https://cython.readthedocs.io/en/latest/src/userguide/numpy
 
 - **C++ interop (N):** Add `language='c++'` to Extension() or create `cy_cpp/` directory
 - **Pythran (R):** Requires `pythran` package installed
+
+---
+
+## Validation & Reward Pipeline
+
+| Signal | Weight | Tool |
+|--------|--------|------|
+| Correctness (py == cy) | 30% | `check_correctness` |
+| Performance (log₂ speedup) | 25% | `run_benchmark` |
+| Annotations (white/yellow ratio) | 20% | `parse_annotations` |
+| Memory safety (ASan) | 15% | `check_memory_safety` |
+| Lint (cython-lint) | 10% | `run_cython_lint` |
+
+Memory safety uses AddressSanitizer (`-fsanitize=address`) to detect leaks, buffer overflows, use-after-free, and double-free in compiled Cython extensions. Runs with `PYTHONMALLOC=malloc` and filters CPython internal allocations by function name.

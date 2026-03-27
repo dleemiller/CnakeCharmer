@@ -13,10 +13,11 @@ logger = logging.getLogger(__name__)
 
 # Default weights
 DEFAULT_WEIGHTS = {
-    "correctness": 0.35,
+    "correctness": 0.30,
     "performance": 0.25,
-    "annotations": 0.25,
-    "lint": 0.15,
+    "annotations": 0.20,
+    "lint": 0.10,
+    "memory_safety": 0.15,
 }
 
 
@@ -44,11 +45,13 @@ def composite_reward(
             "performance": float,
             "annotations": float,
             "lint": float,
+            "memory_safety": float,
             "speedup": float,
             "compilation_errors": str,
             "correctness_failures": list,
             "annotation_hints": list,
             "lint_violations": list,
+            "memory_safety_errors": list,
         }
     """
     w = weights or DEFAULT_WEIGHTS
@@ -70,10 +73,12 @@ def composite_reward(
         "performance": 0.0,
         "annotations": 0.0,
         "lint": 0.0,
+        "memory_safety": 0.0,
         "speedup": 0.0,
         "correctness_failures": [],
         "annotation_hints": [],
         "lint_violations": [],
+        "memory_safety_errors": [],
         "total": 0.0,
     }
 
@@ -105,12 +110,20 @@ def composite_reward(
         scores["lint"] = result.lint.score
         scores["lint_violations"] = result.lint.violations
 
+    # Memory safety score
+    if result.memory_safety is not None and result.memory_safety.success:
+        scores["memory_safety"] = result.memory_safety.score
+        scores["memory_safety_errors"] = result.memory_safety.errors
+    else:
+        scores["memory_safety"] = 1.0  # don't penalize if ASan unavailable
+
     # Weighted total
     scores["total"] = (
-        w.get("correctness", 0.35) * scores["correctness"]
+        w.get("correctness", 0.30) * scores["correctness"]
         + w.get("performance", 0.25) * scores["performance"]
-        + w.get("annotations", 0.25) * scores["annotations"]
-        + w.get("lint", 0.15) * scores["lint"]
+        + w.get("annotations", 0.20) * scores["annotations"]
+        + w.get("lint", 0.10) * scores["lint"]
+        + w.get("memory_safety", 0.15) * scores["memory_safety"]
     )
 
     return scores
