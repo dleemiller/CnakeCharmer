@@ -30,7 +30,7 @@ def bitonic_sort(int n):
         while j > 0:
             for i in range(n):
                 l = i ^ j
-                if l > i:
+                if l > i and l < n:
                     # Ascending if (i & k) == 0, descending otherwise
                     if (i & k) == 0:
                         if arr[i] > arr[l]:
