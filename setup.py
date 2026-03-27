@@ -26,6 +26,42 @@ def _uses_openmp(file_path):
     return False
 
 
+def _uses_cpp(file_path):
+    """Check if a .pyx file needs C++ compilation (libcpp, cppclass, directive)."""
+    try:
+        with open(file_path) as f:
+            for line in f:
+                if "from libcpp" in line or "cdef cppclass" in line:
+                    return True
+                if "distutils: language" in line and "c++" in line:
+                    return True
+    except OSError:
+        pass
+    return False
+
+
+def _uses_pythran(file_path):
+    """Check if a .pyx file uses Pythran's NumPy backend."""
+    try:
+        with open(file_path) as f:
+            for line in f:
+                if "np_pythran" in line and "True" in line:
+                    return True
+    except OSError:
+        pass
+    return False
+
+
+def _get_pythran_include():
+    """Get Pythran's include directory, or empty list if unavailable."""
+    try:
+        import pythran.config
+
+        return [pythran.config.get_include()]
+    except (ImportError, AttributeError):
+        return []
+
+
 def _get_engine_extensions():
     """Collect engine .pyx files, all compiled with SIMD flags."""
     extensions = []
@@ -62,18 +98,25 @@ def get_cython_extensions(syntax: Literal["cy", "pp", "cy_simd"]):
                 category = os.path.basename(root)
                 extra_compile = []
                 extra_link = []
+                include_dirs = list(NUMPY_INCLUDE)
+                lang = None
                 if syntax == "cy_simd" or category in SIMD_CATEGORIES:
                     extra_compile = SIMD_COMPILE_ARGS
                 if _uses_openmp(file_path):
                     extra_compile = extra_compile + OPENMP_COMPILE_ARGS
                     extra_link = OPENMP_LINK_ARGS
+                if _uses_cpp(file_path):
+                    lang = "c++"
+                if _uses_pythran(file_path):
+                    include_dirs = include_dirs + _get_pythran_include()
                 extensions.append(
                     Extension(
                         module_name,
                         [file_path],
-                        include_dirs=NUMPY_INCLUDE,
+                        include_dirs=include_dirs,
                         extra_compile_args=extra_compile,
                         extra_link_args=extra_link,
+                        language=lang,
                     )
                 )
 
