@@ -28,7 +28,7 @@ def numpy_cross_entropy(int n):
     cdef double[::1] labels = labels_arr
 
     cdef double loss = 0.0
-    cdef double p, lbl
+    cdef double p
     cdef double eps = 1e-12
     cdef int i
 
@@ -39,7 +39,10 @@ def numpy_cross_entropy(int n):
                 p = eps
             elif p > 1.0 - eps:
                 p = 1.0 - eps
-            lbl = labels[i]
-            loss -= lbl * log(p) + (1.0 - lbl) * log(1.0 - p)
+            # labels are strictly 0.0 or 1.0, so one log term is always zero
+            if labels[i] == 1.0:
+                loss -= log(p)
+            else:
+                loss -= log(1.0 - p)
 
     return loss
