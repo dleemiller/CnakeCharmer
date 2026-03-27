@@ -6,7 +6,7 @@ Keywords: sorting, insertion sort, nogil, blocks, benchmark
 from cnake_charmer.benchmarks import python_benchmark
 
 
-@python_benchmark(args=(10000,))
+@python_benchmark(args=(1000,))
 def nogil_sort_blocks(n: int) -> int:
     """Sort n blocks of 256 elements each, return checksum.
 
