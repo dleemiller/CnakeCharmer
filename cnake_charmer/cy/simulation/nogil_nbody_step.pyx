@@ -58,7 +58,7 @@ cdef void _gravity_step(
     free(ay)
 
 
-@cython_benchmark(syntax="cy", args=(2000,))
+@cython_benchmark(syntax="cy", args=(500,))
 def nogil_nbody_step(int n):
     """Simulate n particles under gravity for 10 steps."""
     cdef double dt = 0.0005

@@ -22,7 +22,7 @@ cdef void _insertion_sort(
         arr[j + 1] = key
 
 
-@cython_benchmark(syntax="cy", args=(10000,))
+@cython_benchmark(syntax="cy", args=(1000,))
 def nogil_sort_blocks(int n):
     """Sort n blocks of 256 elements, return checksum."""
     cdef int block_size = 256

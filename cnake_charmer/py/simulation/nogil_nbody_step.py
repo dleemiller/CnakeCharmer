@@ -8,7 +8,7 @@ import math
 from cnake_charmer.benchmarks import python_benchmark
 
 
-@python_benchmark(args=(2000,))
+@python_benchmark(args=(500,))
 def nogil_nbody_step(n: int) -> float:
     """Simulate n particles under gravity for 10 steps.
 
