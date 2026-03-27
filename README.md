@@ -27,7 +27,7 @@ LLMs can write decent Python but struggle with efficient Cython. This is a train
 
 This repo is both the **dataset** and the **training infrastructure**:
 
-- **Dataset**: 454 matched Python/Cython pairs across 19 categories, version-controlled and CI-testable
+- **Dataset**: 478 matched Python/Cython pairs across 19 categories, version-controlled and CI-testable
 - **Training**: Multi-turn GRPO with TRL GRPOTrainer — the model iteratively compiles, reviews HTML annotations, and optimizes its Cython output
 - **nn_ops**: XNNPACK-style SIMD kernels (AVX2+FMA) for neural network operations, within 1.3x of hand-written C
 - **Tools**: MCP server for AI-assisted development (compile, annotate, benchmark, score)
@@ -76,20 +76,22 @@ The problem set covers a broad range of Cython features beyond basic typed funct
 | `cdef class` (extension types) | `__cinit__`/`__dealloc__`, typed C attributes, `cdef`/`cpdef` methods |
 | Special methods | `__getitem__`, `__setitem__`, `__len__`, `__contains__`, `__iter__`/`__next__`, `__add__`/`__mul__`/`__neg__`, `__richcmp__`, `__call__`, `__hash__` |
 | Inheritance | `cdef class Child(Parent)` with `cpdef` method dispatch |
-| Class decorators | `@cython.final`, `@property` with getter/setter, `cdef readonly` |
-| `cdef enum` / `cpdef enum` | State machines, token types, direction enums |
-| Typed memoryviews | 1D `double[:]`, 2D `double[:, :]`, C-contiguous `[::1]`, `const` views, slicing, `.copy()`, `&view[0]` C interop |
-| `cdef struct` / `cdef union` | Composite types, tagged unions, type punning |
-| Fused types | `ctypedef fused` with type dispatch, `cython.floating` |
+| Class decorators | `@cython.final`, `@cython.freelist`, `@cython.dataclasses.dataclass`, `cdef readonly`, `not None` |
+| Properties | `@property` with getter and setter |
+| `cdef enum` / `cpdef enum` | State machines, token types, direction enums, anonymous enums |
+| Typed memoryviews | 1D/2D, C-contiguous `[::1]`, Fortran `[::1, :]`, `const`, `.T`, `.copy()`, `&view[0]`, `cython.view.array` |
+| `cdef struct` / `cdef union` | Nested structs, packed structs, tagged unions, struct↔dict conversion, struct return |
+| Fused types | `ctypedef fused` with type dispatch, memoryview params, type checking branches |
 | `ctypedef` | Type aliases, function pointer typedefs |
 | Function pointers | Dispatch tables, callbacks, `qsort` comparators |
-| Buffer protocol | `__getbuffer__`/`__releasebuffer__` for custom buffer sources |
+| Buffer protocol | `__getbuffer__`/`__releasebuffer__` for 1D and 2D custom buffers |
 | C-tuples | `(double, double)` return types from `cdef` functions |
-| Error return specs | `except -1`, `except? -1.0` |
+| Error return specs | `except -1`, `except? -1.0`, `except *` |
 | `cpdef` functions | Standalone module-level hybrid functions |
 | `cdef extern from` | Direct C header access (`math.h`, `stdlib.h`, `string.h`) |
 | C memory ops | `malloc`/`free`/`realloc`/`calloc`, `memcpy`/`memset`/`memcmp` |
 | Stack arrays | Fixed-size `cdef int[1024]` on the stack |
+| Forward declarations | `cdef class` forward declaration for recursive types |
 
 See [FEATURE_COVERAGE.md](FEATURE_COVERAGE.md) for the full checklist and coverage gaps.
 
