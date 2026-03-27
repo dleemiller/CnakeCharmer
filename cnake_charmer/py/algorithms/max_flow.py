@@ -6,7 +6,7 @@ Keywords: algorithms, max flow, Ford-Fulkerson, BFS, graph, network flow, benchm
 from cnake_charmer.benchmarks import python_benchmark
 
 
-@python_benchmark(args=(1000,))
+@python_benchmark(args=(20000,))
 def max_flow(n: int) -> int:
     """Compute max flow in a layered graph with n nodes.
 
