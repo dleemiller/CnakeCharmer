@@ -27,7 +27,7 @@ LLMs can write decent Python but struggle with efficient Cython. This is a train
 
 This repo is both the **dataset** and the **training infrastructure**:
 
-- **Dataset**: 478 matched Python/Cython pairs across 19 categories, version-controlled and CI-testable
+- **Dataset**: 492 matched Python/Cython pairs across 19 categories, version-controlled and CI-testable
 - **Training**: Multi-turn GRPO with TRL GRPOTrainer — the model iteratively compiles, reviews HTML annotations, and optimizes its Cython output
 - **nn_ops**: XNNPACK-style SIMD kernels (AVX2+FMA) for neural network operations, within 1.3x of hand-written C
 - **Tools**: MCP server for AI-assisted development (compile, annotate, benchmark, score)
@@ -92,6 +92,8 @@ The problem set covers a broad range of Cython features beyond basic typed funct
 | C memory ops | `malloc`/`free`/`realloc`/`calloc`, `memcpy`/`memset`/`memcmp` |
 | Stack arrays | Fixed-size `cdef int[1024]` on the stack |
 | Forward declarations | `cdef class` forward declaration for recursive types |
+| `prange` / `nogil` | OpenMP parallel loops, GIL release for C computation, schedule policies |
+| NumPy interop | `cimport numpy`, typed memoryviews from arrays, `cnp.float64_t`, prange+NumPy |
 
 See [FEATURE_COVERAGE.md](FEATURE_COVERAGE.md) for the full checklist and coverage gaps.
 

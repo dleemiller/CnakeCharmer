@@ -1,12 +1,29 @@
 import os
 from typing import Literal
 
+import numpy as np
 from Cython.Build import cythonize
 from setuptools import Extension, find_packages, setup
 
+NUMPY_INCLUDE = [np.get_include()]
+
 SIMD_COMPILE_ARGS = ["-mavx2", "-mfma", "-O3"]
+OPENMP_COMPILE_ARGS = ["-fopenmp"]
+OPENMP_LINK_ARGS = ["-fopenmp"]
 SIMD_CATEGORIES = {"nn_ops"}
 ENGINE_DIRS = ["cnake_charmer/engine"]  # always compiled with SIMD flags
+
+
+def _uses_openmp(file_path):
+    """Check if a .pyx file imports cython.parallel (prange, parallel)."""
+    try:
+        with open(file_path) as f:
+            for line in f:
+                if "cython.parallel" in line or "from cython.parallel" in line:
+                    return True
+    except OSError:
+        pass
+    return False
 
 
 def _get_engine_extensions():
@@ -19,7 +36,12 @@ def _get_engine_extensions():
                     file_path = os.path.join(root, f)
                     module_name = file_path.replace(os.path.sep, ".").replace(".pyx", "")
                     extensions.append(
-                        Extension(module_name, [file_path], extra_compile_args=SIMD_COMPILE_ARGS)
+                        Extension(
+                            module_name,
+                            [file_path],
+                            include_dirs=NUMPY_INCLUDE,
+                            extra_compile_args=SIMD_COMPILE_ARGS,
+                        )
                     )
     return extensions
 
@@ -38,14 +60,20 @@ def get_cython_extensions(syntax: Literal["cy", "pp", "cy_simd"]):
                 module_name = file_path.replace(os.path.sep, ".").replace(file_extension, "")
                 # Add SIMD flags for cy_simd/ tree or nn_ops category
                 category = os.path.basename(root)
-                extra_args = (
-                    SIMD_COMPILE_ARGS if syntax == "cy_simd" or category in SIMD_CATEGORIES else []
-                )
+                extra_compile = []
+                extra_link = []
+                if syntax == "cy_simd" or category in SIMD_CATEGORIES:
+                    extra_compile = SIMD_COMPILE_ARGS
+                if _uses_openmp(file_path):
+                    extra_compile = extra_compile + OPENMP_COMPILE_ARGS
+                    extra_link = OPENMP_LINK_ARGS
                 extensions.append(
                     Extension(
                         module_name,
                         [file_path],
-                        extra_compile_args=extra_args,
+                        include_dirs=NUMPY_INCLUDE,
+                        extra_compile_args=extra_compile,
+                        extra_link_args=extra_link,
                     )
                 )
 

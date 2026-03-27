@@ -3,9 +3,9 @@
 Tracks which Cython user-guide features are represented in py/cy/test problem triplets.
 
 **Last updated:** 2026-03-26
-**Total problems:** 478 matched pairs
-**Categories complete:** 13 of 15
-**Remaining gaps:** ~24 (prange/nogil + C++ interop)
+**Total problems:** 492 matched pairs
+**Categories complete:** 15 of 18
+**Remaining gaps:** ~18 (C++ interop, NumPy ufuncs, Pythran)
 
 ---
 
@@ -67,14 +67,14 @@ Tracks which Cython user-guide features are represented in py/cy/test problem tr
 
 ---
 
-## E. Parallelism (`prange` / `nogil`) — Not Started
+## E. Parallelism (`prange` / `nogil`) — **Complete**
 
-- [ ] `prange` basic parallel for loop — **4 problems**
-- [ ] `prange` with reductions (`+=`, `*=`) — **3 problems**
-- [ ] `with nogil:` blocks (release GIL for C computation) — **4 problems**
-- [ ] `prange` with `schedule` (static/dynamic/guided) — **2 problems**
+- [x] `prange` basic parallel for loop (prange_vector_add, prange_mandelbrot, prange_histogram_partial, prange_transform_chain)
+- [x] `prange` with `+=` reduction (prange_dot_product, prange_sum_squares, prange_count_primes)
+- [x] `with nogil:` blocks (nogil_matrix_multiply, nogil_sort_blocks, nogil_newton_roots, nogil_nbody_step)
+- [x] `prange` with `schedule` (prange_schedule_static, prange_schedule_dynamic)
 
-**Remaining: ~13 problems** (requires `-fopenmp` compile flag)
+Build support: `setup.py` auto-detects `cython.parallel` imports and adds `-fopenmp` flags.
 
 ---
 
@@ -170,6 +170,39 @@ Tracks which Cython user-guide features are represented in py/cy/test problem tr
 
 ---
 
+## P. NumPy Interop — **Complete**
+
+Ref: [numpy_tutorial](https://cython.readthedocs.io/en/latest/src/userguide/numpy_tutorial.html)
+
+- [x] Typed memoryviews from NumPy arrays (numpy_ewma, numpy_cummax, numpy_run_length, numpy_median_filter)
+- [x] NumPy array creation + Cython processing (numpy_softmax, numpy_l2_normalize, numpy_cross_entropy, numpy_batch_norm)
+- [x] Typed memoryview params from ndarray (numpy_argmax_rows, numpy_bincount_weighted)
+- [x] `cimport numpy as cnp` with `cnp.float64_t` (numpy_typed_histogram, numpy_typed_interp)
+- [x] NumPy + prange (numpy_prange_norm, numpy_prange_distance)
+
+---
+
+## Q. NumPy Ufuncs — Not Started
+
+Ref: [numpy_ufuncs](https://cython.readthedocs.io/en/latest/src/userguide/numpy_ufuncs.html)
+
+- [ ] Custom ufuncs via `@cython.ufunc` decorator — **3 problems**
+- [ ] Fused-type ufuncs — **2 problems**
+
+**Remaining: ~5 problems**
+
+---
+
+## R. NumPy + Pythran — Not Started
+
+Ref: [numpy_pythran](https://cython.readthedocs.io/en/latest/src/userguide/numpy_pythran.html)
+
+- [ ] Pythran-optimized NumPy expressions (`# cython: np_pythran=True`) — **2 problems**
+
+**Remaining: ~2 problems** (requires pythran installed)
+
+---
+
 ## Summary Table
 
 | Category | Status | Remaining |
@@ -178,7 +211,7 @@ Tracks which Cython user-guide features are represented in py/cy/test problem tr
 | B. Enums | **Complete** | 0 |
 | C. Typed memoryviews | **Complete** | 0 |
 | D. Fused types | **Complete** | 0 |
-| E. Parallelism (prange/nogil) | Not started | ~13 |
+| E. Parallelism (prange/nogil) | **Complete** | 0 |
 | F. Structs | **Complete** | 0 |
 | G. Unions | **Complete** | 0 |
 | H. ctypedef | **Complete** | 0 |
@@ -189,9 +222,12 @@ Tracks which Cython user-guide features are represented in py/cy/test problem tr
 | M. C-tuples | **Complete** | 0 |
 | N. C++ interop | Not started | ~11 |
 | O. Miscellaneous | **Complete** | 0 |
-| **Total remaining** | | **~24** |
+| P. NumPy interop | **Complete** | 0 |
+| Q. NumPy ufuncs | Not started | ~5 |
+| R. NumPy + Pythran | Not started | ~2 |
+| **Total remaining** | | **~18** |
 
 ## Build Changes Required
 
-- **prange/OpenMP (E):** Add `-fopenmp` to `extra_compile_args` and `extra_link_args`
 - **C++ interop (N):** Add `language='c++'` to Extension() or create `cy_cpp/` directory
+- **Pythran (R):** Requires `pythran` package installed
