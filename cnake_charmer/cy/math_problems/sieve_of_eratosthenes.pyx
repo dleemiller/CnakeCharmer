@@ -6,7 +6,6 @@ Keywords: sieve, eratosthenes, primes, math, cython, benchmark
 """
 
 from cnake_charmer.benchmarks import cython_benchmark
-import cython
 
 
 @cython_benchmark(syntax="cy", args=(1000000,))

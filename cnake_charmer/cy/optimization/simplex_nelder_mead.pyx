@@ -17,7 +17,7 @@ def simplex_nelder_mead(int n):
     cdef double vx0, vy0, vx1, vy1, vx2, vy2
     cdef double f0, f1, f2
     cdef double cx, cy, rx, ry, fr, ex, ey, fe
-    cdef double kx, ky, fk, best, tmp
+    cdef double kx, ky, fk, best
 
     for idx in range(n):
         x0 = (idx * 0.7) % 5 - 2.5

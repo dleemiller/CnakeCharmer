@@ -1,7 +1,7 @@
 """Goertzel algorithm to detect a specific frequency bin in a signal.
 
-Computes the power at a target frequency using the Goertzel recurrence,
-which is more efficient than a full DFT for single-bin detection.
+Computes the magnitude, phase cosine, and power at a target frequency using
+the Goertzel recurrence.
 
 Keywords: dsp, Goertzel, frequency, detection, DFT, power, benchmark
 """
@@ -12,8 +12,8 @@ from cnake_charmer.benchmarks import python_benchmark
 
 
 @python_benchmark(args=(1000000,))
-def goertzel(n: int) -> float:
-    """Compute power at target frequency using Goertzel algorithm.
+def goertzel(n: int) -> tuple:
+    """Compute DFT metrics at target frequency using Goertzel algorithm.
 
     Signal: s[i] = sin(2*pi*i*100/n) + 0.5*sin(2*pi*i*300/n).
     Target frequency bin: 100.
@@ -22,7 +22,7 @@ def goertzel(n: int) -> float:
         n: Signal length.
 
     Returns:
-        Power at the target frequency bin.
+        Tuple of (magnitude, phase_cos, power).
     """
     target_bin = 100
     two_pi = 2.0 * math.pi
@@ -39,4 +39,13 @@ def goertzel(n: int) -> float:
         s1 = s0
 
     power = s1 * s1 + s2 * s2 - coeff * s1 * s2
-    return power
+
+    # Real and imaginary parts of DFT at target bin
+    w = two_pi * target_bin / n
+    real_part = s1 - s2 * math.cos(w)
+    imag_part = s2 * math.sin(w)
+
+    magnitude = math.sqrt(real_part * real_part + imag_part * imag_part)
+    phase_cos = real_part / magnitude if magnitude > 0.0 else 0.0
+
+    return (magnitude, phase_cos, power)

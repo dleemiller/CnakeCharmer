@@ -8,7 +8,6 @@ Keywords: fizzbuzz, leetcode, cython, benchmark, example
 
 """
 from cnake_charmer.benchmarks import cython_benchmark
-import cython
 
 @cython_benchmark(syntax="cy", args=(1000000,))
 def fizzbuzz(int n):

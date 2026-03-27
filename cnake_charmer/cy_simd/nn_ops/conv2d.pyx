@@ -51,7 +51,7 @@ def conv2d(int n):
         raise MemoryError()
 
     # Input gen: same pixel formula as py/cy
-    cdef int i, j, ki, kj, row, col
+    cdef int i, j, ki, kj
     for i in range(n):
         for j in range(n):
             inp[i * n + j] = <float>((i * 17 + j * 31 + 5) % 256)

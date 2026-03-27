@@ -1,5 +1,4 @@
-"""
-Count primes up to n using deterministic Miller-Rabin primality test.
+"""Deterministic Miller-Rabin primality test for numbers 2..n.
 
 Keywords: math, primes, miller-rabin, primality, number theory, benchmark
 """
@@ -8,20 +7,18 @@ from cnake_charmer.benchmarks import python_benchmark
 
 
 @python_benchmark(args=(100000,))
-def miller_rabin(n: int) -> int:
-    """Count primes up to n using deterministic Miller-Rabin.
-
-    Uses witnesses {2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37}
-    which is deterministic for n < 3.3 * 10^24.
+def miller_rabin(n: int) -> tuple:
+    """Test primality of all numbers 2..n using deterministic Miller-Rabin.
 
     Args:
         n: Upper bound (inclusive).
 
     Returns:
-        Number of primes up to n.
+        Tuple of (prime_count, largest_prime, prime_at_midpoint).
+        prime_at_midpoint is the largest prime <= n//2.
     """
     if n < 2:
-        return 0
+        return (0, 0, 0)
 
     def is_prime(num):
         if num < 2:
@@ -31,7 +28,6 @@ def miller_rabin(n: int) -> int:
         if num % 2 == 0 or num % 3 == 0:
             return False
 
-        # Write num-1 as 2^r * d
         d = num - 1
         r = 0
         while d % 2 == 0:
@@ -56,8 +52,14 @@ def miller_rabin(n: int) -> int:
         return True
 
     count = 0
+    largest = 0
+    mid = n // 2
+    prime_at_mid = 0
     for i in range(2, n + 1):
         if is_prime(i):
             count += 1
+            largest = i
+            if i <= mid:
+                prime_at_mid = i
 
-    return count
+    return (count, largest, prime_at_mid)

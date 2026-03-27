@@ -2,6 +2,7 @@ from cnake_charmer.rewards.annotations import annotation_reward
 from cnake_charmer.rewards.compilation import compilation_reward
 from cnake_charmer.rewards.composite import composite_reward
 from cnake_charmer.rewards.correctness import correctness_reward
+from cnake_charmer.rewards.lint import lint_reward
 from cnake_charmer.rewards.performance import performance_reward
 
 __all__ = [
@@ -9,5 +10,6 @@ __all__ = [
     "correctness_reward",
     "performance_reward",
     "annotation_reward",
+    "lint_reward",
     "composite_reward",
 ]

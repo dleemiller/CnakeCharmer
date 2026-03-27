@@ -7,6 +7,7 @@ import logging
 from collections.abc import Callable
 from dataclasses import dataclass
 
+from cnake_charmer.rewards.lint import LintResult, run_cython_lint
 from cnake_charmer.validate.annotations import AnnotationResult, parse_annotations
 from cnake_charmer.validate.benchmark import BenchmarkResult, run_benchmark
 from cnake_charmer.validate.compiler import CompilationResult, cleanup_build, compile_cython
@@ -25,6 +26,7 @@ class ValidationResult:
     correctness: CorrectnessResult | None = None
     benchmark: BenchmarkResult | None = None
     annotations: AnnotationResult | None = None
+    lint: LintResult | None = None
 
     @property
     def compiled(self) -> bool:
@@ -46,6 +48,12 @@ class ValidationResult:
             return self.annotations.score
         return 0.0
 
+    @property
+    def lint_score(self) -> float:
+        if self.lint and self.lint.success:
+            return self.lint.score
+        return 1.0  # don't penalize if lint unavailable
+
     def summary(self) -> dict:
         """Return a flat summary dict suitable for training data."""
         return {
@@ -56,6 +64,8 @@ class ValidationResult:
             "speedup": self.speedup,
             "annotation_score": self.annotation_score,
             "annotation_hints": self.annotations.hints if self.annotations else [],
+            "lint_score": self.lint_score,
+            "lint_violations": self.lint.violations if self.lint else [],
         }
 
 
@@ -105,7 +115,10 @@ def validate(
         logger.debug(f"Compilation failed, stopping pipeline: {result.compilation.errors[:200]}")
         return result
 
-    # Step 2: Parse annotations (from compilation HTML)
+    # Step 2: Lint analysis (runs on source, independent of compilation)
+    result.lint = run_cython_lint(cython_code)
+
+    # Step 3: Parse annotations (from compilation HTML)
     if result.compilation.html_path:
         result.annotations = parse_annotations(html_path=result.compilation.html_path)
 
@@ -118,7 +131,7 @@ def validate(
         except Exception as e:
             logger.warning(f"Could not load function '{func_name}' from compiled module: {e}")
 
-    # Step 3: Correctness check
+    # Step 4: Correctness check
     if not skip_correctness and python_func and cython_func and test_cases:
         result.correctness = check_correctness(
             python_func=python_func,
@@ -126,7 +139,7 @@ def validate(
             test_cases=test_cases,
         )
 
-    # Step 4: Benchmark
+    # Step 5: Benchmark
     if not skip_benchmark and python_func and cython_func:
         b_args = benchmark_args
         if b_args is None and test_cases:

@@ -50,26 +50,6 @@ def max_pool_1d(int n):
     for i in range(n):
         inp[i] = <float>((i * 31 + 17) % 1000)
 
-    # AVX2 max pool: process 8 output positions at a time
-    # Each output needs max of 4 consecutive inputs at stride offsets
-    # Load 32 consecutive inputs, deinterleave into 4 groups of 8, take max
-    cdef int end8 = (out_n // 8) * 8
-    cdef __m256 v0, v1, v2, v3, vmax
-    i = 0
-    while i + 8 <= out_n:
-        # Load the 4 "lanes" for 8 consecutive pool windows
-        # Window i uses inp[i*4], inp[i*4+1], inp[i*4+2], inp[i*4+3]
-        # For 8 windows we need inp[i*4 .. i*4+31]
-        # But these are interleaved, so load stride-offset slices
-        v0 = _mm256_loadu_ps(&inp[i * stride])       # elements 0,4,8,...
-        v1 = _mm256_loadu_ps(&inp[i * stride + 1])   # elements 1,5,9,...
-        v2 = _mm256_loadu_ps(&inp[i * stride + 2])
-        v3 = _mm256_loadu_ps(&inp[i * stride + 3])
-        # Wait — stride=4, so inp[i*4] for 8 consecutive i's is NOT contiguous
-        # inp[0], inp[4], inp[8], ... inp[28] — stride 4 apart, not loadable with loadu
-        # Need gather or scalar. Let's do scalar pool + AVX reduction instead.
-        break
-
     # Scalar pool (stride access pattern defeats SIMD)
     cdef float max_val, v
     for i in range(out_n):

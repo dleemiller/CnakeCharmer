@@ -13,7 +13,7 @@ from cnake_charmer.benchmarks import cython_benchmark
 def median_filter_1d(int n):
     """Apply 1D median filter with window size 7 to a deterministic signal."""
     cdef int i, j, a, b, count
-    cdef int window = 7
+
     cdef int half_w = 3
     cdef double pi2 = 2.0 * M_PI
     cdef double checksum = 0.0, key

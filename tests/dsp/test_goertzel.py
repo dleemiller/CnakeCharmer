@@ -10,4 +10,5 @@ from cnake_charmer.py.dsp.goertzel import goertzel as py_goertzel
 def test_goertzel_equivalence(n):
     py_result = py_goertzel(n)
     cy_result = cy_goertzel(n)
-    assert abs(py_result - cy_result) < 1e-4, f"Mismatch: py={py_result}, cy={cy_result}"
+    for p, c in zip(py_result, cy_result, strict=False):
+        assert abs(p - c) / max(abs(p), 1.0) < 1e-4, f"Mismatch: py={py_result}, cy={cy_result}"

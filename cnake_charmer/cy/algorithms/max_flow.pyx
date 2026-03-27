@@ -27,7 +27,7 @@ def max_flow(int n):
         if queue: free(queue)
         raise MemoryError()
 
-    cdef int i, j, j1, j2, u, v, head, tail
+    cdef int i, j1, j2, u, v, head, tail
     cdef int total_flow, path_flow, c
     cdef int source = 0
     cdef int sink = n - 1
