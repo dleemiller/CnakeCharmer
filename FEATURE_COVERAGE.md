@@ -3,163 +3,170 @@
 Tracks which Cython user-guide features are represented in py/cy/test problem triplets.
 
 **Last updated:** 2026-03-26
-**Total existing problems:** ~380
-**Total proposed new problems:** ~137
+**Total problems:** 454 matched pairs
+**Remaining gaps:** ~24 (prange/nogil, C++, a few extension type decorators)
 
 ---
 
-## A. Extension Types (`cdef class`) — Currently: 6 files
+## A. Extension Types (`cdef class`) — 30+ files
 
-- [x] Basic `cdef class` with typed C attributes (6 files)
-- [x] `__cinit__` / `__dealloc__` lifecycle (6 files)
-- [x] `cdef` methods on classes (6 files)
-- [x] `@property` getters (1 file: particle_bounce)
-- [x] `cpdef` methods (1 file: polygon_area_centroid)
-- [ ] `__getitem__` / `__setitem__` / `__len__` (sequence protocol) — **5 problems**
-- [ ] `__iter__` / `__next__` (iterator protocol) — **3 problems**
-- [ ] `__add__` / `__mul__` / `__neg__` etc. (arithmetic operators) — **4 problems**
-- [ ] `__richcmp__` or `__eq__`/`__lt__` (comparison) — **2 problems**
-- [ ] `__call__` (callable objects) — **2 problems**
-- [ ] `__hash__` — **1 problem**
-- [ ] `__contains__` — **1 problem**
-- [ ] `cdef class` inheritance (single inheritance) — **3 problems**
-- [ ] `cdef readonly` attributes — **2 problems**
-- [ ] `@cython.final` on class or method — **2 problems**
+- [x] Basic `cdef class` with typed C attributes
+- [x] `__cinit__` / `__dealloc__` lifecycle
+- [x] `cdef` methods on classes
+- [x] `@property` getters (particle_bounce)
+- [x] `@property` with setter (property_particle_energy, property_bounded_value)
+- [x] `cpdef` methods (polygon_area_centroid)
+- [x] `__getitem__` / `__setitem__` / `__len__` (sorted_array_search, circular_buffer_sum, bit_array_count, sparse_vector_dot, lookup_table_eval, histogram_bucket)
+- [x] `__iter__` / `__next__` (range_iterator_sum, linked_list_sum, fibonacci_iterator)
+- [x] `__add__` / `__mul__` / `__neg__` / `__iadd__` (complex_multiply_sum, vector3d_cross_sum, matrix2x2_power, fixed_point_accum)
+- [x] `__richcmp__` (priority_queue_sort, interval_overlap_count)
+- [x] `__call__` (callable_transform, callable_filter_count)
+- [x] `__hash__` (interval_overlap_count)
+- [x] `__contains__` (sorted_array_search, bit_array_count)
+- [x] `cdef class` inheritance (shape_area_sum, animal_simulation, expression_eval)
+- [x] `cdef readonly` attributes (immutable_point_distance, config_lookup)
+- [x] `@cython.final` (final_accumulator)
 - [ ] `@cython.freelist(N)` — **2 problems**
 - [ ] `not None` typed parameter checking — **2 problems**
 - [ ] Forward declaration of extension types — **1 problem**
 - [ ] `@cython.dataclasses.dataclass` — **2 problems**
 
-**Subtotal: ~32 new problems**
+**Remaining: ~7 problems**
 
 ---
 
-## B. Enums — Currently: 2 files
+## B. Enums — 5 files
 
-- [x] Basic `cdef enum` (2 files: classify_transitions, rpn_eval)
-- [ ] `cpdef enum` (Python-accessible, PEP 435-style) — **3 problems**
+- [x] Basic `cdef enum` (classify_transitions, rpn_eval)
+- [x] `cpdef enum` (cpdef_enum_direction, cpdef_enum_token_type, cpdef_enum_color_blend)
 - [ ] Anonymous enum (named constants without type) — **2 problems**
 
-**Subtotal: ~5 new problems**
+**Remaining: ~2 problems**
 
 ---
 
-## C. Typed Memoryviews — Currently: 3 files (pointer-cast only)
+## C. Typed Memoryviews — 15+ files
 
-- [x] 1D memoryview from pointer cast `<double[:n]>ptr` (3 files)
-- [ ] 2D memoryview `double[:, :]` (strided) — **4 problems**
-- [ ] C-contiguous `double[::1]` / `double[:, ::1]` — **3 problems**
+- [x] 1D memoryview from pointer cast `<double[:n]>ptr` (memview_weighted_sum, matrix_power_trace, image_flip_checksum)
+- [x] 2D memoryview `double[:, :]` via `cython.view.array` (memview_mat_transpose, memview_gauss_blur_2d, memview_mat_add, memview_game_of_life)
+- [x] C-contiguous `double[::1]` (contig_prefix_sum, contig_moving_avg, contig_threshold_count)
+- [x] `const` memoryviews (const_dot_product, const_histogram)
+- [x] Memoryview slicing (memview_slice_reverse)
+- [x] `.copy()` (memview_copy_transform)
+- [x] Pass to C via `&view[0]` (memview_pass_to_c)
 - [ ] Fortran-contiguous `double[::1, :]` — **2 problems**
-- [ ] `const` memoryviews (read-only views) — **2 problems**
-- [ ] Memoryview slicing (`view[2:10]`, subviews) — **2 problems**
-- [ ] `.copy()` / `.copy_fortran()` — **1 problem**
 - [ ] `.T` transpose — **1 problem**
-- [ ] `cython.view.array` for standalone allocation — **2 problems**
-- [ ] Pass to C via `&view[0]` — **2 problems**
 
-**Subtotal: ~19 new problems**
+**Remaining: ~3 problems**
 
 ---
 
-## D. Fused Types (Generics) — Currently: 0 files
+## D. Fused Types (Generics) — 5 files
 
-- [ ] `ctypedef fused` basic (int/float/double dispatch) — **3 problems**
+- [x] `ctypedef fused` basic (fused_array_sum, fused_minmax, fused_clamp, fused_accumulate)
+- [x] Separate float/double helpers (fused_dot_product)
 - [ ] Fused types with memoryviews — **2 problems**
 - [ ] Type checking branches (`if fused_type is int:`) — **2 problems**
-- [ ] Built-in fused types (`cython.integral`, `cython.floating`, `cython.numeric`) — **2 problems**
 
-**Subtotal: ~9 new problems**
+**Remaining: ~4 problems**
 
 ---
 
-## E. Parallelism (`prange` / `nogil`) — Currently: 0 `prange`, ~17 `nogil` (qsort comparators only)
+## E. Parallelism (`prange` / `nogil`) — 0 `prange` files
 
 - [ ] `prange` basic parallel for loop — **4 problems**
 - [ ] `prange` with reductions (`+=`, `*=`) — **3 problems**
 - [ ] `with nogil:` blocks (release GIL for C computation) — **4 problems**
 - [ ] `prange` with `schedule` (static/dynamic/guided) — **2 problems**
 
-**Subtotal: ~13 new problems** (requires `-fopenmp` compile flag)
+**Remaining: ~13 problems** (requires `-fopenmp` compile flag)
 
 ---
 
-## F. Structs (advanced) — Currently: 9 files
+## F. Structs — 9+ files
 
-- [x] Basic `cdef struct` with typed fields (9 files)
-- [x] Structs with `qsort` comparators (9 files)
+- [x] Basic `cdef struct` with typed fields (spearman_rank, convex_hull_area, etc.)
+- [x] Structs with `qsort` comparators
 - [ ] Nested structs — **2 problems**
 - [ ] Packed structs (`cdef packed struct`) — **1 problem**
 - [ ] Struct ↔ dict auto-conversion — **2 problems**
 - [ ] Struct as function return — **2 problems**
 
-**Subtotal: ~7 new problems**
+**Remaining: ~7 problems**
 
 ---
 
-## G. Unions — Currently: 0 files
+## G. Unions — 3 files
 
-- [ ] `cdef union` (tagged union / variant type) — **3 problems**
+- [x] `cdef union` int/float type punning (union_int_float)
+- [x] `cdef union` byte array packing (union_color_channels)
+- [x] Tagged union with `cdef struct` + `cdef union` (union_tagged_value)
 
-**Subtotal: ~3 new problems**
-
----
-
-## H. `ctypedef` — Currently: 0 files
-
-- [ ] Type aliases (`ctypedef unsigned long long uint64`) — **3 problems**
-- [ ] Function pointer typedefs — **2 problems**
-
-**Subtotal: ~5 new problems**
+**Complete**
 
 ---
 
-## I. Function Pointers & Callbacks — Currently: ~9 files (qsort only)
+## H. `ctypedef` — 3 files
 
-- [x] `qsort` with custom comparator (9 files)
-- [ ] Custom callback dispatch (non-qsort) — **3 problems**
-- [ ] Function pointer arrays (dispatch tables) — **2 problems**
-- [ ] Typed function pointer variables — **2 problems**
+- [x] Type aliases (typedef_hash_table — `ctypedef unsigned long long uint64`)
+- [x] Fixed-size array typedefs (typedef_matrix_ops — `ctypedef double[4] vec4_t`)
+- [x] Function pointer typedefs (typedef_callback_sort — `ctypedef int (*compare_fn)(...)`)
 
-**Subtotal: ~7 new problems**
+**Complete**
 
 ---
 
-## J. Error Return Specifications — Currently: 0 files (all use default)
+## I. Function Pointers & Callbacks — 12+ files
 
-- [ ] `except -1` (specific sentinel) — **2 problems**
-- [ ] `except? -1` (check with PyErr_Occurred) — **2 problems**
+- [x] `qsort` with custom comparator (9 existing files)
+- [x] Dispatch table with function pointer array (dispatch_table_eval)
+- [x] Callback function passing (callback_transform)
+- [x] Function pointer for generic algorithm (bisection_root)
+
+**Complete**
+
+---
+
+## J. Error Return Specifications — 2 files
+
+- [x] `except -1` (except_value_search)
+- [x] `except? -1.0` (except_check_sqrt)
 - [ ] `except *` (always check) — **1 problem**
-- [ ] `noexcept` on cdef functions — **2 problems**
 
-**Subtotal: ~7 new problems**
-
----
-
-## K. Buffer Protocol — Currently: 0 files
-
-- [ ] `__getbuffer__` / `__releasebuffer__` on cdef class — **3 problems**
-
-**Subtotal: ~3 new problems**
+**Remaining: ~1 problem**
 
 ---
 
-## L. `cpdef` Functions (standalone) — Currently: 0 standalone
+## K. Buffer Protocol — 3 files
 
-- [ ] `cpdef` module-level functions — **3 problems**
+- [x] 1D `__getbuffer__`/`__releasebuffer__` for `double*` (buffer_sum_squares)
+- [x] 1D buffer protocol for `unsigned char*` (buffer_byte_histogram)
+- [x] 2D buffer protocol with shape/strides (buffer_matrix_trace)
 
-**Subtotal: ~3 new problems**
-
----
-
-## M. C-tuples — Currently: 0 files
-
-- [ ] `ctuple` return types `(double, int)` — **2 problems**
-
-**Subtotal: ~2 new problems**
+**Complete**
 
 ---
 
-## N. C++ Interop — Currently: 0 in problem files
+## L. `cpdef` Functions (standalone) — 3 files
+
+- [x] `cpdef long long gcd(...)` (cpdef_gcd_sum)
+- [x] `cpdef double clamp(...)` (cpdef_clamp_sum)
+- [x] `cpdef bint is_prime(...)` (cpdef_is_prime_count)
+
+**Complete**
+
+---
+
+## M. C-tuples — 2 files
+
+- [x] `(double, double)` return type (ctuple_minmax)
+- [x] `(long long, long long)` return type (ctuple_divmod)
+
+**Complete**
+
+---
+
+## N. C++ Interop — 0 in problem files
 
 - [ ] STL containers (`libcpp.vector`, `libcpp.map`, `libcpp.set`) — **4 problems**
 - [ ] `cdef cppclass` wrapping — **2 problems**
@@ -167,42 +174,45 @@ Tracks which Cython user-guide features are represented in py/cy/test problem tr
 - [ ] C++ templates — **2 problems**
 - [ ] C++ scoped enums (`enum class`) — **1 problem**
 
-**Subtotal: ~11 new problems** (requires `language=c++` build support)
+**Remaining: ~11 problems** (requires `language=c++` build support)
 
 ---
 
 ## O. Miscellaneous
 
-- [ ] C arrays (fixed-size stack-allocated `cdef int[256]`) — **3 problems**
-- [ ] `realloc` / `calloc` usage — **2 problems**
-- [ ] `from libc.string cimport memcpy/memset/memcmp` — **3 problems**
-- [ ] `@property` with setter — **2 problems**
-- [ ] `cdef extern from "header.h"` custom C integration — **2 problems**
+- [x] Stack-allocated C arrays `cdef int[1024]` (stack_array_sort, stack_lut_transform, stack_matrix_det)
+- [x] `realloc` (dynamic_array_grow)
+- [x] `calloc` (calloc_histogram)
+- [x] `memcpy` (memcpy_block_reverse)
+- [x] `memset` (memset_clear_pattern)
+- [x] `memcmp` (memcmp_dedup_count)
+- [x] `@property` with setter (property_particle_energy, property_bounded_value)
+- [x] `cdef extern from "header.h"` (extern_abs_sum, extern_string_ops)
 
-**Subtotal: ~12 new problems**
+**Complete**
 
 ---
 
 ## Summary Table
 
-| Category | Current | Proposed | Priority |
-|----------|---------|----------|----------|
-| A. Extension type features | 6 | ~32 | Tier 1 |
-| B. Enums | 2 | ~5 | Tier 2 |
-| C. Typed memoryviews | 3 | ~19 | Tier 1 |
-| D. Fused types | 0 | ~9 | Tier 1 |
-| E. Parallelism (prange/nogil) | 0 | ~13 | Tier 1 |
-| F. Structs (advanced) | 9 | ~7 | Tier 2 |
-| G. Unions | 0 | ~3 | Tier 3 |
-| H. ctypedef | 0 | ~5 | Tier 2 |
-| I. Function pointers | 9 | ~7 | Tier 2 |
-| J. Error return specs | 0 | ~7 | Tier 2 |
-| K. Buffer protocol | 0 | ~3 | Tier 3 |
-| L. cpdef functions | 0 | ~3 | Tier 3 |
-| M. C-tuples | 0 | ~2 | Tier 3 |
-| N. C++ interop | 0 | ~11 | Tier 3 |
-| O. Miscellaneous | varies | ~12 | Tier 3 |
-| **Total** | | **~137** | |
+| Category | Problems | Status |
+|----------|----------|--------|
+| A. Extension type features | ~30 | Nearly complete (7 remaining) |
+| B. Enums | 5 | Nearly complete (2 remaining) |
+| C. Typed memoryviews | 15+ | Nearly complete (3 remaining) |
+| D. Fused types | 5 | Partial (4 remaining) |
+| E. Parallelism (prange/nogil) | 0 | Not started (13 remaining) |
+| F. Structs (advanced) | 9 | Partial (7 remaining) |
+| G. Unions | 3 | **Complete** |
+| H. ctypedef | 3 | **Complete** |
+| I. Function pointers | 12+ | **Complete** |
+| J. Error return specs | 2 | Nearly complete (1 remaining) |
+| K. Buffer protocol | 3 | **Complete** |
+| L. cpdef functions | 3 | **Complete** |
+| M. C-tuples | 2 | **Complete** |
+| N. C++ interop | 0 | Not started (11 remaining) |
+| O. Miscellaneous | 10 | **Complete** |
+| **Total remaining** | | **~48 problems** |
 
 ## Build Changes Required
 
