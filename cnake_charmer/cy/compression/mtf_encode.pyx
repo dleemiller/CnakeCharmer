@@ -4,7 +4,7 @@
 Keywords: compression, move-to-front, MTF, transform, encoding, cython, benchmark
 """
 
-from libc.stdlib cimport malloc, free
+
 from cnake_charmer.benchmarks import cython_benchmark
 
 

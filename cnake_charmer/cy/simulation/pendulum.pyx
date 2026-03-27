@@ -25,7 +25,7 @@ def pendulum(int n):
     cdef double w2 = 0.0
 
     cdef double delta, sin_d, cos_d, den1, den2
-    cdef double dth1, dw1_val, dth2, dw2_val
+
     cdef double k1_th1, k1_w1, k1_th2, k1_w2
     cdef double k2_th1, k2_w1, k2_th2, k2_w2
     cdef double k3_th1, k3_w1, k3_th2, k3_w2

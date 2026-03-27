@@ -33,7 +33,7 @@ def a_star_grid(int n):
         raise MemoryError()
 
     cdef int i, j, d, ci, cj, ni, nj, neighbor, current, current_g, tentative_g
-    cdef int f, h, goal, nodes_explored, min_idx, heap_size
+    cdef int h, goal, nodes_explored, min_idx, heap_size
     cdef int path_length, mid_node, path_midpoint_x, pos, idx
     cdef int INF = nn + 1
     cdef int dx[4]
@@ -69,7 +69,6 @@ def a_star_grid(int n):
         for i in range(1, heap_size):
             if heap_f[i] < heap_f[min_idx]:
                 min_idx = i
-        f = heap_f[min_idx]
         current = heap_n[min_idx]
         heap_size -= 1
         heap_f[min_idx] = heap_f[heap_size]

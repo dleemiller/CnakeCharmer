@@ -7,7 +7,6 @@ Keywords: collatz, sequence, math, conjecture, cython, benchmark
 
 from libc.stdlib cimport malloc, free
 from cnake_charmer.benchmarks import cython_benchmark
-import cython
 
 
 @cython_benchmark(syntax="cy", args=(10000,))

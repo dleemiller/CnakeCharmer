@@ -5,7 +5,7 @@ Keywords: dsp, pitch detection, amdf, signal processing, frequency, cython, benc
 """
 
 from libc.stdlib cimport malloc, free
-from libc.math cimport sin, cos, fabs, M_PI
+from libc.math cimport sin, M_PI
 from cnake_charmer.benchmarks import cython_benchmark
 
 
@@ -21,7 +21,7 @@ def pitch_detect_amdf(int n):
     cdef double f2 = 200.0
     cdef double t
     cdef int i, li, lag
-    cdef double acc, diff, val
+    cdef double acc, diff
     cdef double two_pi = 2.0 * M_PI
 
     # Generate signal

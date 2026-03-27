@@ -5,7 +5,7 @@ Keywords: numerical, svd, singular value, power iteration, linear algebra, cytho
 """
 
 from libc.stdlib cimport malloc, free
-from libc.math cimport sin, cos, sqrt, fabs
+from libc.math cimport sin, cos, sqrt
 from cnake_charmer.benchmarks import cython_benchmark
 
 

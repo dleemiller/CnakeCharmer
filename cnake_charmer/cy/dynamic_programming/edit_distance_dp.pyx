@@ -12,7 +12,7 @@ from cnake_charmer.benchmarks import cython_benchmark
 @cython_benchmark(syntax="cy", args=(1500,))
 def edit_distance_dp(int n):
     """Compute edit distance using a flat C array DP table."""
-    cdef int i, j, cost, val
+    cdef int i, j, val
     cdef int *s1 = <int *>malloc(n * sizeof(int))
     cdef int *s2 = <int *>malloc(n * sizeof(int))
     cdef int *dp = <int *>malloc((n + 1) * (n + 1) * sizeof(int))

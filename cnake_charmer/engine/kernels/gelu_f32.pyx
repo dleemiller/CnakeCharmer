@@ -5,7 +5,7 @@ GELU(x) = 0.5 * x * (1 + tanh(sqrt(2/pi) * (x + 0.044715 * x^3))).
 Pure compute, no allocation.
 """
 
-from libc.math cimport tanh, sqrt, exp
+from libc.math cimport tanh
 
 cdef extern from "immintrin.h" nogil:
     ctypedef float __m256

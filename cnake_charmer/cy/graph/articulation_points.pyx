@@ -38,7 +38,7 @@ def articulation_points(int n):
         if stack_idx: free(stack_idx)
         raise MemoryError()
 
-    cdef int i, j, k, parent, node, neighbor, idx
+    cdef int i, k, parent, node, neighbor, idx
     cdef int timer = 0
     cdef int stack_top
     cdef int parent_node, start

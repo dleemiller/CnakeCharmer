@@ -5,7 +5,7 @@ Keywords: numerical, cholesky, decomposition, linear algebra, matrix, cython, be
 """
 
 from libc.stdlib cimport malloc, free
-from libc.math cimport sqrt, fabs
+from libc.math cimport sqrt
 from cnake_charmer.benchmarks import cython_benchmark
 
 

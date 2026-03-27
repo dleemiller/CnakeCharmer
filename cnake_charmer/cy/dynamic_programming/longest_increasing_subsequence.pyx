@@ -6,7 +6,6 @@ Keywords: dynamic programming, longest increasing subsequence, LIS, cython, benc
 """
 
 from cnake_charmer.benchmarks import cython_benchmark
-import cython
 from libc.stdlib cimport malloc, free
 
 

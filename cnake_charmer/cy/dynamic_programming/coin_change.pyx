@@ -5,7 +5,6 @@ Keywords: dynamic programming, coin change, cython, benchmark
 """
 
 from libc.stdlib cimport malloc, free
-from libc.string cimport memset
 from cnake_charmer.benchmarks import cython_benchmark
 
 

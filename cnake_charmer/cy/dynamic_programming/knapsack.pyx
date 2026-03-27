@@ -6,7 +6,6 @@ Keywords: dynamic programming, knapsack, cython, benchmark
 """
 
 from cnake_charmer.benchmarks import cython_benchmark
-import cython
 from libc.stdlib cimport malloc, free
 from libc.string cimport memset
 

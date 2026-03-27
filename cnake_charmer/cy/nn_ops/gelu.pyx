@@ -7,7 +7,7 @@ Keywords: gelu, activation, neural network, tensor, f32, cython, benchmark
 """
 
 from libc.stdlib cimport malloc, free
-from libc.math cimport sin, tanh, sqrt
+from libc.math cimport sin, tanh
 from cnake_charmer.benchmarks import cython_benchmark
 
 cdef float SQRT_2_OVER_PI = 0.7978845608028654

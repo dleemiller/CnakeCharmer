@@ -51,7 +51,7 @@ cdef void softmax_f32_avx(const float *inp, float *out, int n) noexcept nogil:
     """
     cdef int i, j
     cdef int end8 = (n // 8) * 8
-    cdef __m256 vmax, v0, vsum, vinv_s
+    cdef __m256 vmax, v0, vinv_s
     cdef float tmp[8]
     cdef float mx, s
 
