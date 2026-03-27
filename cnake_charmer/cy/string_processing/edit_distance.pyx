@@ -6,7 +6,6 @@ Keywords: string processing, edit distance, levenshtein, cython, benchmark
 """
 
 from cnake_charmer.benchmarks import cython_benchmark
-import cython
 from libc.stdlib cimport malloc, free
 
 
@@ -17,7 +16,7 @@ def edit_distance(int n):
     cdef str s2 = "ba" * n
     cdef int len1 = len(s1)
     cdef int len2 = len(s2)
-    cdef int i, j, cost, replace_cost, insert_cost, delete_cost
+    cdef int i, j, replace_cost, insert_cost, delete_cost
     cdef int *prev = <int *>malloc((len2 + 1) * sizeof(int))
     cdef int *curr = <int *>malloc((len2 + 1) * sizeof(int))
     cdef int *tmp

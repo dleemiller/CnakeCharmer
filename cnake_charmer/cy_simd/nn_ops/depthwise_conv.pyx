@@ -53,7 +53,6 @@ def depthwise_conv(int n):
     cdef double total = 0.0
     cdef float val
     cdef __m256 vacc, vk
-    cdef int end8 = (out_spatial // 8) * 8
 
     # Cheap input gen (no sin)
     for c in range(n):

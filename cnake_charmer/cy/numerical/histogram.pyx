@@ -8,7 +8,6 @@ Keywords: histogram, frequency, counting, numerical, cython, benchmark
 from libc.stdlib cimport malloc, free
 from libc.string cimport memset
 from cnake_charmer.benchmarks import cython_benchmark
-import cython
 
 
 @cython_benchmark(syntax="cy", args=(1000000,))

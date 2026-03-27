@@ -16,7 +16,7 @@ def wave_interference(int n):
     cdef double two_pi_over_lam = 2.0 * M_PI / wavelength
     cdef int n_obs = 1000
     cdef double total_intensity = 0.0
-    cdef double obs_x, obs_y, amplitude, src_x, dx, r
+    cdef double obs_x, obs_y, amplitude, dx, r
     cdef int obs, i
 
     cdef double *src_xs = <double *>malloc(n * sizeof(double))

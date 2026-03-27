@@ -16,7 +16,7 @@ def lu_decomposition(int n):
         raise MemoryError()
 
     cdef int i, j, k
-    cdef double diag_sum, factor
+    cdef double diag_sum
 
     # Build matrix
     for i in range(n):

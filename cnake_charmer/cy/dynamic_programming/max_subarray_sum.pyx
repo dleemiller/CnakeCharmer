@@ -15,7 +15,7 @@ def max_subarray_sum(int n):
     cdef int chunk_size = 100
     cdef int k = n / chunk_size
     cdef long long total = 0
-    cdef int chunk, i, offset, val
+    cdef int chunk, i, offset
     cdef int max_ending_here, max_so_far
     cdef int max_single = -101
     cdef int *v = <int *>malloc(chunk_size * sizeof(int))

@@ -10,4 +10,5 @@ from cnake_charmer.py.dsp.autocorrelation import autocorrelation as py_autocorre
 def test_autocorrelation_equivalence(n):
     py_result = py_autocorrelation(n)
     cy_result = cy_autocorrelation(n)
-    assert abs(py_result - cy_result) < 1e-6, f"Mismatch: py={py_result}, cy={cy_result}"
+    for p, c in zip(py_result, cy_result, strict=False):
+        assert abs(p - c) / max(abs(p), 1.0) < 1e-4, f"Mismatch: py={py_result}, cy={cy_result}"

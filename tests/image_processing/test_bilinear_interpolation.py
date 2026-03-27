@@ -12,4 +12,6 @@ from cnake_charmer.py.image_processing.bilinear_interpolation import (
 
 @pytest.mark.parametrize("n", [5, 10, 50, 100])
 def test_bilinear_interpolation_equivalence(n):
-    assert py_func(n) == cy_func(n)
+    py_result = py_func(n)
+    cy_result = cy_func(n)
+    assert py_result == cy_result, f"Mismatch: py={py_result}, cy={cy_result}"

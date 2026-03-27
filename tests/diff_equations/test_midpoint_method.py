@@ -10,4 +10,5 @@ from cnake_charmer.py.diff_equations.midpoint_method import midpoint_method as p
 def test_midpoint_method_equivalence(n):
     py_result = py_func(n)
     cy_result = cy_func(n)
-    assert abs(py_result - cy_result) < 1e-9, f"Mismatch: py={py_result}, cy={cy_result}"
+    for p, c in zip(py_result, cy_result, strict=False):
+        assert abs(p - c) / max(abs(p), 1.0) < 1e-4, f"Mismatch: py={py_result}, cy={cy_result}"

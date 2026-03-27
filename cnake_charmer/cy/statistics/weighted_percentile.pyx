@@ -18,7 +18,7 @@ def weighted_percentile(int n):
         free(values); free(weights); free(indices)
         raise MemoryError()
 
-    cdef int i, idx
+    cdef int i
     cdef long long total_weight, cumulative
     cdef double threshold, result
 

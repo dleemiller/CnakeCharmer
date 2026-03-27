@@ -208,6 +208,8 @@ def run_all_benchmarks(force_all: bool = False, num_workers: int = 4) -> list[di
         return results
 
     log.info(f"Running {len(to_run)} benchmarks with {num_workers} workers, {skipped} cached")
+    for bid in to_run:
+        log.info(f"  → {bid}")
 
     if num_workers <= 1:
         # Single-threaded fallback

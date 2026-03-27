@@ -18,7 +18,7 @@ def envelope_detection(int n):
     cdef int i, k
     cdef int half_n = n // 2
     cdef double two_pi_over_n = 2.0 * M_PI / n
-    cdef double quad, envelope, total, angle_factor
+    cdef double quad, envelope, total
     cdef double *s = <double *>malloc(n * sizeof(double))
     if not s:
         raise MemoryError()

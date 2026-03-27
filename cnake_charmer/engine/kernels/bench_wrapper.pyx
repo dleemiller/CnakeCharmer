@@ -13,7 +13,7 @@ from libc.stdlib cimport malloc, free
 from libc.math cimport sin
 
 # Import engine kernels
-from cnake_charmer.engine.kernels.relu_f32 cimport relu_f32, relu_f32_avx, reduce_sum_f32
+from cnake_charmer.engine.kernels.relu_f32 cimport relu_f32, relu_f32_avx
 from cnake_charmer.engine.kernels.gemm_f32 cimport gemm_f32, gemm_f32_avx
 from cnake_charmer.engine.kernels.sigmoid_f32 cimport sigmoid_f32, sigmoid_f32_avx
 from cnake_charmer.engine.kernels.gelu_f32 cimport gelu_f32, gelu_f32_avx
@@ -111,7 +111,7 @@ def bench_all_kernels():
     cdef float *out
     cdef float *a
     cdef float *b
-    cdef double scalar_ms, simd_ms_val
+    cdef double scalar_ms
 
     # --- Unary ops: (inp, out, n) ---
     cdef list unary_specs = [("relu", 5000000), ("sigmoid", 2000000), ("gelu", 2000000),

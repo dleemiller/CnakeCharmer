@@ -20,7 +20,7 @@ def softmax(int n):
         raise MemoryError()
 
     cdef int i, g, start
-    cdef double max_val, exp_sum, total, val
+    cdef double max_val, exp_sum, total
 
     for i in range(n):
         values[i] = (i * 17 + 5) % 100 / 50.0 - 1.0
