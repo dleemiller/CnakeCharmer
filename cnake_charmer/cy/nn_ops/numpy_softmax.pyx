@@ -11,6 +11,7 @@ import numpy as np
 cimport numpy as cnp
 
 from libc.math cimport exp
+from libc.stdlib cimport malloc, free
 from cnake_charmer.benchmarks import cython_benchmark
 
 cnp.import_array()
@@ -20,15 +21,16 @@ cnp.import_array()
 def numpy_softmax(int n):
     """Compute chunked softmax and return sum of outputs."""
     rng = np.random.RandomState(42)
-    cdef cnp.ndarray[double, ndim=1] data_arr = (
-        rng.standard_normal(n).astype(np.float64)
-    )
+    cdef cnp.ndarray[double, ndim=1] data_arr = rng.standard_normal(n)
     cdef double[::1] data = data_arr
     cdef int chunk = 256
     cdef int num_chunks = n // chunk
     cdef double total = 0.0
-    cdef double mx, s_exp, val
+    cdef double mx, s_exp, inv_s_exp
     cdef int c, i, start
+    cdef double *buf = <double *>malloc(chunk * sizeof(double))
+    if not buf:
+        raise MemoryError()
 
     with nogil:
         for c in range(num_chunks):
@@ -39,9 +41,11 @@ def numpy_softmax(int n):
                     mx = data[start + i]
             s_exp = 0.0
             for i in range(chunk):
-                s_exp += exp(data[start + i] - mx)
+                buf[i] = exp(data[start + i] - mx)
+                s_exp += buf[i]
+            inv_s_exp = 1.0 / s_exp
             for i in range(chunk):
-                val = exp(data[start + i] - mx) / s_exp
-                total += val
+                total += buf[i] * inv_s_exp
 
+    free(buf)
     return total

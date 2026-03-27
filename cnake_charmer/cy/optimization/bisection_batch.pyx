@@ -16,19 +16,20 @@ def bisection_batch(int n):
     cdef int i, j
     cdef double k, lo, hi, mid, fmid
 
-    for i in range(n):
-        k = <double>(i + 1)
-        lo = 0.0
-        hi = pi
+    with nogil:
+        for i in range(n):
+            k = <double>(i + 1)
+            lo = 0.0
+            hi = pi
 
-        for j in range(50):
-            mid = 0.5 * (lo + hi)
-            fmid = sin(mid) - mid / k
-            if fmid > 0.0:
-                lo = mid
-            else:
-                hi = mid
+            for j in range(50):
+                mid = 0.5 * (lo + hi)
+                fmid = sin(mid) - mid / k
+                if fmid > 0.0:
+                    lo = mid
+                else:
+                    hi = mid
 
-        total += 0.5 * (lo + hi)
+            total += 0.5 * (lo + hi)
 
     return total

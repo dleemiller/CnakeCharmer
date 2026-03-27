@@ -48,10 +48,30 @@ cdef class LinkedList:
         self._iter_current = self._iter_current.next_node
         return val
 
+    cdef double c_sum(self):
+        """Traverse the list at C level, summing values without Python boxing."""
+        cdef Node node = self.head
+        cdef double total = 0.0
+        while node is not None:
+            total += node.value
+            node = node.next_node
+        return total
+
+    cdef double c_sum_squares(self):
+        """Traverse the list at C level, summing val*val without Python boxing."""
+        cdef Node node = self.head
+        cdef double sq_total = 0.0
+        cdef double v
+        while node is not None:
+            v = node.value
+            sq_total += v * v
+            node = node.next_node
+        return sq_total
+
 
 @cython_benchmark(syntax="cy", args=(50000,))
 def linked_list_sum(int n):
-    """Build a LinkedList and sum via __iter__/__next__."""
+    """Build a LinkedList and sum via C-level traversal methods."""
     cdef LinkedList lst = LinkedList()
     cdef int i
     cdef double val
@@ -60,14 +80,5 @@ def linked_list_sum(int n):
         val = ((<long long>i * <long long>2654435761 + 13) % 10000) / 100.0
         lst.append(val)
 
-    # First iteration: sum values
-    cdef double total = 0.0
-    for val in lst:
-        total += val
-
-    # Second iteration: sum squares
-    cdef double sq_total = 0.0
-    for val in lst:
-        sq_total += val * val
-
-    return total + sq_total
+    # C-level traversals: no Python iterator boxing
+    return lst.c_sum() + lst.c_sum_squares()

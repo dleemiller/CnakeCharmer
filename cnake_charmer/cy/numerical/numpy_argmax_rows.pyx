@@ -19,9 +19,7 @@ def numpy_argmax_rows(int n):
     """Find argmax of each row in n x 512 matrix."""
     rng = np.random.RandomState(42)
     cdef int cols = 512
-    cdef cnp.ndarray[double, ndim=2] mat_arr = (
-        rng.standard_normal((n, cols)).astype(np.float64)
-    )
+    cdef cnp.ndarray[double, ndim=2] mat_arr = rng.standard_normal((n, cols))
     cdef double[:, ::1] mat = mat_arr
     cdef long total = 0
     cdef int i, j, best_j

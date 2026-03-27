@@ -22,9 +22,7 @@ def numpy_prange_norm(int n):
     """Compute row-wise L2 norms of n x 1000 matrix."""
     rng = np.random.RandomState(42)
     cdef int cols = 1000
-    cdef cnp.ndarray[double, ndim=2] mat_arr = (
-        rng.standard_normal((n, cols)).astype(np.float64)
-    )
+    cdef cnp.ndarray[double, ndim=2] mat_arr = rng.standard_normal((n, cols))
     cdef double[:, ::1] mat = mat_arr
     cdef cnp.ndarray[double, ndim=1] norms_arr = (
         np.empty(n, dtype=np.float64)
@@ -32,15 +30,13 @@ def numpy_prange_norm(int n):
     cdef double[::1] norms = norms_arr
     cdef int i, j
     cdef double total = 0.0
+    cdef double row_sum
 
     for i in prange(n, nogil=True):
-        norms[i] = 0.0
+        row_sum = 0.0
         for j in range(cols):
-            norms[i] = norms[i] + mat[i, j] * mat[i, j]
-        norms[i] = sqrt(norms[i])
-
-    with nogil:
-        for i in range(n):
-            total += norms[i]
+            row_sum = row_sum + mat[i, j] * mat[i, j]
+        norms[i] = sqrt(row_sum)
+        total += norms[i]
 
     return total

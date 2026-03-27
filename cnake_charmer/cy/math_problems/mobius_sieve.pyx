@@ -26,23 +26,31 @@ def mobius_sieve(int n):
     memset(is_prime, 1, (n + 1) * sizeof(unsigned char))
     mu[1] = 1
 
-    for i in range(2, n + 1):
-        if is_prime[i]:
-            mu[i] = -1
-            for j in range(2 * i, n + 1, i):
-                is_prime[j] = 0
-            for j in range(2 * i, n + 1, i):
-                mu[j] = -mu[j]
-            i2 = <long long>i * <long long>i
-            if i2 <= n:
-                j = <int>i2
+    with nogil:
+        i = 2
+        while i <= n:
+            if is_prime[i]:
+                mu[i] = -1
+                # Fused single pass: mark composites and flip mu together
+                j = 2 * i
                 while j <= n:
-                    mu[j] = 0
-                    j += <int>i2
+                    is_prime[j] = 0
+                    mu[j] = -mu[j]
+                    j += i
+                # Zero out multiples of i^2
+                i2 = <long long>i * <long long>i
+                if i2 <= n:
+                    j = <int>i2
+                    while j <= n:
+                        mu[j] = 0
+                        j += <int>i2
+            i += 1
 
-    total = 0
-    for i in range(1, n + 1):
-        total += mu[i]
+        total = 0
+        j = 1
+        while j <= n:
+            total += mu[j]
+            j += 1
 
     free(mu)
     free(is_prime)
