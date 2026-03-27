@@ -19,9 +19,7 @@ cnp.import_array()
 def numpy_typed_histogram(int n):
     """Compute histogram with 256 bins, return max count."""
     rng = np.random.RandomState(42)
-    cdef cnp.ndarray[cnp.float64_t, ndim=1] data_arr = (
-        rng.standard_normal(n).astype(np.float64)
-    )
+    cdef cnp.ndarray[cnp.float64_t, ndim=1] data_arr = rng.standard_normal(n)
     cdef cnp.float64_t[::1] data = data_arr
 
     cdef int num_bins = 256
@@ -38,13 +36,14 @@ def numpy_typed_histogram(int n):
     cdef int i, b
     cdef cnp.float64_t val
     cdef int max_count
+    cdef cnp.float64_t inv_bin_width = 1.0 / bin_width
 
     with nogil:
         for i in range(n):
             val = data[i]
             if val < lo or val >= hi:
                 continue
-            b = <int>((val - lo) / bin_width)
+            b = <int>((val - lo) * inv_bin_width)
             if b >= num_bins:
                 b = num_bins - 1
             counts[b] += 1

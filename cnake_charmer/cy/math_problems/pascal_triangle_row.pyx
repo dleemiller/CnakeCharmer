@@ -11,18 +11,21 @@ from cnake_charmer.benchmarks import cython_benchmark
 def pascal_triangle_row(int n):
     """Compute the nth row of Pascal's triangle.
 
+    Uses the O(n) binomial coefficient recurrence:
+        C(n, k) = C(n, k-1) * (n - k + 1) // k
+    This computes each element in one pass with a single multiply and
+    divide per step instead of the O(n^2) inner loop.
+
     Uses Python ints for arbitrary precision (values exceed long long
     for n > ~60), but typed loop variables for speed.
     """
-    cdef int i, j
-    cdef int size = n + 1
-    cdef list row = [1] * size
+    cdef int k
+    cdef list row = [None] * (n + 1)
 
-    for i in range(2, n + 1):
-        prev = 1
-        for j in range(1, i):
-            temp = row[j]
-            row[j] = prev + row[j]
-            prev = temp
+    row[0] = 1
+    val = 1
+    for k in range(1, n + 1):
+        val = val * (n - k + 1) // k
+        row[k] = val
 
     return row

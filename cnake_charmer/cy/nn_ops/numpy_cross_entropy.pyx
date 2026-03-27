@@ -19,9 +19,7 @@ cnp.import_array()
 def numpy_cross_entropy(int n):
     """Compute cross-entropy loss, return scalar value."""
     rng = np.random.RandomState(42)
-    cdef cnp.ndarray[double, ndim=1] raw_arr = (
-        rng.standard_normal(n).astype(np.float64)
-    )
+    cdef cnp.ndarray[double, ndim=1] raw_arr = rng.standard_normal(n)
     cdef double[::1] raw = raw_arr
 
     cdef cnp.ndarray[double, ndim=1] labels_arr = (
