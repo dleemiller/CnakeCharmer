@@ -39,6 +39,7 @@ dependencies = [
     "mcp>=1.26.0",
     "numpy>=2.2",
     "peft>=0.14",
+    "pythran>=0.18.1",
     "rich>=14.3.3",
     "setuptools>=75",
     "torch>=2.6",

@@ -3,9 +3,9 @@
 Tracks which Cython user-guide features are represented in py/cy/test problem triplets.
 
 **Last updated:** 2026-03-26
-**Total problems:** 491 matched pairs
-**Categories complete:** 14 of 17
-**Remaining gaps:** ~21+ (C++ interop, NumPy interop, NumPy ufuncs)
+**Total problems:** 492 matched pairs
+**Categories complete:** 15 of 18
+**Remaining gaps:** ~18 (C++ interop, NumPy ufuncs, Pythran)
 
 ---
 
@@ -170,17 +170,15 @@ Build support: `setup.py` auto-detects `cython.parallel` imports and adds `-fope
 
 ---
 
-## P. NumPy Interop — Not Started
+## P. NumPy Interop — **Complete**
 
 Ref: [numpy_tutorial](https://cython.readthedocs.io/en/latest/src/userguide/numpy_tutorial.html)
 
-- [ ] Typed memoryviews from NumPy arrays (`np.ndarray` → `double[:]`) — **4 problems**
-- [ ] NumPy array creation + Cython processing (hybrid py/cy) — **4 problems**
-- [ ] `cnp.ndarray` typed parameters — **2 problems**
-- [ ] `cimport numpy as cnp` with `cnp.float64_t` etc. — **2 problems**
-- [ ] NumPy + prange (parallel NumPy processing) — **2 problems**
-
-**Remaining: ~14 problems**
+- [x] Typed memoryviews from NumPy arrays (numpy_ewma, numpy_cummax, numpy_run_length, numpy_median_filter)
+- [x] NumPy array creation + Cython processing (numpy_softmax, numpy_l2_normalize, numpy_cross_entropy, numpy_batch_norm)
+- [x] Typed memoryview params from ndarray (numpy_argmax_rows, numpy_bincount_weighted)
+- [x] `cimport numpy as cnp` with `cnp.float64_t` (numpy_typed_histogram, numpy_typed_interp)
+- [x] NumPy + prange (numpy_prange_norm, numpy_prange_distance)
 
 ---
 
@@ -224,10 +222,10 @@ Ref: [numpy_pythran](https://cython.readthedocs.io/en/latest/src/userguide/numpy
 | M. C-tuples | **Complete** | 0 |
 | N. C++ interop | Not started | ~11 |
 | O. Miscellaneous | **Complete** | 0 |
-| P. NumPy interop | Not started | ~14 |
+| P. NumPy interop | **Complete** | 0 |
 | Q. NumPy ufuncs | Not started | ~5 |
 | R. NumPy + Pythran | Not started | ~2 |
-| **Total remaining** | | **~32** |
+| **Total remaining** | | **~18** |
 
 ## Build Changes Required
 
