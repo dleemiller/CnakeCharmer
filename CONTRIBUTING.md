@@ -89,11 +89,43 @@ def func_name(int n):
 - Use `cdivision=True` to avoid Python's zero-division checks
 - Convert to Python objects only at the very end when returning
 - For strings, work with `char *` or `bytes` instead of Python `str`
+- Add `with nogil:` around pure-C loops to release the GIL
 
 **Do NOT use:**
 - `PyList_SET_ITEM` / `PyList_New` / `Py_INCREF` — causes segfaults. Use list comprehensions instead.
 - `import cython` with annotation syntax (`cython.int`) in `.pyx` files — use native `cdef` syntax. The dataset loader strips `import cython`.
 - Python `list.append()` in hot loops — pre-allocate with `malloc` or `[None] * n`.
+
+**When the Python baseline uses NumPy:**
+
+Don't replace vectorized NumPy calls with scalar Cython loops. NumPy's SIMD-optimized functions (`np.argmax`, `np.bincount`, `np.linalg.norm`, `np.interp`, etc.) will beat scalar C loops. Instead, demonstrate real-world Cython+NumPy synergy:
+
+- **Fuse multiple NumPy operations** to eliminate temporary arrays (e.g., norm+scale+sum in one pass)
+- **Custom reductions** NumPy can't express as a single vectorized call
+- **Reduce Python overhead** between NumPy calls in a loop
+- **Typed memoryview access** for operations that would need awkward NumPy indexing
+
+Example — bad (slower than Python):
+```cython
+# DON'T: scalar loop replacing np.argmax
+for i in range(n):
+    for j in range(cols):
+        if mat[i, j] > best_val: ...  # scalar comparison can't beat SIMD
+```
+
+Example — good (fuses 3 NumPy operations into 2 passes, zero temporaries):
+```cython
+# DO: fuse norm + scale + sum to avoid temp arrays
+with nogil:
+    for i in range(n):
+        norm_sq = 0.0
+        for j in range(cols):
+            norm_sq += mat[i, j] * mat[i, j]
+        inv_norm = 1.0 / sqrt(norm_sq)
+        for j in range(cols):
+            mat[i, j] *= inv_norm
+            total += mat[i, j]
+```
 
 ### 3. Choose a discriminating return value
 
@@ -281,6 +313,51 @@ con.close()
 4. Parameterize by `n`, tune benchmark args to 10-500ms Python time
 5. Test, annotate, benchmark, commit
 
+## Memory Safety (ASan)
+
+The scoring pipeline includes AddressSanitizer (ASan) checking to detect memory errors in Cython code. This catches:
+
+- **Memory leaks** — `malloc` without corresponding `free`
+- **Buffer overflows** — writing past allocated bounds
+- **Use-after-free** — accessing memory after `free`
+- **Double-free** — calling `free` twice on the same pointer
+
+### How it works
+
+1. The `.pyx` file is compiled with `-fsanitize=address -fno-omit-frame-pointer`
+2. The function is run with small inputs (`PYTHONMALLOC=malloc` to avoid CPython false positives)
+3. ASan output is parsed, filtering by function name to ignore CPython internal allocations
+4. Score: 1.0 (clean) or 0.0 (any error detected)
+
+### Reward weight
+
+Memory safety is 15% of the composite reward:
+
+| Signal | Weight |
+|--------|--------|
+| Correctness | 30% |
+| Performance (speedup) | 25% |
+| Annotations (C-level code) | 20% |
+| Memory safety (ASan) | 15% |
+| Lint (cython-lint) | 10% |
+
+### Testing manually
+
+Via MCP:
+```
+check_memory("cnake_charmer/cy/algorithms/max_flow.pyx", "max_flow", "(100,)")
+```
+
+Via Python:
+```python
+from cnake_charmer.validate.memory_safety import check_memory_safety
+code = open("cnake_charmer/cy/algorithms/max_flow.pyx").read()
+result = check_memory_safety(code, "max_flow", test_args=(100,))
+print(result.score, result.errors)
+```
+
+---
+
 ## MCP Tools
 
 The project includes an MCP server for AI-assisted development:
@@ -289,4 +366,14 @@ The project includes an MCP server for AI-assisted development:
 claude mcp add cnake-charmer -- uv run python -m cnake_charmer.mcp_server
 ```
 
-Tools are self-describing. Auto-detects SIMD flags for `cy_simd/` and `nn_ops/` files.
+Available tools:
+
+| Tool | Description |
+|------|-------------|
+| `score_problem` | Full composite reward for a problem pair (compile + test + benchmark + annotate + ASan) |
+| `list_problems` | List all problem pairs with status |
+| `compile_file` | Compile a .pyx and check for errors |
+| `annotate_file` | Compile with HTML annotations for optimization analysis |
+| `check_memory` | Run AddressSanitizer to detect leaks, overflows, use-after-free |
+
+Auto-detects SIMD flags for `cy_simd/` and `nn_ops/` files.

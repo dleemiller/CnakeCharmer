@@ -16,6 +16,7 @@ from cnake_charmer.validate.correctness import (
     _load_module_from_path,
     check_correctness,
 )
+from cnake_charmer.validate.memory_safety import MemorySafetyResult, check_memory_safety
 
 logger = logging.getLogger(__name__)
 
@@ -27,6 +28,7 @@ class ValidationResult:
     benchmark: BenchmarkResult | None = None
     annotations: AnnotationResult | None = None
     lint: LintResult | None = None
+    memory_safety: MemorySafetyResult | None = None
 
     @property
     def compiled(self) -> bool:
@@ -54,6 +56,12 @@ class ValidationResult:
             return self.lint.score
         return 1.0  # don't penalize if lint unavailable
 
+    @property
+    def memory_safety_score(self) -> float:
+        if self.memory_safety and self.memory_safety.success:
+            return self.memory_safety.score
+        return 1.0  # don't penalize if ASan unavailable
+
     def summary(self) -> dict:
         """Return a flat summary dict suitable for training data."""
         return {
@@ -66,6 +74,8 @@ class ValidationResult:
             "annotation_hints": self.annotations.hints if self.annotations else [],
             "lint_score": self.lint_score,
             "lint_violations": self.lint.violations if self.lint else [],
+            "memory_safety_score": self.memory_safety_score,
+            "memory_safety_errors": self.memory_safety.errors if self.memory_safety else [],
         }
 
 
@@ -79,6 +89,7 @@ def validate(
     benchmark_runs: int = 10,
     skip_benchmark: bool = False,
     skip_correctness: bool = False,
+    skip_memory_safety: bool = False,
     module_name: str = "gen_module",
 ) -> ValidationResult:
     """
@@ -161,7 +172,39 @@ def validate(
                 num_runs=benchmark_runs,
             )
 
+    # Step 6: Memory safety (ASan) — uses small test args
+    if not skip_memory_safety and func_name:
+        asan_args = benchmark_args
+        if asan_args is None and test_cases:
+            case = test_cases[0]
+            if isinstance(case, dict):
+                asan_args = tuple(case.get("args", ()))
+            elif isinstance(case, (list, tuple)) and len(case) > 0:
+                asan_args = tuple(case[0]) if isinstance(case[0], (list, tuple)) else tuple(case)
+            else:
+                asan_args = (case,) if case is not None else ()
+
+        if asan_args is not None:
+            # Use small inputs to keep ASan check fast
+            small_args = _shrink_args(asan_args)
+            result.memory_safety = check_memory_safety(
+                cython_code=cython_code,
+                func_name=func_name,
+                test_args=small_args,
+            )
+
     # Clean up build directory
     cleanup_build(result.compilation)
 
     return result
+
+
+def _shrink_args(args: tuple) -> tuple:
+    """Shrink benchmark args to small values for fast ASan checking."""
+    shrunk = []
+    for a in args:
+        if isinstance(a, int) and a > 100:
+            shrunk.append(min(a, 100))
+        else:
+            shrunk.append(a)
+    return tuple(shrunk)
