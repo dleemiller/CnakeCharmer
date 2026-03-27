@@ -23,9 +23,7 @@ def numpy_bincount_weighted(int n):
         rng.randint(0, 1000, size=n).astype(np.intc)
     )
     cdef int[::1] indices = idx_arr
-    cdef cnp.ndarray[double, ndim=1] w_arr = (
-        rng.random(n).astype(np.float64)
-    )
+    cdef cnp.ndarray[double, ndim=1] w_arr = rng.random(n)
     cdef double[::1] weights = w_arr
 
     cdef int num_bins = 1000

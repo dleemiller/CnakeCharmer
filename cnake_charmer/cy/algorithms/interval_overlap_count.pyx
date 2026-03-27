@@ -1,80 +1,82 @@
 # cython: boundscheck=False, wraparound=False, cdivision=True, language_level=3
-"""Count overlapping interval pairs using cdef class with __richcmp__ and __hash__ (Cython).
+"""Count overlapping interval pairs using parallel C arrays and in-place sweep (Cython).
 
 Keywords: algorithms, intervals, overlap, comparison, hash, cdef class, cython, benchmark
 """
 
-from cpython.object cimport Py_LT, Py_LE, Py_EQ, Py_NE, Py_GT, Py_GE
+from libc.stdlib cimport malloc, free, qsort
 from cnake_charmer.benchmarks import cython_benchmark
 
 
-cdef class Interval:
-    """Interval with start and end, comparable by start via __richcmp__."""
-    cdef long long start
-    cdef long long end
+# ---------------------------------------------------------------------------
+# C-level sort helpers
+# ---------------------------------------------------------------------------
 
-    def __cinit__(self, long long start, long long end):
-        self.start = start
-        self.end = end
-
-    def __richcmp__(self, other, int op):
-        cdef Interval o = <Interval>other
-        if op == Py_LT:
-            if self.start != o.start:
-                return self.start < o.start
-            return self.end < o.end
-        elif op == Py_LE:
-            if self.start != o.start:
-                return self.start < o.start
-            return self.end <= o.end
-        elif op == Py_EQ:
-            return self.start == o.start and self.end == o.end
-        elif op == Py_NE:
-            return self.start != o.start or self.end != o.end
-        elif op == Py_GT:
-            if self.start != o.start:
-                return self.start > o.start
-            return self.end > o.end
-        elif op == Py_GE:
-            if self.start != o.start:
-                return self.start > o.start
-            return self.end >= o.end
-        return NotImplemented
-
-    def __hash__(self):
-        return <Py_hash_t>(self.start * <long long>100003 + self.end)
+# Packed struct-like approach: interleave starts/ends in a single array of
+# pairs so qsort can swap them atomically.  Layout: [s0, e0, s1, e1, ...]
+cdef int _cmp_pairs(const void *a, const void *b) noexcept nogil:
+    """Compare two (start, end) pairs by start first, then end."""
+    cdef long long sa = (<long long *>a)[0]
+    cdef long long sb = (<long long *>b)[0]
+    if sa < sb:
+        return -1
+    if sa > sb:
+        return 1
+    cdef long long ea = (<long long *>a)[1]
+    cdef long long eb = (<long long *>b)[1]
+    if ea < eb:
+        return -1
+    if ea > eb:
+        return 1
+    return 0
 
 
 @cython_benchmark(syntax="cy", args=(20000,))
 def interval_overlap_count(int n):
     """Create n intervals, sort by start, count overlapping pairs via sweep."""
-    cdef list intervals = []
-    cdef long long start, length
-    cdef int i, j
+    # Allocate interleaved pairs array: pairs[i*2] = start, pairs[i*2+1] = end
+    cdef long long *pairs = <long long *>malloc(n * 2 * sizeof(long long))
+    if not pairs:
+        raise MemoryError()
+
+    # Allocate active_ends C array (worst case: all n ends are active)
+    cdef long long *active = <long long *>malloc(n * sizeof(long long))
+    if not active:
+        free(pairs)
+        raise MemoryError()
+
     cdef long long overlap_count = 0
-    cdef Interval iv
+    cdef long long start, length
+    cdef int i, j, active_count, write_pos
 
-    for i in range(n):
-        start = ((<long long>i * <long long>2654435761 + 17) ^ (<long long>i * <long long>1103515245)) % 10000
-        length = ((<long long>i * <long long>1664525 + <long long>1013904223) ^ (<long long>i * <long long>214013)) % 500 + 1
-        intervals.append(Interval(start, start + length))
+    # Build intervals
+    with nogil:
+        for i in range(n):
+            start = ((<long long>i * <long long>2654435761 + 17) ^ (<long long>i * <long long>1103515245)) % 10000
+            length = ((<long long>i * <long long>1664525 + <long long>1013904223) ^ (<long long>i * <long long>214013)) % 500 + 1
+            pairs[i * 2]     = start
+            pairs[i * 2 + 1] = start + length
 
-    intervals.sort()
+        # Sort by start (then end) using stdlib qsort
+        qsort(pairs, n, 2 * sizeof(long long), _cmp_pairs)
 
-    # Sweep line: count pairs where previous interval end > current start
-    cdef list active_ends = []
-    cdef list new_active
-    cdef long long e
+        # Sweep line with in-place compaction of active_ends
+        active_count = 0
+        for i in range(n):
+            start = pairs[i * 2]
 
-    for i in range(n):
-        iv = <Interval>intervals[i]
-        new_active = []
-        for j in range(len(active_ends)):
-            e = <long long>active_ends[j]
-            if e > iv.start:
-                new_active.append(e)
-        active_ends = new_active
-        overlap_count += len(active_ends)
-        active_ends.append(iv.end)
+            # Filter active_ends in-place: keep only those > current start
+            write_pos = 0
+            for j in range(active_count):
+                if active[j] > start:
+                    active[write_pos] = active[j]
+                    write_pos += 1
+            active_count = write_pos
 
+            overlap_count += active_count
+            active[active_count] = pairs[i * 2 + 1]
+            active_count += 1
+
+    free(pairs)
+    free(active)
     return overlap_count

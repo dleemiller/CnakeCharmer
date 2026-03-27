@@ -4,13 +4,13 @@
 Keywords: leetcode, two sum, pairs, hash map, indices, cython, benchmark
 """
 
-from libc.stdlib cimport malloc, free
+from libc.stdlib cimport malloc, free, calloc
 from cnake_charmer.benchmarks import cython_benchmark
 
 
 @cython_benchmark(syntax="cy", args=(100000,))
 def two_sum_all_pairs(int n):
-    """Find all pairs summing to target using typed variables and hash map."""
+    """Find all pairs summing to target using typed variables and C frequency array."""
     cdef int target = n // 4
     cdef int half_n = n // 2
     if half_n == 0:
@@ -20,38 +20,48 @@ def two_sum_all_pairs(int n):
     if not arr:
         raise MemoryError()
 
+    # freq[v] = number of times value v has been seen so far
+    # Values are in [0, half_n), so freq needs half_n entries
+    cdef int *freq = <int *>calloc(half_n, sizeof(int))
+    if not freq:
+        free(arr)
+        raise MemoryError()
+
+    # first_seen[v] = earliest index at which value v appeared (-1 = unseen)
+    cdef int *first_seen = <int *>malloc(half_n * sizeof(int))
+    if not first_seen:
+        free(arr)
+        free(freq)
+        raise MemoryError()
+
     cdef int i, j
+    for i in range(half_n):
+        first_seen[i] = -1
+
     for i in range(n):
         arr[i] = (i * 37 + 13) % half_n
 
-    # Use Python dict for hash map (Cython still benefits from typed loop vars)
     cdef long long num_pairs = 0
     cdef long long index_sum = 0
     cdef int first_pair_sum = -1
-    cdef int complement, count
-
-    index_map = {}
+    cdef int complement, val, cnt
 
     for j in range(n):
-        complement = target - arr[j]
-        if complement in index_map:
-            count = index_map[complement]
-            num_pairs += count
-            index_sum += <long long>count * j
-        if arr[j] in index_map:
-            index_map[arr[j]] = index_map[arr[j]] + 1
-        else:
-            index_map[arr[j]] = 1
-
-    # Find first pair
-    seen = {}
-    for j in range(n):
-        complement = target - arr[j]
-        if complement in seen:
-            first_pair_sum = seen[complement] + j
-            break
-        if arr[j] not in seen:
-            seen[arr[j]] = j
+        val = arr[j]
+        complement = target - val
+        # complement must be a valid index into freq
+        if 0 <= complement < half_n:
+            cnt = freq[complement]
+            if cnt > 0:
+                num_pairs += cnt
+                index_sum += <long long>cnt * j
+                if first_pair_sum == -1:
+                    first_pair_sum = first_seen[complement] + j
+        freq[val] += 1
+        if first_seen[val] == -1:
+            first_seen[val] = j
 
     free(arr)
+    free(freq)
+    free(first_seen)
     return (int(num_pairs), int(index_sum), first_pair_sum)

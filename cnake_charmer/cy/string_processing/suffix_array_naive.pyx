@@ -10,7 +10,7 @@ from libc.string cimport memcmp
 from cnake_charmer.benchmarks import cython_benchmark
 
 
-cdef int _compare_suffixes(const char *s, int n, int a, int b) noexcept nogil:
+cdef inline int _compare_suffixes(const char *s, int n, int a, int b) noexcept nogil:
     """Compare suffix starting at a with suffix starting at b."""
     cdef int la = n - a
     cdef int lb = n - b
@@ -34,11 +34,21 @@ cdef void _insertion_sort(int *sa, const char *s, int n, int lo, int hi) noexcep
 
 
 cdef void _quicksort(int *sa, const char *s, int n, int lo, int hi) noexcept nogil:
-    """Quicksort suffix array indices by suffix comparison."""
-    cdef int i, j, pivot_val, temp
+    """Quicksort with true median-of-three pivot selection."""
+    cdef int i, j, mid, tmp, pivot_val
     while hi - lo > 16:
-        # Median-of-three pivot
-        pivot_val = sa[(lo + hi) // 2]
+        mid = (lo + hi) >> 1
+
+        # True median-of-three: sort lo, mid, hi-1 so median ends up at mid
+        if _compare_suffixes(s, n, sa[lo], sa[mid]) > 0:
+            tmp = sa[lo]; sa[lo] = sa[mid]; sa[mid] = tmp
+        if _compare_suffixes(s, n, sa[lo], sa[hi - 1]) > 0:
+            tmp = sa[lo]; sa[lo] = sa[hi - 1]; sa[hi - 1] = tmp
+        if _compare_suffixes(s, n, sa[mid], sa[hi - 1]) > 0:
+            tmp = sa[mid]; sa[mid] = sa[hi - 1]; sa[hi - 1] = tmp
+        # Now sa[lo] <= sa[mid] <= sa[hi-1]; use mid as pivot
+        pivot_val = sa[mid]
+
         i = lo
         j = hi - 1
         while True:
@@ -48,11 +58,11 @@ cdef void _quicksort(int *sa, const char *s, int n, int lo, int hi) noexcept nog
                 j -= 1
             if i >= j:
                 break
-            temp = sa[i]
-            sa[i] = sa[j]
-            sa[j] = temp
+            tmp = sa[i]; sa[i] = sa[j]; sa[j] = tmp
             i += 1
             j -= 1
+
+        # Tail-call optimization: recurse on smaller half, iterate on larger
         if j - lo < hi - i:
             _quicksort(sa, s, n, lo, j + 1)
             lo = i
@@ -85,15 +95,14 @@ def suffix_array_naive(int n):
         free(s)
         raise MemoryError("Failed to allocate suffix array")
 
+    # Initialize both buffers in a single pass
     for i in range(n):
         s[i] = 65 + (i * 7 + 3) % 26
-
-    # Initialize suffix array
-    for i in range(n):
         sa[i] = i
 
-    # Sort using quicksort with suffix comparison
-    _quicksort(sa, s, n, 0, n)
+    # Sort using quicksort with suffix comparison (GIL released)
+    with nogil:
+        _quicksort(sa, s, n, 0, n)
 
     # Sum first 100 positions
     limit = 100 if n > 100 else n

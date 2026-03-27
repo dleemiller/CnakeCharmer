@@ -1,8 +1,8 @@
 # cython: boundscheck=False, wraparound=False, cdivision=True, language_level=3
 """Batch normalization with typed memoryview (Cython).
 
-Two-pass algorithm: compute mean/var then normalize, avoiding
-NumPy temporary arrays.
+Three-pass algorithm: mean, variance, then fused normalize+sum,
+avoiding all NumPy temporary arrays.
 
 Keywords: nn_ops, batch norm, normalization, numpy, typed memoryview, cython, benchmark
 """
@@ -20,16 +20,14 @@ cnp.import_array()
 def numpy_batch_norm(int n):
     """Apply batch normalization and return sum."""
     rng = np.random.RandomState(42)
-    cdef cnp.ndarray[double, ndim=1] data_arr = (
-        rng.standard_normal(n).astype(np.float64)
-    )
+    cdef cnp.ndarray[double, ndim=1] data_arr = rng.standard_normal(n)
     cdef double[::1] data = data_arr
     cdef double gamma = 1.5
     cdef double beta = 0.5
     cdef double eps = 1e-5
     cdef double mean = 0.0
     cdef double var = 0.0
-    cdef double diff, inv_std, total
+    cdef double diff, total, scale
     cdef int i
 
     with nogil:
@@ -42,9 +40,9 @@ def numpy_batch_norm(int n):
             var += diff * diff
         var /= n
 
-        inv_std = 1.0 / sqrt(var + eps)
+        scale = gamma / sqrt(var + eps)
         total = 0.0
         for i in range(n):
-            total += (data[i] - mean) * inv_std * gamma + beta
+            total += (data[i] - mean) * scale + beta
 
     return total

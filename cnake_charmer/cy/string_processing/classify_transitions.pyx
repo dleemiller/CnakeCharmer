@@ -36,19 +36,18 @@ cdef inline CharClass classify_char(int h) noexcept nogil:
 def classify_transitions(int n):
     """Classify chars using cdef enum and count class transitions."""
     cdef int transitions = 0
-    cdef CharClass prev_class
-    cdef CharClass cur_class
+    cdef int prev_class = -1
+    cdef int cur_class
     cdef int i
-    cdef long long h
-    cdef bint has_prev = False
+    cdef unsigned long long h
 
-    for i in range(n):
-        h = (((<long long>i * 6364136223846793005 + 1442695040888963407) >> 16) & 0x7F)
-        cur_class = classify_char(<int>h)
+    with nogil:
+        for i in range(n):
+            h = (((<unsigned long long>i * <unsigned long long>6364136223846793005ULL + <unsigned long long>1442695040888963407ULL) >> 16) & 0x7F)
+            cur_class = <int>classify_char(<int>h)
 
-        if has_prev and cur_class != prev_class:
-            transitions += 1
-        prev_class = cur_class
-        has_prev = True
+            if prev_class >= 0 and cur_class != prev_class:
+                transitions += 1
+            prev_class = cur_class
 
     return transitions
