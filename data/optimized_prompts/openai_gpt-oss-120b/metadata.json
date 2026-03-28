@@ -1,0 +1,12 @@
+{
+  "model": "openai/gpt-oss-120b",
+  "reflection_model": "openrouter/xiaomi/mimo-v2-pro",
+  "budget": "medium",
+  "subset": 150,
+  "difficulty": null,
+  "max_iters": 3,
+  "reflection_minibatch_size": 8,
+  "num_problems_train": 115,
+  "num_problems_val": 35,
+  "val_size": 35
+}

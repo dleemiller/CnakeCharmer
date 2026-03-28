@@ -15,6 +15,7 @@ import logging
 import re
 from pathlib import Path
 
+from cnake_charmer.dataset.difficulty import classify_difficulty
 from cnake_charmer.sources.base import ProblemSpec
 
 logger = logging.getLogger(__name__)
@@ -79,6 +80,7 @@ def discover_pairs() -> list[ProblemSpec]:
                 test_cases=test_cases,
                 benchmark_args=benchmark_args,
                 category=category,
+                difficulty=classify_difficulty(clean_cython, category),
                 source="repo",
                 metadata={
                     "py_path": str(py_path),
