@@ -32,6 +32,7 @@ def lz4_block(int n):
     cdef unsigned int val
     cdef int literal_count = 0
     cdef int match_count = 0
+    cdef int total_match_len = 0
 
     with nogil:
         # Generate source data: letters with period 26
@@ -69,6 +70,7 @@ def lz4_block(int n):
 
                 if match_len >= MIN_MATCH:
                     match_count += 1
+                    total_match_len += match_len
                     pos += match_len
                     continue
 
@@ -78,4 +80,4 @@ def lz4_block(int n):
         literal_count += n - pos
 
     free(data)
-    return (literal_count, match_count, literal_count + match_count)
+    return (literal_count, match_count, total_match_len)

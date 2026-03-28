@@ -38,6 +38,7 @@ def lz4_block(n: int) -> tuple:
     pos = 0
     literal_count = 0
     match_count = 0
+    total_match_len = 0
 
     while pos <= n - _MIN_MATCH:
         # Compute 4-byte hash
@@ -61,6 +62,7 @@ def lz4_block(n: int) -> tuple:
 
             if match_len >= _MIN_MATCH:
                 match_count += 1
+                total_match_len += match_len
                 pos += match_len
                 continue
 
@@ -70,4 +72,4 @@ def lz4_block(n: int) -> tuple:
     # Remaining bytes past the last MIN_MATCH window are literals
     literal_count += n - pos
 
-    return (literal_count, match_count, literal_count + match_count)
+    return (literal_count, match_count, total_match_len)
