@@ -4,7 +4,7 @@
   "budget": "medium",
   "subset": 150,
   "difficulty": null,
-  "max_iters": 3,
+  "max_iters": 5,
   "reflection_minibatch_size": 8,
   "num_problems_train": 115,
   "num_problems_val": 35,

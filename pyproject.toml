@@ -63,6 +63,7 @@ Documentation = "https://github.com/dleemiller/cnakecharmer#readme"
 [tool.ruff]
 target-version = "py311"
 line-length = 100
+extend-exclude = ["prompt/docs"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM"]
