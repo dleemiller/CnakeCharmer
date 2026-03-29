@@ -280,6 +280,112 @@ class CythonToolEnvironment:
             },
         )
 
+    def evaluate(
+        self, code: str, annotate: bool = True, test: bool = True, benchmark: bool = True
+    ) -> str:
+        """Compile once, then annotate, test, and benchmark using the same build.
+
+        Single compilation avoids the redundant builds of calling compile(),
+        annotate(), test(), and benchmark() separately.
+
+        Args:
+            code: The complete .pyx Cython source code.
+            annotate: Include annotation analysis (default True).
+            test: Run correctness tests (default True).
+            benchmark: Measure speedup (default True).
+
+        Returns:
+            Markdown-formatted results with sections for each step.
+        """
+        self.last_code = code
+        sections = []
+
+        # Compile with annotations enabled (one compilation for everything)
+        result = compile_cython(code, annotate=annotate, keep_build=True)
+        sections.append(
+            "## Compilation\n"
+            + format_feedback("compile", {"success": result.success, "errors": result.errors})
+        )
+
+        if not result.success:
+            cleanup_build(result)
+            return "\n\n".join(sections)
+
+        # Annotation (from the same compilation, no rebuild)
+        if annotate:
+            ann = parse_annotations(html_path=result.html_path) if result.html_path else None
+            if ann and ann.success:
+                sections.append(
+                    "## Annotation\n"
+                    + format_feedback(
+                        "annotate",
+                        {
+                            "success": True,
+                            "score": ann.score,
+                            "hints": ann.hints,
+                            "yellow_lines": ann.yellow_lines,
+                            "total_lines": ann.total_lines,
+                        },
+                    )
+                )
+
+        # Load the compiled module once for both test and benchmark
+        cython_func = None
+        if (test or benchmark) and result.module_path:
+            try:
+                module = _load_module_from_path(result.module_path, "gen_module")
+                cython_func = getattr(module, self._func_name)
+            except Exception as e:
+                sections.append(f"## Load Error\nCould not load function: {e}")
+                cleanup_build(result)
+                return "\n\n".join(sections)
+
+        # Test (reuses loaded module)
+        if test and cython_func and self._python_func and self._test_cases:
+            test_result = check_correctness(
+                python_func=self._python_func,
+                cython_func=cython_func,
+                test_cases=self._test_cases,
+            )
+            sections.append(
+                "## Tests\n"
+                + format_feedback(
+                    "test",
+                    {
+                        "success": True,
+                        "passed": test_result.passed,
+                        "total": test_result.total,
+                        "failures": test_result.failures,
+                    },
+                )
+            )
+
+        # Benchmark (reuses loaded module)
+        if benchmark and cython_func and self._python_func:
+            b_args = self._benchmark_args or ()
+            bench_result = _run_benchmark(
+                python_func=self._python_func,
+                cython_func=cython_func,
+                args=b_args,
+                num_runs=3,
+            )
+            sections.append(
+                "## Benchmark\n"
+                + format_feedback(
+                    "benchmark",
+                    {
+                        "success": bench_result.success,
+                        "speedup": round(bench_result.speedup, 2),
+                        "cython_time": round(bench_result.cython_time, 6),
+                        "python_time": round(bench_result.python_time, 6),
+                        "errors": bench_result.error,
+                    },
+                )
+            )
+
+        cleanup_build(result)
+        return "\n\n".join(sections)
+
     def get_composite_score(self) -> float:
         """Compute final reward from the last submitted code."""
         if not self.last_code or not self._python_func:
