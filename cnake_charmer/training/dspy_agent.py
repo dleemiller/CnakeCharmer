@@ -59,9 +59,13 @@ logger = logging.getLogger(__name__)
 
 
 class CythonOptimization(dspy.Signature):
-    """Translate Python code into optimized Cython (.pyx) that compiles correctly and runs faster.
-    You MUST use all four tools in order: compile_cython → annotate_cython → test_cython → benchmark_cython.
-    Do not finish until you have verified compilation, checked annotation quality, confirmed all tests pass, and measured the speedup."""
+    """Translate Python code into optimized Cython (.pyx) that compiles and runs faster.
+    Use evaluate_cython repeatedly to improve your solution:
+    1. Write initial Cython code and evaluate it.
+    2. Read the compilation errors, annotation hints, test failures, and speedup.
+    3. Fix issues and evaluate again.
+    4. Repeat until: all tests pass, annotation score > 0.9, and speedup is maximized.
+    Each call to evaluate_cython compiles, annotates, tests, and benchmarks in one step."""
 
     python_code: str = dspy.InputField(desc="The Python source code to optimize")
     func_name: str = dspy.InputField(desc="Name of the main function to optimize")
@@ -110,13 +114,28 @@ def _sandboxed_tool_call(tool_name, env_args, code, timeout=30):
     return "Tool returned no result."
 
 
+def _evaluate_worker(queue, env_args, code, annotate=True, test=True, benchmark=True):
+    """Worker that runs the full evaluate pipeline in a single subprocess.
+
+    One compilation, one module load, reused for annotation + test + benchmark.
+    """
+    try:
+        env = CythonToolEnvironment()
+        env.reset(**env_args)
+        result = env.evaluate(code, annotate=annotate, test=test, benchmark=benchmark)
+        queue.put(result)
+    except Exception as e:
+        queue.put(f"## Error\n{type(e).__name__}: {e}")
+
+
 def make_tools(
     python_code: str, func_name: str, test_cases: list, benchmark_args: tuple | None = None
 ):
-    """Create DSPy-compatible tool functions for a specific problem.
+    """Create a single DSPy-compatible evaluation tool for a problem.
 
-    Each tool runs in a spawn subprocess to isolate segfaults from
-    compiled Cython modules that may crash when loaded.
+    One tool does everything: compile + annotate + test + benchmark.
+    Single compilation, single subprocess, all feedback at once.
+    The model calls evaluate_cython, reads the results, fixes issues, repeats.
     """
     env_args = {
         "python_code": python_code,
@@ -125,53 +144,57 @@ def make_tools(
         "benchmark_args": json.dumps(benchmark_args),
     }
 
-    # Also create an in-process env for compile (safe — doesn't load the .so)
-    env = CythonToolEnvironment()
-    env.reset(**env_args)
+    def evaluate_cython(
+        code: str, annotate: bool = True, test: bool = True, benchmark: bool = True
+    ) -> str:
+        """Compile, analyze, test, and benchmark Cython code in one step.
+        Returns compilation status, annotation score with optimization hints,
+        correctness test results, and speedup measurement. If compilation fails,
+        only error messages are returned. Fix any issues and call again.
 
-    def compile_cython(code: str) -> str:
-        """Compile Cython (.pyx) code. Call this first after writing or modifying code.
-        Returns 'Compilation successful.' or error messages to fix before proceeding.
+        Set annotate/test/benchmark to False to skip expensive steps when you
+        only need a quick compile check. Defaults are all True.
 
         Args:
             code: Complete .pyx source code.
+            annotate: Run annotation analysis (default True).
+            test: Run correctness tests (default True).
+            benchmark: Measure speedup (default True).
         """
         safety_err = _check_code_safety(code)
         if safety_err:
             return safety_err
-        return env.compile(code)
 
-    def annotate_cython(code: str) -> str:
-        """Analyze optimization quality via Cython's HTML annotations. Returns a score
-        (0.0 = all Python fallback, 1.0 = pure C) and hints about which lines need
-        cdef declarations or C-library replacements. Call after successful compilation.
+        # Everything runs in one subprocess: compile once, load once,
+        # annotate + test + benchmark on the same build.
+        ctx = multiprocessing.get_context("spawn")
+        queue = ctx.Queue()
+        proc = ctx.Process(
+            target=_evaluate_worker,
+            args=(queue, env_args, code, annotate, test, benchmark),
+        )
+        proc.start()
+        proc.join(timeout=30)
 
-        Args:
-            code: Complete .pyx source code.
-        """
-        # Annotate is safe in-process (parses HTML, doesn't load .so)
-        return env.annotate(code)
+        if proc.is_alive():
+            proc.kill()
+            proc.join()
+            return "## Compilation\nEvaluation timed out after 30s."
 
-    def test_cython(code: str) -> str:
-        """Run correctness tests comparing Cython output against the Python reference.
-        All tests must pass. Failures show which inputs produced wrong results.
+        if proc.exitcode != 0:
+            return (
+                f"## Compilation\nEvaluation crashed (exit {proc.exitcode}). "
+                f"The code likely causes a segfault when loaded."
+            )
 
-        Args:
-            code: Complete .pyx source code.
-        """
-        return _sandboxed_tool_call("test", env_args, code)
+        if not queue.empty():
+            return queue.get()
 
-    def benchmark_cython(code: str) -> str:
-        """Measure speedup vs the Python original. Good results are 2x+, excellent is 10x+.
-        Reports wall-clock times for both implementations.
+        return "## Compilation\nEvaluation returned no result."
 
-        Args:
-            code: Complete .pyx source code.
-        """
-        return _sandboxed_tool_call("benchmark", env_args, code)
-
-    tools = [compile_cython, annotate_cython, test_cython, benchmark_cython]
-    return tools, env
+    env = CythonToolEnvironment()
+    env.reset(**env_args)
+    return [evaluate_cython], env
 
 
 # ---------------------------------------------------------------------------
@@ -187,30 +210,13 @@ def create_agent(max_iters: int = 5) -> dspy.ReAct:
     then pass them when calling the agent.
     """
 
-    def _placeholder_compile(code: str) -> str:
-        """Compile Cython code and check for errors."""
-        return "placeholder"
-
-    def _placeholder_annotate(code: str) -> str:
-        """Analyze Cython code optimization quality."""
-        return "placeholder"
-
-    def _placeholder_test(code: str) -> str:
-        """Run correctness tests against the Python reference."""
-        return "placeholder"
-
-    def _placeholder_benchmark(code: str) -> str:
-        """Measure speedup of Cython code vs Python."""
+    def _placeholder_evaluate_cython(code: str) -> str:
+        """Compile, analyze, test, and benchmark Cython code in one step."""
         return "placeholder"
 
     return dspy.ReAct(
         CythonOptimization,
-        tools=[
-            _placeholder_compile,
-            _placeholder_annotate,
-            _placeholder_test,
-            _placeholder_benchmark,
-        ],
+        tools=[_placeholder_evaluate_cython],
         max_iters=max_iters,
     )
 
@@ -389,15 +395,13 @@ def cython_metric(
         while f"tool_name_{idx}" in pred_trajectory:
             tools_used.add(pred_trajectory[f"tool_name_{idx}"])
             idx += 1
-        missing_tools = REQUIRED_TOOLS - tools_used
-        if missing_tools:
+        if "evaluate_cython" not in tools_used:
             feedback_parts.append(
-                f"CRITICAL: The agent did NOT use these required tools: {', '.join(sorted(missing_tools))}. "
-                f"The prompt MUST instruct the agent to use ALL four tools "
-                f"(compile → annotate → test → benchmark) before finishing. "
-                f"Traces that skip test or benchmark are rejected with score 0."
+                "CRITICAL: The agent did NOT call evaluate_cython. "
+                "The prompt MUST instruct the agent to call evaluate_cython "
+                "to compile, test, and benchmark the code. "
+                "Traces without evaluation are rejected with score 0."
             )
-            # Penalize heavily for skipping tools
             total *= 0.5
 
     # Actionable summary for the reflection model
@@ -432,10 +436,10 @@ def cython_metric(
 # Process reward: credit tool usage patterns (Context-1 insight)
 # ---------------------------------------------------------------------------
 
-ALL_TOOLS = {"compile_cython", "annotate_cython", "test_cython", "benchmark_cython"}
+ALL_TOOLS = {"evaluate_cython"}
 
-# Required tools — trace must use all of these or reward is zeroed
-REQUIRED_TOOLS = {"compile_cython", "annotate_cython", "test_cython", "benchmark_cython"}
+# Required tools — trace must call evaluate_cython at least once or reward is zeroed
+REQUIRED_TOOLS = {"evaluate_cython"}
 
 # Per-tool bonus for using each distinct tool
 TOOL_DIVERSITY_BONUS = 0.025  # +0.025 per tool used, max +0.10 for all 4

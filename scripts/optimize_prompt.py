@@ -68,25 +68,13 @@ class CythonReActAgent(dspy.Module):
     def _init_react(self):
         """Initialize the ReAct module with placeholder tools."""
 
-        def compile_cython(code: str) -> str:
-            """Compile Cython code and check for errors. Returns success status and any error messages."""
-            return "placeholder"
-
-        def annotate_cython(code: str) -> str:
-            """Analyze Cython code optimization quality via HTML annotations. Returns score (0-1) and hints about Python-fallback lines."""
-            return "placeholder"
-
-        def test_cython(code: str) -> str:
-            """Run correctness tests comparing Cython output against the Python reference. Returns pass/fail counts."""
-            return "placeholder"
-
-        def benchmark_cython(code: str) -> str:
-            """Measure speedup of Cython code vs the Python original. Returns speedup ratio and timing."""
+        def evaluate_cython(code: str) -> str:
+            """Compile, analyze, test, and benchmark Cython code in one step."""
             return "placeholder"
 
         self.react = dspy.ReAct(
             CythonOptimization,
-            tools=[compile_cython, annotate_cython, test_cython, benchmark_cython],
+            tools=[evaluate_cython],
             max_iters=self.max_iters,
         )
 

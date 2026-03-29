@@ -196,3 +196,6 @@ unsloth_compiled_cache/
 # Large data files (tracked separately or downloaded)
 utils/stack_data/*.duckdb
 utils/stack_data/*.parquet
+prompt/docs/
+data/trajectories/
+.benchmark_cache.json.bak
