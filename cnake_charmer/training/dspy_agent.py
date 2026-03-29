@@ -59,7 +59,9 @@ logger = logging.getLogger(__name__)
 
 
 class CythonOptimization(dspy.Signature):
-    """Translate Python code into optimized Cython (.pyx) that compiles correctly and runs faster."""
+    """Translate Python code into optimized Cython (.pyx) that compiles correctly and runs faster.
+    You MUST use all four tools in order: compile_cython → annotate_cython → test_cython → benchmark_cython.
+    Do not finish until you have verified compilation, checked annotation quality, confirmed all tests pass, and measured the speedup."""
 
     python_code: str = dspy.InputField(desc="The Python source code to optimize")
     func_name: str = dspy.InputField(desc="Name of the main function to optimize")
@@ -379,14 +381,33 @@ def cython_metric(
     if scores.get("lint_violations"):
         feedback_parts.append(f"Lint violations: {scores['lint_violations'][:3]}")
 
+    # Check tool usage from the prediction's trajectory
+    pred_trajectory = getattr(pred, "trajectory", None)
+    if isinstance(pred_trajectory, dict):
+        tools_used = set()
+        idx = 0
+        while f"tool_name_{idx}" in pred_trajectory:
+            tools_used.add(pred_trajectory[f"tool_name_{idx}"])
+            idx += 1
+        missing_tools = REQUIRED_TOOLS - tools_used
+        if missing_tools:
+            feedback_parts.append(
+                f"CRITICAL: The agent did NOT use these required tools: {', '.join(sorted(missing_tools))}. "
+                f"The prompt MUST instruct the agent to use ALL four tools "
+                f"(compile → annotate → test → benchmark) before finishing. "
+                f"Traces that skip test or benchmark are rejected with score 0."
+            )
+            # Penalize heavily for skipping tools
+            total *= 0.5
+
     # Actionable summary for the reflection model
     if scores["correctness"] < 1.0:
         feedback_parts.append(
-            "ACTION: The generated code has correctness bugs. The prompt should emphasize testing and correctness verification."
+            "ACTION: The generated code has correctness bugs. The prompt should emphasize running test_cython and fixing failures."
         )
     if scores["speedup"] < 2.0:
         feedback_parts.append(
-            "ACTION: Speedup is low. The prompt should emphasize aggressive C-level typing and avoiding Python object overhead."
+            "ACTION: Speedup is low. The prompt should emphasize running benchmark_cython and optimizing based on results."
         )
     if scores["annotations"] < 0.8:
         feedback_parts.append(
@@ -412,6 +433,9 @@ def cython_metric(
 # ---------------------------------------------------------------------------
 
 ALL_TOOLS = {"compile_cython", "annotate_cython", "test_cython", "benchmark_cython"}
+
+# Required tools — trace must use all of these or reward is zeroed
+REQUIRED_TOOLS = {"compile_cython", "annotate_cython", "test_cython", "benchmark_cython"}
 
 # Per-tool bonus for using each distinct tool
 TOOL_DIVERSITY_BONUS = 0.025  # +0.025 per tool used, max +0.10 for all 4
@@ -468,16 +492,24 @@ def extract_tool_usage(entry: dict) -> dict:
     }
 
 
-def process_reward(entry: dict) -> float:
-    """Compute process reward bonus from tool usage patterns.
+def process_reward(entry: dict, require_all_tools: bool = True) -> float:
+    """Compute process reward from tool usage patterns.
 
-    Inspired by Context-1's approach of crediting exploration and tool usage
-    regardless of final output quality.
+    When require_all_tools=True, returns -1.0 if any required tool is missing,
+    signaling that this trace should be rejected. Otherwise returns a bonus.
 
     Returns:
-        Bonus reward (0.0 to ~0.20), to be added to the outcome reward.
+        -1.0 if tool gate failed (trace should be scored as 0),
+        or bonus reward (0.0 to ~0.20) to add to outcome reward.
     """
     usage = extract_tool_usage(entry)
+
+    # Gate: must use all 4 tools at least once
+    if require_all_tools:
+        missing = REQUIRED_TOOLS - usage["tools_used"]
+        if missing:
+            return -1.0  # signal to zero the total reward
+
     bonus = 0.0
 
     # Tool diversity: +0.025 per unique tool used (max +0.10 for all 4)
@@ -531,14 +563,17 @@ def collect_reward(inputs: dict, prediction: dspy.Prediction) -> float:
     return scores["total"]
 
 
-def score_trajectory(entry: dict) -> float:
+def score_trajectory(entry: dict, require_all_tools: bool = True) -> float:
     """Score a collected trace entry with both outcome and process rewards.
 
     Use this when loading/filtering traces for SFT data selection.
     Combines the stored outcome reward with process reward from tool usage.
+    If require_all_tools=True and any required tool is missing, returns 0.0.
     """
     outcome = entry.get("reward", 0.0) or 0.0
-    bonus = process_reward(entry)
+    bonus = process_reward(entry, require_all_tools=require_all_tools)
+    if bonus == -1.0:
+        return 0.0  # tool gate failed
     return min(outcome + bonus, 1.0)  # cap at 1.0
 
 
