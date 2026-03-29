@@ -99,18 +99,35 @@ def load_optimized_program(model_id: str) -> dspy.Module | None:
     return agent
 
 
-def select_best_traces(entries: list[dict]) -> list[dict]:
-    """From N traces per problem, keep only the best-scoring one per problem."""
+def select_best_traces(entries: list[dict], require_all_tools: bool = False) -> list[dict]:
+    """From N traces per problem, keep only the best-scoring one per problem.
+
+    When require_all_tools=True, prefers traces that used all 4 tools.
+    Falls back to best reward if no trace used all tools.
+    """
+    from cnake_charmer.training.dspy_agent import REQUIRED_TOOLS, extract_tool_usage
+
     by_problem = defaultdict(list)
     for entry in entries:
-        # Use func_name as problem key (unique per problem)
         key = entry.get("inputs", {}).get("func_name", "unknown")
         by_problem[key].append(entry)
 
     best = []
+    full_tool_count = 0
     for problem_key, candidates in sorted(by_problem.items()):
-        # Sort by reward descending, pick the best
-        scored = [(e.get("reward") or 0.0, e) for e in candidates]
+        if require_all_tools:
+            # Prefer traces that used all 4 tools
+            full_tool = [
+                e for e in candidates if extract_tool_usage(e)["tools_used"] >= REQUIRED_TOOLS
+            ]
+            if full_tool:
+                scored = [(e.get("reward") or 0.0, e) for e in full_tool]
+                full_tool_count += 1
+            else:
+                scored = [(e.get("reward") or 0.0, e) for e in candidates]
+        else:
+            scored = [(e.get("reward") or 0.0, e) for e in candidates]
+
         scored.sort(key=lambda x: x[0], reverse=True)
         best_reward, best_entry = scored[0]
         best.append(best_entry)
@@ -119,6 +136,9 @@ def select_best_traces(entries: list[dict]) -> list[dict]:
         logger.info(
             f"  {problem_key}: best {best_reward:.3f} from {n} candidates ({', '.join(rewards)})"
         )
+
+    if require_all_tools:
+        logger.info(f"  {full_tool_count}/{len(by_problem)} problems had traces with all 4 tools")
 
     return best
 
