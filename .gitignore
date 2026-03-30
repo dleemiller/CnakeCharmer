@@ -201,3 +201,5 @@ data/trajectories/
 .benchmark_cache.json.bak
 data/traces/
 data/trajectories/
+data/samples/
+data/sft_dataset.jsonl
