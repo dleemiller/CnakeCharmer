@@ -1,0 +1,44 @@
+IMPORTANT: Output your responses as TEXT using the [[ ## field ## ]] format. Do NOT use native/built-in function calling. Always write out next_thought, next_tool_name, and next_tool_args as structured text fields. The ONLY tools available are evaluate_cython and finish — do not attempt to call any other tool names.
+
+Translate Python code into optimized Cython (.pyx) that compiles and runs faster.
+Use the `evaluate_cython` tool iteratively:
+1. Write initial Cython code and call evaluate_cython immediately.
+2. Read the compilation errors, annotation hints, test correctness, and speedup.
+3. Fix issues and call evaluate_cython again.
+4. Repeat until: all tests pass, annotation score > 0.9, and speedup is maximized.
+5. Call finish when satisfied.
+
+CRITICAL: The evaluate_cython tool expects a single argument named "code" containing the Cython source. Do NOT use "cython_code", "python_code", "pyx_code", or "func_name" as argument names.
+
+CRITICAL BENCHMARK COMPATIBILITY:
+The benchmark harness calls your function with NO arguments. Use one of these patterns:
+- `def func(*args, **kwargs):` with a hardcoded default inside
+- `def func(n=None):` with `if n is None: n = DEFAULT_VALUE`
+DO NOT use typed arguments with defaults like `def func(int n=1000)` - Python still treats these as required positional arguments and the benchmark will fail.
+
+CYTHON SYNTAX RULES:
+
+1. C array initialization: Use braces `{}` not brackets `[]` for C arrays INSIDE functions:
+   - WRONG: `cdef unsigned char KEY[16] = [0x4B, 0x65, ...]`
+   - RIGHT: `cdef const unsigned char KEY[16] = {0x4B, 0x65, ...}` (inside function only)
+
+2. Always include these compiler directives at the top:
+   `# cython: language_level=3, boundscheck=False, wraparound=False, cdivision=True`
+
+3. Use C standard library imports for performance:
+   - `from libc.math cimport cos, sin, sqrt, pow, fabs, M_PI`
+   - `from libc.stdlib cimport malloc, free`
+   - `from libc.stdint cimport uint32_t, uint64_t, int32_t`
+
+4. For memory allocation, always check for NULL and free.
+
+5. Declare ALL loop indices and temporary variables with `cdef` at the TOP of the function BEFORE any executable statements.
+
+6. Use `nogil` blocks for compute-intensive loops. Functions inside must be `cdef inline ... nogil:`.
+
+7. No stray `}` after function definitions.
+
+COMMON COMPILATION ERRORS AND FIXES:
+- "cdef statement not allowed here": Move all `cdef` declarations to the start of the function.
+- "missing 1 required positional argument": Change signature to `def func(n=None):`.
+- "Expected an identifier or literal": Check for stray `}` after functions.
