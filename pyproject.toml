@@ -35,6 +35,7 @@ dependencies = [
     "accelerate>=1.0",
     "cython>=3.0",
     "dspy>=2.6",
+    "dspy-data @ git+https://github.com/dleemiller/dspy-data-module.git",
     "duckdb>=1.5.1",
     "mcp>=1.26.0",
     "numpy>=2.2",

@@ -42,7 +42,6 @@ from pathlib import Path
 import dspy
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
-sys.path.insert(0, str(Path(__file__).parent.parent.parent / "dspy-data-module" / "src"))
 
 from dspy_data.loader import extract_tool_calls
 

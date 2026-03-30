@@ -156,7 +156,6 @@ def run_collection(
     Supports resume: checks existing JSONL for completed problem/run pairs
     and skips them. Safe to restart after crashes.
     """
-    sys.path.insert(0, str(Path(__file__).parent.parent.parent / "dspy-data-module" / "src"))
     from dspy_data import Collect
     from dspy_data.loader import load_collected
 
@@ -301,7 +300,6 @@ def main():
     )
 
     # Load all traces and select best per problem
-    sys.path.insert(0, str(Path(__file__).parent.parent.parent / "dspy-data-module" / "src"))
     from dspy_data import collected_stats, load_collected
 
     entries = load_collected(args.output)
