@@ -1,0 +1,57 @@
+Translate Python code into optimized Cython (.pyx) that compiles and runs significantly faster.
+Use the `evaluate_cython` tool iteratively:
+1. Write initial Cython code and evaluate it.
+2. Read the compilation errors, annotation hints, test correctness failures, and speedup metrics.
+3. Fix issues and evaluate again. Address correctness bugs first, then maximize speed.
+4. Repeat until: all tests pass, annotation score > 0.9, and speedup is maximized.
+
+## TOOL USAGE
+The `evaluate_cython` tool accepts ONE argument: `code` (the complete .pyx source).
+Do NOT pass `func_name`, `python_code`, `cython_code`, or any other arguments.
+
+## FUNCTION SIGNATURE (CRITICAL RULE)
+- Preserve the exact parameter names and counts from the original Python signature.
+- Provide appropriate C types for the parameters directly in the signature (e.g., `def func(int n):`).
+- Do NOT add default values (like `n=1000`, `n=None`, `*args`, or `**kwargs`) unless they were strictly present in the original Python code. 
+- If the benchmark harness fails with `Warmup failed: ... missing 1 required positional argument`, DO NOT attempt to fix it by introducing default values. This error is almost always resolved simply by using a strictly C-typed exact signature (e.g., `def func(int n):`).
+
+## COMPILER DIRECTIVES
+Always include at the top of the file:
+```cython
+# cython: language_level=3, boundscheck=False, wraparound=False, cdivision=True
+```
+
+## CYTHON SYNTAX RULES
+1. ALL `cdef` declarations must be at the TOP of the function, before any executable code:
+   ```cython
+   cdef int i, j, k
+   cdef double total = 0.0
+   ```
+   Do not mix declarations into loops or after statements—it causes "cdef statement not allowed here".
+2. Use C array initializers with braces `{}` inside functions, not brackets `[]` (e.g. `cdef int arr[4] = {1, 2, 3, 4}`).
+3. Use the C standard library for performance (e.g. `from libc.math cimport sin, cos`, `from libc.stdlib cimport malloc, free, qsort`, `from libc.string cimport memset, memcmp`).
+4. Always check memory bounds, check for NULL returns on `malloc` (e.g., `if arr == NULL: raise MemoryError()`), and strictly call `free()` to prevent memory leaks.
+5. `nogil` blocks require pure C with absolutely no Python objects. Helper comparison functions passed to C libraries (like `qsort`) must be declared `noexcept nogil`.
+
+## MAINTAINING PYTHON CORRECTNESS (AVOIDING INTEGER OVERFLOW)
+Python integers implicitly compute with arbitrary precision. When converting algorithms into Cython using fixed-size C scalars, truncation often causes hidden correctness bugs:
+- **Use 64-bit Types for Intermediates:** Linear congruential generators (LCGs), hashing, or polynomial math (like `seed * 1103515245 + 12345`) easily overflow standard 32-bit `int` or `unsigned int`. The test harness will catch this as an `OverflowError: value too large to convert to unsigned int` or mismatched output hashes. Always cast and operate utilizing `long long` or `unsigned long long` for intermediate values before applying modulo (`% mod`) or bitwise masks (`& 0xFFFFFFFF`).
+- **Bitwise Shifts:** In Python, a shift logic like `v << 4` does not truncate high bits. If `v` is typed as `uint32_t`, C behaves differently by instantly truncating those shifted bits, leading to mismatched outputs down the pipeline. Compute shifts in 64-bit space until Python's explicit bitmask rules apply.
+
+## OPTIMIZATION PATTERNS TO ELIMINATE PYTHON FALLBACKS
+- **Avoid Python Calls in Hot Loops:** Make sure every variable accessed inside a loop is statically typed (`cdef int`, `cdef long long`). Un-typed variables inherently default to Python Objects, causing heavy overhead.
+- **Replace Python Lists/Dicts With C Arrays or Typed Memoryviews:** Deeply nested dictionaries, queue sorting, list comprehensions, or dynamic object maps must be aggressively rewritten into flat, 1-dimensional C arrays using pointers. Falling back to Python list operations will severely limit speedup and lower your annotation score.
+- **Sorting with qsort:** Instead of Python `.sort()`, sort native arrays using standard C routines:
+  ```cython
+  cdef int cmp_func(const void *a, const void *b) noexcept nogil:
+      return (<int *>a)[0] - (<int *>b)[0]
+  qsort(arr, n, sizeof(int), cmp_func)
+  ```
+- **Eliminate String Allocations:** Substitute Python string concatenations character tracking with integer mapping logic in tight loops wherever predictably allowable.
+
+## ITERATIVE PROCESS
+Focus heavily on iterating based on the continuous `evaluate_cython` feedback:
+1. **Fix Compilation Errors first:** Syntax parsing failures block all benchmarking entirely.
+2. **Ensure Correctness:** Read the test case failures. If tests fail producing mismatched sums, or throw `OverflowError`, fix variable bounds by switching loop variables or operations explicitly to `long long`.
+3. **Check Speedup & Annotation Optimization Hints:** If speedup is poor (<10x) or many lines "fall back to Python", you must eliminate Python overhead. Remove memory overhead, eradicate mapped dict/list lookups, replace them with pointer tracking in contiguous C arrays, and declare rigid `cdef` typing for all variables.
+4. Iterate logically until all testing constraints consistently pass and speedup is maximized.

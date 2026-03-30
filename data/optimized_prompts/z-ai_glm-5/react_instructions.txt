@@ -1,0 +1,101 @@
+Translate Python code into optimized Cython (.pyx) that compiles and runs faster.
+Use the `evaluate_cython` tool iteratively:
+1. Write initial Cython code and evaluate it.
+2. Read the compilation errors, annotation hints, test correctness, and speedup.
+3. Fix issues and evaluate again.
+4. Repeat until: Correctness is 1.00, annotation score > 0.9, and speedup is maximized.
+
+## TOOL USAGE
+The `evaluate_cython` tool accepts ONE argument: `code` (the complete .pyx source).
+It runs both correctness tests and performance benchmarks. 
+Do NOT pass `func_name`, `python_code`, or any other arguments.
+
+## FUNCTION SIGNATURE (CRITICAL)
+Your top-level function signature MUST match the original Python arguments exactly. Do NOT add default values (like `n=1000`, `n=None`, or `*args`) unless they were strictly in the original Python code. 
+Adding arbitrary defaults tricks the benchmark harness into omitting required arguments during warmup, which causes cryptic "missing 1 required positional argument" or "takes exactly 0 positional arguments" errors!
+
+- CORRECT: `def func(int n):` (If original was `def func(n: int)`)
+- CORRECT: `def func(double x, int y):`
+- WRONG: `def func(int n=1000):` (Do not add defaults!)
+- WRONG: `def func(n=None):`
+- WRONG: `def func(*args):`
+
+## COMPILER DIRECTIVES
+Always include at the top of the file:
+```cython
+# cython: language_level=3, boundscheck=False, wraparound=False, cdivision=True
+```
+
+## CYTHON SYNTAX & OPTIMIZATION RULES
+
+1. **Variables & Declarations:**
+   ALL `cdef` declarations must be at the TOP of the function/method, before any executable code:
+   ```cython
+   cdef int i, j
+   cdef double total = 0.0
+   ```
+   Never put `cdef` inside loops or after statements.
+
+2. **Memory Allocation:**
+   Replace Python lists with C arrays for massive speedups:
+   ```cython
+   from libc.stdlib cimport malloc, free
+   cdef int *arr = <int *>malloc(n * sizeof(int))
+   if arr == NULL: raise MemoryError()
+   # ... use arr ...
+   free(arr)
+   ```
+
+3. **Custom Data Structures (`cdef class`):**
+   If the Python code uses Objects, Nodes, or Linked Lists, translate them into `cdef class`!
+   - Use `__cinit__` instead of `__init__` for fast C-level initialization.
+   - Declare all attributes with `cdef` at the class-level.
+   - For iterating/summing, write `cdef` methods that traverse at the C-level to completely avoid Python boxing overhead.
+   ```cython
+   cdef class Node:
+       cdef double value
+       cdef Node next_node
+       
+       def __cinit__(self, double value):
+           self.value = value
+           self.next_node = None
+
+   cdef class LinkedList:
+       cdef Node head
+       def __cinit__(self):
+           self.head = None
+       
+       cdef double c_sum(self):  # C-level traversal! Massive speedup.
+           cdef Node curr = self.head
+           cdef double total = 0.0
+           while curr is not None:
+               total += curr.value
+               curr = curr.next_node
+           return total
+   ```
+
+4. **Nogil Functions:**
+   Recursive functions or helper functions should be declared as `cdef inline int func(int x) noexcept nogil:`. Pure C, no Python objects. Notice `noexcept` is required for compilation on recent Cython versions when `nogil` is used.
+
+5. **C Standard Library:**
+   Use C math/string functions directly:
+   ```cython
+   from libc.math cimport sin, sqrt, fabs
+   from libc.string cimport memset
+   ```
+
+6. **Arrays Initialization:**
+   C array inline initialization uses `{}`: `cdef int arr[4] = {1, 2, 3, 4}`.
+
+## COMMON ERRORS AND FIXES
+- **"Warmup failed: missing 1 required positional argument"**: You added an arbitrary default (e.g. `n=1000`). Remove it and purely type the signature (e.g. `def func(int n):`).
+- **"takes exactly 0 positional arguments (1 given)"**: Same, remove `*args` and type the explicitly required positional arguments.
+- **"cdef statement not allowed here"**: Move `cdef` type declarations to the very top.
+- **Correctness: 0.00**: Your optimization broke the logic. Analyze the traceback, ensure correctness passes, then worry about pushing boundaries for higher speedups.
+
+## ITERATIVE PROCESS
+1. **Write**: Translate Python to Cython, strictly adding C types to the original signature without altering default arguments.
+2. **Evaluate**: Call `evaluate_cython`.
+3. **Correctness First**: Read the test pass rate. If tests fail, your logic or type bounds are wrong. 
+4. **Optimize**: Read the Performance/Speedup output and annotation hints. Optimize by swapping `list` to `<type*>malloc(...)`, using `cdef class` instead of slow python objects, and minimizing PyObject fallback warnings. 
+5. **Evaluate again** until correctness is 1.00 and performance is maxed.

@@ -35,6 +35,7 @@ import logging
 import os
 import random
 import sys
+from collections import Counter
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -285,32 +286,58 @@ def main():
         output_path = Path(f"data/traces/{model_slug}_{prompt_id}.jsonl")
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
-    # Run
-    total = len(problems) * args.attempts
-    done = 0
-    for problem in problems:
-        for attempt in range(args.attempts):
-            done += 1
+    # Resume: count existing traces per problem
+    existing_counts = Counter()
+    if output_path.exists():
+        with open(output_path) as f:
+            for line in f:
+                if line.strip():
+                    try:
+                        r = json.loads(line)
+                        existing_counts[r.get("func_name", "")] += 1
+                    except json.JSONDecodeError:
+                        pass
+        if existing_counts:
             logger.info(
-                f"[{done}/{total}] {problem.problem_id} attempt {attempt + 1}/{args.attempts}"
+                f"Resuming: {sum(existing_counts.values())} existing traces across {len(existing_counts)} problems"
             )
-            try:
-                result = run_problem(
-                    problem, args.model, args.max_iters, optimized_program, seed_text
-                )
-                record = make_trace_record(problem, result, args.model, prompt_id, attempt)
-                record["reward"] = score_trace(record, problem)
 
-                # Append
-                with open(output_path, "a") as f:
-                    f.write(json.dumps(record, default=str) + "\n")
+    # Build work list, skipping completed problems
+    work = []
+    skipped = 0
+    for problem in problems:
+        existing = existing_counts.get(problem.func_name, 0)
+        remaining = args.attempts - existing
+        if remaining <= 0:
+            skipped += 1
+            continue
+        for attempt in range(existing, existing + remaining):
+            work.append((problem, attempt))
 
-                logger.info(
-                    f"  reward={record['reward']:.3f} iters={record['num_iterations']} "
-                    f"tools={record['tools_used']}"
-                )
-            except Exception as e:
-                logger.error(f"  Failed: {e}")
+    if skipped:
+        logger.info(f"Skipping {skipped} complete problems, {len(work)} traces remaining")
+
+    # Run
+    total = len(work)
+    done = 0
+    for problem, attempt in work:
+        done += 1
+        logger.info(f"[{done}/{total}] {problem.problem_id} attempt {attempt + 1}/{args.attempts}")
+        try:
+            result = run_problem(problem, args.model, args.max_iters, optimized_program, seed_text)
+            record = make_trace_record(problem, result, args.model, prompt_id, attempt)
+            record["reward"] = score_trace(record, problem)
+
+            # Append
+            with open(output_path, "a") as f:
+                f.write(json.dumps(record, default=str) + "\n")
+
+            logger.info(
+                f"  reward={record['reward']:.3f} iters={record['num_iterations']} "
+                f"tools={record['tools_used']}"
+            )
+        except Exception as e:
+            logger.error(f"  Failed: {e}")
 
     # Summary
     logger.info(f"\nSaved {done} traces to {output_path}")

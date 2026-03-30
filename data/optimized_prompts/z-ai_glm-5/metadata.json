@@ -1,0 +1,9 @@
+{
+  "model": "openrouter/z-ai/glm-5",
+  "reflection_model": "openrouter/google/gemini-3.1-pro-preview",
+  "best_val_score": 0.8889,
+  "budget": "light",
+  "react_from_iteration": 1,
+  "extract_from_iteration": 4,
+  "note": "extracted from running GEPA log, not official program.json"
+}
