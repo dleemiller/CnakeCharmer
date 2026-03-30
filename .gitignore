@@ -199,3 +199,5 @@ utils/stack_data/*.parquet
 prompt/docs/
 data/trajectories/
 .benchmark_cache.json.bak
+data/traces/
+data/trajectories/
