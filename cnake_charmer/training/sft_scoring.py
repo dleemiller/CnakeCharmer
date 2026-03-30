@@ -35,6 +35,7 @@ def sft_score(
     quality = 0.25 * correctness + 0.40 * perf + 0.15 * annotation + 0.05 * lint + 0.05 * memory
 
     # Secondary: efficiency tiebreaker (never overrides quality)
+    # Count only evaluate_cython calls, not finish — calling finish is good behavior
     efficiency = max(0, 1.0 - (num_iters - 1) / 4)
     conciseness = max(0, 1.0 - thought_tokens / 5000)
     compactness = max(0, 1.0 - code_tokens / 3000)
@@ -88,10 +89,17 @@ def parse_trace_metrics(trace: dict) -> dict:
             tests_total = int(m.group(2))
         idx += 1
 
-    # Count thought tokens
+    # Count evaluate calls (not finish — finish is good behavior, not a cost)
+    eval_calls = 0
+    called_finish = False
     thought_tokens = 0
     idx = 0
-    while f"thought_{idx}" in traj:
+    while f"tool_name_{idx}" in traj:
+        tool = traj.get(f"tool_name_{idx}")
+        if tool == "evaluate_cython":
+            eval_calls += 1
+        elif tool == "finish":
+            called_finish = True
         thought_tokens += len(traj.get(f"thought_{idx}", "") or "")
         idx += 1
 
@@ -102,7 +110,8 @@ def parse_trace_metrics(trace: dict) -> dict:
         "correctness": correctness,
         "speedup": speedup,
         "annotation": annotation,
-        "num_iters": trace.get("num_iterations", 5),
+        "num_iters": eval_calls,  # only count evaluate calls
+        "called_finish": called_finish,
         "thought_tokens": thought_tokens,
         "code_tokens": code_tokens,
         "tests_passed": tests_passed,
