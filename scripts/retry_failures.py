@@ -36,7 +36,9 @@ logger = logging.getLogger(__name__)
 
 
 def find_failures(input_path: str, threshold: float) -> list[str]:
-    """Find problems where best reward is below threshold."""
+    """Find problems where best SFT score is below threshold."""
+    from cnake_charmer.training.sft_scoring import score_trace
+
     by_problem = defaultdict(list)
     with open(input_path) as f:
         for line in f:
@@ -44,15 +46,18 @@ def find_failures(input_path: str, threshold: float) -> list[str]:
                 continue
             r = json.loads(line)
             pid = r.get("problem_id", r.get("func_name", ""))
-            reward = r.get("reward", 0) or 0
-            by_problem[pid].append(reward)
+            sft = score_trace(r)
+            by_problem[pid].append((sft, r.get("reward", 0) or 0))
 
     failures = []
-    for pid, rewards in sorted(by_problem.items()):
-        best = max(rewards)
-        if best < threshold:
+    for pid, scores in sorted(by_problem.items()):
+        best_sft = max(s[0] for s in scores)
+        best_reward = max(s[1] for s in scores)
+        if best_sft < threshold:
             failures.append(pid)
-            logger.info(f"  {pid}: best={best:.3f} from {len(rewards)} attempts")
+            logger.info(
+                f"  {pid}: best_sft={best_sft:.3f} reward={best_reward:.3f} from {len(scores)} attempts"
+            )
 
     return failures
 
