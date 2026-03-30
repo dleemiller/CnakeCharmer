@@ -66,7 +66,7 @@ class CythonReActAgent(dspy.Module):
         self._init_react()
 
     def _init_react(self):
-        """Initialize the ReAct module with placeholder tools."""
+        """Initialize the ReAct module with placeholder tools and seed prompt."""
 
         def evaluate_cython(code: str) -> str:
             """Compile, analyze, test, and benchmark Cython code in one step."""
@@ -77,6 +77,14 @@ class CythonReActAgent(dspy.Module):
             tools=[evaluate_cython],
             max_iters=self.max_iters,
         )
+
+        # Load seed prompt if available (merged best of mimo + GLM-5)
+        seed_path = Path(__file__).parent.parent / "data" / "optimized_prompts" / "seed_prompt.txt"
+        if seed_path.exists():
+            seed = seed_path.read_text().strip()
+            for _name, param in self.react.named_parameters():
+                if hasattr(param, "signature"):
+                    param.signature = param.signature.with_instructions(seed)
 
     def forward(
         self,
@@ -131,7 +139,8 @@ def run_optimization(
 
     # Configure student LM
     lm_kwargs = {"api_key": api_key, "temperature": temperature}
-    if base_url:
+    # Only set api_base for local models — OpenRouter models route via litellm
+    if base_url and not model_id.startswith("openrouter/"):
         lm_kwargs["api_base"] = base_url
 
     lm = dspy.LM(model_id, **lm_kwargs)
@@ -300,15 +309,16 @@ def main():
         list_saved_prompts()
         return
 
-    # For local vLLM, no real API key needed. Only use env key for remote endpoints.
+    # Detect if student model is remote (OpenRouter) or local
+    is_remote = args.model.startswith("openrouter/")
     if args.api_key:
         api_key = args.api_key
-    elif "localhost" in args.base_url or "127.0.0.1" in args.base_url:
-        api_key = "local"
-    else:
+    elif is_remote:
         api_key = os.environ.get("APIKEY", os.environ.get("OPENROUTER_API_KEY", ""))
         if not api_key:
-            parser.error("API key required for remote endpoints (--api-key or APIKEY env var)")
+            parser.error("API key required for OpenRouter models (--api-key or APIKEY env var)")
+    else:
+        api_key = "local"
 
     run_optimization(
         model_id=args.model,
