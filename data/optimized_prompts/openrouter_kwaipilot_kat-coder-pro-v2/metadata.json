@@ -1,0 +1,12 @@
+{
+  "model": "openrouter/kwaipilot/kat-coder-pro-v2",
+  "reflection_model": "openrouter/google/gemini-3.1-pro-preview",
+  "budget": "light",
+  "subset": 30,
+  "difficulty": null,
+  "max_iters": 5,
+  "reflection_minibatch_size": 3,
+  "num_problems_train": 20,
+  "num_problems_val": 10,
+  "val_size": 10
+}
