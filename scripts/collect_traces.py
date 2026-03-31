@@ -40,14 +40,19 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 import dspy
-
-sys.path.insert(0, str(Path(__file__).parent.parent))
-
 from dspy_data.loader import extract_tool_calls
 
 from cnake_charmer.dataset.loader import discover_pairs
 from cnake_charmer.training.dspy_agent import CythonOptimization, make_tools
 from cnake_charmer.training.rollout import extract_code_from_content
+
+# Load .env if present
+_env = Path(__file__).parent.parent / ".env"
+if _env.exists():
+    for _line in _env.read_text().splitlines():
+        if _line.strip() and not _line.startswith("#") and "=" in _line:
+            _k, _v = _line.split("=", 1)
+            os.environ.setdefault(_k.strip(), _v.strip())
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 logger = logging.getLogger(__name__)
@@ -206,6 +211,7 @@ def main():
         "--problems-from-file", default=None, help="File with one problem ID per line"
     )
     parser.add_argument("--all", action="store_true", help="Run all problems")
+    parser.add_argument("--shuffle", action="store_true", help="Shuffle problem order")
     parser.add_argument(
         "--difficulty",
         choices=["easy", "medium", "hard"],
@@ -274,6 +280,9 @@ def main():
         problems = random.sample(list(all_problems.values()), min(args.n_random, len(all_problems)))
     else:
         problems = random.sample(list(all_problems.values()), min(10, len(all_problems)))
+
+    if args.shuffle:
+        random.shuffle(problems)
 
     logger.info(f"Problems: {len(problems)}, Attempts: {args.attempts}, Prompt: {prompt_id}")
 
