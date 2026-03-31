@@ -66,6 +66,7 @@ def make_trace_record(
     model: str,
     prompt_id: str,
     attempt: int,
+    lm_history: list | None = None,
 ) -> dict:
     """Build a standardized trace record from a DSPy ReAct result."""
     traj = result.trajectory if result.trajectory else {}
@@ -80,6 +81,18 @@ def make_trace_record(
     entry_for_tools = {"trajectory": dict(traj)}
     calls = extract_tool_calls(entry_for_tools)
 
+    # Extract reasoning_content from LM history (thinking models)
+    traj = dict(traj)
+    if lm_history:
+        for idx, interaction in enumerate(lm_history):
+            response = interaction.get("response")
+            if response is None:
+                continue
+            for choice in getattr(response, "choices", []):
+                rc = getattr(getattr(choice, "message", None), "reasoning_content", None)
+                if rc:
+                    traj[f"reasoning_{idx}"] = rc
+
     return {
         "version": TRACE_VERSION,
         "model": model,
@@ -91,7 +104,7 @@ def make_trace_record(
         "attempt": attempt,
         "num_iterations": num_iters,
         "tools_used": list({c["tool_name"] for c in calls}),
-        "trajectory": dict(traj),
+        "trajectory": traj,
         "cython_code": cython_code,
         "output": dict(result) if result else None,
         "reward": None,  # filled in by score_trace
@@ -159,7 +172,9 @@ def apply_prompt(react_module, optimized_program, seed_text=None):
 
 
 def run_problem(problem, model_id, max_iters, optimized_program, seed_text):
-    """Run a single problem and return the ReAct result."""
+    """Run a single problem and return (result, lm_history)."""
+    from copy import deepcopy
+
     tools, _env = make_tools(
         problem.python_code,
         problem.func_name,
@@ -168,11 +183,16 @@ def run_problem(problem, model_id, max_iters, optimized_program, seed_text):
     )
     react = dspy.ReAct(CythonOptimization, tools=tools, max_iters=max_iters)
     apply_prompt(react, optimized_program, seed_text)
-    return react(
-        python_code=problem.python_code,
-        func_name=problem.func_name,
-        description=problem.description or "",
-    )
+
+    thread_local_lm = deepcopy(dspy.settings.lm)
+    thread_local_lm.history = []
+    with dspy.context(lm=thread_local_lm):
+        result = react(
+            python_code=problem.python_code,
+            func_name=problem.func_name,
+            description=problem.description or "",
+        )
+    return result, thread_local_lm.history
 
 
 def main():
@@ -207,6 +227,13 @@ def main():
         "--problems-from-file", default=None, help="File with one problem ID per line"
     )
     parser.add_argument("--all", action="store_true", help="Run all problems")
+    parser.add_argument("--shuffle", action="store_true", help="Randomize problem order")
+    parser.add_argument(
+        "--reasoning-effort",
+        default=None,
+        choices=["none", "low", "medium", "high"],
+        help="Set reasoning_effort for thinking models (e.g. Mistral Small 4)",
+    )
     parser.add_argument(
         "--difficulty",
         choices=["easy", "medium", "hard"],
@@ -242,6 +269,12 @@ def main():
         api_key = "local"
 
     lm_kwargs = {"api_key": api_key, "temperature": args.temperature, "cache": False}
+    if args.reasoning_effort:
+        if is_remote:
+            # OpenRouter doesn't support reasoning_effort natively; pass via extra_body
+            lm_kwargs["extra_body"] = {"reasoning_effort": args.reasoning_effort}
+        else:
+            lm_kwargs["reasoning_effort"] = args.reasoning_effort
     if not is_remote:
         lm_kwargs["api_base"] = args.base_url or "http://localhost:8000/v1"
 
@@ -286,7 +319,7 @@ def main():
         output_path = Path(f"data/traces/{model_slug}_{prompt_id}.jsonl")
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
-    # Resume: count existing traces per problem
+    # Resume: count existing traces per problem for this model
     existing_counts = Counter()
     if output_path.exists():
         with open(output_path) as f:
@@ -294,19 +327,20 @@ def main():
                 if line.strip():
                     try:
                         r = json.loads(line)
-                        existing_counts[r.get("func_name", "")] += 1
+                        if r.get("model", "") == args.model:
+                            existing_counts[r.get("problem_id", "")] += 1
                     except json.JSONDecodeError:
                         pass
         if existing_counts:
             logger.info(
-                f"Resuming: {sum(existing_counts.values())} existing traces across {len(existing_counts)} problems"
+                f"Resuming: {sum(existing_counts.values())} existing traces for {args.model} across {len(existing_counts)} problems"
             )
 
     # Build work list, skipping completed problems
     work = []
     skipped = 0
     for problem in problems:
-        existing = existing_counts.get(problem.func_name, 0)
+        existing = existing_counts.get(problem.problem_id, 0)
         remaining = args.attempts - existing
         if remaining <= 0:
             skipped += 1
@@ -317,6 +351,9 @@ def main():
     if skipped:
         logger.info(f"Skipping {skipped} complete problems, {len(work)} traces remaining")
 
+    if args.shuffle:
+        random.shuffle(work)
+
     # Run
     total = len(work)
     done = 0
@@ -324,8 +361,10 @@ def main():
         done += 1
         logger.info(f"[{done}/{total}] {problem.problem_id} attempt {attempt + 1}/{args.attempts}")
         try:
-            result = run_problem(problem, args.model, args.max_iters, optimized_program, seed_text)
-            record = make_trace_record(problem, result, args.model, prompt_id, attempt)
+            result, lm_history = run_problem(
+                problem, args.model, args.max_iters, optimized_program, seed_text
+            )
+            record = make_trace_record(problem, result, args.model, prompt_id, attempt, lm_history)
             record["reward"] = score_trace(record, problem)
 
             # Append
