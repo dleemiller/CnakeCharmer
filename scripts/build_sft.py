@@ -82,6 +82,12 @@ def main():
     parser.add_argument(
         "--tools", default=str(TOOLS_FILE), help=f"Tool schema JSON file (default: {TOOLS_FILE})"
     )
+    parser.add_argument(
+        "--max-tokens",
+        type=int,
+        default=16384,
+        help="Max tokens per example; truncate reasoning then drop (default: 16384)",
+    )
     args = parser.parse_args()
 
     input_paths = args.inputs or [str(p) for p in MASTER_FILES if p.exists()]
@@ -219,6 +225,121 @@ def main():
         ex["speedup"] = parse_trace_metrics(trace).get("speedup", 0.0)
         ex["thinking"] = trace.get("_thinking", False)
 
+    # Token counting and filtering
+    import re as _re
+
+    import tiktoken
+
+    enc = tiktoken.get_encoding("o200k_base")
+
+    def count_tokens(ex: dict) -> int:
+        return len(enc.encode(json.dumps(ex, default=str)))
+
+    def truncate_reasoning(ex: dict, max_tok: int) -> tuple[dict, bool]:
+        """Try to fit example within max_tok by truncating <think> blocks.
+
+        Returns (example, was_truncated). Modifies example in place.
+        """
+        current = count_tokens(ex)
+        if current <= max_tok:
+            return ex, False
+
+        # Collect (msg_index, reasoning_text, token_count) for all think blocks
+        think_blocks = []
+        for i, msg in enumerate(ex["messages"]):
+            if msg.get("role") != "assistant" or not msg.get("content"):
+                continue
+            match = _re.search(r"<think>\n(.*?)\n</think>", msg["content"], _re.DOTALL)
+            if match:
+                reasoning = match.group(1)
+                think_blocks.append((i, match, len(enc.encode(reasoning))))
+
+        if not think_blocks:
+            return ex, False
+
+        # Sort by token count descending, truncate longest first
+        think_blocks.sort(key=lambda x: x[2], reverse=True)
+        excess = current - max_tok
+
+        for msg_idx, match, block_tokens in think_blocks:
+            if excess <= 0:
+                break
+            msg = ex["messages"][msg_idx]
+            if excess >= block_tokens:
+                # Remove entire think block
+                msg["content"] = msg["content"][: match.start()] + msg["content"][match.end() :]
+                msg["content"] = msg["content"].strip() or None
+                excess -= block_tokens
+            else:
+                # Truncate reasoning to fit
+                reasoning = match.group(1)
+                keep_tokens = block_tokens - excess
+                if keep_tokens > 0:
+                    truncated = enc.decode(enc.encode(reasoning)[:keep_tokens]) + "..."
+                    msg["content"] = (
+                        msg["content"][: match.start()]
+                        + f"<think>\n{truncated}\n</think>"
+                        + msg["content"][match.end() :]
+                    )
+                else:
+                    msg["content"] = msg["content"][: match.start()] + msg["content"][match.end() :]
+                    msg["content"] = msg["content"].strip() or None
+                excess = 0
+
+        return ex, True
+
+    # Apply token filtering
+    kept = []
+    n_truncated = 0
+    n_dropped = 0
+    for ex in examples:
+        tok = count_tokens(ex)
+        if tok <= args.max_tokens:
+            kept.append(ex)
+            continue
+        ex, was_truncated = truncate_reasoning(ex, args.max_tokens)
+        tok = count_tokens(ex)
+        if tok <= args.max_tokens:
+            kept.append(ex)
+            if was_truncated:
+                n_truncated += 1
+        else:
+            n_dropped += 1
+
+    logger.info(
+        f"Token filter (max={args.max_tokens}): kept={len(kept)}, "
+        f"truncated={n_truncated}, dropped={n_dropped}"
+    )
+    examples = kept
+
+    # Token distribution stats
+    if examples:
+        all_tok = sorted(count_tokens(ex) for ex in examples)
+        think_tok = sorted(count_tokens(ex) for ex in examples if ex.get("thinking"))
+        nothink_tok = sorted(count_tokens(ex) for ex in examples if not ex.get("thinking"))
+        n = len(all_tok)
+
+        def pct(data, p):
+            return data[min(int(p / 100 * len(data)), len(data) - 1)] if data else 0
+
+        logger.info(
+            f"Tokens (all n={n}): "
+            f"p50={pct(all_tok, 50)}, p90={pct(all_tok, 90)}, "
+            f"p95={pct(all_tok, 95)}, p99={pct(all_tok, 99)}, max={all_tok[-1]}"
+        )
+        if think_tok:
+            logger.info(
+                f"Tokens (thinking n={len(think_tok)}): "
+                f"p50={pct(think_tok, 50)}, p90={pct(think_tok, 90)}, "
+                f"p95={pct(think_tok, 95)}, max={think_tok[-1]}"
+            )
+        if nothink_tok:
+            logger.info(
+                f"Tokens (nothink n={len(nothink_tok)}): "
+                f"p50={pct(nothink_tok, 50)}, p90={pct(nothink_tok, 90)}, "
+                f"p95={pct(nothink_tok, 95)}, max={nothink_tok[-1]}"
+            )
+
     # Save
     output = Path(args.output)
     output.parent.mkdir(parents=True, exist_ok=True)
@@ -235,7 +356,7 @@ def main():
         )
 
     # Score distribution
-    scores = [t["reward"] for t in best]
+    scores = [ex.get("sft_score", 0) for ex in examples]
     if scores:
         logger.info(
             f"SFT score: min={min(scores):.3f}, max={max(scores):.3f}, "

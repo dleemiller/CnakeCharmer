@@ -1,0 +1,83 @@
+{
+  "react.react": {
+    "traces": [],
+    "train": [],
+    "demos": [],
+    "signature": {
+      "instructions": "Translate Python code into optimized Cython (.pyx) that compiles and runs faster.\nUse the evaluate_cython tool iteratively:\n1. Write initial Cython code and evaluate it.\n2. Read the compilation errors, annotation hints, test failures, and speedup.\n3. Fix issues and evaluate again.\n4. Repeat until: all tests pass, annotation score > 0.9, and speedup is maximized.\n\n## TOOL USAGE\n\nThe evaluate_cython tool accepts ONE argument: `code` (the complete .pyx source).\nDo NOT pass `func_name`, `python_code`, `cython_code`, or any other arguments.\n\n## FUNCTION SIGNATURE (CRITICAL)\n\nThe benchmark harness tests correctness by explicitly mapping the arguments from your Python code type definitions. To ensure tests and signatures match:\n1. Keep the EXACT argument names and count from the original Python code.\n2. Add basic C types to the arguments.\n3. **DO NOT add default arguments or variable arguments (`*args`)!** Adding defaults (`n=1000` or `n=None`) completely breaks the benchmark's dynamic signature testing capability.\n- **CORRECT**: `def func(int n):` (Directly matches the original `def func(n: int)`)\n- **WRONG**: `def func(int n=1000):` (Adding defaults fails test matching logic)\n- **WRONG**: `def func(n=None):` (Adding defaults breaks the tester)\n- **WRONG**: `def func(*args, **kwargs):` (Results in \"takes exactly 0 positional arguments\" failures)\n\n## COMPILER DIRECTIVES\n\nAlways include at the top of the file:\n```cython\n# cython: language_level=3, boundscheck=False, wraparound=False, cdivision=True\n```\n\n## CYTHON SYNTAX & OPTIMIZATION RULES\n\n1. **Variable Declarations**: ALL `cdef` declarations must be at the TOP of the function/helper before any executable code:\n   ```cython\n   cdef int i, j\n   cdef double total = 0.0\n   ```\n   **NEVER** declare variables inside loops or after logical statements like `if` conditions — this causes a \"cdef statement not allowed here\" compilation error.\n\n2. **Memory Allocation (Critical for Speed)**: DO NOT use Python list initialization (e.g., `[0] * n`) or list comprehensions (e.g., `[i * 2 for i in range(n)]`). These inherently fall back to Python internal calls, creating a huge performance bottleneck (`PyObject` references). Always dynamically allocate C arrays, check for NULL, populate them via C-loops, and `free` them at the end:\n   ```cython\n   from libc.stdlib cimport malloc, free\n   cdef long long *arr = <long long *>malloc(n * sizeof(long long))\n   if not arr:\n       raise MemoryError()\n   cdef int i\n   for i in range(n):\n       arr[i] = i * 2\n   # ... use arr ...\n   free(arr)\n   ```\n\n3. **Helper Functions and Recursion**:\n   - Make internal helper functions `cdef` (or `cdef inline`) rather than `def` to bypass Python's calling overhead.\n   - Do NOT pass Python lists into recursive paths. Instead, replace list parameters with typed C pointers (`cdef int _helper(long long *arr, int n):`).\n\n4. **Preventing Integer Overflows**: Python handles infinitely large integers seamlessly, but C types natively overflow. In complex mathematical steps, bit mask logic, or large multiplication algorithms, prefer `long long` variables and explicitly cast computations to mirror Python's precision cleanly:\n   ```cython\n   # Cast operands to prevent 32-bit overflow before modulo or bit-wise limits\n   val = (<long long>i * <long long>2654435761 + 17) & 0x7FFFFFFF\n   ```\n\n5. **Classes and Structs**:\n   - Use `cdef class` instead of `class` for node-like structures (e.g., Trees, Linked Lists).\n   - Add the `cdef public` modifier to attributes for direct, typed C-level pointer access, avoiding Python dictionary lookup overhead:\n   ```cython\n   cdef class TreeNode:\n       cdef public int value\n       cdef public TreeNode left\n       cdef public TreeNode right\n   ```\n\n6. **Fused Types for Generics**: To perform algorithms identically across datatypes (e.g., binary searching an `int` array vs a `double` array without duplicating the algorithm structure), explicitly define fused types:\n   ```cython\n   ctypedef fused orderable_t:\n       int\n       double\n   \n   cdef int _binary_search(orderable_t *arr, int n, orderable_t target) noexcept:\n       # Pure C algorithm implementation\n   ```\n\n## ITERATIVE PROCESS\n\n1. **Write**: Translate Python to Cython. Enforce purely typed functions, C arrays mapped using `malloc` over lists, defensive `long long` integrations for math operations, and native C helper structs. \n2. **Evaluate**: Run `evaluate_cython`. Methodically read ALL metrics and feedback points:\n   - **Correctness**: Passing tests is the foundational requirement. Consistent runtime failures often indicate integer overflow (requiring `long long` integration/casts) or incorrect memory pointer traversal natively.\n   - **Cython Optimization Hints**: Inspect the lines compiling to Python `PyObject` references. Remediate these by explicitly declaring variables or converting embedded list logic natively.\n   - **Performance**: High pass rates on test correctness must complement maximizing numerical speedups (driving towards purely C-executed speeds).\n   - **Lint**: Delete any unused imports (e.g., leftover `import cython` or `libc.math.fabs`) to maintain pristine lint scores.\n3. **Fix and Repeat**: Correct compilation defects first, clear runtime exceptions next, maximize strict types to minimize pure Python fallbacks, and iterate until the criteria metric threshold natively hits ~1.0.",
+      "fields": [
+        {
+          "prefix": "Python Code:",
+          "description": "The Python source code to optimize"
+        },
+        {
+          "prefix": "Func Name:",
+          "description": "Name of the main function to optimize"
+        },
+        {
+          "prefix": "Description:",
+          "description": "Description of what the code does"
+        },
+        {
+          "prefix": "Trajectory:",
+          "description": "${trajectory}"
+        },
+        {
+          "prefix": "Next Thought:",
+          "description": "${next_thought}"
+        },
+        {
+          "prefix": "Next Tool Name:",
+          "description": "${next_tool_name}"
+        },
+        {
+          "prefix": "Next Tool Args:",
+          "description": "${next_tool_args}"
+        }
+      ]
+    },
+    "lm": null
+  },
+  "react.extract.predict": {
+    "traces": [],
+    "train": [],
+    "demos": [],
+    "signature": {
+      "instructions": "Translate Python code into optimized Cython (.pyx) that compiles and runs faster.\nUse the evaluate_cython tool iteratively:\n1. Write initial Cython code and evaluate it.\n2. Read the compilation errors, annotation hints, test failures, and speedup.\n3. Fix issues and evaluate again.\n4. Repeat until: all tests pass, annotation score > 0.9, and speedup is maximized.\n\n## TOOL USAGE\n\nThe evaluate_cython tool accepts ONE argument: `code` (the complete .pyx source).\nDo NOT pass `func_name`, `python_code`, `cython_code`, or any other arguments.\n\n## FUNCTION SIGNATURE (CRITICAL)\n\nThe benchmark harness calls your function with NO arguments for warmup, then with arguments for testing.\n- CORRECT: `def func(n=1000):` — untyped default, works for both calls\n- CORRECT: `def func(n=None):` with `if n is None: n = 1000` inside\n- WRONG: `def func(int n=1000):` — typed default fails as positional arg\n- WRONG: `cpdef func(int n=1000):` — cpdef typed defaults fail warmup call\n- WRONG: `def func(int n):` — strict positional arg fails the zero-argument warmup call\n\n## COMPILER DIRECTIVES\n\nAlways include at top of file:\n```\n# cython: language_level=3, boundscheck=False, wraparound=False, cdivision=True\n```\n\n## CYTHON SYNTAX RULES & OPTIMIZATIONS\n\n1. ALL `cdef` declarations at TOP of function, before any executable code. NEVER inside `if` blocks or after statements — causes \"cdef statement not allowed here\".\n\n2. Memory allocation — always check NULL and free:\n   ```cython\n   cdef int *buf = <int *>malloc(n * sizeof(int))\n   if buf == NULL: raise MemoryError()\n   # ... use buf ...\n   free(buf)\n   ```\n\n3. `nogil` blocks require pure C — no Python objects. Convert Python args to C types BEFORE the nogil block. Use `noexcept` on C functions that don't raise Python exceptions.\n\n4. **`cdef class` and Inheritance**:\n   - Use `cdef class` for tree nodes or data structures.\n   - Use `def __cinit__(self, ...):` for initializing `cdef` attributes. It is faster and safer than `def __init__`.\n   - Polymorphism/Overrides: Use `cpdef` for methods that might be overridden or called dynamically (e.g., `cpdef double eval(self):`). Standard `cdef` methods cannot be dynamically overridden by subclasses in the same way, potentially raising `AttributeError` from Python space context.\n\n5. **Python Objects & Structs**:\n   - `cdef class` instances are Python objects! Do NOT try to put Python objects inside C structs or cast them to C-pointers (`void*` or `Expr*`) without using Cython's explicit `PyObject*` refcounting.\n   - It is significantly safer and often fast enough to return a `cdef tuple` to return an Object and an integer together: `cdef tuple func(): return (my_obj, 1)`.\n\n6. **Beware of Integer C-Overflows (Correctness Issue)**:\n   - Python `int` safely handles huge numbers (e.g., PRNG seeds or giant hash multiplications), but Cython automatically downcasts integers to 32-bit `int` or 64-bit `long long` when operations trace back to C primitives.\n   - Operations like `seed * 2654435761 + 17` will silently overflow if translated verbatim, leading to **mismatched outputs/correctness failures**.\n   - **Fix**: Explicitly cast the literal to force 64-bit precision: `seed * <long long>2654435761 + 17`.\n\n7. **Preserve Logic when Optimizing Recursion**:\n   - Do NOT pass primitives by pointer (`long long *seed`) as a shortcut to avoid returning multiple values in recursion if the Python original relies on specific evaluation order. Cython/C evaluation order of arguments might drift and mutate the pointer unexpectedly. Stick to returning a `cdef tuple` for structural parity.\n\n## COMMON ERRORS AND FIXES\n\n- \"cdef statement not allowed here\" → move declarations to top of function\n- \"missing 1 required positional argument\" → use `def func(n=1000):` (untyped default)\n- Output mismatch/Correctness 0.00 → You likely created a C-integer overflow. Cast large literals to `<long long>`!\n- AttributeError for C-methods on classes → Ensure the method is declared with `cpdef` on both the base and derived classes.\n- \"Cannot convert Python object to 'Expr *'\" → Do not use C pointer operations or C `struct`s to pass/group `cdef class` objects.\n\n## ITERATIVE PROCESS\n\n1. **Write**: Translate Python to Cython applying C types, `__cinit__`, and logic parity.\n2. **Evaluate**: Call evaluate_cython — read ALL feedback sections (Compile, Correctness, Output match, Tracebacks).\n3. **Fix compilation errors** first (nothing else matters until it compiles).\n4. **Fix test failures** next. If model outputs are wrong, explicitly check for integer overflows and evaluation order!\n5. **Improve annotation score** — add more exact types and utilize C arrays (`malloc`), replace Python math with C `<math.h>`.\n6. **Maximize speedup** — avoid Python calls in hot loops.\n7. **Evaluate again** until correctness is 1.00 and speedup is maximized.",
+      "fields": [
+        {
+          "prefix": "Python Code:",
+          "description": "The Python source code to optimize"
+        },
+        {
+          "prefix": "Func Name:",
+          "description": "Name of the main function to optimize"
+        },
+        {
+          "prefix": "Description:",
+          "description": "Description of what the code does"
+        },
+        {
+          "prefix": "Trajectory:",
+          "description": "${trajectory}"
+        },
+        {
+          "prefix": "Reasoning: Let's think step by step in order to",
+          "description": "${reasoning}"
+        },
+        {
+          "prefix": "Cython Code:",
+          "description": "Complete .pyx Cython source code"
+        }
+      ]
+    },
+    "lm": null
+  },
+  "metadata": {
+    "dependency_versions": {
+      "python": "3.12",
+      "dspy": "3.1.3",
+      "cloudpickle": "3.1"
+    }
+  }
+}

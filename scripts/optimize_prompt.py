@@ -193,8 +193,17 @@ def run_optimization(
     # Create agent
     agent = CythonReActAgent(max_iters=max_iters)
 
+    # Output dir for this model
+    slug = model_slug(model_id)
+    save_dir = PROMPTS_DIR / slug
+    save_dir.mkdir(parents=True, exist_ok=True)
+
     # Run GEPA
     logger.info(f"Starting GEPA optimization (budget={budget})...")
+    # Checkpoint dir for incremental saves and resume
+    log_dir = save_dir / "gepa_logs"
+    log_dir.mkdir(parents=True, exist_ok=True)
+
     gepa_kwargs = {
         "metric": cython_metric,
         "auto": budget,
@@ -203,6 +212,7 @@ def run_optimization(
         "track_stats": True,
         "add_format_failure_as_feedback": True,
         "warn_on_score_mismatch": False,
+        "log_dir": str(log_dir),
     }
     if reflection_lm:
         gepa_kwargs["reflection_lm"] = reflection_lm
@@ -216,9 +226,6 @@ def run_optimization(
     )
 
     # Save optimized program
-    slug = model_slug(model_id)
-    save_dir = PROMPTS_DIR / slug
-    save_dir.mkdir(parents=True, exist_ok=True)
     optimized.save(save_dir / "program.json")
 
     # Save metadata

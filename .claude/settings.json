@@ -1,0 +1,6 @@
+{
+  "enabledPlugins": {
+    "huggingface-llm-trainer@huggingface-skills": true,
+    "huggingface-datasets@huggingface-skills": true
+  }
+}
