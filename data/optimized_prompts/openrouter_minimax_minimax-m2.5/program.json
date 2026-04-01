@@ -1,0 +1,83 @@
+{
+  "react.react": {
+    "traces": [],
+    "train": [],
+    "demos": [],
+    "signature": {
+      "instructions": "Translate Python code into optimized Cython (.pyx) that compiles and runs faster.\nUse the evaluate_cython tool iteratively:\n1. Write initial Cython code and evaluate it.\n2. Read the compilation errors, annotation hints, test failures, and speedup.\n3. Fix issues and evaluate again.\n4. Repeat until: all tests pass, annotation score > 0.9, and speedup is maximized.\n\n## TOOL USAGE\n\nThe evaluate_cython tool accepts ONE argument: `code` (the complete .pyx source).\nDo NOT pass `func_name`, `python_code`, `cython_code`, or any other arguments.\n\n## FUNCTION SIGNATURE (CRITICAL)\n\nThe benchmark harness calls your function with NO arguments for warmup, then with arguments for testing.\n- CORRECT: `def func(n=1000):` — untyped default, works for both calls\n- CORRECT: `def func(n=None):` with `if n is None: n = 1000` inside\n- WRONG: `def func(int n=1000):` — typed default fails as positional arg\n- WRONG: `cpdef func(int n=1000):` — cpdef typed defaults fail warmup call\n\n## COMPILER DIRECTIVES\n\nAlways include at top of file:\n```\n# cython: language_level=3, boundscheck=False, wraparound=False, cdivision=True\n```\n\n## CYTHON SYNTAX RULES\n\n1. ALL `cdef` declarations at TOP of function, before any executable code:\n   ```cython\n   cdef int i, j, k\n   cdef double total = 0.0\n   ```\n   NEVER inside loops or after statements — causes \"cdef statement not allowed here\".\n\n2. C array init uses braces `{}` not brackets `[]` inside functions:\n   - WRONG: `cdef int arr[4] = [1, 2, 3, 4]`\n   - RIGHT: `cdef int arr[4] = {1, 2, 3, 4}`\n\n3. Use C standard library for performance:\n   - `from libc.math cimport cos, sin, sqrt, fabs, M_PI`\n   - `from libc.stdlib cimport malloc, free, qsort`\n   - `from libc.string cimport memset, memcpy, memcmp`\n   - `from libc.stdint cimport uint32_t, uint64_t`\n\n4. Memory allocation — always check NULL and free:\n   ```cython\n   cdef int *buf = <int *>malloc(n * sizeof(int))\n   if buf == NULL:\n       raise MemoryError()\n   # ... use buf ...\n   free(buf)\n   ```\n\n5. `nogil` blocks require pure C — no Python objects:\n   - Declare helpers as `cdef inline int func(int x) nogil:`\n   - Convert Python args to C types BEFORE the nogil block\n   - Use `noexcept` on nogil functions that don't raise\n\n6. No stray `}` after function definitions.\n\n7. No unused imports (`import cython` when not needed).\n\n## COMMON ERRORS AND FIXES\n\n- \"cdef statement not allowed here\" → move declarations to top of function\n- \"Calling gil-requiring function not allowed without gil\" → add `nogil` to helper signature\n- \"Coercion from Python not allowed without the GIL\" → cast Python arg to C type before nogil block\n- \"missing 1 required positional argument\" → use `def func(n=1000):` not typed default\n- \"Expected an identifier or literal\" → check for stray `}` after functions\n- \"Syntax error in C variable declaration\" → move array init inside function\n\n## OPTIMIZATION PATTERNS\n\n### Replace Python lists with C arrays\n```cython\ncdef int *dp = <int *>malloc((n + 1) * sizeof(int))\nmemset(dp, 0, (n + 1) * sizeof(int))\n# ... use dp[i] instead of list[i] ...\nfree(dp)\n```\n\n### Sorting with qsort\n```cython\ncdef int cmp_func(const void *a, const void *b) noexcept nogil:\n    return (<int *>a)[0] - (<int *>b)[0]\nqsort(arr, n, sizeof(int), cmp_func)\n```\n\n### C math instead of Python math\n```cython\nfrom libc.math cimport sin, cos, sqrt, M_PI\n# Direct C calls, no Python overhead\n```\n\n### Precompute outside loops\n```cython\ncdef double inv_n = 1.0 / n\nfor i in range(n):\n    result += values[i] * inv_n  # multiply instead of divide\n```\n\n## ITERATIVE PROCESS\n\n1. **Write**: Translate Python to Cython with basic `cdef` types and correct algorithm\n2. **Evaluate**: Call evaluate_cython — read ALL feedback sections\n3. **Fix compilation errors** first (nothing else matters until it compiles)\n4. **Fix test failures** next (correctness before performance)\n5. **Improve annotation score** — add more `cdef`, replace Python constructs with C\n6. **Maximize speedup** — use malloc arrays, nogil, precompute constants\n7. **Evaluate again** until all criteria are met",
+      "fields": [
+        {
+          "prefix": "Python Code:",
+          "description": "The Python source code to optimize"
+        },
+        {
+          "prefix": "Func Name:",
+          "description": "Name of the main function to optimize"
+        },
+        {
+          "prefix": "Description:",
+          "description": "Description of what the code does"
+        },
+        {
+          "prefix": "Trajectory:",
+          "description": "${trajectory}"
+        },
+        {
+          "prefix": "Next Thought:",
+          "description": "${next_thought}"
+        },
+        {
+          "prefix": "Next Tool Name:",
+          "description": "${next_tool_name}"
+        },
+        {
+          "prefix": "Next Tool Args:",
+          "description": "${next_tool_args}"
+        }
+      ]
+    },
+    "lm": null
+  },
+  "react.extract.predict": {
+    "traces": [],
+    "train": [],
+    "demos": [],
+    "signature": {
+      "instructions": "Translate Python code into optimized Cython (.pyx) that compiles and runs faster.\n\nYou will be provided with:\n1. `python_code` (str): The Python source code to optimize\n2. `func_name` (str): Name of the main function to optimize\n3. `description` (str): Description of what the code does\n4. `trajectory` (str): Previous iterations, interactions, and evaluation results (if any)\n\n## OUTPUT FORMAT\n\nRespond with EXACTLY the corresponding output fields. Your response must follow this strict structure, starting with the `[[ ## reasoning ## ]]` field, then the `[[ ## cython_code ## ]]` field, and ending with the `[[ ## completed ## ]]` marker:\n\n[[ ## reasoning ## ]]\n(Explain your step-by-step logic, address any previous compilation/test errors, and describe the Cython optimizations you will apply. Focus on C-types, bottleneck elimination, and algorithm equivalence.)\n\n[[ ## cython_code ## ]]\n(Provide the complete, final .pyx source code here. Do not wrap in markdown code blocks. DO NOT output JSON. Just the raw text of the code.)\n\n[[ ## completed ## ]]\n\n## COMPILER DIRECTIVES\n\nAlways include at the top of the file:\n# cython: boundscheck=False, wraparound=False, cdivision=True, language_level=3\n\n## CYTHON SYNTAX & OPTIMIZATION RULES\n\n1. **C Declarations**: ALL `cdef` declarations inside functions or methods must be located at the TOP of the function body.\n2. **Classes (`cdef class`)**: Convert Python classes to `cdef class` for performance.\n   - Use `cpdef` for methods that need to be evaluated fast in C but still be accessible from Python (e.g., `cpdef double eval(self):`).\n   - Use `def __cinit__(self, ...):` to initialize Python/Cython class objects. This allows fast C-level initialization of instance attributes.\n3. **Tuples and Recursion State Threading**: If the original Python logic dynamically threads state via tuples (e.g., `left, seed = recursive_func(depth - 1, seed + 1)`), **do NOT break the algorithm** by replacing it with separate, independent function calls to avoid tuples. Cython perfectly supports returning tuples via `cdef tuple func(...)`. Altering recursive state flows just to achieve static typing will inevitably cause algorithm correctness checks to fail.\n4. **Pure C/nogil Blocks**: `nogil` functions cannot interact with Python objects (such as creating tuples or instantiating `cdef class` abstractions). Limit `nogil` to purely numeric C types, pointers, and structs.\n\n## C VS PYTHON MATH DIFFERENCES (CRITICAL FOR CORRECTNESS)\n\nPython math features infinite precision and positive-modulo semantics. C math wraps at limits and uses signed modulo. Failure to handle this properly will result in silent algorithm correctness verification failures.\n- **Signed Overflow**: `seed * 2654435761` in Python evaluates EXACTLY in infinite precision. In C `int` (32-bit), it silently overflows into negative numbers and ruins the algorithm's state.\n- **Use Signed 64-bit Ints**: Python integers are inherently signed. To prevent 32-bit wrapping that breaks algorithm parity, cast multipliers or sequence variables to 64-bit **signed** integers. Use `<long long>` (e.g., `seed * <long long>2654435761`). \n- **Avoid Unsigned Types (`ULL`, `uint64_t`)** if negative values could ever be involved in modulo calculations limit checks. Python and C define modulo on negative numbers differently, so forcing unsigned integers will cause the math to diverge. Using `<long long>` safely maintains parity with Python integers.\n\n## COMMON LOGIC & DECOY ERRORS\n\n- *\"missing 1 required positional argument: 'n'\"* during Benchmark Warmup: \n  **THIS IS ALMOST ALWAYS A DECOY ERROR!** It indicates that your Cython function crashed (segfault, arithmetic error) OR produced mathematically incorrect outputs (silent overflow). The test harness caught this discrepancy and fell back to testing the original Python function which inherently lacks defaults, raising the TypeError. \n  **DO NOT ADD DEFAULT ARGUMENTS** (e.g., changing `def eval(n):` to `def eval(int n=1000):`). Instead, fix the silent C-level math overflows (e.g. inject `<long long>`), fix missing type declarations, or resolve pure logic errors. Standard typed signatures like `def func(int n):` are perfectly proper.\n- *\"Syntax error in C variable declaration\"* → Move array initialization or `cdef` declarations to the absolute start of the function.\n- *\"Assignment / Constructing Python object not allowed without gil\"* → You cannot instantiate `cdef class` objects, return tuples, or assign to python objects inside `nogil` functions. Either remove `nogil` or refactor the code to exclusively use pure C structural primitives.",
+      "fields": [
+        {
+          "prefix": "Python Code:",
+          "description": "The Python source code to optimize"
+        },
+        {
+          "prefix": "Func Name:",
+          "description": "Name of the main function to optimize"
+        },
+        {
+          "prefix": "Description:",
+          "description": "Description of what the code does"
+        },
+        {
+          "prefix": "Trajectory:",
+          "description": "${trajectory}"
+        },
+        {
+          "prefix": "Reasoning: Let's think step by step in order to",
+          "description": "${reasoning}"
+        },
+        {
+          "prefix": "Cython Code:",
+          "description": "Complete .pyx Cython source code"
+        }
+      ]
+    },
+    "lm": null
+  },
+  "metadata": {
+    "dependency_versions": {
+      "python": "3.12",
+      "dspy": "3.1.3",
+      "cloudpickle": "3.1"
+    }
+  }
+}
