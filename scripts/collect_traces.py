@@ -320,14 +320,19 @@ def main():
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
     # Resume: count existing traces per problem for this model
+    # Normalize model names: strip :free suffix so paid/free variants match
+    def normalize_model(m: str) -> str:
+        return m.removesuffix(":free")
+
     existing_counts = Counter()
+    model_norm = normalize_model(args.model)
     if output_path.exists():
         with open(output_path) as f:
             for line in f:
                 if line.strip():
                     try:
                         r = json.loads(line)
-                        if r.get("model", "") == args.model:
+                        if normalize_model(r.get("model", "")) == model_norm:
                             existing_counts[r.get("problem_id", "")] += 1
                     except json.JSONDecodeError:
                         pass
