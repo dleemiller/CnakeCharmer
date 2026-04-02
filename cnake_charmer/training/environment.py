@@ -8,6 +8,7 @@ The trainer handles the multi-turn loop: generate → tool call → execute → 
 
 import json
 import logging
+import multiprocessing
 
 from cnake_charmer.rewards.composite import composite_reward
 from cnake_charmer.training.prompts import format_feedback
@@ -30,6 +31,17 @@ def _exec_func(python_code: str, func_name: str):
     except Exception as e:
         logger.warning(f"Failed to exec Python for {func_name}: {e}")
         return None
+
+
+def _evaluate_worker(queue, env_args, code, annotate, test, benchmark):
+    """Worker for safe_evaluate — runs in a spawned subprocess."""
+    try:
+        env = CythonToolEnvironment()
+        env.reset(**env_args)
+        result = env.evaluate(code=code, annotate=annotate, test=test, benchmark=benchmark)
+        queue.put(result)
+    except Exception as e:
+        queue.put(f"## Error\n{type(e).__name__}: {e}")
 
 
 class CythonToolEnvironment:
@@ -385,6 +397,56 @@ class CythonToolEnvironment:
 
         cleanup_build(result)
         return "\n\n".join(sections)
+
+    def safe_evaluate(
+        self,
+        code: str,
+        annotate: bool = True,
+        test: bool = True,
+        benchmark: bool = True,
+        timeout: int = 60,
+    ) -> str:
+        """Run evaluate() in a subprocess to isolate segfaults and hangs.
+
+        Args:
+            code: Complete .pyx source code.
+            annotate: Run annotation analysis.
+            test: Run correctness tests.
+            benchmark: Measure speedup.
+            timeout: Max seconds before killing the worker.
+
+        Returns:
+            Markdown-formatted results, or error message on crash/timeout.
+        """
+        ctx = multiprocessing.get_context("spawn")
+        queue = ctx.Queue()
+
+        env_args = {
+            "python_code": self._python_code,
+            "func_name": self._func_name,
+            "test_cases": self._test_cases,
+            "benchmark_args": self._benchmark_args,
+        }
+
+        proc = ctx.Process(
+            target=_evaluate_worker,
+            args=(queue, env_args, code, annotate, test, benchmark),
+        )
+        proc.start()
+        proc.join(timeout=timeout)
+
+        if proc.is_alive():
+            proc.kill()
+            proc.join()
+            return "## Error\nEvaluation timed out."
+
+        if proc.exitcode != 0:
+            return f"## Error\nEvaluation crashed (exit code {proc.exitcode}). Try a different approach."
+
+        if not queue.empty():
+            return queue.get()
+
+        return "## Error\nEvaluation returned no result."
 
     def get_composite_score(self) -> float:
         """Compute final reward from the last submitted code."""

@@ -90,6 +90,17 @@ def main():
         default=16384,
         help="Max tokens per example; truncate reasoning then drop (default: 16384)",
     )
+    parser.add_argument(
+        "--min-iters",
+        type=int,
+        default=0,
+        help="Minimum tool-call iterations to include (default: 0, no filter)",
+    )
+    parser.add_argument(
+        "--require-finish",
+        action="store_true",
+        help="Only include traces that called finish (exclude force-exits)",
+    )
     args = parser.parse_args()
 
     input_paths = args.inputs or [str(p) for p in MASTER_FILES if p.exists()]
@@ -117,10 +128,32 @@ def main():
     logger.info("Scoring and augmenting traces...")
     scored = []
     skipped_no_problem = 0
+    skipped_no_finish = 0
+    skipped_min_iters = 0
     for trace in traces:
         sft = score_trace(trace)
         if sft < args.min_score:
             continue
+
+        # Filter: require finish tool call (exclude force-exits that hit max iterations)
+        traj = trace.get("trajectory", {})
+        if args.require_finish:
+            called_finish = any(v == "finish" for k, v in traj.items() if k.startswith("tool_name"))
+            if not called_finish:
+                skipped_no_finish += 1
+                continue
+
+        # Filter: minimum iterations (eval calls excluding finish)
+        # 1-eval traces are allowed if they scored very well (annotation >0.9, speedup >2x)
+        if args.min_iters > 0:
+            n_evals = sum(1 for k, v in traj.items() if k.startswith("tool_name") and v != "finish")
+            if n_evals < args.min_iters:
+                # Allow high-quality 1-shot traces through
+                if n_evals == 1 and sft >= 0.9:
+                    pass  # keep it — model nailed it first try
+                else:
+                    skipped_min_iters += 1
+                    continue
 
         pid = trace.get("problem_id", "")
         problem = problems.get(pid)
@@ -138,7 +171,10 @@ def main():
         }
         scored.append(trace)
 
-    logger.info(f"  {len(scored)} traces passed (skipped {skipped_no_problem} unknown problem_ids)")
+    logger.info(
+        f"  {len(scored)} traces passed (skipped {skipped_no_problem} unknown problem_ids, "
+        f"{skipped_no_finish} no finish, {skipped_min_iters} too few iters)"
+    )
 
     # Classify thinking vs non-thinking
     def has_thinking(trace):
@@ -175,7 +211,6 @@ def main():
     for trace in best:
         trace["_thinking"] = has_thinking(trace)
 
-    models = sorted({t.get("model", "unknown") for t in best})
     problems_covered = len(all_pids)
     n_thinking = sum(1 for t in best if t["_thinking"])
     n_nothink = len(best) - n_thinking
@@ -183,7 +218,29 @@ def main():
         f"Top-{args.top_k} selection: {len(best)} examples from {problems_covered} problems"
     )
     logger.info(f"  thinking={n_thinking}, nothink={n_nothink}")
-    logger.info(f"Models: {models}")
+
+    # Per-model breakdown
+    from collections import Counter
+
+    raw_counts = Counter(t.get("model", "?") for t in traces)
+    sel_models = defaultdict(lambda: {"total": 0, "think": 0, "nothink": 0})
+    for t in best:
+        m = t.get("model", "?")
+        sel_models[m]["total"] += 1
+        sel_models[m]["think" if t["_thinking"] else "nothink"] += 1
+
+    logger.info("Per-model breakdown:")
+    logger.info(
+        f"  {'Model':<35} {'Traces':>6} {'Accept':>6} {'Rate':>5} {'Think':>5} {'NoThk':>5}"
+    )
+    for model in sorted(sel_models, key=lambda m: raw_counts[m], reverse=True):
+        s = sel_models[model]
+        r = raw_counts[model]
+        rate = f"{s['total'] / r * 100:.0f}%" if r > 0 else "-"
+        name = model.replace("openrouter/", "").replace("openai/", "")
+        logger.info(
+            f"  {name:<35} {r:>6} {s['total']:>6} {rate:>5} {s['think']:>5} {s['nothink']:>5}"
+        )
 
     # Convert to SFT format
     examples = to_sft_examples(best, tools=tools)
