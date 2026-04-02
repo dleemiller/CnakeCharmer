@@ -82,6 +82,23 @@ def merge_and_save(base_model_id: str, adapter_path: str, output_dir: str):
     logger.info(f"Saving merged model to {output_dir}...")
     model.save_pretrained(output_dir, safe_serialization=True, max_shard_size="5GB")
 
+    # Remove quantization_config from config.json — weights are bf16 after merge,
+    # but config still says mxfp4. This mismatch causes vLLM to use wrong kernels.
+    # (Matches what Unsloth does in _remove_quantization_config)
+    config_path = output_dir / "config.json"
+    if config_path.exists():
+        config_data = json.loads(config_path.read_text())
+        removed = []
+        if "quantization_config" in config_data:
+            del config_data["quantization_config"]
+            removed.append("quantization_config")
+        if "transformers_version" in config_data:
+            del config_data["transformers_version"]
+            removed.append("transformers_version")
+        if removed:
+            config_path.write_text(json.dumps(config_data, indent=2))
+            logger.info(f"Patched config.json: removed {', '.join(removed)}")
+
     # Copy tokenizer + chat template from base model cache (avoids format mismatch)
     base_cache = Path(
         snapshot_download(base_model_id, allow_patterns=["tokenizer*", "chat_template*"])
