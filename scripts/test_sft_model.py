@@ -1,8 +1,8 @@
 """
 Test the SFT model on unseen problems with real tool execution.
 
-Runs a ReAct loop against the model via OpenAI API, calling evaluate_cython
-for real compilation/testing/benchmarking.
+Uses the OpenAI Responses API (/v1/responses) which correctly handles
+gpt-oss Harmony format tool calls (unlike /v1/chat/completions).
 
 Usage:
     # Test on all unseen problems (not in SFT dataset)
@@ -18,7 +18,7 @@ Usage:
     uv run --no-sync python scripts/test_sft_model.py --n 10
 
     # Custom model endpoint
-    uv run --no-sync python scripts/test_sft_model.py --base-url http://localhost:8003/v1 --model gpt-oss-20b-cython
+    uv run --no-sync python scripts/test_sft_model.py --base-url http://localhost:8003/v1
 """
 
 import argparse
@@ -29,7 +29,7 @@ import re
 import sys
 from pathlib import Path
 
-from openai import OpenAI
+import httpx
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
@@ -42,6 +42,25 @@ logger = logging.getLogger(__name__)
 TOOLS_FILE = Path("data/tools.json")
 SYSTEM_PROMPT_FILE = Path("data/system_prompt.txt")
 SFT_DATASET = Path("data/sft_dataset.jsonl")
+
+# Responses API tool format
+RESPONSE_TOOLS = [
+    {
+        "type": "function",
+        "name": "evaluate_cython",
+        "description": (
+            "Compile, analyze, test, and benchmark Cython code in one step. "
+            "Returns compilation status, annotation score, correctness tests, and speedup."
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "code": {"type": "string", "description": "Complete .pyx source code."},
+            },
+            "required": ["code"],
+        },
+    }
+]
 
 
 def parse_metrics(result: str) -> dict:
@@ -68,17 +87,16 @@ def parse_metrics(result: str) -> dict:
 
 
 def run_problem(
-    client,
+    base_url,
     model,
     system_prompt,
-    tools,
     problem,
     nothink=False,
     max_iters=5,
     verbose=True,
     reasoning_effort="medium",
 ):
-    """Run ReAct loop on a single problem. Returns dict with results."""
+    """Run ReAct loop using the Responses API (/v1/responses)."""
     env = CythonToolEnvironment()
     env.reset(
         python_code=problem.python_code,
@@ -95,59 +113,60 @@ def run_problem(
     if nothink:
         user_content += " /nothink"
 
-    messages = [
-        {"role": "system", "content": system_prompt},
-        {"role": "user", "content": user_content},
-    ]
+    # Build Responses API request
+    request = {
+        "model": model,
+        "instructions": system_prompt,
+        "input": user_content,
+        "tools": RESPONSE_TOOLS,
+        "max_output_tokens": 8192,
+        "temperature": 1.0,
+        "top_p": 1.0,
+    }
+    if reasoning_effort:
+        request["reasoning"] = {"effort": reasoning_effort}
 
     best_metrics = None
     iterations_used = 0
     called_finish = False
+    client = httpx.Client(base_url=base_url, timeout=120)
 
     for iteration in range(max_iters):
         try:
-            extra_body = {}
-            if reasoning_effort:
-                extra_body["chat_template_kwargs"] = {"effort": reasoning_effort}
-            response = client.chat.completions.create(
-                model=model,
-                messages=messages,
-                tools=tools,
-                max_tokens=8192,
-                temperature=1.0,
-                top_p=1.0,
-                timeout=60,
-                extra_body=extra_body if extra_body else None,
-            )
+            resp = client.post("/responses", json=request)
+            resp.raise_for_status()
+            result = resp.json()
         except Exception as e:
             if verbose:
                 logger.warning(f"  iter {iteration}: API error: {e}")
             break
 
-        msg = response.choices[0].message
+        # Process output items
+        tool_call = None
+        for item in result.get("output", []):
+            if item.get("type") == "function_call" and item.get("name") == "evaluate_cython":
+                tool_call = item
 
-        if not msg.tool_calls:
+        if not tool_call:
             if verbose:
-                logger.info(f"  iter {iteration}: stop ({response.choices[0].finish_reason})")
+                logger.info(f"  iter {iteration}: no tool call (status={result.get('status')})")
             break
 
-        tc = msg.tool_calls[0]
-        fn = tc.function
-        args = json.loads(fn.arguments) if isinstance(fn.arguments, str) else fn.arguments
-
-        if "finish" in fn.name:
-            called_finish = True
-            if verbose:
-                logger.info(f"  iter {iteration}: finish()")
-            break
-
-        code = args.get("code", "")
+        # Execute the tool
         try:
-            result = env.safe_evaluate(code=code)
-        except Exception as e:
-            result = f"## Error\n{e}"
+            args = json.loads(tool_call["arguments"])
+            code = args.get("code", "")
+        except (json.JSONDecodeError, KeyError):
+            if verbose:
+                logger.warning(f"  iter {iteration}: bad tool args")
+            break
 
-        metrics = parse_metrics(result)
+        try:
+            eval_result = env.safe_evaluate(code=code)
+        except Exception as e:
+            eval_result = f"## Error\n{e}"
+
+        metrics = parse_metrics(eval_result)
         iterations_used = iteration + 1
 
         if best_metrics is None or (
@@ -167,8 +186,23 @@ def run_problem(
                 f"ann {metrics['annotation']:.2f} | {metrics['speedup']:.1f}x"
             )
 
-        messages.append(msg.model_dump())
-        messages.append({"role": "tool", "tool_call_id": tc.id, "content": result})
+        # Continue conversation with tool result
+        request["input"] = [
+            {"type": "message", "role": "user", "content": user_content},
+        ]
+        # Add previous output items
+        for item in result.get("output", []):
+            request["input"].append(item)
+        # Add tool result
+        request["input"].append(
+            {
+                "type": "function_call_output",
+                "call_id": tool_call.get("call_id", ""),
+                "output": eval_result,
+            }
+        )
+
+    client.close()
 
     return {
         "problem_id": problem.problem_id,
@@ -192,7 +226,6 @@ def main():
     parser = argparse.ArgumentParser(description="Test SFT model on Cython problems")
     parser.add_argument("--base-url", default="http://localhost:8003/v1")
     parser.add_argument("--model", default="gpt-oss-20b-cython")
-    parser.add_argument("--api-key", default="empty")
     parser.add_argument("--problem", default=None, help="Specific problem ID to test")
     parser.add_argument("--n", type=int, default=None, help="Test N random unseen problems")
     parser.add_argument("--nothink", action="store_true", help="Use /nothink mode")
@@ -210,9 +243,7 @@ def main():
     parser.add_argument("--seed", type=int, default=42)
     args = parser.parse_args()
 
-    client = OpenAI(base_url=args.base_url, api_key=args.api_key)
     system_prompt = SYSTEM_PROMPT_FILE.read_text().strip()
-    tools = json.loads(TOOLS_FILE.read_text())
 
     # Load problems
     all_problems = {p.problem_id: p for p in discover_pairs()}
@@ -223,7 +254,6 @@ def main():
             return
         test_problems = [all_problems[args.problem]]
     else:
-        # Filter to unseen by default
         if not args.include_seen and SFT_DATASET.exists():
             with open(SFT_DATASET) as f:
                 sft_pids = set(json.loads(line).get("problem_id") for line in f)
@@ -241,7 +271,7 @@ def main():
 
     logger.info(
         f"Testing {len(test_problems)} problems | model={args.model} | "
-        f"nothink={args.nothink} | max_iters={args.max_iters}"
+        f"nothink={args.nothink} | effort={args.effort} | max_iters={args.max_iters}"
     )
 
     results = []
@@ -249,10 +279,9 @@ def main():
         logger.info(f"\n[{i + 1}/{len(test_problems)}] {problem.problem_id} ({problem.difficulty})")
         try:
             result = run_problem(
-                client,
+                args.base_url,
                 args.model,
                 system_prompt,
-                tools,
                 problem,
                 nothink=args.nothink,
                 max_iters=args.max_iters,
@@ -284,7 +313,6 @@ def main():
 
     compiled = sum(1 for r in results if r["compiled"])
     correct = sum(1 for r in results if r["correct"])
-    finished = sum(1 for r in results if r["called_finish"])
     speedups = [r["speedup"] for r in results if r["correct"] and r["speedup"] > 0]
     annotations = [r["annotation"] for r in results if r["correct"]]
     iters_list = [r["iterations"] for r in results]
@@ -295,7 +323,6 @@ def main():
     print(f"{'=' * 60}")
     print(f"  Compiled:    {compiled}/{n} ({compiled / n * 100:.0f}%)")
     print(f"  Correct:     {correct}/{n} ({correct / n * 100:.0f}%)")
-    print(f"  Called finish: {finished}/{n} ({finished / n * 100:.0f}%)")
     print(f"  Tool calls:  avg={avg_iters:.1f}, min={min(iters_list)}, max={max(iters_list)}")
     if speedups:
         speedups.sort()
@@ -315,7 +342,10 @@ def main():
         dc = sum(1 for r in dr if r["correct"])
         ds = [r["speedup"] for r in dr if r["correct"] and r["speedup"] > 0]
         di = [r["iterations"] for r in dr]
-        line = f"  {diff}: {dc}/{len(dr)} correct, calls avg={sum(di) / len(di):.1f} min={min(di)} max={max(di)}"
+        line = (
+            f"  {diff}: {dc}/{len(dr)} correct, "
+            f"calls avg={sum(di) / len(di):.1f} min={min(di)} max={max(di)}"
+        )
         if ds:
             line += f", median speedup {sorted(ds)[len(ds) // 2]:.1f}x"
         print(line)
