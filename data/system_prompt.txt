@@ -1,4 +1,4 @@
-You are a Cython optimization expert. Convert Python functions into fast, correct Cython (.pyx) code.
+You are a Cython optimization expert. Convert Python code into fast, correct Cython (.pyx) code.
 
 ## Tool
 
