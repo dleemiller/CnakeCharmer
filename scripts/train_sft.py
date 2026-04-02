@@ -54,21 +54,140 @@ def load_dataset_jsonl(path: str) -> Dataset:
     return Dataset.from_list(examples)
 
 
-def merge_and_save(base_model_id: str, adapter_path: str, output_dir: str):
-    """Merge LoRA adapter into base model and save.
+def _save_sharded(tensors: dict, output_dir: Path, max_shard_bytes: int = 5 * 1024**3):
+    """Save a dict of tensors as sharded safetensors with index."""
+    from safetensors.torch import save_file
 
-    Loads the base model in native MXFP4 (not dequantized) so the merged
-    model stays compact. Copies tokenizer directly from the base model
-    cache to avoid format mismatches between transformers versions.
+    shards = []
+    current_shard = {}
+    current_size = 0
+    for name, tensor in tensors.items():
+        tensor_size = tensor.numel() * tensor.element_size()
+        if current_size + tensor_size > max_shard_bytes and current_shard:
+            shards.append(current_shard)
+            current_shard = {}
+            current_size = 0
+        current_shard[name] = tensor.contiguous().cpu()
+        current_size += tensor_size
+    if current_shard:
+        shards.append(current_shard)
+
+    weight_map = {}
+    total_size = 0
+    for i, shard in enumerate(shards):
+        shard_name = f"model-{i + 1:05d}-of-{len(shards):05d}.safetensors"
+        save_file(shard, str(output_dir / shard_name))
+        for name, tensor in shard.items():
+            weight_map[name] = shard_name
+            total_size += tensor.numel() * tensor.element_size()
+        logger.info(f"Saved {shard_name} ({len(shard)} tensors)")
+
+    index = {"metadata": {"total_size": total_size}, "weight_map": weight_map}
+    (output_dir / "model.safetensors.index.json").write_text(json.dumps(index, indent=2))
+
+
+def _copy_base_files(base_model_id: str, output_dir: Path, keep_quant_config: bool):
+    """Copy config.json, tokenizer, chat template from base model cache.
+
+    Don't use model.config.to_dict() — it renames rope_scaling to rope_parameters
+    and nests rope_theta inside it, causing vLLM warnings.
     """
-    output_dir = Path(output_dir)
+    base_cache = Path(
+        snapshot_download(
+            base_model_id,
+            allow_patterns=["config.json", "generation_config*", "tokenizer*", "chat_template*"],
+        )
+    )
+    base_config = json.loads((base_cache / "config.json").read_text())
+    if not keep_quant_config:
+        base_config.pop("quantization_config", None)
+    base_config.pop("transformers_version", None)
+    (output_dir / "config.json").write_text(json.dumps(base_config, indent=2))
+    for pattern in ["generation_config*", "tokenizer*", "chat_template*"]:
+        for f in base_cache.glob(pattern):
+            shutil.copy2(f, output_dir / f.name)
+    if SYSTEM_PROMPT_FILE.exists():
+        shutil.copy2(SYSTEM_PROMPT_FILE, output_dir / "system_prompt.txt")
+
+
+def _quantize_to_mxfp4(bf16_dir: Path, output_dir: Path, base_model_id: str):
+    """Re-quantize a bf16 merged model to MXFP4, matching the base model format.
+
+    Uses OpenAI's triton kernels (downcast_to_mxfp_torch) to quantize expert
+    layers. Non-expert weights (attention, norms, embeddings) are copied as-is.
+    The serialized format matches openai/gpt-oss-20b exactly so vLLM can load
+    it with the Marlin MXFP4 backend.
+    """
+    from collections import defaultdict
+
+    from safetensors import safe_open
+    from transformers.integrations.hub_kernels import get_kernel
+
+    tkh = get_kernel("kernels-community/gpt-oss-triton-kernels")
+    downcast = tkh.numerics_details.mxfp.downcast_to_mxfp_torch
+
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    logger.info(f"Loading base model {base_model_id} (native MXFP4)...")
+    bf16_index = json.loads((bf16_dir / "model.safetensors.index.json").read_text())
+    shard_keys = defaultdict(list)
+    for key, shard in bf16_index["weight_map"].items():
+        shard_keys[shard].append(key)
+
+    # Collect all output tensors, then save sharded
+    all_tensors = {}
+    for shard_file in sorted(shard_keys.keys()):
+        logger.info(f"Quantizing {shard_file}...")
+        f = safe_open(str(bf16_dir / shard_file), framework="pt")
+
+        for key in sorted(shard_keys[shard_file]):
+            # Expert proj weights → quantize to MXFP4 blocks + scales
+            if ".mlp.experts." in key and key.endswith(("gate_up_proj", "down_proj")):
+                layer_name = key.rsplit(".", 1)[0]
+                proj = key.rsplit(".", 1)[1]
+
+                w = f.get_tensor(key).cuda()  # [experts, in, out]
+                w_t = w.transpose(-1, -2).contiguous()  # [experts, out, in]
+                blocks, scales = downcast(w_t.to(torch.bfloat16), torch.uint8, axis=2)
+                blocks = blocks.reshape(blocks.shape[0], blocks.shape[1], -1, 16).cpu()
+                scales = scales.cpu()
+
+                all_tensors[f"{layer_name}.{proj}_blocks"] = blocks
+                all_tensors[f"{layer_name}.{proj}_scales"] = scales
+
+                del w, w_t, blocks, scales
+                torch.cuda.empty_cache()
+            else:
+                # Non-expert weights pass through unchanged
+                all_tensors[key] = f.get_tensor(key)
+
+    _save_sharded(all_tensors, output_dir)
+    _copy_base_files(base_model_id, output_dir, keep_quant_config=True)
+    logger.info(f"MXFP4 model saved to {output_dir}")
+
+
+def merge_and_save(base_model_id: str, adapter_path: str, output_dir: str):
+    """Merge LoRA adapter into base model and save as both bf16 and MXFP4.
+
+    Pipeline:
+      1. Load base model dequantized to bf16
+      2. Load and merge LoRA adapter
+      3. Save bf16 merged model (for GRPO training)
+      4. Re-quantize expert layers to MXFP4 (for serving and distribution)
+
+    The bf16 save uses manual state_dict serialization because save_pretrained
+    fails on dequantized MXFP4 models (NotImplementedError in revert_weight_conversion).
+    """
+    bf16_dir = Path(output_dir)
+    mxfp4_dir = Path(str(output_dir).replace("-merged", "-mxfp4"))
+    bf16_dir.mkdir(parents=True, exist_ok=True)
+
+    # Step 1-2: Load dequantized base + merge LoRA
+    logger.info(f"Loading base model {base_model_id} (dequantized to bf16)...")
     base_model = AutoModelForCausalLM.from_pretrained(
         base_model_id,
         attn_implementation="eager",
-        torch_dtype="auto",
+        torch_dtype=torch.bfloat16,
+        quantization_config=Mxfp4Config(dequantize=True),
         use_cache=True,
         device_map="auto",
     )
@@ -79,40 +198,20 @@ def merge_and_save(base_model_id: str, adapter_path: str, output_dir: str):
     logger.info("Merging adapter into base model...")
     model = model.merge_and_unload()
 
-    logger.info(f"Saving merged model to {output_dir}...")
-    model.save_pretrained(output_dir, safe_serialization=True, max_shard_size="5GB")
+    # Step 3: Save bf16
+    logger.info(f"Saving bf16 merged model to {bf16_dir}...")
+    _save_sharded(model.state_dict(), bf16_dir)
+    _copy_base_files(base_model_id, bf16_dir, keep_quant_config=False)
+    logger.info(f"bf16 model saved to {bf16_dir}")
 
-    # Remove quantization_config from config.json — weights are bf16 after merge,
-    # but config still says mxfp4. This mismatch causes vLLM to use wrong kernels.
-    # (Matches what Unsloth does in _remove_quantization_config)
-    config_path = output_dir / "config.json"
-    if config_path.exists():
-        config_data = json.loads(config_path.read_text())
-        removed = []
-        if "quantization_config" in config_data:
-            del config_data["quantization_config"]
-            removed.append("quantization_config")
-        if "transformers_version" in config_data:
-            del config_data["transformers_version"]
-            removed.append("transformers_version")
-        if removed:
-            config_path.write_text(json.dumps(config_data, indent=2))
-            logger.info(f"Patched config.json: removed {', '.join(removed)}")
+    # Free the model to reclaim GPU memory for quantization
+    del model, base_model
+    torch.cuda.empty_cache()
 
-    # Copy tokenizer + chat template from base model cache (avoids format mismatch)
-    base_cache = Path(
-        snapshot_download(base_model_id, allow_patterns=["tokenizer*", "chat_template*"])
-    )
-    for pattern in ["tokenizer*", "chat_template*"]:
-        for f in base_cache.glob(pattern):
-            shutil.copy2(f, output_dir / f.name)
-    logger.info("Copied tokenizer from base model cache")
-
-    # Copy system prompt
-    if SYSTEM_PROMPT_FILE.exists():
-        shutil.copy2(SYSTEM_PROMPT_FILE, output_dir / "system_prompt.txt")
-
-    logger.info(f"Done! Merged model saved to {output_dir}")
+    # Step 4: Re-quantize to MXFP4
+    logger.info("Re-quantizing to MXFP4...")
+    _quantize_to_mxfp4(bf16_dir, mxfp4_dir, base_model_id)
+    logger.info(f"Done! bf16: {bf16_dir}, MXFP4: {mxfp4_dir}")
 
 
 def train(args):
