@@ -253,7 +253,10 @@ def train(args):
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
 
-    # LoRA targeting attention (all layers) + experts (every 4th layer)
+    # LoRA on all linear layers + expert MoE layers at every 4th layer.
+    # target_parameters adds LoRA to expert gate_up_proj/down_proj on dequantized model.
+    # (Warning "no parameter was matched" appears only during merge with non-dequantized model;
+    #  during training with dequantize=True, experts are standard modules and it works.)
     lora_alpha = args.lora_rank * 2
     expert_targets = []
     for layer in [3, 7, 11, 15, 19, 23]:
@@ -284,7 +287,7 @@ def train(args):
         gradient_checkpointing_kwargs={"use_reentrant": False},
         bf16=True,
         logging_steps=1,
-        save_steps=100,
+        save_steps=25,
         save_total_limit=3,
         report_to=["trackio"],
         log_level="info",
@@ -304,13 +307,13 @@ def train(args):
     trainer.train()
     logger.info("Training complete!")
 
-    # Save adapter from best checkpoint
+    # Merge the final checkpoint (highest step number)
     if not args.no_merge:
         output_dir = Path(args.output)
         checkpoints = sorted(
             output_dir.glob("checkpoint-*"), key=lambda p: int(p.name.split("-")[1])
         )
-        adapter_path = str(checkpoints[0]) if checkpoints else args.output
+        adapter_path = str(checkpoints[-1]) if checkpoints else args.output
 
         merge_dir = str(output_dir) + "-merged"
         merge_and_save(args.model, adapter_path, merge_dir)
