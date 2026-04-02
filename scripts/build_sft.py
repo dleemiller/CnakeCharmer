@@ -30,8 +30,10 @@ logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
 logger = logging.getLogger(__name__)
 
 TRACES_DIR = Path("data/traces")
-MASTER_FILES = [TRACES_DIR / "master_thinking.jsonl", TRACES_DIR / "master_nothink.jsonl"]
+# master_nothink.jsonl excluded: all models there were thinking models with uncaptured reasoning
+MASTER_FILES = [TRACES_DIR / "master_thinking.jsonl"]
 TOOLS_FILE = Path("data/tools.json")
+SYSTEM_PROMPT_FILE = Path("data/system_prompt.txt")
 
 
 def load_traces(paths: list[str]) -> list[dict]:
@@ -186,6 +188,26 @@ def main():
     # Convert to SFT format
     examples = to_sft_examples(best, tools=tools)
     logger.info(f"Built {len(examples)} SFT examples")
+
+    # Inject system prompt and /nothink tag
+    system_prompt = None
+    if SYSTEM_PROMPT_FILE.exists():
+        system_prompt = SYSTEM_PROMPT_FILE.read_text().strip()
+        logger.info(f"Loaded system prompt ({len(system_prompt)} chars)")
+    else:
+        logger.warning(f"No system prompt at {SYSTEM_PROMPT_FILE}")
+
+    for ex, trace in zip(examples, best, strict=False):
+        msgs = ex["messages"]
+        # Prepend system prompt
+        if system_prompt:
+            msgs.insert(0, {"role": "system", "content": system_prompt})
+        # Add /nothink to first user message for non-thinking examples
+        if not trace.get("_thinking", False):
+            for msg in msgs:
+                if msg.get("role") == "user":
+                    msg["content"] = (msg.get("content") or "") + " /nothink"
+                    break
 
     # Patch malformed finish calls: model passed code args to finish, causing DSPy error.
     # Strip args and clear error content so the trace looks like a clean finish.
