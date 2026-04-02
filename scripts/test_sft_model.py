@@ -131,6 +131,9 @@ def run_problem(
     called_finish = False
     client = httpx.Client(base_url=base_url, timeout=120)
 
+    # Conversation history accumulates across turns
+    conversation = []
+
     for iteration in range(max_iters):
         try:
             resp = client.post("/responses", json=request)
@@ -186,21 +189,22 @@ def run_problem(
                 f"ann {metrics['annotation']:.2f} | {metrics['speedup']:.1f}x"
             )
 
-        # Continue conversation with tool result
-        request["input"] = [
-            {"type": "message", "role": "user", "content": user_content},
-        ]
-        # Add previous output items
+        # Accumulate conversation history for next turn
         for item in result.get("output", []):
-            request["input"].append(item)
-        # Add tool result
-        request["input"].append(
+            conversation.append(item)
+        conversation.append(
             {
                 "type": "function_call_output",
                 "call_id": tool_call.get("call_id", ""),
                 "output": eval_result,
             }
         )
+
+        # Rebuild input with full history
+        request["input"] = [
+            {"type": "message", "role": "user", "content": user_content},
+            *conversation,
+        ]
 
     client.close()
 

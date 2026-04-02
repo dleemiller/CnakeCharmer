@@ -23,9 +23,6 @@ from collections import Counter, defaultdict
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
-sys.path.insert(0, str(Path(__file__).parent.parent.parent / "dspy-data-module" / "src"))
-
-from dspy_data.sft import to_sft_examples
 
 from cnake_charmer.dataset.loader import discover_pairs
 from cnake_charmer.training.sft_scoring import parse_trace_metrics, score_trace
@@ -244,11 +241,7 @@ def main():
             f"  {name:<35} {r:>6} {s['total']:>6} {rate:>5} {s['think']:>5} {s['nothink']:>5}"
         )
 
-    # Convert to SFT format
-    examples = to_sft_examples(best, tools=tools)
-    logger.info(f"Built {len(examples)} SFT examples")
-
-    # Inject system prompt and /nothink tag
+    # Load system prompt and tokenizer for Harmony rendering
     system_prompt = None
     if SYSTEM_PROMPT_FILE.exists():
         system_prompt = SYSTEM_PROMPT_FILE.read_text().strip()
@@ -256,169 +249,166 @@ def main():
     else:
         logger.warning(f"No system prompt at {SYSTEM_PROMPT_FILE}")
 
-    for ex, trace in zip(examples, best, strict=False):
-        msgs = ex["messages"]
-        # Prepend system prompt
-        if system_prompt:
-            msgs.insert(0, {"role": "system", "content": system_prompt})
-        # Add tools column so TRL passes tool schemas to the chat template
-        if tools:
-            ex["tools"] = tools
-        # Add /nothink to first user message for non-thinking examples
-        if not trace.get("_thinking", False):
-            for msg in msgs:
-                if msg.get("role") == "user":
-                    msg["content"] = (msg.get("content") or "") + " /nothink"
-                    break
+    from transformers import AutoTokenizer
 
-    # Fix Harmony format: move content to "thinking" field on assistant messages with tool_calls.
-    # The Harmony chat template renders "thinking" as an analysis channel message before the tool call.
-    # Without this, the template silently drops the content (reasoning/thinking) from tool-call messages.
-    thinking_moved = 0
-    for ex in examples:
-        for msg in ex["messages"]:
-            if msg.get("role") == "assistant" and msg.get("tool_calls") and msg.get("content"):
-                msg["thinking"] = msg.pop("content")
-                thinking_moved += 1
-    if thinking_moved:
-        logger.info(
-            f"Moved content→thinking on {thinking_moved} assistant+tool_call messages (Harmony format)"
+    tokenizer = AutoTokenizer.from_pretrained("openai/gpt-oss-20b")
+
+    # Compute median reasoning length for thinking traces to set medium/high threshold
+    reasoning_lengths = []
+    for trace in best:
+        if not trace.get("_thinking"):
+            continue
+        traj = trace.get("trajectory", {})
+        total = sum(
+            len(v) for k, v in traj.items() if k.startswith("reasoning_") and isinstance(v, str)
+        )
+        if total > 0:
+            reasoning_lengths.append(total)
+    median_reasoning = (
+        sorted(reasoning_lengths)[len(reasoning_lengths) // 2] if reasoning_lengths else 0
+    )
+    logger.info(f"Median reasoning length: {median_reasoning} chars (for medium/high threshold)")
+
+    # Build messages directly from traces and render to Harmony text.
+    # Key design decisions for Harmony format:
+    # - Thinking traces use reasoning_N for analysis channel (deep reasoning) → medium/high effort
+    # - Nothink traces use thought_N for analysis channel (brief planning) → low effort
+    # - NO final standalone code message — end with finish tool call so all analysis channels render
+    #   (Harmony template drops analysis when a future non-tool-call assistant message exists)
+    rendered = []
+    for trace in best:
+        traj = trace.get("trajectory", {})
+        is_thinking = trace.get("_thinking", False)
+        inputs = trace.get("inputs", {})
+
+        # Determine reasoning effort
+        if not is_thinking:
+            effort = "low"
+        else:
+            total_reasoning = sum(
+                len(v) for k, v in traj.items() if k.startswith("reasoning_") and isinstance(v, str)
+            )
+            effort = "high" if total_reasoning > median_reasoning else "medium"
+
+        # Build messages
+        msgs = []
+        if system_prompt:
+            msgs.append({"role": "system", "content": system_prompt})
+
+        # User message
+        user_content = "\n".join(
+            f"{k}: {v}" for k, v in inputs.items() if k not in ("test_cases", "benchmark_args")
+        )
+        msgs.append({"role": "user", "content": user_content})
+
+        # Tool-calling turns from trajectory
+        n_iters = trace.get("num_iterations", 0)
+        for i in range(n_iters):
+            tool_name = traj.get(f"tool_name_{i}")
+            tool_args = traj.get(f"tool_args_{i}", {})
+            observation = traj.get(f"observation_{i}", "")
+
+            if not tool_name:
+                continue
+
+            # Select reasoning for analysis channel:
+            # - thinking traces: use reasoning_N (deep <think> content, stripped of tags)
+            # - nothink traces: use thought_N (brief ReAct planning)
+            if is_thinking:
+                reasoning = traj.get(f"reasoning_{i}", "")
+                # Strip <think> tags if present
+                reasoning = reasoning.replace("<think>\n", "").replace("\n</think>", "").strip()
+                if not reasoning:
+                    reasoning = traj.get(f"thought_{i}", "")
+            else:
+                reasoning = traj.get(f"thought_{i}", "")
+
+            # Assistant message with tool call + thinking for analysis channel
+            assistant_msg = {
+                "role": "assistant",
+                "tool_calls": [
+                    {
+                        "id": f"call_{i}",
+                        "type": "function",
+                        "function": {
+                            "name": tool_name,
+                            "arguments": tool_args if tool_args else {},
+                        },
+                    }
+                ],
+            }
+            if reasoning:
+                assistant_msg["content"] = reasoning
+
+            # Patch malformed finish calls
+            if tool_name == "finish" and "Execution error" in observation:
+                observation = "Completed."
+                assistant_msg["tool_calls"][0]["function"]["arguments"] = {}
+
+            msgs.append(assistant_msg)
+            msgs.append(
+                {
+                    "role": "tool",
+                    "tool_call_id": f"call_{i}",
+                    "name": tool_name,
+                    "content": observation,
+                }
+            )
+
+        # NO final standalone assistant message — this ensures all analysis channels render
+
+        # Render to Harmony text
+        text = tokenizer.apply_chat_template(
+            msgs,
+            tools=tools,
+            tokenize=False,
+            reasoning_effort=effort,
         )
 
-    # Patch malformed finish calls: model passed code args to finish, causing DSPy error.
-    # Strip args and clear error content so the trace looks like a clean finish.
-    patched = 0
-    for ex in examples:
-        msgs = ex["messages"]
-        for i, msg in enumerate(msgs):
-            if (
-                msg.get("role") == "tool"
-                and msg.get("name") == "finish"
-                and "Execution error" in (msg.get("content") or "")
-            ):
-                msg["content"] = "Completed."
-                asst = msgs[i - 1]
-                for tc in asst.get("tool_calls", []):
-                    if tc.get("function", {}).get("name") == "finish":
-                        tc["function"]["arguments"] = {}
-                patched += 1
-    if patched:
-        logger.info(f"Patched {patched} malformed finish calls")
-
-    # Attach trace metadata to each example
-    METADATA_KEYS = (
-        "model",
-        "prompt_id",
-        "problem_id",
-        "func_name",
-        "category",
-        "difficulty",
-        "num_iterations",
-    )
-    for ex, trace in zip(examples, best, strict=False):
-        for k in METADATA_KEYS:
+        # Attach metadata
+        record = {"text": text}
+        for k in (
+            "model",
+            "prompt_id",
+            "problem_id",
+            "func_name",
+            "category",
+            "difficulty",
+            "num_iterations",
+        ):
             if k in trace:
-                ex[k] = trace[k]
-        ex["sft_score"] = trace["reward"]
-        ex["speedup"] = parse_trace_metrics(trace).get("speedup", 0.0)
-        ex["thinking"] = trace.get("_thinking", False)
+                record[k] = trace[k]
+        record["sft_score"] = trace["reward"]
+        record["speedup"] = parse_trace_metrics(trace).get("speedup", 0.0)
+        record["thinking"] = is_thinking
+        record["reasoning_effort"] = effort
+        rendered.append(record)
 
-    # Token counting and filtering
-    import re as _re
+    examples = rendered
+    logger.info(f"Rendered {len(examples)} examples to Harmony text")
 
-    import tiktoken
+    # Token counting using the actual tokenizer
+    def count_tokens(text: str) -> int:
+        return len(tokenizer.encode(text))
 
-    enc = tiktoken.get_encoding("o200k_base")
-
-    def count_tokens(ex: dict) -> int:
-        return len(enc.encode(json.dumps(ex, default=str)))
-
-    def truncate_reasoning(ex: dict, max_tok: int) -> tuple[dict, bool]:
-        """Try to fit example within max_tok by truncating <think> blocks.
-
-        Returns (example, was_truncated). Modifies example in place.
-        """
-        current = count_tokens(ex)
-        if current <= max_tok:
-            return ex, False
-
-        # Collect (msg_index, field, reasoning_text, token_count) for all think blocks
-        # Check both "content" and "thinking" fields (Harmony format moves content→thinking)
-        think_blocks = []
-        for i, msg in enumerate(ex["messages"]):
-            if msg.get("role") != "assistant":
-                continue
-            for field in ("content", "thinking"):
-                text = msg.get(field)
-                if not text:
-                    continue
-                match = _re.search(r"<think>\n(.*?)\n</think>", text, _re.DOTALL)
-                if match:
-                    reasoning = match.group(1)
-                    think_blocks.append((i, field, match, len(enc.encode(reasoning))))
-
-        if not think_blocks:
-            return ex, False
-
-        # Sort by token count descending, truncate longest first
-        think_blocks.sort(key=lambda x: x[2], reverse=True)
-        excess = current - max_tok
-
-        for msg_idx, field, match, block_tokens in think_blocks:
-            if excess <= 0:
-                break
-            msg = ex["messages"][msg_idx]
-            text = msg[field]
-            if excess >= block_tokens:
-                text = text[: match.start()] + text[match.end() :]
-                msg[field] = text.strip() or None
-                excess -= block_tokens
-            else:
-                reasoning = match.group(1)
-                keep_tokens = block_tokens - excess
-                if keep_tokens > 0:
-                    truncated = enc.decode(enc.encode(reasoning)[:keep_tokens]) + "..."
-                    msg[field] = (
-                        text[: match.start()]
-                        + f"<think>\n{truncated}\n</think>"
-                        + text[match.end() :]
-                    )
-                else:
-                    text = text[: match.start()] + text[match.end() :]
-                    msg[field] = text.strip() or None
-                excess = 0
-
-        return ex, True
-
-    # Apply token filtering
+    # Filter by token count
     kept = []
-    n_truncated = 0
     n_dropped = 0
     for ex in examples:
-        tok = count_tokens(ex)
+        tok = count_tokens(ex["text"])
         if tok <= args.max_tokens:
             kept.append(ex)
-            continue
-        ex, was_truncated = truncate_reasoning(ex, args.max_tokens)
-        tok = count_tokens(ex)
-        if tok <= args.max_tokens:
-            kept.append(ex)
-            if was_truncated:
-                n_truncated += 1
         else:
             n_dropped += 1
 
-    logger.info(
-        f"Token filter (max={args.max_tokens}): kept={len(kept)}, "
-        f"truncated={n_truncated}, dropped={n_dropped}"
-    )
+    logger.info(f"Token filter (max={args.max_tokens}): kept={len(kept)}, dropped={n_dropped}")
     examples = kept
 
     # Token distribution stats
     if examples:
-        all_tok = sorted(count_tokens(ex) for ex in examples)
-        think_tok = sorted(count_tokens(ex) for ex in examples if ex.get("thinking"))
-        nothink_tok = sorted(count_tokens(ex) for ex in examples if not ex.get("thinking"))
+        all_tok = sorted(count_tokens(ex["text"]) for ex in examples)
+        think_tok = sorted(count_tokens(ex["text"]) for ex in examples if ex.get("thinking"))
+        nothink_tok = sorted(count_tokens(ex["text"]) for ex in examples if not ex.get("thinking"))
         n = len(all_tok)
 
         def pct(data, p):
@@ -442,6 +432,10 @@ def main():
                 f"p95={pct(nothink_tok, 95)}, max={nothink_tok[-1]}"
             )
 
+    # Reasoning effort distribution
+    effort_counts = Counter(ex.get("reasoning_effort", "?") for ex in examples)
+    logger.info(f"Reasoning effort: {dict(effort_counts)}")
+
     # Save
     output = Path(args.output)
     output.parent.mkdir(parents=True, exist_ok=True)
@@ -449,13 +443,7 @@ def main():
         for ex in examples:
             f.write(json.dumps(ex, default=str) + "\n")
 
-    msg_counts = [len(ex["messages"]) for ex in examples]
     logger.info(f"Saved to {output}")
-    if msg_counts:
-        logger.info(
-            f"Messages per example: min={min(msg_counts)}, max={max(msg_counts)}, "
-            f"mean={sum(msg_counts) / len(msg_counts):.1f}"
-        )
 
     # Score distribution
     scores = [ex.get("sft_score", 0) for ex in examples]

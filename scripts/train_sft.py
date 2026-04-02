@@ -39,17 +39,17 @@ SYSTEM_PROMPT_FILE = Path("data/system_prompt.txt")
 
 
 def load_dataset_jsonl(path: str) -> Dataset:
-    """Load SFT dataset from JSONL file."""
+    """Load SFT dataset from JSONL file.
+
+    Expects pre-rendered Harmony text in the "text" column.
+    """
     examples = []
     with open(path) as f:
         for line in f:
             line = line.strip()
             if line:
                 ex = json.loads(line)
-                row = {"messages": ex["messages"]}
-                if "tools" in ex:
-                    row["tools"] = ex["tools"]
-                examples.append(row)
+                examples.append({"text": ex["text"]})
     logger.info(f"Loaded {len(examples)} examples from {path}")
     return Dataset.from_list(examples)
 
