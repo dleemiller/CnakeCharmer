@@ -5,17 +5,21 @@ Loads traces from data/traces/*.jsonl, re-scores with sft_scoring.score_trace(),
 augments with problem inputs from discover_pairs(), selects best per problem,
 and converts to messages format via dspy_data.sft.
 
+Harmony format handling:
+- Moves assistant content to "thinking" field when tool_calls are present,
+  so the chat template renders it as an analysis channel message.
+- Includes tools column so TRL passes tool schemas to the chat template.
+
 Usage:
-    uv run --no-sync python scripts/build_sft.py
+    uv run --no-sync python scripts/build_sft.py --require-finish --min-iters 2
     uv run --no-sync python scripts/build_sft.py --min-score 0.5 --output data/sft_dataset.jsonl
-    uv run --no-sync python scripts/build_sft.py --inputs data/traces/gptoss120b_glm5prompt.jsonl
 """
 
 import argparse
 import json
 import logging
 import sys
-from collections import defaultdict
+from collections import Counter, defaultdict
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -220,8 +224,6 @@ def main():
     logger.info(f"  thinking={n_thinking}, nothink={n_nothink}")
 
     # Per-model breakdown
-    from collections import Counter
-
     raw_counts = Counter(t.get("model", "?") for t in traces)
     sel_models = defaultdict(lambda: {"total": 0, "think": 0, "nothink": 0})
     for t in best:
@@ -259,12 +261,29 @@ def main():
         # Prepend system prompt
         if system_prompt:
             msgs.insert(0, {"role": "system", "content": system_prompt})
+        # Add tools column so TRL passes tool schemas to the chat template
+        if tools:
+            ex["tools"] = tools
         # Add /nothink to first user message for non-thinking examples
         if not trace.get("_thinking", False):
             for msg in msgs:
                 if msg.get("role") == "user":
                     msg["content"] = (msg.get("content") or "") + " /nothink"
                     break
+
+    # Fix Harmony format: move content to "thinking" field on assistant messages with tool_calls.
+    # The Harmony chat template renders "thinking" as an analysis channel message before the tool call.
+    # Without this, the template silently drops the content (reasoning/thinking) from tool-call messages.
+    thinking_moved = 0
+    for ex in examples:
+        for msg in ex["messages"]:
+            if msg.get("role") == "assistant" and msg.get("tool_calls") and msg.get("content"):
+                msg["thinking"] = msg.pop("content")
+                thinking_moved += 1
+    if thinking_moved:
+        logger.info(
+            f"Moved content→thinking on {thinking_moved} assistant+tool_call messages (Harmony format)"
+        )
 
     # Patch malformed finish calls: model passed code args to finish, causing DSPy error.
     # Strip args and clear error content so the trace looks like a clean finish.
@@ -323,15 +342,20 @@ def main():
         if current <= max_tok:
             return ex, False
 
-        # Collect (msg_index, reasoning_text, token_count) for all think blocks
+        # Collect (msg_index, field, reasoning_text, token_count) for all think blocks
+        # Check both "content" and "thinking" fields (Harmony format moves content→thinking)
         think_blocks = []
         for i, msg in enumerate(ex["messages"]):
-            if msg.get("role") != "assistant" or not msg.get("content"):
+            if msg.get("role") != "assistant":
                 continue
-            match = _re.search(r"<think>\n(.*?)\n</think>", msg["content"], _re.DOTALL)
-            if match:
-                reasoning = match.group(1)
-                think_blocks.append((i, match, len(enc.encode(reasoning))))
+            for field in ("content", "thinking"):
+                text = msg.get(field)
+                if not text:
+                    continue
+                match = _re.search(r"<think>\n(.*?)\n</think>", text, _re.DOTALL)
+                if match:
+                    reasoning = match.group(1)
+                    think_blocks.append((i, field, match, len(enc.encode(reasoning))))
 
         if not think_blocks:
             return ex, False
@@ -340,29 +364,28 @@ def main():
         think_blocks.sort(key=lambda x: x[2], reverse=True)
         excess = current - max_tok
 
-        for msg_idx, match, block_tokens in think_blocks:
+        for msg_idx, field, match, block_tokens in think_blocks:
             if excess <= 0:
                 break
             msg = ex["messages"][msg_idx]
+            text = msg[field]
             if excess >= block_tokens:
-                # Remove entire think block
-                msg["content"] = msg["content"][: match.start()] + msg["content"][match.end() :]
-                msg["content"] = msg["content"].strip() or None
+                text = text[: match.start()] + text[match.end() :]
+                msg[field] = text.strip() or None
                 excess -= block_tokens
             else:
-                # Truncate reasoning to fit
                 reasoning = match.group(1)
                 keep_tokens = block_tokens - excess
                 if keep_tokens > 0:
                     truncated = enc.decode(enc.encode(reasoning)[:keep_tokens]) + "..."
-                    msg["content"] = (
-                        msg["content"][: match.start()]
+                    msg[field] = (
+                        text[: match.start()]
                         + f"<think>\n{truncated}\n</think>"
-                        + msg["content"][match.end() :]
+                        + text[match.end() :]
                     )
                 else:
-                    msg["content"] = msg["content"][: match.start()] + msg["content"][match.end() :]
-                    msg["content"] = msg["content"].strip() or None
+                    text = text[: match.start()] + text[match.end() :]
+                    msg[field] = text.strip() or None
                 excess = 0
 
         return ex, True

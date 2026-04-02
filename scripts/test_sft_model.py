@@ -113,8 +113,9 @@ def run_problem(
                 model=model,
                 messages=messages,
                 tools=tools,
-                max_tokens=4096,
-                temperature=0.7,
+                max_tokens=8192,
+                temperature=1.0,
+                top_p=1.0,
                 timeout=60,
                 extra_body=extra_body if extra_body else None,
             )

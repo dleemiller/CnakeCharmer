@@ -46,7 +46,10 @@ def load_dataset_jsonl(path: str) -> Dataset:
             line = line.strip()
             if line:
                 ex = json.loads(line)
-                examples.append({"messages": ex["messages"]})
+                row = {"messages": ex["messages"]}
+                if "tools" in ex:
+                    row["tools"] = ex["tools"]
+                examples.append(row)
     logger.info(f"Loaded {len(examples)} examples from {path}")
     return Dataset.from_list(examples)
 
