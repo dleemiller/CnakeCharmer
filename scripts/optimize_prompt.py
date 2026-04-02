@@ -129,6 +129,7 @@ def run_optimization(
     num_threads: int = 2,
     reflection_minibatch_size: int = 3,
     temperature: float = 0.7,
+    extra_body: dict | None = None,
 ):
     """Run GEPA optimization for a specific model.
 
@@ -142,6 +143,8 @@ def run_optimization(
     # Only set api_base for local models — OpenRouter models route via litellm
     if base_url and not model_id.startswith("openrouter/"):
         lm_kwargs["api_base"] = base_url
+    if extra_body:
+        lm_kwargs["extra_body"] = extra_body
 
     lm = dspy.LM(model_id, **lm_kwargs)
     dspy.settings.configure(lm=lm)
@@ -309,6 +312,12 @@ def main():
         default=1.0,
         help="Sampling temperature (default: 1.0, recommended for gpt-oss)",
     )
+    parser.add_argument(
+        "--extra-body",
+        type=json.loads,
+        default=None,
+        help='JSON extra_body for student LM (e.g. \'{"chat_template_kwargs": {"enable_thinking": true}}\')',
+    )
     parser.add_argument("--list", action="store_true", help="List saved optimized prompts")
     args = parser.parse_args()
 
@@ -340,6 +349,7 @@ def main():
         num_threads=args.threads,
         reflection_minibatch_size=args.reflection_minibatch_size,
         temperature=args.temperature,
+        extra_body=args.extra_body,
     )
 
 
