@@ -113,11 +113,21 @@ class CythonToolEnvironment:
     Used with TRL GRPOTrainer's environment_factory parameter.
     """
 
-    def reset(self, **kwargs) -> str | None:
-        """Reset the environment for a new episode."""
+    def reset(self, *, python_code: str = "", **kwargs) -> str | None:
+        """Reset the environment for a new episode.
+
+        During training, python_code from the dataset is stored as the ground
+        truth reference. The tool uses this for equivalence checking regardless
+        of what the model passes as python_code — prevents reward hacking by
+        modifying the reference.
+
+        In production (MCP), reset() is called with no args, so
+        _original_python is empty and the tool uses the model's python_code.
+        """
         self.step_scores = []
         self.num_tool_calls = 0
         self.last_code = None
+        self._original_python = python_code
         return None
 
     def evaluate_cython(self, code: str, python_code: str, test_code: str) -> str:
@@ -125,7 +135,7 @@ class CythonToolEnvironment:
 
         The test_code runs in a namespace where `py` is the Python module and
         `cy` is the compiled Cython module. Each test assertion has a 5-second
-        timeout. Hidden verification tests also run automatically to check equivalence.
+        timeout.
 
         Args:
             code: Complete .pyx Cython source code.
@@ -135,6 +145,11 @@ class CythonToolEnvironment:
         Returns:
             Evaluation results as formatted text.
         """
+        # During training, use the ground truth Python from reset() to prevent
+        # reward hacking (model could modify python_code to match broken Cython).
+        # In production (no reset), use whatever the model passes.
+        effective_python = self._original_python if self._original_python else python_code
+
         self.last_code = code
         self.num_tool_calls += 1
         code_preview = code[:80].replace("\n", "\\n") if code else "<empty>"
@@ -191,7 +206,7 @@ class CythonToolEnvironment:
         py_mod = None
         cy_mod = None
         try:
-            py_mod = _exec_as_module(python_code, "py_module")
+            py_mod = _exec_as_module(effective_python, "py_module")
         except Exception as e:
             sections.append(f"## Python Error\nFailed to load Python code: {e}")
             self.step_scores.append(step)
