@@ -1,39 +1,67 @@
 """
 Prompt formatting for multi-turn Cython training.
 
-Structures the system prompt, user turn, and tool definitions
-for the model during training rollouts.
+Matches the SFT training data format exactly:
+  - System message: data/system_prompt.txt (rendered as Harmony developer message)
+  - User message: key-value format (python_code, func_name, description)
+  - Tool schemas: loaded from data/tools.json
 """
 
-SYSTEM_PROMPT = """\
-You are an expert Cython developer. Your task is to translate Python code into \
-optimized Cython (.pyx) that compiles correctly and runs faster than the original.
+from pathlib import Path
 
-You have access to tools that help you verify and improve your code:
-- **compile**: Check if your Cython code compiles without errors.
-- **annotate**: Analyze your code's optimization quality. Returns a score (0-1) and \
-hints about lines that fall back to Python.
-- **test**: Run correctness tests comparing your Cython output against the Python reference.
-- **benchmark**: Measure the speedup of your Cython code vs the Python original.
+_SYSTEM_PROMPT_FILE = Path("data/system_prompt.txt")
+_TOOLS_FILE = Path("data/tools.json")
 
-Guidelines for good Cython:
-- Use `cdef` for C-level variable declarations (int, double, etc.)
-- Use `cdef`/`cpdef` for functions that don't need Python-level access
-- Use typed memoryviews for array operations instead of numpy indexing
-- Add `nogil` where possible to release the GIL
-- Use `prange` from cython.parallel for parallelizable loops
-- Set compiler directives: boundscheck=False, wraparound=False, cdivision=True
-- Minimize PyObject interactions (the yellow lines in annotations)
-
-Output ONLY the complete .pyx file content. Do not include explanations outside the code."""
+# Lazy-loaded system prompt from data/system_prompt.txt
+_system_prompt_cache: str | None = None
+_tools_cache: list | None = None
 
 
-def format_user_prompt(python_code: str, description: str = "") -> str:
-    """Format the user turn asking for a Cython translation."""
-    parts = ["Translate this Python code to optimized Cython:"]
+def get_system_prompt() -> str:
+    """Load the system prompt from data/system_prompt.txt.
+
+    This is the exact prompt used during SFT training, rendered as the
+    Harmony developer message by the chat template.
+    """
+    global _system_prompt_cache
+    if _system_prompt_cache is None:
+        if _SYSTEM_PROMPT_FILE.exists():
+            _system_prompt_cache = _SYSTEM_PROMPT_FILE.read_text().strip()
+        else:
+            # Fallback if file not found (e.g. running from different directory)
+            _system_prompt_cache = (
+                "You are a Cython optimization expert. Convert Python code into "
+                "fast, correct Cython (.pyx) code."
+            )
+    return _system_prompt_cache
+
+
+def get_tools() -> list:
+    """Load tool schemas from data/tools.json.
+
+    Returns the exact tool definitions used during SFT training.
+    """
+    global _tools_cache
+    if _tools_cache is None:
+        import json
+
+        _tools_cache = json.loads(_TOOLS_FILE.read_text()) if _TOOLS_FILE.exists() else []
+    return _tools_cache
+
+
+def format_user_prompt(python_code: str, func_name: str = "", description: str = "") -> str:
+    """Format the user turn in SFT-matching key-value format.
+
+    SFT training data uses:
+        python_code: <code>
+        func_name: <name>
+        description: <desc>
+    """
+    parts = [f"python_code: {python_code}"]
+    if func_name:
+        parts.append(f"func_name: {func_name}")
     if description:
-        parts.append(f"\nDescription: {description}")
-    parts.append(f"\n```python\n{python_code}\n```")
+        parts.append(f"description: {description}")
     return "\n".join(parts)
 
 
@@ -74,11 +102,3 @@ def format_feedback(tool_name: str, tool_result: dict) -> str:
         return f"Speedup: {tool_result['speedup']:.2f}x (Python: {tool_result['python_time']:.6f}s, Cython: {tool_result['cython_time']:.6f}s)"
 
     return str(tool_result)
-
-
-def make_initial_messages(python_code: str, description: str = "") -> list:
-    """Create the initial message list for a training rollout."""
-    return [
-        {"role": "system", "content": SYSTEM_PROMPT},
-        {"role": "user", "content": format_user_prompt(python_code, description)},
-    ]

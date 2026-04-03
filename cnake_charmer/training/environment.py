@@ -88,18 +88,17 @@ class CythonToolEnvironment:
         return None
 
     def evaluate_cython(self, code: str) -> str:
-        """Compile, annotate, test, and benchmark Cython code in a single call.
+        """Compile, analyze, test, and benchmark Cython code in one step.
 
-        Compiles the code once, then runs annotation analysis, correctness tests,
-        and performance benchmarks using the same build. Returns detailed feedback
-        with all results.
+        Returns compilation status, annotation score with optimization hints,
+        correctness test results, and speedup measurement. If compilation fails,
+        only error messages are returned. Fix any issues and call again.
 
         Args:
-            code: The complete .pyx Cython source code to evaluate.
+            code: Complete .pyx source code.
 
         Returns:
-            Markdown-formatted results with sections for compilation, annotation,
-            tests, and benchmark.
+            Evaluation results as formatted text.
         """
         self.last_code = code
         self.num_tool_calls += 1

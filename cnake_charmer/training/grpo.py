@@ -19,7 +19,7 @@ from datasets import Dataset
 
 from cnake_charmer.sources.base import ProblemSpec
 from cnake_charmer.training.environment import CythonToolEnvironment
-from cnake_charmer.training.prompts import format_user_prompt
+from cnake_charmer.training.prompts import format_user_prompt, get_system_prompt
 
 logger = logging.getLogger(__name__)
 
@@ -132,9 +132,14 @@ def cython_reward(environments, trainer_state=None, log_extra=None, log_metric=N
 def build_dataset(problems: list[ProblemSpec]) -> Dataset:
     """Build a HuggingFace Dataset from ProblemSpecs for TRL GRPOTrainer.
 
-    Each row contains the prompt (as chat messages) plus metadata fields
-    that get passed to the environment's reset() as kwargs.
+    Prompt format matches SFT training data exactly:
+      - system message: data/system_prompt.txt (Harmony renders as developer message)
+      - user message: key-value format (python_code, func_name, description)
+
+    Extra columns (python_code, func_name, etc.) are passed to the
+    environment's reset() as kwargs.
     """
+    system_prompt = get_system_prompt()
     prompts = []
     python_codes = []
     func_names = []
@@ -143,7 +148,13 @@ def build_dataset(problems: list[ProblemSpec]) -> Dataset:
 
     for p in problems:
         prompts.append(
-            [{"role": "user", "content": format_user_prompt(p.python_code, p.description)}]
+            [
+                {"role": "system", "content": system_prompt},
+                {
+                    "role": "user",
+                    "content": format_user_prompt(p.python_code, p.func_name, p.description),
+                },
+            ]
         )
         python_codes.append(p.python_code)
         func_names.append(p.func_name)
