@@ -62,6 +62,13 @@ def func_name(n: int) -> return_type:
 | Class-based | `class Solver: def run(self, ...)` | `cdef class` with typed attrs |
 | Config dict | `def simulate(params: dict)` | Unpack to cdef locals at entry |
 
+**Hard rule for new additions:** avoid single-argument toy signatures like `def foo(n: int)` unless the real source problem is genuinely defined that way. Prefer multi-argument, data-driven interfaces (`seed/count/config`, arrays + shape parameters, thresholds, flags) that look like production code.
+
+Before finalizing a new problem, quickly check:
+- Does the function signature look like a realistic library/API call?
+- Is `n` only one part of the configuration rather than the whole interface?
+- Would this signature still make sense outside a benchmark harness?
+
 **Class-based problems are encouraged.** Many real Cython conversions involve stateful objects — `cdef class` with typed attributes, `cdef` helper methods, and `__init__` that pre-allocates C arrays. The Stack v2 candidate pool includes class-based implementations that make good training examples. For classes:
 
 ```python
@@ -495,3 +502,8 @@ Available tools:
 | `check_memory` | Run AddressSanitizer to detect leaks, overflows, use-after-free |
 
 Auto-detects SIMD flags for `cy_simd/` and `nn_ops/` files.
+For new Stack-to-triplet conversions, treat this as a required quality gate before marking done:
+- Run `score_problem("{category}/{name}")`
+- Require `correctness = 1.0`
+- Require `annotation_score > 0.90`
+- Require a meaningful speedup versus Python (typically >2x; if lower, document why the workload is already close to C/NumPy-limited)
