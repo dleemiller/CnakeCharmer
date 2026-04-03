@@ -540,9 +540,9 @@
     "babylonian_sqrt_sum": "",
     "gaussian_integral_2d": "bff79b429e2d8766",
     "linf_proximal": "11f59750dc76796b",
-    "stdlib_qsort": "9582570c825d3522",
+    "stdlib_qsort": "ae4e47c88d35bf76",
     "triangle_angles_3d": "70adcb465a6ea46c",
-    "cosine_similarity": "a5713c9a453f53a5",
+    "cosine_similarity": "d0f802e8e8fbdee9",
     "alignment_identity": "6e1c7c9920691ae2"
   },
   "results": {
@@ -7251,11 +7251,11 @@
         "benchmark": "stdlib_qsort",
         "category": "sorting",
         "syntax": "cython",
-        "py_avg": 0.07532369082327932,
-        "py_std": 0.0064507569162333255,
-        "cy_avg": 0.02300096566323191,
-        "cy_std": 0.00020623585088134586,
-        "speedup": 3.2748055853884286
+        "py_avg": 0.03471361880656332,
+        "py_std": 0.0004016071564193703,
+        "cy_avg": 0.0034695285139605403,
+        "cy_std": 2.4185645926016237e-06,
+        "speedup": 10.005284195499229
       }
     ],
     "triangle_angles_3d": [
@@ -7275,11 +7275,11 @@
         "benchmark": "cosine_similarity",
         "category": "statistics",
         "syntax": "cython",
-        "py_avg": 0.4903147015022114,
-        "py_std": 0.016241719157593697,
-        "cy_avg": 0.006093488307669759,
-        "cy_std": 4.610390047011595e-06,
-        "speedup": 80.46535526868273
+        "py_avg": 0.4516433301847428,
+        "py_std": 0.00932257210393437,
+        "cy_avg": 0.0063392570009455085,
+        "cy_std": 5.916309638778982e-05,
+        "speedup": 71.24546774446588
       }
     ],
     "alignment_identity": [
