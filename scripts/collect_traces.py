@@ -72,6 +72,24 @@ def make_trace_record(
     traj = result.trajectory if result.trajectory else {}
     cython_code = extract_code_from_content(getattr(result, "cython_code", "") or "")
 
+    # Fallback: extract code from the last tool call if output field is empty.
+    # Some models (e.g. Gemma 4) don't produce a clean final output with the
+    # cython_code field, but the code is in the tool call trajectory.
+    if not cython_code:
+        for i in range(20, -1, -1):
+            args = traj.get(f"tool_args_{i}")
+            if args and isinstance(args, dict) and "code" in args:
+                cython_code = args["code"]
+                break
+            elif args and isinstance(args, str):
+                try:
+                    parsed = json.loads(args)
+                    if "code" in parsed:
+                        cython_code = parsed["code"]
+                        break
+                except (json.JSONDecodeError, TypeError):
+                    pass
+
     # Count iterations
     num_iters = 0
     while f"tool_name_{num_iters}" in traj:
@@ -274,7 +292,12 @@ def main():
     else:
         api_key = "local"
 
-    lm_kwargs = {"api_key": api_key, "temperature": args.temperature, "cache": False}
+    lm_kwargs = {
+        "api_key": api_key,
+        "temperature": args.temperature,
+        "cache": False,
+        "max_tokens": 8192,
+    }
     if args.reasoning_effort:
         if is_remote:
             # OpenRouter doesn't support reasoning_effort natively; pass via extra_body
