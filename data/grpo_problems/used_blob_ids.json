@@ -1,32 +1,230 @@
 {
   "description": "Stack v2 blob_ids already converted to GRPO Python problems. Skip these when adding new ones.",
   "used": [
-    {"blob_id": "4b64ebc201e2b766", "path": "profiling/approxe.pyx", "output": "approx_e.py"},
-    {"blob_id": "10bd6d8eddb8d828", "path": "Python/Cython/Pi/pi_lib.pyx", "output": "compute_pi.py"},
-    {"blob_id": "8f63e124d8c07314", "path": "Slides/.../slow_4.pyx", "output": "is_prime.py"},
-    {"blob_id": "047aeaeb99a78cd8", "path": "profile_cython/integrate.pyx", "output": "numerical_integrate.py"},
-    {"blob_id": "961a8d6f7bc7d7f5", "path": "cython/project-euler/.../solution.pyx", "output": "largest_palindrome_product.py"},
-    {"blob_id": "8ae2d07a3ca3dc5d", "path": ".../hello.pyx", "output": "sum_of_powers.py"},
-    {"blob_id": "627da3b1bdc0cdca", "path": "examples/cython_for_ODEs/ode0_cy3.pyx", "output": "rk2_ode_solver.py"},
-    {"blob_id": "fdc5cd80c3911bd4", "path": "algorithms/core/cython/algorithms.pyx", "output": "fibonacci_sequence.py"},
-    {"blob_id": "55c00a8d65e84e44", "path": "quad2.pyx", "output": "quad_integrate_sinx2.py"},
-    {"blob_id": "7b94cbeb2c843b35", "path": "rms.pyx", "output": "rms_difference.py"},
-    {"blob_id": "2c5d1a1246d00cef", "path": "03/func.pyx", "output": "integrate_x2_minus_x.py"},
-    {"blob_id": "aa7523c07147a90b", "path": "c2.pyx", "output": "string_compare_count.py"},
-    {"blob_id": "c5a83df9c1b6b624", "path": "Cython/dot_product.pyx", "output": "dot_product.py"},
-    {"blob_id": "395fba1d1cd996ac", "path": "ufo/.../cython_insertion.pyx", "output": "insertion_sort.py"},
-    {"blob_id": "c2abd086ea7d52c7", "path": "src/wsgi_benchmark/native.pyx", "output": "triangular_number.py"},
-    {"blob_id": "ee16444420bfd84d", "path": "do_omp_basic.pyx", "output": "parallel_sin_sum.py"},
-    {"blob_id": "ef0270f5a58e4894", "path": "simulation/combinadics/combi.pyx", "output": "factorial_combinations.py"},
-    {"blob_id": "5f271f62b7ce36e3", "path": "2022-01/solver_cython9.pyx", "output": "distinct_prime_factors.py"},
-    {"blob_id": "fd14afa187c9432e", "path": "main.pyx", "output": "model_error_assess.py"},
-    {"blob_id": "660997aa9f903df6", "path": "energybalance_pkg/.../NetRadiationEquivalentEvaporation.pyx", "output": "net_radiation.py"},
-    {"blob_id": "6e64a1259c529e97", "path": "cyfuncs.pyx", "output": "normalize_array.py"},
-    {"blob_id": "a5b9bbe0b522346d", "path": "src/genutils.pyx", "output": "bisection_root.py"},
-    {"blob_id": "fe6b0fe9b9804763", "path": "cython_primes/primes1.pyx", "output": "prime_sieve_bitwise.py"},
-    {"blob_id": "fbbe7d07320f27f0", "path": "tbmod/core.pyx", "output": "hamiltonian_trig.py"},
-    {"blob_id": "7ba610df7dafbfa7", "path": "softrenderer/.../render_utils.pyx", "output": "pixel_blend.py"},
-    {"blob_id": "d966a75f4bdc0fb9", "path": "research/cython/n_gram.pyx", "output": "ngram_count.py"},
-    {"blob_id": "f3071f0f8078cec3", "path": "day-01/part-2/bebert.pyx", "output": "advent_fuel_calc.py"}
+    {
+      "blob_id": "4b64ebc201e2b766",
+      "path": "profiling/approxe.pyx",
+      "output": "approx_e.py"
+    },
+    {
+      "blob_id": "10bd6d8eddb8d828",
+      "path": "Python/Cython/Pi/pi_lib.pyx",
+      "output": "compute_pi.py"
+    },
+    {
+      "blob_id": "8f63e124d8c07314",
+      "path": "Slides/.../slow_4.pyx",
+      "output": "is_prime.py"
+    },
+    {
+      "blob_id": "047aeaeb99a78cd8",
+      "path": "profile_cython/integrate.pyx",
+      "output": "numerical_integrate.py"
+    },
+    {
+      "blob_id": "961a8d6f7bc7d7f5",
+      "path": "cython/project-euler/.../solution.pyx",
+      "output": "largest_palindrome_product.py"
+    },
+    {
+      "blob_id": "8ae2d07a3ca3dc5d",
+      "path": ".../hello.pyx",
+      "output": "sum_of_powers.py"
+    },
+    {
+      "blob_id": "627da3b1bdc0cdca",
+      "path": "examples/cython_for_ODEs/ode0_cy3.pyx",
+      "output": "rk2_ode_solver.py"
+    },
+    {
+      "blob_id": "fdc5cd80c3911bd4",
+      "path": "algorithms/core/cython/algorithms.pyx",
+      "output": "fibonacci_sequence.py"
+    },
+    {
+      "blob_id": "55c00a8d65e84e44",
+      "path": "quad2.pyx",
+      "output": "quad_integrate_sinx2.py"
+    },
+    {
+      "blob_id": "7b94cbeb2c843b35",
+      "path": "rms.pyx",
+      "output": "rms_difference.py"
+    },
+    {
+      "blob_id": "2c5d1a1246d00cef",
+      "path": "03/func.pyx",
+      "output": "integrate_x2_minus_x.py"
+    },
+    {
+      "blob_id": "aa7523c07147a90b",
+      "path": "c2.pyx",
+      "output": "string_compare_count.py"
+    },
+    {
+      "blob_id": "c5a83df9c1b6b624",
+      "path": "Cython/dot_product.pyx",
+      "output": "dot_product.py"
+    },
+    {
+      "blob_id": "395fba1d1cd996ac",
+      "path": "ufo/.../cython_insertion.pyx",
+      "output": "insertion_sort.py"
+    },
+    {
+      "blob_id": "c2abd086ea7d52c7",
+      "path": "src/wsgi_benchmark/native.pyx",
+      "output": "triangular_number.py"
+    },
+    {
+      "blob_id": "ee16444420bfd84d",
+      "path": "do_omp_basic.pyx",
+      "output": "parallel_sin_sum.py"
+    },
+    {
+      "blob_id": "ef0270f5a58e4894",
+      "path": "simulation/combinadics/combi.pyx",
+      "output": "factorial_combinations.py"
+    },
+    {
+      "blob_id": "5f271f62b7ce36e3",
+      "path": "2022-01/solver_cython9.pyx",
+      "output": "distinct_prime_factors.py"
+    },
+    {
+      "blob_id": "fd14afa187c9432e",
+      "path": "main.pyx",
+      "output": "model_error_assess.py"
+    },
+    {
+      "blob_id": "660997aa9f903df6",
+      "path": "energybalance_pkg/.../NetRadiationEquivalentEvaporation.pyx",
+      "output": "net_radiation.py"
+    },
+    {
+      "blob_id": "6e64a1259c529e97",
+      "path": "cyfuncs.pyx",
+      "output": "normalize_array.py"
+    },
+    {
+      "blob_id": "a5b9bbe0b522346d",
+      "path": "src/genutils.pyx",
+      "output": "bisection_root.py"
+    },
+    {
+      "blob_id": "fe6b0fe9b9804763",
+      "path": "cython_primes/primes1.pyx",
+      "output": "prime_sieve_bitwise.py"
+    },
+    {
+      "blob_id": "fbbe7d07320f27f0",
+      "path": "tbmod/core.pyx",
+      "output": "hamiltonian_trig.py"
+    },
+    {
+      "blob_id": "7ba610df7dafbfa7",
+      "path": "softrenderer/.../render_utils.pyx",
+      "output": "pixel_blend.py"
+    },
+    {
+      "blob_id": "d966a75f4bdc0fb9",
+      "path": "research/cython/n_gram.pyx",
+      "output": "ngram_count.py"
+    },
+    {
+      "blob_id": "f3071f0f8078cec3",
+      "path": "day-01/part-2/bebert.pyx",
+      "output": "advent_fuel_calc.py"
+    },
+    {
+      "blob_id": "9f90f348e12fec49",
+      "path": "pythran/tests/cython/diffuse.pyx",
+      "output": "diffuse_stencil.py"
+    },
+    {
+      "blob_id": "746c240ec6853273",
+      "path": "Lehmer_Cython.pyx",
+      "output": "lehmer_rng.py"
+    },
+    {
+      "blob_id": "fe4f51a385c9abef",
+      "path": "laplace_cy.pyx",
+      "output": "laplace_relaxation.py"
+    },
+    {
+      "blob_id": "f5f168d58b44bc13",
+      "path": "cython/parallel/ex_prange.pyx",
+      "output": "nested_loop_sum.py"
+    },
+    {
+      "blob_id": "b704810f84efa691",
+      "path": "imag_manip2/fitness.pyx",
+      "output": "rectangle_fill_grid.py"
+    },
+    {
+      "blob_id": "ad31ff075426eea8",
+      "path": "src/cchen.pyx",
+      "output": "entropy_score.py"
+    },
+    {
+      "blob_id": "45d02c6b44008901",
+      "path": "python/humble_track/foreground_groups.pyx",
+      "output": "foreground_voting.py"
+    },
+    {
+      "blob_id": "14b63351de427754",
+      "path": "multidynet/multinet/log_likelihood.pyx",
+      "output": "network_log_likelihood.py"
+    },
+    {
+      "blob_id": "5917ca298603722d",
+      "path": "python/spectral_aux.pyx",
+      "output": "squared_distance_matrix.py"
+    },
+    {
+      "blob_id": "57341f2c4ae6fccd",
+      "path": "project/rar/ks_test.pyx",
+      "output": "ks_max_distance.py"
+    },
+    {
+      "blob_id": "363bb52540b0e425",
+      "path": "python/lib/genome/dseg.pyx",
+      "output": "high_scoring_segments.py"
+    },
+    {
+      "blob_id": "f74b117a184c84d407903b3bdf80344cf56c4362",
+      "path": "larVolumeToObj/computation/calc_chains_helper.pyx",
+      "output": "linearize_3d_coords.py"
+    },
+    {
+      "blob_id": "a96c451911100a10",
+      "path": "source code/Parallel Cython/jac_2d.pyx",
+      "output": "jacobi_heat_2d.py"
+    },
+    {
+      "blob_id": "f830c0caf02efd7e1f8b62a117993c44da9dc099",
+      "path": "wind_eff_area/geo_dist.pyx",
+      "output": "distance_point_ellipse.py"
+    },
+    {
+      "blob_id": "f5e8f7d9e04fdab44c0f1504cae51afe0553f948",
+      "path": "src/kernels_c.pyx",
+      "output": "string_subseq_kernel.py"
+    },
+    {
+      "blob_id": "30237788af5b166285fc37a98cb2243a876c6747",
+      "path": "/notebooks/02_cython/primes.pyx",
+      "output": "get_first_n_primes.py"
+    },
+    {
+      "blob_id": "fe6b0fe9b98047c617e37aeec6a0997e14acdc9c",
+      "path": "/cython_primes/primes1.pyx",
+      "output": "sqrt_trial_prime.py"
+    },
+    {
+      "blob_id": "96274d31a8326e2f0f939923b28e5620fed4fdda",
+      "path": "/misc_methods.pyx",
+      "output": "angle_wrap.py"
+    }
   ]
 }
