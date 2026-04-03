@@ -10,6 +10,7 @@
 | statistics | prange_histogram_partial | cython | 82.409 | 0.135 | 611.5x |
 | numerical | prange_transform_chain | cython | 104.754 | 0.185 | 566.6x |
 | cryptography | sha256_blocks | cython | 68.870 | 0.149 | 461.0x |
+| image_processing | central_moments | cython | 6.382 | 0.014 | 449.2x |
 | nn_ops | max_pool_1d | cython | 195.154 | 0.551 | 354.4x |
 | nn_ops | layer_norm | simd | 193.694 | 0.547 | 353.8x |
 | nn_ops | embedding_lookup | simd | 440.082 | 1.549 | 284.1x |
@@ -27,6 +28,7 @@
 | algorithms | union_tagged_value | cython | 10.626 | 0.051 | 209.1x |
 | graph | topological_sort_dfs | cython | 67.188 | 0.330 | 203.9x |
 | nn_ops | max_pool_1d | simd | 195.154 | 0.964 | 202.5x |
+| math_problems | assoc_legendre_sum | cython | 221.042 | 1.131 | 195.5x |
 | image_processing | gamma_correction | cython | 36.631 | 0.191 | 191.8x |
 | image_processing | sobel_edge | cython | 146.747 | 0.766 | 191.6x |
 | string_processing | alignment_identity | cython | 288.001 | 1.506 | 191.3x |
@@ -113,6 +115,7 @@
 | string_processing | classify_transitions | cython | 15.953 | 0.158 | 101.0x |
 | leetcode | longest_palindrome_substring | cython | 1363.264 | 13.515 | 100.9x |
 | optimization | conjugate_gradient | cython | 17.780 | 0.177 | 100.4x |
+| numerical | signal_distance | cython | 69.466 | 0.697 | 99.6x |
 | math_problems | prange_count_primes | cython | 38.207 | 0.385 | 99.2x |
 | compression | lz77_compress | cython | 19.372 | 0.197 | 98.1x |
 | dynamic_programming | optimal_bst | cython | 200.566 | 2.050 | 97.8x |
@@ -146,6 +149,7 @@
 | numerical | cholesky_decompose | cython | 225.849 | 2.563 | 88.1x |
 | numerical | qr_decomposition | cython | 336.993 | 3.829 | 88.0x |
 | numerical | nested_loop_sum | cython | 14.870 | 0.169 | 87.9x |
+| compression | delta_decode_rows | cython | 15.276 | 0.176 | 86.7x |
 | math_problems | binomial_coefficients | cython | 228.129 | 2.639 | 86.5x |
 | dsp | contig_moving_avg | cython | 24.934 | 0.290 | 86.0x |
 | compression | lz4_block | cython | 18.220 | 0.212 | 85.8x |
@@ -223,6 +227,7 @@
 | algorithms | memview_slice_reverse | cython | 9.218 | 0.149 | 61.8x |
 | numerical | fused_memview_scale | cython | 20.270 | 0.333 | 60.8x |
 | math_problems | digit_sum | cython | 394.849 | 6.510 | 60.7x |
+| algorithms | sudoku_solver | cython | 865.816 | 14.282 | 60.6x |
 | physics | magnetic_field | cython | 460.537 | 7.601 | 60.6x |
 | numerical | gauss_seidel | cython | 456.633 | 7.547 | 60.5x |
 | dsp | cross_correlation | cython | 116.658 | 1.936 | 60.2x |
@@ -252,6 +257,7 @@
 | dynamic_programming | min_cost_path | cython | 164.574 | 3.042 | 54.1x |
 | simulation | schelling_segregation | cython | 289.917 | 5.392 | 53.8x |
 | nn_ops | gemm | cython | 197.144 | 3.674 | 53.7x |
+| math_problems | lcg_judge_match | cython | 151.015 | 2.857 | 52.9x |
 | graph | euler_path | cython | 67.340 | 1.278 | 52.7x |
 | dsp | autocorrelation | cython | 283.189 | 5.396 | 52.5x |
 | numerical | lagrange_interpolation | cython | 208.970 | 3.994 | 52.3x |
@@ -260,6 +266,7 @@
 | numerical | final_accumulator | cython | 84.739 | 1.670 | 50.7x |
 | simulation | traffic_flow | cython | 141.860 | 2.801 | 50.6x |
 | algorithms | config_lookup | cython | 130.191 | 2.591 | 50.3x |
+| numerical | piecewise_interp | cython | 67.197 | 1.338 | 50.2x |
 | numerical | fused_clamp | cython | 16.552 | 0.331 | 50.0x |
 | numerical | nbody_energy | cython | 219.325 | 4.392 | 49.9x |
 | leetcode | two_sum_all_pairs | cython | 13.943 | 0.279 | 49.9x |
@@ -281,6 +288,7 @@
 | graph | cycle_detection | cython | 45.362 | 0.989 | 45.9x |
 | algorithms | reservoir_sampling | cython | 217.708 | 4.754 | 45.8x |
 | dsp | fir_filter | cython | 468.262 | 10.246 | 45.7x |
+| math_problems | laguerre_polynomial | cython | 62.404 | 1.366 | 45.7x |
 | dynamic_programming | partition_equal_sum | cython | 416.349 | 9.190 | 45.3x |
 | nn_ops | softmax_stable | cython | 220.184 | 4.865 | 45.3x |
 | algorithms | a_star_grid | cython | 15.738 | 0.348 | 45.2x |
@@ -350,6 +358,7 @@
 | numerical | chebyshev_nodes | cython | 272.289 | 9.165 | 29.7x |
 | compression | arithmetic_coding_sim | cython | 164.174 | 5.613 | 29.2x |
 | physics | orbital_mechanics | cython | 319.300 | 10.960 | 29.1x |
+| diff_equations | rk2_ode_step | cython | 73.000 | 2.548 | 28.6x |
 | optimization | linear_least_squares | cython | 189.645 | 6.700 | 28.3x |
 | nn_ops | elementwise_add | simd | 500.170 | 18.036 | 27.7x |
 | graph | dijkstra_shortest | cython | 313.963 | 11.360 | 27.6x |
@@ -370,6 +379,7 @@
 | dsp | pitch_detect_amdf | cython | 39.622 | 1.616 | 24.5x |
 | algorithms | prime_sieve_bytearray | cython | 13.892 | 0.568 | 24.5x |
 | numerical | babylonian_sqrt_sum | cython | 656.625 | 27.271 | 24.1x |
+| numerical | newton_raphson_poly | cython | 32.867 | 1.368 | 24.0x |
 | dsp | numpy_median_filter | cython | 100.687 | 4.216 | 23.9x |
 | numerical | matrix_transpose | cython | 107.141 | 4.500 | 23.8x |
 | sorting | pancake_sort | cython | 217.631 | 9.160 | 23.8x |
@@ -421,6 +431,7 @@
 | math_problems | fibonacci_matrix | cython | 178.764 | 10.886 | 16.4x |
 | algorithms | floyd_cycle | cython | 687.801 | 42.005 | 16.4x |
 | statistics | stl_unordered_map_group_sum | cython | 154.345 | 9.604 | 16.1x |
+| string_processing | dna_kmer_canonical | cython | 23.457 | 1.462 | 16.0x |
 | algorithms | fibonacci | cython | 32.907 | 2.115 | 15.6x |
 | optimization | newton_method_nd | cython | 290.067 | 19.268 | 15.1x |
 | nn_ops | residual_add | cython | 713.250 | 47.462 | 15.0x |
@@ -489,6 +500,7 @@
 | statistics | pearson_correlation | cython | 246.539 | 25.337 | 9.7x |
 | numerical | bisection_root | cython | 164.753 | 17.056 | 9.7x |
 | nn_ops | gelu | simd | 674.496 | 71.387 | 9.4x |
+| statistics | poisson_pmf_sum | cython | 1.748 | 0.186 | 9.4x |
 | numerical | runge_kutta | cython | 195.442 | 21.362 | 9.1x |
 | numerical | fft_naive | cython | 327.331 | 35.798 | 9.1x |
 | sorting | merge_sort | cython | 47.859 | 5.237 | 9.1x |
@@ -585,25 +597,25 @@ Compares portable Cython (scalar) vs platform-optimized SIMD.
 
 | Kernel | Size | Portable (ms) | SIMD (ms) | SIMD ISA | Speedup |
 |--------|------|--------------|-----------|----------|----------|
-| relu | 5,000,000 | 4.984 | 1.528 | avx2+fma | 3.3x |
-| sigmoid | 2,000,000 | 7.154 | 0.546 | avx2+fma | 13.1x |
-| gelu | 2,000,000 | 13.708 | 13.424 | avx2+fma | 1.0x |
-| silu | 2,000,000 | 6.121 | 6.203 | avx2+fma | 1.0x |
-| softmax | 1,000,000 | 3.814 | 2.951 | avx2+fma | 1.3x |
-| elementwise_add | 5,000,000 | 5.253 | 1.892 | avx2+fma | 2.8x |
-| elementwise_mul | 5,000,000 | 1.803 | 1.782 | avx2+fma | 1.0x |
-| residual_add | 5,000,000 | 1.696 | 1.891 | avx2+fma | 0.9x |
-| gemm | 200x200 | 3.549 | 0.224 | avx2+fma | 15.9x |
-| batch_norm | 5,000,000 | 4.647 | 1.384 | avx2+fma | 3.4x |
-| layer_norm | 1,000,000 | 1.657 | 0.248 | avx2+fma | 6.7x |
-| conv1d | 500,000 | 1.439 | 0.178 | avx2+fma | 8.1x |
-| max_pool_1d | 5,000,000 | 2.416 | 1.412 | avx2+fma | 1.7x |
-| attention_scores | 128x64d | 0.437 | 0.051 | avx2+fma | 8.6x |
-| avg_pool_1d | 5,000,000 | 1.849 | 1.858 | avx2+fma | 1.0x |
+| relu | 5,000,000 | 4.810 | 1.158 | avx2+fma | 4.2x |
+| sigmoid | 2,000,000 | 6.983 | 0.491 | avx2+fma | 14.2x |
+| gelu | 2,000,000 | 13.471 | 13.378 | avx2+fma | 1.0x |
+| silu | 2,000,000 | 6.049 | 6.085 | avx2+fma | 1.0x |
+| softmax | 1,000,000 | 3.657 | 2.957 | avx2+fma | 1.2x |
+| elementwise_add | 5,000,000 | 5.377 | 1.891 | avx2+fma | 2.8x |
+| elementwise_mul | 5,000,000 | 1.727 | 1.708 | avx2+fma | 1.0x |
+| residual_add | 5,000,000 | 1.702 | 1.683 | avx2+fma | 1.0x |
+| gemm | 200x200 | 3.545 | 0.247 | avx2+fma | 14.3x |
+| batch_norm | 5,000,000 | 4.413 | 1.121 | avx2+fma | 3.9x |
+| layer_norm | 1,000,000 | 1.676 | 0.229 | avx2+fma | 7.3x |
+| conv1d | 500,000 | 1.442 | 0.160 | avx2+fma | 9.0x |
+| max_pool_1d | 5,000,000 | 2.205 | 1.289 | avx2+fma | 1.7x |
+| attention_scores | 128x64d | 0.555 | 0.051 | avx2+fma | 10.9x |
+| avg_pool_1d | 5,000,000 | 1.617 | 1.617 | avx2+fma | 1.0x |
 | conv2d | 256x256 | 0.319 | 0.055 | avx2+fma | 5.8x |
-| cross_entropy | 100,000 | 0.369 | 0.368 | avx2+fma | 1.0x |
-| depthwise_conv | 64x10000 | 1.704 | 0.204 | avx2+fma | 8.3x |
-| dropout_mask | 5,000,000 | 6.157 | 3.766 | avx2+fma | 1.6x |
-| embedding_lookup | 10000v,64d,50000n | 1.357 | 0.214 | avx2+fma | 6.4x |
-| global_avg_pool | 256x10000 | 1.064 | 0.229 | avx2+fma | 4.6x |
-| instance_norm | 64x10000 | 0.791 | 0.165 | avx2+fma | 4.8x |
+| cross_entropy | 100,000 | 0.370 | 0.369 | avx2+fma | 1.0x |
+| depthwise_conv | 64x10000 | 1.627 | 0.205 | avx2+fma | 7.9x |
+| dropout_mask | 5,000,000 | 5.965 | 3.834 | avx2+fma | 1.6x |
+| embedding_lookup | 10000v,64d,50000n | 1.540 | 0.366 | avx2+fma | 4.2x |
+| global_avg_pool | 256x10000 | 1.058 | 0.210 | avx2+fma | 5.0x |
+| instance_norm | 64x10000 | 0.796 | 0.185 | avx2+fma | 4.3x |
