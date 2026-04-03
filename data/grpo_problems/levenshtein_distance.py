@@ -1,27 +1,8 @@
-"""Compute Levenshtein edit distance between two strings.
-
-Keywords: grpo, string, dynamic programming, edit distance, benchmark
-"""
-
-from cnake_charmer.benchmarks import python_benchmark
-
-
-@python_benchmark(args=(2000,))
-def levenshtein_distance(n: int) -> tuple:
-    """Compute Levenshtein distance between two deterministic strings.
-
-    Generates two strings of length n from a repeating alphabet pattern
-    with insertions/deletions to make them differ.
+def levenshtein_distance(n):
+    """Compute Levenshtein distance between two deterministic strings of length n.
 
     Returns (distance, number of DP cells computed, checksum of last row).
-
-    Args:
-        n: Base length of the strings.
-
-    Returns:
-        Tuple of (distance, cells_computed, row_checksum).
     """
-    # Generate deterministic strings
     alpha = "abcdefghijklmnop"
     s1 = ""
     s2 = ""
@@ -32,7 +13,6 @@ def levenshtein_distance(n: int) -> tuple:
     len1 = len(s1)
     len2 = len(s2)
 
-    # DP with two rows
     prev = list(range(len2 + 1))
     curr = [0] * (len2 + 1)
     cells = 0
@@ -47,7 +27,6 @@ def levenshtein_distance(n: int) -> tuple:
             cells += 1
         prev, curr = curr, prev
 
-    # Checksum of final row
     checksum = 0
     for v in prev:
         checksum = (checksum * 31 + v) & 0xFFFFFFFF

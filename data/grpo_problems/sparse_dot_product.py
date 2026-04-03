@@ -1,27 +1,8 @@
-"""Sparse vector dot product using index-value pairs.
+def sparse_dot_product(n):
+    """Dot product of two sparse vectors using merge-join on sorted index arrays.
 
-Keywords: grpo, numerical, sparse, linear algebra, benchmark
-"""
-
-from cnake_charmer.benchmarks import python_benchmark
-
-
-@python_benchmark(args=(100000,))
-def sparse_dot_product(n: int) -> tuple:
-    """Dot product of two sparse vectors stored as sorted (index, value) lists.
-
-    Generates two sparse vectors with ~10% density and computes their dot product
-    using a merge-join approach.
-
-    Returns (dot_product, number of matching indices, operations_count).
-
-    Args:
-        n: Dimension of the full vector space.
-
-    Returns:
-        Tuple of (dot_product, num_matches, ops).
+    Returns (dot_product, number of matching indices, operations count).
     """
-    # Generate sparse vectors (~10% nonzero)
     indices_a = []
     values_a = []
     indices_b = []
@@ -35,7 +16,6 @@ def sparse_dot_product(n: int) -> tuple:
             indices_b.append(i)
             values_b.append((i * 17 + 2) % 100 * 0.01)
 
-    # Merge-join dot product
     dot = 0.0
     matches = 0
     ops = 0

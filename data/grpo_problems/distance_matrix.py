@@ -1,24 +1,8 @@
-"""Compute pairwise Euclidean distance matrix for 2D points.
-
-Keywords: grpo, numerical, distance, matrix, geometry, benchmark
-"""
-
-from cnake_charmer.benchmarks import python_benchmark
-
-
-@python_benchmark(args=(800,))
-def distance_matrix(n: int) -> tuple:
-    """Compute full pairwise distance matrix for n deterministic 2D points.
+def distance_matrix(n):
+    """Compute full pairwise Euclidean distance matrix for n deterministic 2D points.
 
     Returns (sum of all distances, max distance, min nonzero distance).
-
-    Args:
-        n: Number of points.
-
-    Returns:
-        Tuple of (sum_distances, max_distance, min_nonzero_distance).
     """
-    # Generate deterministic points
     xs = [0.0] * n
     ys = [0.0] * n
     for i in range(n):

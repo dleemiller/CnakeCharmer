@@ -1,22 +1,7 @@
-"""Sieve of Eratosthenes for prime counting.
-
-Keywords: grpo, math, primes, sieve, number theory, benchmark
-"""
-
-from cnake_charmer.benchmarks import python_benchmark
-
-
-@python_benchmark(args=(1000000,))
-def sieve_primes(n: int) -> tuple:
+def sieve_primes(n):
     """Count primes up to n using the Sieve of Eratosthenes.
 
     Returns (prime_count, sum of first 100 primes, largest prime <= n).
-
-    Args:
-        n: Upper bound for prime search.
-
-    Returns:
-        Tuple of (count, sum_first_100, largest_prime).
     """
     is_prime = [True] * (n + 1)
     is_prime[0] = False
