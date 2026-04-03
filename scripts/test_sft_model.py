@@ -41,23 +41,32 @@ logger = logging.getLogger(__name__)
 
 TOOLS_FILE = Path("data/tools.json")
 SYSTEM_PROMPT_FILE = Path("data/system_prompt.txt")
-SFT_DATASET = Path("data/sft_dataset.jsonl")
+SFT_DATASET = Path("data/sft_dataset_v2.jsonl")
 
-# Responses API tool format
+# Responses API tool format — matches data/tools.json
 RESPONSE_TOOLS = [
     {
         "type": "function",
         "name": "evaluate_cython",
         "description": (
-            "Compile, analyze, test, and benchmark Cython code in one step. "
-            "Returns compilation status, annotation score, correctness tests, and speedup."
+            "Compile Cython code, test equivalence against Python reference, and benchmark. "
+            "The test_code runs in a namespace where `py` is the Python module and `cy` is "
+            "the compiled Cython module. Each test assertion has a 5-second timeout."
         ),
         "parameters": {
             "type": "object",
             "properties": {
-                "code": {"type": "string", "description": "Complete .pyx source code."},
+                "code": {"type": "string", "description": "Complete .pyx Cython source code."},
+                "python_code": {
+                    "type": "string",
+                    "description": "Original Python source code (reference implementation).",
+                },
+                "test_code": {
+                    "type": "string",
+                    "description": "Equivalence test assertions comparing py.<name>(...) == cy.<name>(...).",
+                },
             },
-            "required": ["code"],
+            "required": ["code", "python_code", "test_code"],
         },
     }
 ]
@@ -98,12 +107,7 @@ def run_problem(
 ):
     """Run ReAct loop using the Responses API (/v1/responses)."""
     env = CythonToolEnvironment()
-    env.reset(
-        python_code=problem.python_code,
-        func_name=problem.func_name,
-        test_cases=problem.test_cases,
-        benchmark_args=problem.benchmark_args,
-    )
+    env.reset()
 
     user_content = (
         f"python_code: {problem.python_code}\n\n"
@@ -155,17 +159,21 @@ def run_problem(
                 logger.info(f"  iter {iteration}: no tool call (status={result.get('status')})")
             break
 
-        # Execute the tool
+        # Execute the tool — extract all 3 params
         try:
             args = json.loads(tool_call["arguments"])
             code = args.get("code", "")
+            python_code = args.get("python_code", problem.python_code)
+            test_code = args.get("test_code", "")
         except (json.JSONDecodeError, KeyError):
             if verbose:
                 logger.warning(f"  iter {iteration}: bad tool args")
             break
 
         try:
-            eval_result = env.safe_evaluate(code=code)
+            eval_result = env.evaluate_cython(
+                code=code, python_code=python_code, test_code=test_code
+            )
         except Exception as e:
             eval_result = f"## Error\n{e}"
 
