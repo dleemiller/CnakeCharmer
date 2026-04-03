@@ -1,220 +1,166 @@
 """
-OpenEnv-compatible tool environment for TRL GRPOTrainer.
+Tool environment for training and serving a Cython code generation agent.
 
-Exposes a single `evaluate_cython` tool matching the SFT training data format.
-The trainer handles the multi-turn loop: generate → tool call → execute → repeat.
+Exposes `evaluate_cython(code, python_code, test_code)` which:
+1. Compiles the Cython code
+2. Runs annotation analysis
+3. Executes the model's equivalence tests (py.<name> vs cy.<name>)
+4. Benchmarks against the Python reference
 
-Tracks per-step scores for graduated reward computation (R_atomic + R_progress).
+Works identically for SFT training, GRPO training, and production serving.
 """
 
-import json
 import logging
 import math
-import multiprocessing
+import signal
+import types
 
-from cnake_charmer.rewards.composite import DEFAULT_WEIGHTS, composite_reward
+from cnake_charmer.rewards.composite import DEFAULT_WEIGHTS
 from cnake_charmer.training.prompts import format_feedback
 from cnake_charmer.validate.annotations import parse_annotations
 from cnake_charmer.validate.benchmark import run_benchmark as _run_benchmark
 from cnake_charmer.validate.compiler import cleanup_build, compile_cython
-from cnake_charmer.validate.correctness import _load_module_from_path, check_correctness
+from cnake_charmer.validate.correctness import _load_module_from_path
 
 logger = logging.getLogger(__name__)
 
-
-def _exec_func(python_code: str, func_name: str):
-    """Execute Python code string and extract the named function."""
-    if not func_name or not python_code:
-        return None
-    namespace = {}
-    try:
-        exec(python_code, namespace)  # noqa: S102
-        return namespace.get(func_name)
-    except Exception as e:
-        logger.warning(f"Failed to exec Python for {func_name}: {e}")
-        return None
+ASSERTION_TIMEOUT = 5  # seconds per test line
 
 
-def _generate_test_cases(python_func, func_name: str, python_code: str) -> list:
-    """Auto-generate test cases by inspecting the function and trying small inputs.
+class _TimeoutError(Exception):
+    pass
 
-    Inspects the function signature to determine parameter count, then tries
-    a range of small inputs. Only keeps inputs that the Python function
-    handles without error.
 
-    Returns list of ((args,),) tuples compatible with check_correctness.
+def _timeout_handler(signum, frame):
+    raise _TimeoutError("Timed out")
+
+
+def _exec_as_module(code: str, name: str = "dynamic_module") -> types.ModuleType:
+    """Execute code into a module object. Works for any Python code."""
+    mod = types.ModuleType(name)
+    exec(code, mod.__dict__)  # noqa: S102
+    return mod
+
+
+def _run_test_code(py_mod, cy_mod, test_code: str) -> dict:
+    """Run model's test assertions with py and cy modules in namespace.
+
+    Each line is executed with a 5-second timeout. Lines containing `==`
+    are treated as assertions (both sides evaluated, compared). Other
+    lines are executed as setup (variable assignments, etc.).
+
+    Returns dict with passed, total, failures list.
     """
-    if python_func is None:
-        return []
+    namespace = {"py": py_mod, "cy": cy_mod}
+    passed = 0
+    total = 0
+    failures = []
 
-    import inspect
-
-    try:
-        sig = inspect.signature(python_func)
-    except (ValueError, TypeError):
-        return []
-
-    params = [
-        p
-        for p in sig.parameters.values()
-        if p.kind in (p.POSITIONAL_ONLY, p.POSITIONAL_OR_KEYWORD) and p.default is p.empty
-    ]
-    n_params = len(params)
-
-    if n_params == 0:
-        # No-arg function: just call it once
-        try:
-            python_func()
-            return [((),)]
-        except Exception:
-            return []
-
-    if n_params == 1:
-        # Single param — most common case. Try small ints.
-        candidates = [1, 5, 10, 50, 100, 500]
-        cases = []
-        for v in candidates:
-            try:
-                python_func(v)
-                cases.append(((v,),))
-            except Exception:
-                continue
-            if len(cases) >= 4:
-                break
-        return cases
-
-    if n_params == 2:
-        # Two params — try small pairs
-        candidates = [(1, 1), (5, 5), (10, 10), (3, 7), (20, 20)]
-        cases = []
-        for args in candidates:
-            try:
-                python_func(*args)
-                cases.append((args,))
-            except Exception:
-                continue
-            if len(cases) >= 4:
-                break
-        return cases
-
-    # 3+ params — try all-same small values
-    candidates = [1, 5, 10, 50]
-    cases = []
-    for v in candidates:
-        args = tuple([v] * n_params)
-        try:
-            python_func(*args)
-            cases.append((args,))
-        except Exception:
+    for line in test_code.strip().splitlines():
+        line = line.strip()
+        if not line or line.startswith("#"):
             continue
-        if len(cases) >= 3:
-            break
-    return cases
 
+        # Set timeout
+        old_handler = signal.signal(signal.SIGALRM, _timeout_handler)
+        signal.alarm(ASSERTION_TIMEOUT)
+        try:
+            if "==" in line:
+                # Assertion line: evaluate and compare
+                total += 1
+                result = eval(line, namespace)  # noqa: S307
+                if result:
+                    passed += 1
+                else:
+                    # Try to get both sides for the error message
+                    parts = line.split("==", 1)
+                    try:
+                        left = eval(parts[0].strip(), namespace)  # noqa: S307
+                        right = eval(parts[1].strip(), namespace)  # noqa: S307
+                        failures.append(
+                            f"FAIL: {line}\n  left:  {repr(left)[:200]}\n  right: {repr(right)[:200]}"
+                        )
+                    except Exception:
+                        failures.append(f"FAIL: {line}")
+            else:
+                # Setup line (variable assignment, import, etc.)
+                exec(line, namespace)  # noqa: S102
+        except _TimeoutError:
+            if "==" in line:
+                total += 1
+                failures.append(f"TIMEOUT: {line} (>{ASSERTION_TIMEOUT}s)")
+            else:
+                failures.append(f"TIMEOUT (setup): {line}")
+        except Exception as e:
+            if "==" in line:
+                total += 1
+                failures.append(f"ERROR: {line}\n  {type(e).__name__}: {e}")
+            else:
+                failures.append(f"ERROR (setup): {line}\n  {type(e).__name__}: {e}")
+        finally:
+            signal.alarm(0)
+            signal.signal(signal.SIGALRM, old_handler)
 
-def _evaluate_worker(queue, env_args, code, annotate, test, benchmark):
-    """Worker for safe_evaluate — runs in a spawned subprocess."""
-    try:
-        env = CythonToolEnvironment()
-        env.reset(**env_args)
-        result = env.evaluate_cython(code=code)
-        queue.put(result)
-    except Exception as e:
-        queue.put(f"## Error\n{type(e).__name__}: {e}")
+    return {"passed": passed, "total": total, "failures": failures}
 
 
 class CythonToolEnvironment:
     """Environment for training a Cython code generation agent.
 
-    Provides a single `evaluate_cython` tool matching the SFT training format.
-    Tracks per-step scores for graduated reward computation.
+    Exposes `evaluate_cython(code, python_code, test_code)` as the single tool.
+    The model provides all three: Cython code, Python reference, and test assertions.
 
     Used with TRL GRPOTrainer's environment_factory parameter.
     """
 
-    def reset(
-        self,
-        *,
-        python_code: str = "",
-        func_name: str = "",
-        test_cases: str = "[]",
-        benchmark_args: str = "null",
-        **kwargs,
-    ) -> str | None:
+    def reset(self, *, python_code: str = "", **kwargs) -> str | None:
         """Reset the environment for a new episode.
 
-        Called by TRL at the start of each rollout. Receives fields from the
-        dataset row as keyword arguments.
+        During training, python_code from the dataset is stored as the ground
+        truth reference. The tool uses this for equivalence checking regardless
+        of what the model passes as python_code — prevents reward hacking by
+        modifying the reference.
+
+        In production (MCP), reset() is called with no args, so
+        _original_python is empty and the tool uses the model's python_code.
         """
-        self._python_code = python_code
-        self._func_name = func_name
-        self._python_func = _exec_func(python_code, func_name)
-        self._test_cases = json.loads(test_cases) if isinstance(test_cases, str) else test_cases
-        self._benchmark_args = (
-            json.loads(benchmark_args) if isinstance(benchmark_args, str) else benchmark_args
-        )
-        if self._benchmark_args is not None and not isinstance(self._benchmark_args, tuple):
-            self._benchmark_args = tuple(self._benchmark_args) if self._benchmark_args else None
-
-        # Auto-generate test cases if none provided
-        if not self._test_cases and self._python_func:
-            self._test_cases = _generate_test_cases(self._python_func, self._func_name, python_code)
-            if not self._benchmark_args and self._test_cases:
-                # Use the largest test input as benchmark args
-                self._benchmark_args = self._test_cases[-1][0]
-            if self._test_cases:
-                logger.info(
-                    f"[reset] Auto-generated {len(self._test_cases)} test cases "
-                    f"for {self._func_name}"
-                )
-
-        # Per-step tracking for graduated rewards
-        self.step_scores = []  # List of score dicts per tool call
+        self.step_scores = []
         self.num_tool_calls = 0
-        self.format_errors = 0
         self.last_code = None
-
+        self._original_python = python_code
         return None
 
-    def evaluate_cython(
-        self,
-        code: str,
-        annotate: bool = True,
-        test: bool = True,
-        benchmark: bool = True,
-    ) -> str:
-        """Compile, analyze, test, and benchmark Cython code in one step. Returns compilation status, annotation score with optimization hints, correctness test results, and speedup measurement. If compilation fails, only error messages are returned. Fix any issues and call again. Set annotate/test/benchmark to False to skip expensive steps.
+    def evaluate_cython(self, code: str, python_code: str, test_code: str) -> str:
+        """Compile Cython code, test equivalence against Python reference, and benchmark.
+
+        The test_code runs in a namespace where `py` is the Python module and
+        `cy` is the compiled Cython module. Each test assertion has a 5-second
+        timeout.
 
         Args:
-            code: Complete .pyx source code.
-            annotate: Run annotation analysis (default true).
-            test: Run correctness tests (default true).
-            benchmark: Measure speedup (default true).
+            code: Complete .pyx Cython source code.
+            python_code: Original Python source code (reference implementation).
+            test_code: Equivalence test assertions comparing py.<name>(...) == cy.<name>(...) for functions, classes, or constants.
 
         Returns:
             Evaluation results as formatted text.
         """
+        # During training, use the ground truth Python from reset() to prevent
+        # reward hacking (model could modify python_code to match broken Cython).
+        # In production (no reset), use whatever the model passes.
+        effective_python = self._original_python if self._original_python else python_code
+
         self.last_code = code
         self.num_tool_calls += 1
         code_preview = code[:80].replace("\n", "\\n") if code else "<empty>"
         logger.info(
-            f"[evaluate_cython] call #{self.num_tool_calls} for {self._func_name} "
-            f"({len(code)} chars): {code_preview}..."
+            f"[evaluate_cython] call #{self.num_tool_calls} ({len(code)} chars): {code_preview}..."
         )
         sections = []
 
-        # Compile with annotations enabled (one compilation for everything)
-        result = compile_cython(code, annotate=True, keep_build=True)
-        compiled = result.success
-        logger.info(f"[evaluate_cython] compiled={compiled}")
-        sections.append(
-            "## Compilation\n"
-            + format_feedback("compile", {"success": result.success, "errors": result.errors})
-        )
-
-        # Initialize step scores
+        # Step scores
         step = {
-            "compiled": compiled,
+            "compiled": False,
             "correctness": 0.0,
             "performance": 0.0,
             "annotations": 0.0,
@@ -224,13 +170,22 @@ class CythonToolEnvironment:
             "total": 0.0,
         }
 
-        if not compiled:
+        # 1. Compile
+        comp = compile_cython(code, annotate=True, keep_build=True)
+        step["compiled"] = comp.success
+        logger.info(f"[evaluate_cython] compiled={comp.success}")
+        sections.append(
+            "## Compilation\n"
+            + format_feedback("compile", {"success": comp.success, "errors": comp.errors})
+        )
+
+        if not comp.success:
             self.step_scores.append(step)
-            cleanup_build(result)
+            cleanup_build(comp)
             return "\n\n".join(sections)
 
-        # Annotation (from the same compilation, no rebuild)
-        ann = parse_annotations(html_path=result.html_path) if result.html_path else None
+        # 2. Annotation
+        ann = parse_annotations(html_path=comp.html_path) if comp.html_path else None
         if ann and ann.success:
             step["annotations"] = ann.score
             sections.append(
@@ -247,70 +202,57 @@ class CythonToolEnvironment:
                 )
             )
 
-        # Load the compiled module once for both test and benchmark
-        cython_func = None
-        if result.module_path:
-            try:
-                module = _load_module_from_path(result.module_path, "gen_module")
-                cython_func = getattr(module, self._func_name)
-            except Exception as e:
-                sections.append(f"## Load Error\nCould not load function: {e}")
-                self.step_scores.append(step)
-                cleanup_build(result)
-                return "\n\n".join(sections)
+        # 3. Load both modules
+        py_mod = None
+        cy_mod = None
+        try:
+            py_mod = _exec_as_module(effective_python, "py_module")
+        except Exception as e:
+            sections.append(f"## Python Error\nFailed to load Python code: {e}")
+            self.step_scores.append(step)
+            cleanup_build(comp)
+            return "\n\n".join(sections)
 
-        # Test (reuses loaded module)
-        if cython_func and self._python_func and self._test_cases:
-            test_result = check_correctness(
-                python_func=self._python_func,
-                cython_func=cython_func,
-                test_cases=self._test_cases,
-            )
-            step["correctness"] = test_result.score
-            logger.info(f"[evaluate_cython] tests={test_result.passed}/{test_result.total}")
-            sections.append(
-                "## Tests\n"
-                + format_feedback(
-                    "test",
-                    {
-                        "success": True,
-                        "passed": test_result.passed,
-                        "total": test_result.total,
-                        "failures": test_result.failures,
-                    },
-                )
-            )
+        try:
+            cy_mod = _load_module_from_path(comp.module_path, "gen_module")
+        except Exception as e:
+            sections.append(f"## Load Error\nFailed to load compiled Cython: {e}")
+            self.step_scores.append(step)
+            cleanup_build(comp)
+            return "\n\n".join(sections)
 
-        # Benchmark (reuses loaded module) — skip if tests failed to avoid hanging on buggy code
-        if cython_func and self._python_func and step["correctness"] > 0:
-            b_args = self._benchmark_args or ()
-            bench_result = _run_benchmark(
-                python_func=self._python_func,
-                cython_func=cython_func,
-                args=b_args,
-                num_runs=3,
+        # 4. Run model's tests
+        test_results = _run_test_code(py_mod, cy_mod, test_code)
+        step["correctness"] = (
+            test_results["passed"] / test_results["total"] if test_results["total"] > 0 else 0.0
+        )
+        logger.info(f"[evaluate_cython] tests={test_results['passed']}/{test_results['total']}")
+        sections.append(
+            "## Tests\n"
+            + format_feedback(
+                "test",
+                {
+                    "success": True,
+                    "passed": test_results["passed"],
+                    "total": test_results["total"],
+                    "failures": test_results["failures"],
+                },
             )
-            if bench_result.success and bench_result.speedup > 1.0:
-                step["speedup"] = bench_result.speedup
-                step["performance"] = min(math.log2(bench_result.speedup) / math.log2(10), 1.0)
-            logger.info(f"[evaluate_cython] speedup={bench_result.speedup:.1f}x")
-            sections.append(
-                "## Benchmark\n"
-                + format_feedback(
-                    "benchmark",
-                    {
-                        "success": bench_result.success,
-                        "speedup": round(bench_result.speedup, 2),
-                        "cython_time": round(bench_result.cython_time, 6),
-                        "python_time": round(bench_result.python_time, 6),
-                        "errors": bench_result.error,
-                    },
-                )
-            )
+        )
 
-        cleanup_build(result)
+        # 5. Benchmark — skip if all tests failed
+        if step["correctness"] > 0:
+            bench = self._run_benchmark(py_mod, cy_mod, test_code)
+            if bench:
+                if bench["success"] and bench["speedup"] > 1.0:
+                    step["speedup"] = bench["speedup"]
+                    step["performance"] = min(math.log2(bench["speedup"]) / math.log2(10), 1.0)
+                logger.info(f"[evaluate_cython] speedup={bench['speedup']:.1f}x")
+                sections.append("## Benchmark\n" + format_feedback("benchmark", bench))
 
-        # Compute weighted total for this step
+        cleanup_build(comp)
+
+        # Compute step total
         step["total"] = self._weighted_score(step)
         self.step_scores.append(step)
         logger.info(
@@ -320,6 +262,48 @@ class CythonToolEnvironment:
         )
 
         return "\n\n".join(sections)
+
+    def _run_benchmark(self, py_mod, cy_mod, test_code: str) -> dict | None:
+        """Extract a callable pair from test_code and benchmark them.
+
+        Finds the first `py.<func>(args) == cy.<func>(args)` line and
+        uses it to benchmark py.func vs cy.func with the same args.
+        """
+        import re
+
+        # Find first assertion that calls a function on both sides
+        for line in test_code.strip().splitlines():
+            line = line.strip()
+            m = re.match(r"py\.(\w+)\((.+?)\)\s*==\s*cy\.\w+\(", line)
+            if m:
+                func_name = m.group(1)
+                py_func = getattr(py_mod, func_name, None)
+                cy_func = getattr(cy_mod, func_name, None)
+                if py_func and cy_func:
+                    # Parse args
+                    args_str = m.group(2)
+                    try:
+                        args = eval(f"({args_str},)")  # noqa: S307
+                    except Exception:
+                        continue
+                    try:
+                        result = _run_benchmark(
+                            python_func=py_func,
+                            cython_func=cy_func,
+                            args=args,
+                            num_runs=3,
+                        )
+                        return {
+                            "success": result.success,
+                            "speedup": round(result.speedup, 2),
+                            "cython_time": round(result.cython_time, 6),
+                            "python_time": round(result.python_time, 6),
+                            "errors": result.error,
+                        }
+                    except Exception as e:
+                        logger.warning(f"Benchmark failed: {e}")
+                        return None
+        return None
 
     def _weighted_score(self, scores: dict, weights: dict | None = None) -> float:
         """Compute weighted composite score from a step's scores dict."""
@@ -337,10 +321,7 @@ class CythonToolEnvironment:
     # -- Graduated reward methods (called by reward function) --
 
     def _get_atomic_reward(self, weights: dict | None = None) -> float:
-        """R_atomic: Average quality across all tool calls.
-
-        Every call contributes signal — not just the last one.
-        """
+        """R_atomic: Average quality across all tool calls."""
         if not self.step_scores:
             return 0.0
         return sum(self._weighted_score(s, weights) for s in self.step_scores) / len(
@@ -348,12 +329,7 @@ class CythonToolEnvironment:
         )
 
     def _get_progress_reward(self) -> float:
-        """R_progress: Average step-over-step improvement (delta-clipped).
-
-        Measures whether each tool call improves on the previous one.
-        Asymmetric clipping: improvements rewarded up to +0.5, regressions
-        penalized up to -0.3 (encourage exploration).
-        """
+        """R_progress: Average step-over-step improvement (delta-clipped)."""
         if len(self.step_scores) < 2:
             return 0.0
         deltas = []
@@ -369,77 +345,9 @@ class CythonToolEnvironment:
         bonus = 0.0
         if not self.step_scores:
             return bonus
-
         last = self.step_scores[-1]
-        # Completion bonus: final code compiles and passes all tests
         if last.get("compiled") and last.get("correctness", 0) >= 1.0:
             bonus += 0.05
-        # Efficiency bonus: solved in ≤3 tool calls
         if self.num_tool_calls <= 3 and last.get("compiled"):
             bonus += 0.05
-        # Format penalty
-        if self.format_errors > 0:
-            bonus -= 0.1 * self.format_errors
         return bonus
-
-    def _get_composite_score(self) -> float:
-        """Legacy: compute final reward from the last submitted code.
-
-        Kept for backward compatibility with existing code.
-        """
-        if not self.last_code or not self._python_func:
-            return 0.0
-
-        scores = composite_reward(
-            cython_code=self.last_code,
-            python_func=self._python_func,
-            func_name=self._func_name,
-            test_cases=self._test_cases,
-            benchmark_args=self._benchmark_args,
-            benchmark_runs=3,
-        )
-        return scores["total"]
-
-    def _safe_evaluate(
-        self,
-        code: str,
-        timeout: int = 60,
-    ) -> str:
-        """Run evaluate_cython() in a subprocess to isolate segfaults and hangs.
-
-        Args:
-            code: Complete .pyx source code.
-            timeout: Max seconds before killing the worker.
-
-        Returns:
-            Markdown-formatted results, or error message on crash/timeout.
-        """
-        ctx = multiprocessing.get_context("spawn")
-        queue = ctx.Queue()
-
-        env_args = {
-            "python_code": self._python_code,
-            "func_name": self._func_name,
-            "test_cases": self._test_cases,
-            "benchmark_args": self._benchmark_args,
-        }
-
-        proc = ctx.Process(
-            target=_evaluate_worker,
-            args=(queue, env_args, code, True, True, True),
-        )
-        proc.start()
-        proc.join(timeout=timeout)
-
-        if proc.is_alive():
-            proc.kill()
-            proc.join()
-            return "## Error\nEvaluation timed out."
-
-        if proc.exitcode != 0:
-            return f"## Error\nEvaluation crashed (exit code {proc.exitcode}). Try a different approach."
-
-        if not queue.empty():
-            return queue.get()
-
-        return "## Error\nEvaluation returned no result."

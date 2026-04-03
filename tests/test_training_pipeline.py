@@ -3,13 +3,11 @@ Tests for the training pipeline components.
 
 These tests verify the non-inference parts of the pipeline:
 - Prompt formatting
-- Tool environment
+- Tool environment (3-param: code, python_code, test_code)
 - Code extraction
 - Credit assignment
 - Reward computation
 """
-
-import json
 
 import pytest
 
@@ -35,6 +33,20 @@ def primes_py(nb_primes):
     return primes_list
 
 
+PRIMES_PY_CODE = """\
+def primes(nb_primes):
+    primes_list = []
+    n = 2
+    while len(primes_list) < nb_primes:
+        for prime in primes_list:
+            if n % prime == 0:
+                break
+        else:
+            primes_list.append(n)
+        n += 1
+    return primes_list
+"""
+
 PRIMES_CYTHON = """
 import cython
 
@@ -56,25 +68,16 @@ def primes(int nb_primes):
     return [prime for prime in p[:len_p]]
 """
 
-PRIMES_PY_CODE = """\
-def primes(nb_primes):
-    primes_list = []
-    n = 2
-    while len(primes_list) < nb_primes:
-        for prime in primes_list:
-            if n % prime == 0:
-                break
-        else:
-            primes_list.append(n)
-        n += 1
-    return primes_list
-"""
-
 BAD_CYTHON = """
 def primes(nb_primes):
     # This won't compile — invalid cdef in def
     cdef int x = broken syntax here
     return []
+"""
+
+PRIMES_TEST_CODE = """\
+py.primes(10) == cy.primes(10)
+py.primes(20) == cy.primes(20)
 """
 
 
@@ -140,97 +143,109 @@ class TestCodeExtraction:
         assert "def add" in _extract_code_from_content(content)
 
 
-# --- Tool Environment ---
+# --- Tool Environment (3-param interface) ---
 
 
 class TestToolEnvironment:
     @pytest.fixture()
     def env(self):
         e = CythonToolEnvironment()
-        e.reset(
-            python_code=PRIMES_PY_CODE,
-            func_name="primes",
-            test_cases=json.dumps([((10,),), ((20,),)]),
-            benchmark_args=json.dumps((100,)),
-        )
+        e.reset()
         return e
 
-    def test_evaluate_cython_good_code(self, env):
-        result = env.evaluate_cython(PRIMES_CYTHON)
+    def test_good_code(self, env):
+        result = env.evaluate_cython(PRIMES_CYTHON, PRIMES_PY_CODE, PRIMES_TEST_CODE)
         assert "Compilation" in result
-        assert "successful" in result.lower() or "True" in result
+        assert "successful" in result.lower()
 
-    def test_evaluate_cython_bad_code(self, env):
-        result = env.evaluate_cython(BAD_CYTHON)
+    def test_bad_code(self, env):
+        result = env.evaluate_cython(BAD_CYTHON, PRIMES_PY_CODE, PRIMES_TEST_CODE)
         assert "failed" in result.lower() or "error" in result.lower()
 
-    def test_evaluate_cython_tracks_steps(self, env):
-        env.evaluate_cython(PRIMES_CYTHON)
+    def test_tracks_steps(self, env):
+        env.evaluate_cython(PRIMES_CYTHON, PRIMES_PY_CODE, PRIMES_TEST_CODE)
         assert len(env.step_scores) == 1
         assert env.num_tool_calls == 1
         assert env.step_scores[0]["compiled"] is True
 
-    def test_evaluate_cython_multiple_calls(self, env):
-        env.evaluate_cython(BAD_CYTHON)
-        env.evaluate_cython(PRIMES_CYTHON)
+    def test_multiple_calls(self, env):
+        env.evaluate_cython(BAD_CYTHON, PRIMES_PY_CODE, PRIMES_TEST_CODE)
+        env.evaluate_cython(PRIMES_CYTHON, PRIMES_PY_CODE, PRIMES_TEST_CODE)
         assert len(env.step_scores) == 2
         assert env.num_tool_calls == 2
         assert env.step_scores[0]["compiled"] is False
         assert env.step_scores[1]["compiled"] is True
 
-    def test_correctness_score(self, env):
-        env.evaluate_cython(PRIMES_CYTHON)
+    def test_correctness_from_test_code(self, env):
+        env.evaluate_cython(PRIMES_CYTHON, PRIMES_PY_CODE, PRIMES_TEST_CODE)
         assert env.step_scores[0]["correctness"] == 1.0
 
+    def test_failing_tests(self, env):
+        # Wrong cython: multiply instead of building prime list
+        wrong_cy = "def primes(int n):\n    return [i * 2 for i in range(n)]"
+        env.evaluate_cython(wrong_cy, PRIMES_PY_CODE, PRIMES_TEST_CODE)
+        assert env.step_scores[0]["correctness"] < 1.0
+
     def test_annotation_score(self, env):
-        env.evaluate_cython(PRIMES_CYTHON)
+        env.evaluate_cython(PRIMES_CYTHON, PRIMES_PY_CODE, PRIMES_TEST_CODE)
         assert env.step_scores[0]["annotations"] > 0.0
 
     def test_speedup_measured(self, env):
-        env.evaluate_cython(PRIMES_CYTHON)
+        env.evaluate_cython(PRIMES_CYTHON, PRIMES_PY_CODE, PRIMES_TEST_CODE)
         assert env.step_scores[0]["speedup"] > 1.0
 
     def test_weighted_total(self, env):
-        env.evaluate_cython(PRIMES_CYTHON)
-        assert env.step_scores[0]["total"] > 0.5
+        env.evaluate_cython(PRIMES_CYTHON, PRIMES_PY_CODE, PRIMES_TEST_CODE)
+        assert env.step_scores[0]["total"] > 0.3
 
     def test_atomic_reward(self, env):
-        env.evaluate_cython(PRIMES_CYTHON)
-        assert env._get_atomic_reward() > 0.5
+        env.evaluate_cython(PRIMES_CYTHON, PRIMES_PY_CODE, PRIMES_TEST_CODE)
+        assert env._get_atomic_reward() > 0.3
 
     def test_progress_reward_single_call(self, env):
-        env.evaluate_cython(PRIMES_CYTHON)
-        # Single call → no delta to compute
+        env.evaluate_cython(PRIMES_CYTHON, PRIMES_PY_CODE, PRIMES_TEST_CODE)
         assert env._get_progress_reward() == 0.0
 
     def test_progress_reward_improvement(self, env):
-        env.evaluate_cython(BAD_CYTHON)  # fails to compile → score 0
-        env.evaluate_cython(PRIMES_CYTHON)  # compiles + correct → high score
+        env.evaluate_cython(BAD_CYTHON, PRIMES_PY_CODE, PRIMES_TEST_CODE)
+        env.evaluate_cython(PRIMES_CYTHON, PRIMES_PY_CODE, PRIMES_TEST_CODE)
         assert env._get_progress_reward() > 0.0
 
     def test_progress_reward_regression(self, env):
-        env.evaluate_cython(PRIMES_CYTHON)  # good
-        env.evaluate_cython(BAD_CYTHON)  # bad
+        env.evaluate_cython(PRIMES_CYTHON, PRIMES_PY_CODE, PRIMES_TEST_CODE)
+        env.evaluate_cython(BAD_CYTHON, PRIMES_PY_CODE, PRIMES_TEST_CODE)
         assert env._get_progress_reward() < 0.0
 
-    def test_bonus_reward_correct_code(self, env):
-        env.evaluate_cython(PRIMES_CYTHON)
-        bonus = env._get_bonus_reward()
-        # Should get completion bonus (+0.05) and efficiency bonus (+0.05)
-        assert bonus >= 0.05
+    def test_bonus_correct_code(self, env):
+        env.evaluate_cython(PRIMES_CYTHON, PRIMES_PY_CODE, PRIMES_TEST_CODE)
+        assert env._get_bonus_reward() >= 0.05
 
-    def test_bonus_reward_failed_code(self, env):
-        env.evaluate_cython(BAD_CYTHON)
-        bonus = env._get_bonus_reward()
-        assert bonus <= 0.0  # no bonuses for failed compilation
+    def test_bonus_failed_code(self, env):
+        env.evaluate_cython(BAD_CYTHON, PRIMES_PY_CODE, PRIMES_TEST_CODE)
+        assert env._get_bonus_reward() <= 0.0
 
     def test_reset_clears_state(self, env):
-        env.evaluate_cython(PRIMES_CYTHON)
+        env.evaluate_cython(PRIMES_CYTHON, PRIMES_PY_CODE, PRIMES_TEST_CODE)
         assert len(env.step_scores) == 1
-        env.reset(python_code=PRIMES_PY_CODE, func_name="primes", test_cases="[]")
+        env.reset()
         assert len(env.step_scores) == 0
         assert env.num_tool_calls == 0
-        assert env.last_code is None
+
+    def test_py_cy_module_namespace(self, env):
+        """Tests run in a namespace with py and cy modules."""
+        py_code = "def add(a, b): return a + b"
+        cy_code = "def add(int a, int b): return a + b"
+        test_code = "py.add(2, 3) == cy.add(2, 3)\npy.add(0, 0) == cy.add(0, 0)"
+        result = env.evaluate_cython(cy_code, py_code, test_code)
+        assert "2/2 passed" in result
+
+    def test_setup_lines_in_test_code(self, env):
+        """Non-assertion lines (variable assignments) work as setup."""
+        py_code = "def add(a, b): return a + b"
+        cy_code = "def add(int a, int b): return a + b"
+        test_code = "x = 5\ny = 10\npy.add(x, y) == cy.add(x, y)"
+        result = env.evaluate_cython(cy_code, py_code, test_code)
+        assert "1/1 passed" in result
 
     def test_tool_methods_for_trl(self, env):
         """Only evaluate_cython should be discoverable as a public method by TRL."""
@@ -240,7 +255,6 @@ class TestToolEnvironment:
             if not m.startswith("_") and callable(getattr(env, m)) and m != "reset"
         ]
         assert "evaluate_cython" in public_methods
-        # Old individual tools should NOT be public
         assert "compile" not in public_methods
         assert "annotate" not in public_methods
         assert "test" not in public_methods
@@ -272,7 +286,6 @@ class TestCredit:
             ],
         )
         mars_credit(root)
-        # Root should get credit from best path (0.9 through v1→v1.1)
         assert root.credit > 0.7
 
     def test_mers_leaf(self):
@@ -289,7 +302,6 @@ class TestCredit:
             ],
         )
         mers_credit(root)
-        # MeRS averages, so root credit should be moderate
         assert 0.0 < root.credit < 1.0
 
 

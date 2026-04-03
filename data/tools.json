@@ -1,0 +1,31 @@
+[
+  {
+    "type": "function",
+    "function": {
+      "name": "evaluate_cython",
+      "description": "Compile Cython code, test equivalence against Python reference, and benchmark. Runs test_code in a namespace where `py` is the Python module and `cy` is the compiled Cython module. Each test assertion has a 5-second timeout. Hidden verification tests also run automatically to check equivalence.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "Complete .pyx Cython source code."
+          },
+          "python_code": {
+            "type": "string",
+            "description": "Original Python source code (reference implementation)."
+          },
+          "test_code": {
+            "type": "string",
+            "description": "Equivalence test assertions comparing py.<name>(...) == cy.<name>(...) for functions, classes, or constants."
+          }
+        },
+        "required": [
+          "code",
+          "python_code",
+          "test_code"
+        ]
+      }
+    }
+  }
+]
