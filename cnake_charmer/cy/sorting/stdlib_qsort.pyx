@@ -19,7 +19,7 @@ cdef int _compare_ints(const void *a, const void *b) noexcept nogil:
     return 0
 
 
-@cython_benchmark(syntax="cy", args=(300000,))
+@cython_benchmark(syntax="cy", args=(50000,))
 def stdlib_qsort(int n):
     """Sort n deterministic integers using C stdlib qsort and return checksum.
 
@@ -35,25 +35,27 @@ def stdlib_qsort(int n):
 
     cdef int i
     cdef unsigned long long v
-    for i in range(n):
-        v = ((<unsigned long long>i * <unsigned long long>2654435761) ^ (<unsigned long long>i * <unsigned long long>40503)) % <unsigned long long>1000000
-        arr[i] = <int>v
-
-    qsort(<void *>arr, <size_t>n, sizeof(int), _compare_ints)
-
-    cdef int limit = 10 if n >= 10 else n
+    cdef int limit
     cdef long long sum_first = 0
     cdef long long sum_last = 0
     cdef long long total = 0
 
-    for i in range(limit):
-        sum_first += arr[i]
+    with nogil:
+        for i in range(n):
+            v = ((<unsigned long long>i * <unsigned long long>2654435761) ^ (<unsigned long long>i * <unsigned long long>40503)) % <unsigned long long>1000000
+            arr[i] = <int>v
 
-    for i in range(n - limit, n):
-        sum_last += arr[i]
+        qsort(<void *>arr, <size_t>n, sizeof(int), _compare_ints)
 
-    for i in range(n):
-        total += arr[i]
+        limit = 10 if n >= 10 else n
+        for i in range(limit):
+            sum_first += arr[i]
+
+        for i in range(n - limit, n):
+            sum_last += arr[i]
+
+        for i in range(n):
+            total += arr[i]
 
     free(arr)
     return (sum_first, sum_last, total)

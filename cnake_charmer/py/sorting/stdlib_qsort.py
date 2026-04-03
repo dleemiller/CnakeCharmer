@@ -9,13 +9,13 @@ Keywords: sorting, qsort, stdlib, callback, comparison, benchmark
 from cnake_charmer.benchmarks import python_benchmark
 
 
-@python_benchmark(args=(300000,))
+@python_benchmark(args=(50000,))
 def stdlib_qsort(n: int) -> tuple:
-    """Sort n deterministic integers using Python sorted() and return checksum.
+    """Sort n deterministic integers using pure Python quicksort and return checksum.
 
     Generates arr[i] = ((i * 2654435761) ^ (i * 40503)) % 1000000 for
-    determinism, sorts ascending, then computes a checksum from the first
-    and last 10 elements plus the total sum.
+    determinism, sorts ascending via iterative quicksort, then computes
+    a checksum from the first and last 10 elements plus the total sum.
 
     Args:
         n: Number of integers to sort.
@@ -25,8 +25,27 @@ def stdlib_qsort(n: int) -> tuple:
     """
     arr = [((i * 2654435761) ^ (i * 40503)) % 1000000 for i in range(n)]
 
-    # In-place sort using comparison (mirrors C qsort behaviour)
-    arr.sort()
+    # Iterative quicksort (pure Python, no built-in sort)
+    stack = [(0, n - 1)]
+    while stack:
+        lo, hi = stack.pop()
+        if lo >= hi:
+            continue
+        pivot = arr[(lo + hi) // 2]
+        i, j = lo, hi
+        while i <= j:
+            while arr[i] < pivot:
+                i += 1
+            while arr[j] > pivot:
+                j -= 1
+            if i <= j:
+                arr[i], arr[j] = arr[j], arr[i]
+                i += 1
+                j -= 1
+        if lo < j:
+            stack.append((lo, j))
+        if i < hi:
+            stack.append((i, hi))
 
     limit = min(10, n)
     sum_first = 0

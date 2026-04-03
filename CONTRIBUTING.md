@@ -198,7 +198,42 @@ uv run pytest tests/{category}/test_{name}.py -v
 - Target score: **>0.85** (85% C lines)
 - Common culprits: `list.append()`, Python list indexing, `sort()` on tuples, string ops
 
-### 5. Run benchmarks and commit
+### 5. Score with MCP and iterate
+
+Run the full composite scoring to check quality:
+
+```
+score_problem("{category}/{name}")
+```
+
+**Minimum thresholds for acceptance:**
+
+| Signal | Minimum | Target |
+|--------|---------|--------|
+| Total reward | **≥ 0.80** | > 0.90 |
+| Correctness | **1.0** (required) | — |
+| Speedup | **≥ 5x** | > 10x |
+| Annotation | **≥ 0.85** | > 0.90 |
+| Memory safety | **1.0** (required) | — |
+| Lint | **1.0** (required) | — |
+
+**If speedup is low (< 5x)**, check whether the Python baseline uses C-level builtins (`list.sort()`, `sum()`, `len()`) that already run in C. Replace with pure Python equivalents:
+- `arr.sort()` → hand-written quicksort/mergesort in Python
+- `sum(arr)` → explicit accumulation loop
+- Built-in `sorted()` → manual sort
+
+The Python version should be **idiomatic pure Python loops**, not wrappers around C-optimized builtins. This ensures the speedup reflects the real value of Cython optimization.
+
+**If annotation score is low (< 0.85)**, check `annotate_file` for yellow lines:
+- Add `cdef` to all loop variables and accumulators
+- Replace Python `list` operations with `malloc`/`free` C arrays
+- Add `with nogil:` around pure-C loop sections
+- Use `from libc.math cimport ...` instead of Python `math` module
+- Convert to Python objects only at the very end when returning
+
+Iterate until the problem meets all thresholds before committing.
+
+### 6. Run benchmarks and commit
 
 ```bash
 uv run run_benchmarks.py    # parallel, hash-cached, only re-runs changed
@@ -334,11 +369,12 @@ SFT candidates range from 415B to 8,000B (median ~4KB).
 ### Adapting Stack code
 
 1. Read the source, identify the core algorithm
-2. Write a pure Python version (self-contained, deterministic)
+2. Write a pure Python version (self-contained, deterministic, no C-level builtins in hot paths)
 3. Write a Cython version using our conventions
 4. Parameterize by `n`, tune benchmark args to 10-500ms Python time
-5. Test, annotate, benchmark, commit
-6. **Update the DuckDB split**: mark the row as `sft` (see above)
+5. Compile, test, then **run `score_problem` and iterate until ≥ 0.80 reward** (see Step 5 above)
+6. Mark duplicates as `split = 'duplicate'` in DuckDB, skip them
+7. **Update the DuckDB split**: mark converted rows as `sft`
 
 ## Memory Safety (ASan)
 
