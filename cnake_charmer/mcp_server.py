@@ -135,6 +135,33 @@ def list_problems() -> str:
 
 
 # ---------------------------------------------------------------------------
+# evaluate_cython: same interface as the training tool
+# ---------------------------------------------------------------------------
+
+
+@mcp.tool()
+def evaluate_cython(code: str, python_code: str, test_code: str) -> str:
+    """Compile Cython code, test equivalence against Python reference, and benchmark.
+
+    The test_code runs in a namespace where `py` is the Python module and
+    `cy` is the compiled Cython module. Each test assertion has a 5-second timeout.
+
+    Args:
+        code: Complete .pyx Cython source code.
+        python_code: Original Python source code (reference implementation).
+        test_code: Equivalence test assertions comparing py.<name>(...) == cy.<name>(...).
+
+    Returns:
+        Compilation status, annotation score, test results, and benchmark speedup.
+    """
+    from cnake_charmer.training.environment import CythonToolEnvironment
+
+    env = CythonToolEnvironment()
+    env.reset()
+    return env.evaluate_cython(code=code, python_code=python_code, test_code=test_code)
+
+
+# ---------------------------------------------------------------------------
 # File-based tools (for iterating on implementations)
 # ---------------------------------------------------------------------------
 
