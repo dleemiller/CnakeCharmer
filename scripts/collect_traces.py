@@ -90,14 +90,8 @@ def make_trace_record(
                 except (json.JSONDecodeError, TypeError):
                     pass
 
-    # Count iterations (DSPy ReAct may use 0-indexed or 1-indexed keys)
-    num_iters = 0
-    while f"tool_name_{num_iters}" in traj:
-        num_iters += 1
-    if num_iters == 0:
-        # Try 1-indexed (newer DSPy versions)
-        while f"tool_name_{num_iters + 1}" in traj:
-            num_iters += 1
+    # Count iterations — just count all tool_name_* keys
+    num_iters = sum(1 for k in traj if k.startswith("tool_name_"))
 
     # Extract tool calls
     entry_for_tools = {"trajectory": dict(traj)}
