@@ -338,15 +338,19 @@ def main():
             if not tool_name:
                 continue
 
-            # Inject python_code and test_code into tool call arguments
+            # Transform tool args to new 3-param format
             if isinstance(tool_args, str):
                 try:
                     tool_args = json.loads(tool_args)
                 except (json.JSONDecodeError, TypeError):
                     tool_args = {}
             if isinstance(tool_args, dict) and "code" in tool_args:
-                tool_args["python_code"] = python_code
-                tool_args["test_code"] = test_code
+                # Keep only the 3 required params, drop old bools
+                tool_args = {
+                    "code": tool_args["code"],
+                    "python_code": python_code,
+                    "test_code": test_code,
+                }
 
             # Select reasoning for analysis channel
             if is_thinking:
