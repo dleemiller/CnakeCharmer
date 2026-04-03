@@ -203,3 +203,9 @@ data/traces/
 data/trajectories/
 data/samples/
 data/sft_dataset.jsonl
+
+# Launch scripts (local config)
+start_*.sh
+
+# GEPA optimization logs
+**/gepa_logs/

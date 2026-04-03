@@ -50,6 +50,63 @@ def func_name(n: int) -> return_type:
     ...
 ```
 
+**Vary function signatures** — this is training data, so problems should reflect the diversity of real-world code that gets converted to Cython. Don't make every function take a single `n: int`. Mix in realistic argument patterns:
+
+| Pattern | Example | Cython benefit |
+|---------|---------|----------------|
+| Size parameter | `def sieve(n: int)` | Loop bounds as C int |
+| Pre-built data | `def median(data: list)` | Typed memoryview or C array |
+| Multiple params | `def lerp(a: float, b: float, steps: int)` | All args as cdef types |
+| String input | `def hamming(s1: str, s2: str)` | `char *` / `bytes` processing |
+| Nested structure | `def adjacency(edges: list, n: int)` | C arrays of C arrays |
+| Class-based | `class Solver: def run(self, ...)` | `cdef class` with typed attrs |
+| Config dict | `def simulate(params: dict)` | Unpack to cdef locals at entry |
+
+**Hard rule for new additions:** avoid single-argument toy signatures like `def foo(n: int)` unless the real source problem is genuinely defined that way. Prefer multi-argument, data-driven interfaces (`seed/count/config`, arrays + shape parameters, thresholds, flags) that look like production code.
+
+Before finalizing a new problem, quickly check:
+- Does the function signature look like a realistic library/API call?
+- Is `n` only one part of the configuration rather than the whole interface?
+- Would this signature still make sense outside a benchmark harness?
+
+**Class-based problems are encouraged.** Many real Cython conversions involve stateful objects — `cdef class` with typed attributes, `cdef` helper methods, and `__init__` that pre-allocates C arrays. The Stack v2 candidate pool includes class-based implementations that make good training examples. For classes:
+
+```python
+# py/ version — plain Python class
+class ParticleSystem:
+    def __init__(self, n):
+        self.x = [0.0] * n
+        self.v = [0.0] * n
+
+    def step(self, dt):
+        for i in range(len(self.x)):
+            self.x[i] += self.v[i] * dt
+```
+
+```cython
+# cy/ version — cdef class with C arrays
+cdef class ParticleSystem:
+    cdef double *x
+    cdef double *v
+    cdef int n
+
+    def __cinit__(self, int n):
+        self.n = n
+        self.x = <double *>malloc(n * sizeof(double))
+        self.v = <double *>malloc(n * sizeof(double))
+
+    def __dealloc__(self):
+        free(self.x)
+        free(self.v)
+
+    def step(self, double dt):
+        cdef int i
+        for i in range(self.n):
+            self.x[i] += self.v[i] * dt
+```
+
+The benchmark decorator goes on a **factory function** that creates the object and calls its methods, so both py and cy versions use the same `@python_benchmark` / `@cython_benchmark` pattern.
+
 ### 2. Write the Cython implementation
 
 Create `cnake_charmer/cy/{category}/{name}.pyx`:
@@ -127,6 +184,11 @@ with nogil:
             total += mat[i, j]
 ```
 
+**Decorator + `cpdef` note (practical guideline):**
+- Cython may reject arbitrary decorators directly on `cpdef`/`cdef` functions in some setups.
+- When that becomes an issue (or when it helps keep hot code clearly C-level), use a decorated `def` wrapper that calls a typed `cdef` core.
+- This is a recommended pattern, not a hard rule. If direct `def`/`cpdef` structure is already clean and performant, keep it simple.
+
 ### 3. Choose a discriminating return value
 
 Return values are how tests verify that py and cy implementations are equivalent. A good return value **changes when the algorithm is wrong**. A bad return value can accidentally match even with bugs.
@@ -183,6 +245,11 @@ def test_{name}_equivalence(n):
     # For floats: assert abs(py - cy) / max(abs(py), 1.0) < 1e-4
     # For ints/lists: assert py_result == cy_result
     assert py_func(n) == cy_func(n)
+
+# For multi-arg functions, parametrize all args:
+@pytest.mark.parametrize("s1,s2", [("abc", "axc"), ("kitten", "sitting")])
+def test_{name}_strings(s1, s2):
+    assert py_func(s1, s2) == cy_func(s1, s2)
 ```
 
 ### 4. Compile, test, review annotations
@@ -440,3 +507,8 @@ Available tools:
 | `check_memory` | Run AddressSanitizer to detect leaks, overflows, use-after-free |
 
 Auto-detects SIMD flags for `cy_simd/` and `nn_ops/` files.
+For new Stack-to-triplet conversions, treat this as a required quality gate before marking done:
+- Run `score_problem("{category}/{name}")`
+- Require `correctness = 1.0`
+- Require `annotation_score > 0.90`
+- Require a meaningful speedup versus Python (typically >2x; if lower, document why the workload is already close to C/NumPy-limited)

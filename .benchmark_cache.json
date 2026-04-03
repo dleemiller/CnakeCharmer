@@ -543,7 +543,63 @@
     "stdlib_qsort": "ae4e47c88d35bf76",
     "triangle_angles_3d": "70adcb465a6ea46c",
     "cosine_similarity": "d0f802e8e8fbdee9",
-    "alignment_identity": "6e1c7c9920691ae2"
+    "alignment_identity": "6e1c7c9920691ae2",
+    "batch_factorial_mod": "621c2ca601bbb729",
+    "derangement_count": "8e9e3d924b7182fc",
+    "mean_squared_error": "eae7c2e55fa25c27",
+    "l1_projection": "87cd691784a5887e",
+    "midpoint_sin_squared": "3e0d2996ad72bf2f",
+    "time_lagged_probability": "1db4a5640350edd8",
+    "poly_a_tail_finder": "3abf4940583baed9",
+    "rowwise_kronecker": "25e732f28d9ca671",
+    "central_moments": "74d8b78a5b0c6684",
+    "delta_decode_rows": "a967f738ad969f50",
+    "rk2_ode_step": "370592c438a1e29f",
+    "laguerre_polynomial": "e3409ad860de5294",
+    "newton_raphson_poly": "a65653e2059838e3",
+    "piecewise_interp": "0d27991fa279e701",
+    "assoc_legendre_sum": "072541b96b012e11",
+    "poisson_pmf_sum": "8ddca926dffc67d9",
+    "lcg_judge_match": "6b67c3f0562bcf84",
+    "signal_distance": "6f9ac96afba4b8da",
+    "dna_kmer_canonical": "910a1188fb0a4aa5",
+    "sudoku_solver": "319a0210c33193eb",
+    "sum_primes": "5f4ee49867c5bc10",
+    "polyline_simplify": "868ee657803ef0b7",
+    "fanno_flow": "0ef9f74cdf359c40",
+    "xor_chain_cipher": "f12fe54f3d1cd610",
+    "gene_row_variance": "f397e57db4084663",
+    "perlin_noise": "d21553d3c0ff74fd",
+    "huber_loss": "22bcff4a74d06984",
+    "trend_correlation": "a50c9fff22e07ff7",
+    "log_sum_exp": "6682b0297e8ff916",
+    "jaro_winkler": "0f2c194823c8f136",
+    "js_divergence": "718c05228310722d",
+    "spectral_norm": "32f304a5554990dd",
+    "convolution_2d": "e4791c4827eceb19",
+    "gp_kernel": "eeb2878e59d55bb3",
+    "lempel_ziv_complexity": "4c5c77fe8c602e68",
+    "kmer_frequency": "c3ff16f12cea208a",
+    "activation_functions": "cee95f439888cd30",
+    "midpoint_integrate": "650b881089ac4be4",
+    "pairwise_l1_norm": "7185fa9075a5e8f8",
+    "eigenvalues_3x3": "125aeee7d2ef783f",
+    "elastic_collision": "677066a2d65841b0",
+    "png_filters": "aec0b009d09bcd54",
+    "nelder_mead": "9cde9e73a5bfcddc",
+    "log_likelihood_linear": "6f19045a05712b73",
+    "seq_align_identity": "0e5b989d4916ba9a",
+    "edit_cost_matrix": "a30fbc412b7c1ba8",
+    "count_primes_trial": "c45ee7ee3e3c04ac",
+    "factorial_mod_sum": "4e3eb34d18c7ae04",
+    "integer_sqrt_newton": "f9f4d47e84841796",
+    "euclid_distance_pair": "530cb0acb350c580",
+    "lerp_accumulate": "86d075622066d385",
+    "crosses_dateline_count": "e4759cc21be11285",
+    "sin_squared_sum": "3c72689e14433645",
+    "euclidean_gcd_sum": "e3592169e0805f99",
+    "probability_to_phred_sum": "9aec876aaf41b696",
+    "xorshift_randint_sum": "28d6fdc72cd79bd4"
   },
   "results": {
     "a_star_grid": [
@@ -7292,6 +7348,678 @@
         "cy_avg": 0.001505508692935109,
         "cy_std": 2.8988514793646055e-06,
         "speedup": 191.29838416311654
+      }
+    ],
+    "batch_factorial_mod": [
+      {
+        "benchmark": "batch_factorial_mod",
+        "category": "math_problems",
+        "syntax": "cython",
+        "py_avg": 0.03389887302182615,
+        "py_std": 0.00016428856230197336,
+        "cy_avg": 0.0014791869325563312,
+        "cy_std": 5.58714697280092e-06,
+        "speedup": 22.917233972072825
+      }
+    ],
+    "derangement_count": [
+      {
+        "benchmark": "derangement_count",
+        "category": "math_problems",
+        "syntax": "cython",
+        "py_avg": 0.05639373997692019,
+        "py_std": 0.0012751849721212298,
+        "cy_avg": 0.0029554092092439533,
+        "cy_std": 6.462624822400976e-05,
+        "speedup": 19.081533548901245
+      }
+    ],
+    "mean_squared_error": [
+      {
+        "benchmark": "mean_squared_error",
+        "category": "statistics",
+        "syntax": "cython",
+        "py_avg": 0.2492654891917482,
+        "py_std": 0.013086172021580815,
+        "cy_avg": 0.0033417974831536413,
+        "cy_std": 2.2794971734483212e-05,
+        "speedup": 74.59024385778079
+      }
+    ],
+    "l1_projection": [
+      {
+        "benchmark": "l1_projection",
+        "category": "optimization",
+        "syntax": "cython",
+        "py_avg": 0.3201775194844231,
+        "py_std": 0.020196444261101145,
+        "cy_avg": 0.009140903735533357,
+        "cy_std": 0.00010066355818830162,
+        "speedup": 35.02689982827406
+      }
+    ],
+    "midpoint_sin_squared": [
+      {
+        "benchmark": "midpoint_sin_squared",
+        "category": "numerical",
+        "syntax": "cython",
+        "py_avg": 0.3461250532185659,
+        "py_std": 0.018218912748505536,
+        "cy_avg": 0.03192014705855399,
+        "cy_std": 0.0003089791584597563,
+        "speedup": 10.843466747933135
+      }
+    ],
+    "time_lagged_probability": [
+      {
+        "benchmark": "time_lagged_probability",
+        "category": "statistics",
+        "syntax": "cython",
+        "py_avg": 0.06645820320118219,
+        "py_std": 0.0006040167430927148,
+        "cy_avg": 0.0008947445079684257,
+        "cy_std": 1.878336444285642e-05,
+        "speedup": 74.27617896429425
+      }
+    ],
+    "poly_a_tail_finder": [
+      {
+        "benchmark": "poly_a_tail_finder",
+        "category": "string_processing",
+        "syntax": "cython",
+        "py_avg": 0.0668916657101363,
+        "py_std": 0.0009670022768020599,
+        "cy_avg": 0.0007056595757603645,
+        "cy_std": 1.46576742342636e-05,
+        "speedup": 94.79310989021722
+      }
+    ],
+    "rowwise_kronecker": [
+      {
+        "benchmark": "rowwise_kronecker",
+        "category": "numerical",
+        "syntax": "cython",
+        "py_avg": 0.8565360878594219,
+        "py_std": 0.03063657192496445,
+        "cy_avg": 0.00970715021248907,
+        "cy_std": 5.744155649804578e-05,
+        "speedup": 88.23764638538465
+      }
+    ],
+    "central_moments": [
+      {
+        "benchmark": "central_moments",
+        "category": "image_processing",
+        "syntax": "cython",
+        "py_avg": 0.00638211453333497,
+        "py_std": 0.00013498875720424267,
+        "cy_avg": 1.4207791537046432e-05,
+        "cy_std": 1.9975979733543321e-07,
+        "speedup": 449.1982104814657
+      }
+    ],
+    "delta_decode_rows": [
+      {
+        "benchmark": "delta_decode_rows",
+        "category": "compression",
+        "syntax": "cython",
+        "py_avg": 0.015276337135583162,
+        "py_std": 0.00042918797857394603,
+        "cy_avg": 0.00017621463630348443,
+        "cy_std": 9.25330418562373e-07,
+        "speedup": 86.69164750465788
+      }
+    ],
+    "rk2_ode_step": [
+      {
+        "benchmark": "rk2_ode_step",
+        "category": "diff_equations",
+        "syntax": "cython",
+        "py_avg": 0.07300028002355248,
+        "py_std": 0.0024714595581812855,
+        "cy_avg": 0.0025483279721811415,
+        "cy_std": 1.0949014389579133e-05,
+        "speedup": 28.646344120718005
+      }
+    ],
+    "laguerre_polynomial": [
+      {
+        "benchmark": "laguerre_polynomial",
+        "category": "math_problems",
+        "syntax": "cython",
+        "py_avg": 0.062404252518899736,
+        "py_std": 0.0032480550932466614,
+        "cy_avg": 0.0013655893504619598,
+        "cy_std": 1.1181278012633289e-05,
+        "speedup": 45.69767075130547
+      }
+    ],
+    "newton_raphson_poly": [
+      {
+        "benchmark": "newton_raphson_poly",
+        "category": "numerical",
+        "syntax": "cython",
+        "py_avg": 0.03286719750612974,
+        "py_std": 0.0006847901606912085,
+        "cy_avg": 0.0013679490890353917,
+        "cy_std": 2.3023515748235815e-05,
+        "speedup": 24.026623336769077
+      }
+    ],
+    "piecewise_interp": [
+      {
+        "benchmark": "piecewise_interp",
+        "category": "numerical",
+        "syntax": "cython",
+        "py_avg": 0.06719706594012678,
+        "py_std": 0.0071087740274535394,
+        "cy_avg": 0.0013383583165705204,
+        "cy_std": 6.15031819680507e-06,
+        "speedup": 50.20857651358723
+      }
+    ],
+    "assoc_legendre_sum": [
+      {
+        "benchmark": "assoc_legendre_sum",
+        "category": "math_problems",
+        "syntax": "cython",
+        "py_avg": 0.22104152999818324,
+        "py_std": 0.015063683588880428,
+        "cy_avg": 0.0011308288667351007,
+        "cy_std": 1.7667943873212908e-05,
+        "speedup": 195.46859520518655
+      }
+    ],
+    "poisson_pmf_sum": [
+      {
+        "benchmark": "poisson_pmf_sum",
+        "category": "statistics",
+        "syntax": "cython",
+        "py_avg": 0.0017483816947788,
+        "py_std": 1.111629484008032e-05,
+        "cy_avg": 0.0001860520336776972,
+        "cy_std": 2.7838029747675994e-06,
+        "speedup": 9.397272688819772
+      }
+    ],
+    "lcg_judge_match": [
+      {
+        "benchmark": "lcg_judge_match",
+        "category": "math_problems",
+        "syntax": "cython",
+        "py_avg": 0.15101498845033348,
+        "py_std": 0.009658370790006612,
+        "cy_avg": 0.002857189788483083,
+        "cy_std": 1.3345202392687047e-05,
+        "speedup": 52.85437777324172
+      }
+    ],
+    "signal_distance": [
+      {
+        "benchmark": "signal_distance",
+        "category": "numerical",
+        "syntax": "cython",
+        "py_avg": 0.06946637637447566,
+        "py_std": 0.025396548164661994,
+        "cy_avg": 0.0006972829811275006,
+        "cy_std": 0.00020053425415570355,
+        "speedup": 99.62436808962285
+      }
+    ],
+    "dna_kmer_canonical": [
+      {
+        "benchmark": "dna_kmer_canonical",
+        "category": "string_processing",
+        "syntax": "cython",
+        "py_avg": 0.02345676750410348,
+        "py_std": 0.0003359886649548838,
+        "cy_avg": 0.001462371600791812,
+        "cy_std": 2.6890520212622435e-05,
+        "speedup": 16.04022362811384
+      }
+    ],
+    "sudoku_solver": [
+      {
+        "benchmark": "sudoku_solver",
+        "category": "algorithms",
+        "syntax": "cython",
+        "py_avg": 0.8658163118408992,
+        "py_std": 0.039705275069606326,
+        "cy_avg": 0.014281791425310076,
+        "cy_std": 6.348772640495535e-05,
+        "speedup": 60.623789135199566
+      }
+    ],
+    "sum_primes": [
+      {
+        "benchmark": "sum_primes",
+        "category": "math_problems",
+        "syntax": "cython",
+        "py_avg": 0.01395041635259986,
+        "py_std": 0.00016792647489454005,
+        "cy_avg": 0.0007449837168678642,
+        "cy_std": 4.9964192724427005e-05,
+        "speedup": 18.725800358767046
+      }
+    ],
+    "polyline_simplify": [
+      {
+        "benchmark": "polyline_simplify",
+        "category": "geometry",
+        "syntax": "cython",
+        "py_avg": 0.02867086520418525,
+        "py_std": 0.0015705842077239377,
+        "cy_avg": 0.0004301882581785321,
+        "cy_std": 6.8035085690501785e-06,
+        "speedup": 66.64725189288308
+      }
+    ],
+    "fanno_flow": [
+      {
+        "benchmark": "fanno_flow",
+        "category": "physics",
+        "syntax": "cython",
+        "py_avg": 0.00896950946189463,
+        "py_std": 0.00019637336543409784,
+        "cy_avg": 0.00038172926288098096,
+        "cy_std": 6.187873238352845e-06,
+        "speedup": 23.497044460778547
+      }
+    ],
+    "xor_chain_cipher": [
+      {
+        "benchmark": "xor_chain_cipher",
+        "category": "cryptography",
+        "syntax": "cython",
+        "py_avg": 0.06770835046190768,
+        "py_std": 0.0007949530680913596,
+        "cy_avg": 0.0011470899218693376,
+        "cy_std": 2.1577284453185023e-05,
+        "speedup": 59.02619242924548
+      }
+    ],
+    "gene_row_variance": [
+      {
+        "benchmark": "gene_row_variance",
+        "category": "statistics",
+        "syntax": "cython",
+        "py_avg": 0.02087840486783534,
+        "py_std": 0.00021032056127839586,
+        "cy_avg": 0.000310970121063292,
+        "cy_std": 3.307629815699113e-05,
+        "speedup": 67.13958497506563
+      }
+    ],
+    "perlin_noise": [
+      {
+        "benchmark": "perlin_noise",
+        "category": "simulation",
+        "syntax": "cython",
+        "py_avg": 0.060442157089710236,
+        "py_std": 0.0004997053437011282,
+        "cy_avg": 0.0033306968864053486,
+        "cy_std": 5.5584781773916845e-05,
+        "speedup": 18.147000207798065
+      }
+    ],
+    "huber_loss": [
+      {
+        "benchmark": "huber_loss",
+        "category": "statistics",
+        "syntax": "cython",
+        "py_avg": 0.012511268467642367,
+        "py_std": 6.896605291108291e-05,
+        "cy_avg": 0.0002536077285185456,
+        "cy_std": 2.623172300582215e-06,
+        "speedup": 49.333151401683146
+      }
+    ],
+    "trend_correlation": [
+      {
+        "benchmark": "trend_correlation",
+        "category": "statistics",
+        "syntax": "cython",
+        "py_avg": 0.00925780162215233,
+        "py_std": 0.00017457704702273153,
+        "cy_avg": 0.00016898622270673514,
+        "cy_std": 8.872165006486677e-06,
+        "speedup": 54.78435741012245
+      }
+    ],
+    "log_sum_exp": [
+      {
+        "benchmark": "log_sum_exp",
+        "category": "numerical",
+        "syntax": "cython",
+        "py_avg": 0.14888719148002566,
+        "py_std": 0.0013997788869764746,
+        "cy_avg": 0.004536336474120617,
+        "cy_std": 6.075827691520148e-05,
+        "speedup": 32.82102029455121
+      }
+    ],
+    "jaro_winkler": [
+      {
+        "benchmark": "jaro_winkler",
+        "category": "string_processing",
+        "syntax": "cython",
+        "py_avg": 0.07090583005920052,
+        "py_std": 0.0008227451307964167,
+        "cy_avg": 0.0011690771440044045,
+        "cy_std": 3.38356154805322e-05,
+        "speedup": 60.65111307909839
+      }
+    ],
+    "js_divergence": [
+      {
+        "benchmark": "js_divergence",
+        "category": "statistics",
+        "syntax": "cython",
+        "py_avg": 0.08448482798412442,
+        "py_std": 0.0008863403910141259,
+        "cy_avg": 0.007292430312372744,
+        "cy_std": 4.533601772506629e-05,
+        "speedup": 11.585277385617625
+      }
+    ],
+    "spectral_norm": [
+      {
+        "benchmark": "spectral_norm",
+        "category": "numerical",
+        "syntax": "cython",
+        "py_avg": 0.2482810838613659,
+        "py_std": 0.0028453201470871156,
+        "cy_avg": 0.003248713305220008,
+        "cy_std": 5.5457257877692495e-05,
+        "speedup": 76.42443654921158
+      }
+    ],
+    "convolution_2d": [
+      {
+        "benchmark": "convolution_2d",
+        "category": "image_processing",
+        "syntax": "cython",
+        "py_avg": 0.0032067623222246768,
+        "py_std": 5.009513649237666e-05,
+        "cy_avg": 3.4353090450167655e-05,
+        "cy_std": 1.497476248529911e-07,
+        "speedup": 93.34712773153214
+      }
+    ],
+    "gp_kernel": [
+      {
+        "benchmark": "gp_kernel",
+        "category": "statistics",
+        "syntax": "cython",
+        "py_avg": 0.00476798068266362,
+        "py_std": 0.00045632976498233735,
+        "cy_avg": 0.00010673883371055126,
+        "cy_std": 7.691815812526533e-07,
+        "speedup": 44.66959696780254
+      }
+    ],
+    "lempel_ziv_complexity": [
+      {
+        "benchmark": "lempel_ziv_complexity",
+        "category": "algorithms",
+        "syntax": "cython",
+        "py_avg": 0.06371789930853992,
+        "py_std": 0.0006008641030530981,
+        "cy_avg": 0.0011227748822420836,
+        "cy_std": 1.2604576545212266e-05,
+        "speedup": 56.75037829604883
+      }
+    ],
+    "kmer_frequency": [
+      {
+        "benchmark": "kmer_frequency",
+        "category": "string_processing",
+        "syntax": "cython",
+        "py_avg": 0.0014936297899112105,
+        "py_std": 1.9792375511846318e-05,
+        "cy_avg": 1.1109001934528352e-05,
+        "cy_std": 6.965061828525429e-07,
+        "speedup": 134.45220360154926
+      }
+    ],
+    "activation_functions": [
+      {
+        "benchmark": "activation_functions",
+        "category": "numerical",
+        "syntax": "cython",
+        "py_avg": 0.002068046131171286,
+        "py_std": 1.9269333225455954e-05,
+        "cy_avg": 6.983121857047081e-05,
+        "cy_std": 6.505428995353261e-07,
+        "speedup": 29.61492257340889
+      }
+    ],
+    "midpoint_integrate": [
+      {
+        "benchmark": "midpoint_integrate",
+        "category": "numerical",
+        "syntax": "cython",
+        "py_avg": 0.016566825308836998,
+        "py_std": 0.00024110161162357687,
+        "cy_avg": 0.0017364790895953775,
+        "cy_std": 1.8175668929518573e-05,
+        "speedup": 9.540469221945704
+      }
+    ],
+    "pairwise_l1_norm": [
+      {
+        "benchmark": "pairwise_l1_norm",
+        "category": "numerical",
+        "syntax": "cython",
+        "py_avg": 0.0028238925617188214,
+        "py_std": 5.487190373598343e-05,
+        "cy_avg": 3.769441973417997e-05,
+        "cy_std": 2.1982227816469815e-06,
+        "speedup": 74.91540078432922
+      }
+    ],
+    "eigenvalues_3x3": [
+      {
+        "benchmark": "eigenvalues_3x3",
+        "category": "numerical",
+        "syntax": "cython",
+        "py_avg": 0.027712877606973052,
+        "py_std": 0.0003574847639005715,
+        "cy_avg": 0.0022827598033472894,
+        "cy_std": 1.6906798200911163e-05,
+        "speedup": 12.140076045818182
+      }
+    ],
+    "elastic_collision": [
+      {
+        "benchmark": "elastic_collision",
+        "category": "physics",
+        "syntax": "cython",
+        "py_avg": 0.006106675812043249,
+        "py_std": 5.751490965001919e-05,
+        "cy_avg": 0.0001719142310321331,
+        "cy_std": 2.2848402559072567e-06,
+        "speedup": 35.52164224788248
+      }
+    ],
+    "png_filters": [
+      {
+        "benchmark": "png_filters",
+        "category": "compression",
+        "syntax": "cython",
+        "py_avg": 0.0510209757136181,
+        "py_std": 0.000560901474551719,
+        "cy_avg": 0.0012107410002499819,
+        "cy_std": 1.5705835445423128e-05,
+        "speedup": 42.14028904867663
+      }
+    ],
+    "nelder_mead": [
+      {
+        "benchmark": "nelder_mead",
+        "category": "optimization",
+        "syntax": "cython",
+        "py_avg": 0.026104568503797054,
+        "py_std": 0.00033850751793237173,
+        "cy_avg": 0.0003296246752142906,
+        "cy_std": 4.299915689353063e-06,
+        "speedup": 79.19482510472356
+      }
+    ],
+    "log_likelihood_linear": [
+      {
+        "benchmark": "log_likelihood_linear",
+        "category": "statistics",
+        "syntax": "cython",
+        "py_avg": 0.02254531024955213,
+        "py_std": 0.00029198735578239677,
+        "cy_avg": 0.0003516842611134052,
+        "cy_std": 4.397700644867738e-06,
+        "speedup": 64.1066796056651
+      }
+    ],
+    "seq_align_identity": [
+      {
+        "benchmark": "seq_align_identity",
+        "category": "string_processing",
+        "syntax": "cython",
+        "py_avg": 0.03940759296528995,
+        "py_std": 0.00028124714416067384,
+        "cy_avg": 0.0007010939298197627,
+        "cy_std": 1.2893502049600825e-06,
+        "speedup": 56.20872081351618
+      }
+    ],
+    "edit_cost_matrix": [
+      {
+        "benchmark": "edit_cost_matrix",
+        "category": "string_processing",
+        "syntax": "cython",
+        "py_avg": 0.04847515153232962,
+        "py_std": 0.0005309222952392457,
+        "cy_avg": 0.0004748679930344224,
+        "cy_std": 4.437509751763942e-06,
+        "speedup": 102.08131995288159
+      }
+    ],
+    "count_primes_trial": [
+      {
+        "benchmark": "count_primes_trial",
+        "category": "math_problems",
+        "syntax": "cython",
+        "py_avg": 0.000927392509765923,
+        "py_std": 1.8238230065740185e-05,
+        "cy_avg": 3.3136364072561265e-05,
+        "cy_std": 2.8594092193601476e-06,
+        "speedup": 27.987153561420914
+      }
+    ],
+    "factorial_mod_sum": [
+      {
+        "benchmark": "factorial_mod_sum",
+        "category": "math_problems",
+        "syntax": "cython",
+        "py_avg": 0.013699343521147966,
+        "py_std": 0.00016422359164067294,
+        "cy_avg": 0.0011596200289204716,
+        "cy_std": 1.0974458018582725e-05,
+        "speedup": 11.813648591341714
+      }
+    ],
+    "integer_sqrt_newton": [
+      {
+        "benchmark": "integer_sqrt_newton",
+        "category": "math_problems",
+        "syntax": "cython",
+        "py_avg": 0.0016816460527479648,
+        "py_std": 4.208021879983982e-05,
+        "cy_avg": 7.240765262395144e-05,
+        "cy_std": 1.6248927741925818e-06,
+        "speedup": 23.224700591822526
+      }
+    ],
+    "euclid_distance_pair": [
+      {
+        "benchmark": "euclid_distance_pair",
+        "category": "numerical",
+        "syntax": "cython",
+        "py_avg": 0.015904147597029804,
+        "py_std": 8.113841629787034e-05,
+        "cy_avg": 0.00013845432549715043,
+        "cy_std": 6.042955559035862e-07,
+        "speedup": 114.86927215832728
+      }
+    ],
+    "lerp_accumulate": [
+      {
+        "benchmark": "lerp_accumulate",
+        "category": "numerical",
+        "syntax": "cython",
+        "py_avg": 0.014354706555604935,
+        "py_std": 0.00021341389143026483,
+        "cy_avg": 0.00018182748463004827,
+        "cy_std": 6.892191474283178e-07,
+        "speedup": 78.9468467036843
+      }
+    ],
+    "crosses_dateline_count": [
+      {
+        "benchmark": "crosses_dateline_count",
+        "category": "geometry",
+        "syntax": "cython",
+        "py_avg": 0.05258596290368587,
+        "py_std": 0.0007833119939634032,
+        "cy_avg": 0.002246852102689445,
+        "cy_std": 4.946995723246987e-05,
+        "speedup": 23.404283192801756
+      }
+    ],
+    "sin_squared_sum": [
+      {
+        "benchmark": "sin_squared_sum",
+        "category": "numerical",
+        "syntax": "cython",
+        "py_avg": 0.002573705743998289,
+        "py_std": 5.566459052385291e-05,
+        "cy_avg": 0.0003433301113545895,
+        "cy_std": 7.931313759934901e-07,
+        "speedup": 7.496300670639925
+      }
+    ],
+    "euclidean_gcd_sum": [
+      {
+        "benchmark": "euclidean_gcd_sum",
+        "category": "math_problems",
+        "syntax": "cython",
+        "py_avg": 0.05815589553676546,
+        "py_std": 0.0010180758710887448,
+        "cy_avg": 0.00783910769969225,
+        "cy_std": 0.00011764451137976823,
+        "speedup": 7.418688167665889
+      }
+    ],
+    "probability_to_phred_sum": [
+      {
+        "benchmark": "probability_to_phred_sum",
+        "category": "numerical",
+        "syntax": "cython",
+        "py_avg": 0.02520906520076096,
+        "py_std": 0.0008219021350557396,
+        "cy_avg": 0.002016354096122086,
+        "cy_std": 2.7743021666295933e-05,
+        "speedup": 12.502300686790978
+      }
+    ],
+    "xorshift_randint_sum": [
+      {
+        "benchmark": "xorshift_randint_sum",
+        "category": "algorithms",
+        "syntax": "cython",
+        "py_avg": 0.10034393011592328,
+        "py_std": 0.0039638430729965245,
+        "cy_avg": 0.0006742219207808376,
+        "cy_std": 1.2481690394671702e-05,
+        "speedup": 148.82923118208888
       }
     ]
   }

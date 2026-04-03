@@ -133,7 +133,7 @@ setup(
     author="Lee Miller",
     author_email="dleemiller@protonmail.com",
     url="https://github.com/dleemiller/CnakeCharmer",
-    packages=find_packages(),
+    packages=find_packages(include=["cnake_charmer", "cnake_charmer.*"]),
     # ext_modules=extensions,
     ext_modules=cythonize(
         get_cython_extensions(syntax="cy")

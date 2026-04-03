@@ -158,17 +158,21 @@ def _extract_test_cases(test_path: Path, func_name: str) -> list:
     source = test_path.read_text()
     test_cases = []
 
-    # Match @pytest.mark.parametrize("param", [val1, val2, ...])
+    # Match @pytest.mark.parametrize("param" or "p1,p2,...", [val1, val2, ...])
     for match in re.finditer(
-        r'@pytest\.mark\.parametrize\(\s*["\'](\w+)["\']\s*,\s*\[([^\]]+)\]',
+        r'@pytest\.mark\.parametrize\(\s*["\']([^"\']+)["\']\s*,\s*\[([^\]]+)\]',
         source,
     ):
+        param_str = match.group(1)
         values_str = match.group(2)
+        n_params = len([p.strip() for p in param_str.split(",") if p.strip()])
         try:
             values = ast.literal_eval(f"[{values_str}]")
             for val in values:
                 if isinstance(val, (list, tuple)):
                     test_cases.append((tuple(val),))
+                elif n_params == 1:
+                    test_cases.append(((val,),))
                 else:
                     test_cases.append(((val,),))
         except (ValueError, SyntaxError):
