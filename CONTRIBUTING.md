@@ -50,6 +50,56 @@ def func_name(n: int) -> return_type:
     ...
 ```
 
+**Vary function signatures** — this is training data, so problems should reflect the diversity of real-world code that gets converted to Cython. Don't make every function take a single `n: int`. Mix in realistic argument patterns:
+
+| Pattern | Example | Cython benefit |
+|---------|---------|----------------|
+| Size parameter | `def sieve(n: int)` | Loop bounds as C int |
+| Pre-built data | `def median(data: list)` | Typed memoryview or C array |
+| Multiple params | `def lerp(a: float, b: float, steps: int)` | All args as cdef types |
+| String input | `def hamming(s1: str, s2: str)` | `char *` / `bytes` processing |
+| Nested structure | `def adjacency(edges: list, n: int)` | C arrays of C arrays |
+| Class-based | `class Solver: def run(self, ...)` | `cdef class` with typed attrs |
+| Config dict | `def simulate(params: dict)` | Unpack to cdef locals at entry |
+
+**Class-based problems are encouraged.** Many real Cython conversions involve stateful objects — `cdef class` with typed attributes, `cdef` helper methods, and `__init__` that pre-allocates C arrays. The Stack v2 candidate pool includes class-based implementations that make good training examples. For classes:
+
+```python
+# py/ version — plain Python class
+class ParticleSystem:
+    def __init__(self, n):
+        self.x = [0.0] * n
+        self.v = [0.0] * n
+
+    def step(self, dt):
+        for i in range(len(self.x)):
+            self.x[i] += self.v[i] * dt
+```
+
+```cython
+# cy/ version — cdef class with C arrays
+cdef class ParticleSystem:
+    cdef double *x
+    cdef double *v
+    cdef int n
+
+    def __cinit__(self, int n):
+        self.n = n
+        self.x = <double *>malloc(n * sizeof(double))
+        self.v = <double *>malloc(n * sizeof(double))
+
+    def __dealloc__(self):
+        free(self.x)
+        free(self.v)
+
+    def step(self, double dt):
+        cdef int i
+        for i in range(self.n):
+            self.x[i] += self.v[i] * dt
+```
+
+The benchmark decorator goes on a **factory function** that creates the object and calls its methods, so both py and cy versions use the same `@python_benchmark` / `@cython_benchmark` pattern.
+
 ### 2. Write the Cython implementation
 
 Create `cnake_charmer/cy/{category}/{name}.pyx`:
@@ -183,6 +233,11 @@ def test_{name}_equivalence(n):
     # For floats: assert abs(py - cy) / max(abs(py), 1.0) < 1e-4
     # For ints/lists: assert py_result == cy_result
     assert py_func(n) == cy_func(n)
+
+# For multi-arg functions, parametrize all args:
+@pytest.mark.parametrize("s1,s2", [("abc", "axc"), ("kitten", "sitting")])
+def test_{name}_strings(s1, s2):
+    assert py_func(s1, s2) == cy_func(s1, s2)
 ```
 
 ### 4. Compile, test, review annotations
