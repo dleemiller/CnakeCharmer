@@ -10,8 +10,11 @@ from cnake_charmer.benchmarks import cython_benchmark
 
 
 @cython_benchmark(syntax="cy", args=(17, 40000, 0.01))
-cpdef double euclid_distance_pair(int seed, int pair_count, double scale):
-    """Accumulate synthetic pairwise 2D distances."""
+def euclid_distance_pair(int seed, int pair_count, double scale):
+    return _euclid_distance_pair_impl(seed, pair_count, scale)
+
+
+cdef double _euclid_distance_pair_impl(int seed, int pair_count, double scale) noexcept:
     cdef int i
     cdef double total = 0.0
     cdef double x1, y1, x2, y2, dx, dy

@@ -14,7 +14,11 @@ cdef inline int _isqrt(int k) noexcept:
 
 
 @cython_benchmark(syntax="cy", args=(1, 7000))
-cpdef int integer_sqrt_newton(int start, int stop):
+def integer_sqrt_newton(int start, int stop):
+    return _integer_sqrt_newton_impl(start, stop)
+
+
+cdef int _integer_sqrt_newton_impl(int start, int stop) noexcept:
     cdef int total = 0
     cdef int k
     if start < 1:

@@ -7,7 +7,7 @@ from cnake_charmer.benchmarks import cython_benchmark
 
 
 @cython_benchmark(syntax="cy", args=(48271, 200000, 1e-6))
-cpdef double probability_to_phred_sum(int seed, int samples, double floor):
+def probability_to_phred_sum(int seed, int samples, double floor):
     return _probability_to_phred_sum_impl(seed, samples, floor)
 
 

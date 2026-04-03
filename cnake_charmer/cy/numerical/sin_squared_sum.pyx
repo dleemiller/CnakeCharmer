@@ -7,7 +7,7 @@ from cnake_charmer.benchmarks import cython_benchmark
 
 
 @cython_benchmark(syntax="cy", args=(0.0, 0.001, 50000))
-cpdef double sin_squared_sum(double offset, double step, int samples):
+def sin_squared_sum(double offset, double step, int samples):
     return _sin_squared_sum_impl(offset, step, samples)
 
 

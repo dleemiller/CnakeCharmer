@@ -14,7 +14,11 @@ cdef inline int _gcd(int a, int b) noexcept:
 
 
 @cython_benchmark(syntax="cy", args=(6789, 9876, 120000))
-cpdef int euclidean_gcd_sum(int seed_a, int seed_b, int count):
+def euclidean_gcd_sum(int seed_a, int seed_b, int count):
+    return _euclidean_gcd_sum_impl(seed_a, seed_b, count)
+
+
+cdef int _euclidean_gcd_sum_impl(int seed_a, int seed_b, int count) noexcept:
     cdef int total = 0
     cdef int i
     cdef int a = seed_a

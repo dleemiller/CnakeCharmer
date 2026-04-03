@@ -5,7 +5,7 @@ from cnake_charmer.benchmarks import cython_benchmark
 
 
 @cython_benchmark(syntax="cy", args=(1.25, 5.5, 250000, 0.00001))
-cpdef double lerp_accumulate(double a0, double b0, int steps, double delta):
+def lerp_accumulate(double a0, double b0, int steps, double delta):
     return _lerp_accumulate_impl(a0, b0, steps, delta)
 
 

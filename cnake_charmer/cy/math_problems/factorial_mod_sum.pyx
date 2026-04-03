@@ -5,7 +5,7 @@ from cnake_charmer.benchmarks import cython_benchmark
 
 
 @cython_benchmark(syntax="cy", args=(250000, 1_000_000_007))
-cpdef int factorial_mod_sum(int limit, int mod):
+def factorial_mod_sum(int limit, int mod):
     return _factorial_mod_sum_impl(limit, mod)
 
 
