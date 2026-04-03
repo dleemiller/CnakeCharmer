@@ -589,7 +589,17 @@
     "nelder_mead": "9cde9e73a5bfcddc",
     "log_likelihood_linear": "6f19045a05712b73",
     "seq_align_identity": "0e5b989d4916ba9a",
-    "edit_cost_matrix": "a30fbc412b7c1ba8"
+    "edit_cost_matrix": "a30fbc412b7c1ba8",
+    "count_primes_trial": "c45ee7ee3e3c04ac",
+    "factorial_mod_sum": "4e3eb34d18c7ae04",
+    "integer_sqrt_newton": "f9f4d47e84841796",
+    "euclid_distance_pair": "530cb0acb350c580",
+    "lerp_accumulate": "86d075622066d385",
+    "crosses_dateline_count": "e4759cc21be11285",
+    "sin_squared_sum": "3c72689e14433645",
+    "euclidean_gcd_sum": "e3592169e0805f99",
+    "probability_to_phred_sum": "9aec876aaf41b696",
+    "xorshift_randint_sum": "28d6fdc72cd79bd4"
   },
   "results": {
     "a_star_grid": [
@@ -7890,6 +7900,126 @@
         "cy_avg": 0.0004748679930344224,
         "cy_std": 4.437509751763942e-06,
         "speedup": 102.08131995288159
+      }
+    ],
+    "count_primes_trial": [
+      {
+        "benchmark": "count_primes_trial",
+        "category": "math_problems",
+        "syntax": "cython",
+        "py_avg": 0.000927392509765923,
+        "py_std": 1.8238230065740185e-05,
+        "cy_avg": 3.3136364072561265e-05,
+        "cy_std": 2.8594092193601476e-06,
+        "speedup": 27.987153561420914
+      }
+    ],
+    "factorial_mod_sum": [
+      {
+        "benchmark": "factorial_mod_sum",
+        "category": "math_problems",
+        "syntax": "cython",
+        "py_avg": 0.013699343521147966,
+        "py_std": 0.00016422359164067294,
+        "cy_avg": 0.0011596200289204716,
+        "cy_std": 1.0974458018582725e-05,
+        "speedup": 11.813648591341714
+      }
+    ],
+    "integer_sqrt_newton": [
+      {
+        "benchmark": "integer_sqrt_newton",
+        "category": "math_problems",
+        "syntax": "cython",
+        "py_avg": 0.0016816460527479648,
+        "py_std": 4.208021879983982e-05,
+        "cy_avg": 7.240765262395144e-05,
+        "cy_std": 1.6248927741925818e-06,
+        "speedup": 23.224700591822526
+      }
+    ],
+    "euclid_distance_pair": [
+      {
+        "benchmark": "euclid_distance_pair",
+        "category": "numerical",
+        "syntax": "cython",
+        "py_avg": 0.015904147597029804,
+        "py_std": 8.113841629787034e-05,
+        "cy_avg": 0.00013845432549715043,
+        "cy_std": 6.042955559035862e-07,
+        "speedup": 114.86927215832728
+      }
+    ],
+    "lerp_accumulate": [
+      {
+        "benchmark": "lerp_accumulate",
+        "category": "numerical",
+        "syntax": "cython",
+        "py_avg": 0.014354706555604935,
+        "py_std": 0.00021341389143026483,
+        "cy_avg": 0.00018182748463004827,
+        "cy_std": 6.892191474283178e-07,
+        "speedup": 78.9468467036843
+      }
+    ],
+    "crosses_dateline_count": [
+      {
+        "benchmark": "crosses_dateline_count",
+        "category": "geometry",
+        "syntax": "cython",
+        "py_avg": 0.05258596290368587,
+        "py_std": 0.0007833119939634032,
+        "cy_avg": 0.002246852102689445,
+        "cy_std": 4.946995723246987e-05,
+        "speedup": 23.404283192801756
+      }
+    ],
+    "sin_squared_sum": [
+      {
+        "benchmark": "sin_squared_sum",
+        "category": "numerical",
+        "syntax": "cython",
+        "py_avg": 0.002573705743998289,
+        "py_std": 5.566459052385291e-05,
+        "cy_avg": 0.0003433301113545895,
+        "cy_std": 7.931313759934901e-07,
+        "speedup": 7.496300670639925
+      }
+    ],
+    "euclidean_gcd_sum": [
+      {
+        "benchmark": "euclidean_gcd_sum",
+        "category": "math_problems",
+        "syntax": "cython",
+        "py_avg": 0.05815589553676546,
+        "py_std": 0.0010180758710887448,
+        "cy_avg": 0.00783910769969225,
+        "cy_std": 0.00011764451137976823,
+        "speedup": 7.418688167665889
+      }
+    ],
+    "probability_to_phred_sum": [
+      {
+        "benchmark": "probability_to_phred_sum",
+        "category": "numerical",
+        "syntax": "cython",
+        "py_avg": 0.02520906520076096,
+        "py_std": 0.0008219021350557396,
+        "cy_avg": 0.002016354096122086,
+        "cy_std": 2.7743021666295933e-05,
+        "speedup": 12.502300686790978
+      }
+    ],
+    "xorshift_randint_sum": [
+      {
+        "benchmark": "xorshift_randint_sum",
+        "category": "algorithms",
+        "syntax": "cython",
+        "py_avg": 0.10034393011592328,
+        "py_std": 0.0039638430729965245,
+        "cy_avg": 0.0006742219207808376,
+        "cy_std": 1.2481690394671702e-05,
+        "speedup": 148.82923118208888
       }
     ]
   }

@@ -184,6 +184,11 @@ with nogil:
             total += mat[i, j]
 ```
 
+**Decorator + `cpdef` note (practical guideline):**
+- Cython may reject arbitrary decorators directly on `cpdef`/`cdef` functions in some setups.
+- When that becomes an issue (or when it helps keep hot code clearly C-level), use a decorated `def` wrapper that calls a typed `cdef` core.
+- This is a recommended pattern, not a hard rule. If direct `def`/`cpdef` structure is already clean and performant, keep it simple.
+
 ### 3. Choose a discriminating return value
 
 Return values are how tests verify that py and cy implementations are equivalent. A good return value **changes when the algorithm is wrong**. A bad return value can accidentally match even with bugs.
