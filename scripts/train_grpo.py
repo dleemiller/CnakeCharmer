@@ -432,6 +432,18 @@ def main():
         peft_config=lora_config,
     )
 
+    # Override auto-generated tool schemas with exact SFT schemas from data/tools.json.
+    # TRL auto-generates schemas from environment method signatures via get_json_schema(),
+    # but the SFT tools.json has explicit "default" fields that the Harmony template
+    # renders as "// default: true" comments. Without this, the rendered tool section
+    # differs from what the model was trained on.
+    from cnake_charmer.training.prompts import get_tools
+
+    sft_tools = get_tools()
+    if sft_tools:
+        trainer.tools = sft_tools
+        logger.info(f"Overrode tool schemas with {len(sft_tools)} SFT tools from data/tools.json")
+
     if torch.cuda.is_available():
         allocated = torch.cuda.memory_allocated() / 1e9
         reserved = torch.cuda.memory_reserved() / 1e9
