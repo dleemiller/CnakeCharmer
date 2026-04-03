@@ -24,6 +24,20 @@ from cnake_charmer.validate.correctness import _load_module_from_path
 
 logger = logging.getLogger(__name__)
 
+
+def _exec_func(python_code: str, func_name: str):
+    """Execute Python code string and extract the named function."""
+    if not func_name or not python_code:
+        return None
+    namespace = {}
+    try:
+        exec(python_code, namespace)  # noqa: S102
+        return namespace.get(func_name)
+    except Exception as e:
+        logger.warning(f"Failed to exec Python for {func_name}: {e}")
+        return None
+
+
 ASSERTION_TIMEOUT = 5  # seconds per test line
 
 
