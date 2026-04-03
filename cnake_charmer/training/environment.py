@@ -1,16 +1,18 @@
 """
 OpenEnv-compatible tool environment for TRL GRPOTrainer.
 
-Exposes Cython validation tools (compile, annotate, test, benchmark)
-as callable methods that TRL auto-discovers via docstring parsing.
+Exposes a single `evaluate_cython` tool matching the SFT training data format.
 The trainer handles the multi-turn loop: generate → tool call → execute → repeat.
+
+Tracks per-step scores for graduated reward computation (R_atomic + R_progress).
 """
 
 import json
 import logging
+import math
 import multiprocessing
 
-from cnake_charmer.rewards.composite import composite_reward
+from cnake_charmer.rewards.composite import DEFAULT_WEIGHTS, composite_reward
 from cnake_charmer.training.prompts import format_feedback
 from cnake_charmer.validate.annotations import parse_annotations
 from cnake_charmer.validate.benchmark import run_benchmark as _run_benchmark
@@ -33,12 +35,89 @@ def _exec_func(python_code: str, func_name: str):
         return None
 
 
+def _generate_test_cases(python_func, func_name: str, python_code: str) -> list:
+    """Auto-generate test cases by inspecting the function and trying small inputs.
+
+    Inspects the function signature to determine parameter count, then tries
+    a range of small inputs. Only keeps inputs that the Python function
+    handles without error.
+
+    Returns list of ((args,),) tuples compatible with check_correctness.
+    """
+    if python_func is None:
+        return []
+
+    import inspect
+
+    try:
+        sig = inspect.signature(python_func)
+    except (ValueError, TypeError):
+        return []
+
+    params = [
+        p
+        for p in sig.parameters.values()
+        if p.kind in (p.POSITIONAL_ONLY, p.POSITIONAL_OR_KEYWORD) and p.default is p.empty
+    ]
+    n_params = len(params)
+
+    if n_params == 0:
+        # No-arg function: just call it once
+        try:
+            python_func()
+            return [((),)]
+        except Exception:
+            return []
+
+    if n_params == 1:
+        # Single param — most common case. Try small ints.
+        candidates = [1, 5, 10, 50, 100, 500]
+        cases = []
+        for v in candidates:
+            try:
+                python_func(v)
+                cases.append(((v,),))
+            except Exception:
+                continue
+            if len(cases) >= 4:
+                break
+        return cases
+
+    if n_params == 2:
+        # Two params — try small pairs
+        candidates = [(1, 1), (5, 5), (10, 10), (3, 7), (20, 20)]
+        cases = []
+        for args in candidates:
+            try:
+                python_func(*args)
+                cases.append((args,))
+            except Exception:
+                continue
+            if len(cases) >= 4:
+                break
+        return cases
+
+    # 3+ params — try all-same small values
+    candidates = [1, 5, 10, 50]
+    cases = []
+    for v in candidates:
+        args = tuple([v] * n_params)
+        try:
+            python_func(*args)
+            cases.append((args,))
+        except Exception:
+            continue
+        if len(cases) >= 3:
+            break
+    return cases
+
+
 def _evaluate_worker(queue, env_args, code, annotate, test, benchmark):
     """Worker for safe_evaluate — runs in a spawned subprocess."""
     try:
         env = CythonToolEnvironment()
         env.reset(**env_args)
-        result = env.evaluate(code=code, annotate=annotate, test=test, benchmark=benchmark)
+        result = env.evaluate_cython(code=code)
         queue.put(result)
     except Exception as e:
         queue.put(f"## Error\n{type(e).__name__}: {e}")
@@ -47,7 +126,9 @@ def _evaluate_worker(queue, env_args, code, annotate, test, benchmark):
 class CythonToolEnvironment:
     """Environment for training a Cython code generation agent.
 
-    Provides tools to compile, test, benchmark, and analyze Cython code.
+    Provides a single `evaluate_cython` tool matching the SFT training format.
+    Tracks per-step scores for graduated reward computation.
+
     Used with TRL GRPOTrainer's environment_factory parameter.
     """
 
@@ -75,290 +156,118 @@ class CythonToolEnvironment:
         if self._benchmark_args is not None and not isinstance(self._benchmark_args, tuple):
             self._benchmark_args = tuple(self._benchmark_args) if self._benchmark_args else None
 
+        # Auto-generate test cases if none provided
+        if not self._test_cases and self._python_func:
+            self._test_cases = _generate_test_cases(self._python_func, self._func_name, python_code)
+            if not self._benchmark_args and self._test_cases:
+                # Use the largest test input as benchmark args
+                self._benchmark_args = self._test_cases[-1][0]
+            if self._test_cases:
+                logger.info(
+                    f"[reset] Auto-generated {len(self._test_cases)} test cases "
+                    f"for {self._func_name}"
+                )
+
+        # Per-step tracking for graduated rewards
+        self.step_scores = []  # List of score dicts per tool call
+        self.num_tool_calls = 0
+        self.format_errors = 0
         self.last_code = None
-        self.last_scores = None
+
         return None
 
-    def compile(self, code: str) -> str:
-        """Compile Cython code and check for errors.
-
-        Args:
-            code: The complete .pyx Cython source code to compile.
-
-        Returns:
-            Compilation result with success status and any error messages.
-        """
-        self.last_code = code
-        result = compile_cython(code, annotate=False)
-        output = format_feedback("compile", {"success": result.success, "errors": result.errors})
-        cleanup_build(result)
-        return output
-
-    def annotate(self, code: str) -> str:
-        """Compile Cython code and analyze optimization quality via HTML annotations.
-
-        Args:
-            code: The complete .pyx Cython source code to analyze.
-
-        Returns:
-            Annotation score and optimization hints about Python-fallback lines.
-        """
-        self.last_code = code
-        result = compile_cython(code, annotate=True, keep_build=True)
-
-        if not result.success:
-            output = format_feedback(
-                "annotate",
-                {
-                    "success": False,
-                    "errors": result.errors,
-                    "score": 0.0,
-                    "hints": [],
-                    "yellow_lines": 0,
-                    "total_lines": 0,
-                },
-            )
-            cleanup_build(result)
-            return output
-
-        ann = parse_annotations(html_path=result.html_path) if result.html_path else None
-        cleanup_build(result)
-
-        if ann and ann.success:
-            return format_feedback(
-                "annotate",
-                {
-                    "success": True,
-                    "score": ann.score,
-                    "hints": ann.hints,
-                    "yellow_lines": ann.yellow_lines,
-                    "total_lines": ann.total_lines,
-                },
-            )
-
-        return format_feedback(
-            "annotate",
-            {
-                "success": True,
-                "score": 0.0,
-                "hints": ["Could not parse annotations"],
-                "yellow_lines": 0,
-                "total_lines": 0,
-            },
-        )
-
-    def test(self, code: str) -> str:
-        """Compile and test Cython code for correctness against the Python reference.
-
-        Args:
-            code: The complete .pyx Cython source code to test.
-
-        Returns:
-            Test results with pass/fail counts and failure details.
-        """
-        self.last_code = code
-
-        if not self._python_func or not self._func_name or not self._test_cases:
-            return format_feedback(
-                "test",
-                {
-                    "success": False,
-                    "errors": "No reference function or test cases",
-                    "passed": 0,
-                    "total": 0,
-                    "failures": [],
-                },
-            )
-
-        comp = compile_cython(code, annotate=False, keep_build=True)
-        if not comp.success:
-            output = format_feedback(
-                "test",
-                {
-                    "success": False,
-                    "errors": comp.errors,
-                    "passed": 0,
-                    "total": len(self._test_cases),
-                    "failures": [],
-                },
-            )
-            cleanup_build(comp)
-            return output
-
-        try:
-            module = _load_module_from_path(comp.module_path, "gen_module")
-            cython_func = getattr(module, self._func_name)
-        except Exception as e:
-            cleanup_build(comp)
-            return format_feedback(
-                "test",
-                {
-                    "success": False,
-                    "errors": f"Could not load function: {e}",
-                    "passed": 0,
-                    "total": len(self._test_cases),
-                    "failures": [],
-                },
-            )
-
-        result = check_correctness(
-            python_func=self._python_func,
-            cython_func=cython_func,
-            test_cases=self._test_cases,
-        )
-        cleanup_build(comp)
-
-        return format_feedback(
-            "test",
-            {
-                "success": True,
-                "passed": result.passed,
-                "total": result.total,
-                "failures": result.failures,
-            },
-        )
-
-    def benchmark(self, code: str) -> str:
-        """Compile and benchmark Cython code against the Python reference.
-
-        Args:
-            code: The complete .pyx Cython source code to benchmark.
-
-        Returns:
-            Speedup ratio and timing details compared to the Python implementation.
-        """
-        self.last_code = code
-
-        if not self._python_func or not self._func_name:
-            return format_feedback(
-                "benchmark",
-                {
-                    "success": False,
-                    "errors": "No reference function",
-                    "speedup": 0.0,
-                    "cython_time": 0.0,
-                    "python_time": 0.0,
-                },
-            )
-
-        comp = compile_cython(code, annotate=False, keep_build=True)
-        if not comp.success:
-            output = format_feedback(
-                "benchmark",
-                {
-                    "success": False,
-                    "errors": comp.errors,
-                    "speedup": 0.0,
-                    "cython_time": 0.0,
-                    "python_time": 0.0,
-                },
-            )
-            cleanup_build(comp)
-            return output
-
-        try:
-            module = _load_module_from_path(comp.module_path, "gen_module")
-            cython_func = getattr(module, self._func_name)
-        except Exception as e:
-            cleanup_build(comp)
-            return format_feedback(
-                "benchmark",
-                {
-                    "success": False,
-                    "errors": f"Could not load function: {e}",
-                    "speedup": 0.0,
-                    "cython_time": 0.0,
-                    "python_time": 0.0,
-                },
-            )
-
-        b_args = self._benchmark_args or ()
-        result = _run_benchmark(
-            python_func=self._python_func,
-            cython_func=cython_func,
-            args=b_args,
-            num_runs=3,
-        )
-        cleanup_build(comp)
-
-        return format_feedback(
-            "benchmark",
-            {
-                "success": result.success,
-                "speedup": round(result.speedup, 2),
-                "cython_time": round(result.cython_time, 6),
-                "python_time": round(result.python_time, 6),
-                "errors": result.error,
-            },
-        )
-
-    def evaluate(
-        self, code: str, annotate: bool = True, test: bool = True, benchmark: bool = True
+    def evaluate_cython(
+        self,
+        code: str,
+        annotate: bool = True,
+        test: bool = True,
+        benchmark: bool = True,
     ) -> str:
-        """Compile once, then annotate, test, and benchmark using the same build.
-
-        Single compilation avoids the redundant builds of calling compile(),
-        annotate(), test(), and benchmark() separately.
+        """Compile, analyze, test, and benchmark Cython code in one step. Returns compilation status, annotation score with optimization hints, correctness test results, and speedup measurement. If compilation fails, only error messages are returned. Fix any issues and call again. Set annotate/test/benchmark to False to skip expensive steps.
 
         Args:
-            code: The complete .pyx Cython source code.
-            annotate: Include annotation analysis (default True).
-            test: Run correctness tests (default True).
-            benchmark: Measure speedup (default True).
+            code: Complete .pyx source code.
+            annotate: Run annotation analysis (default true).
+            test: Run correctness tests (default true).
+            benchmark: Measure speedup (default true).
 
         Returns:
-            Markdown-formatted results with sections for each step.
+            Evaluation results as formatted text.
         """
         self.last_code = code
+        self.num_tool_calls += 1
+        code_preview = code[:80].replace("\n", "\\n") if code else "<empty>"
+        logger.info(
+            f"[evaluate_cython] call #{self.num_tool_calls} for {self._func_name} "
+            f"({len(code)} chars): {code_preview}..."
+        )
         sections = []
 
         # Compile with annotations enabled (one compilation for everything)
-        result = compile_cython(code, annotate=annotate, keep_build=True)
+        result = compile_cython(code, annotate=True, keep_build=True)
+        compiled = result.success
+        logger.info(f"[evaluate_cython] compiled={compiled}")
         sections.append(
             "## Compilation\n"
             + format_feedback("compile", {"success": result.success, "errors": result.errors})
         )
 
-        if not result.success:
+        # Initialize step scores
+        step = {
+            "compiled": compiled,
+            "correctness": 0.0,
+            "performance": 0.0,
+            "annotations": 0.0,
+            "lint": 0.0,
+            "memory_safety": 1.0,
+            "speedup": 0.0,
+            "total": 0.0,
+        }
+
+        if not compiled:
+            self.step_scores.append(step)
             cleanup_build(result)
             return "\n\n".join(sections)
 
         # Annotation (from the same compilation, no rebuild)
-        if annotate:
-            ann = parse_annotations(html_path=result.html_path) if result.html_path else None
-            if ann and ann.success:
-                sections.append(
-                    "## Annotation\n"
-                    + format_feedback(
-                        "annotate",
-                        {
-                            "success": True,
-                            "score": ann.score,
-                            "hints": ann.hints,
-                            "yellow_lines": ann.yellow_lines,
-                            "total_lines": ann.total_lines,
-                        },
-                    )
+        ann = parse_annotations(html_path=result.html_path) if result.html_path else None
+        if ann and ann.success:
+            step["annotations"] = ann.score
+            sections.append(
+                "## Annotation\n"
+                + format_feedback(
+                    "annotate",
+                    {
+                        "success": True,
+                        "score": ann.score,
+                        "hints": ann.hints,
+                        "yellow_lines": ann.yellow_lines,
+                        "total_lines": ann.total_lines,
+                    },
                 )
+            )
 
         # Load the compiled module once for both test and benchmark
         cython_func = None
-        if (test or benchmark) and result.module_path:
+        if result.module_path:
             try:
                 module = _load_module_from_path(result.module_path, "gen_module")
                 cython_func = getattr(module, self._func_name)
             except Exception as e:
                 sections.append(f"## Load Error\nCould not load function: {e}")
+                self.step_scores.append(step)
                 cleanup_build(result)
                 return "\n\n".join(sections)
 
         # Test (reuses loaded module)
-        if test and cython_func and self._python_func and self._test_cases:
+        if cython_func and self._python_func and self._test_cases:
             test_result = check_correctness(
                 python_func=self._python_func,
                 cython_func=cython_func,
                 test_cases=self._test_cases,
             )
+            step["correctness"] = test_result.score
+            logger.info(f"[evaluate_cython] tests={test_result.passed}/{test_result.total}")
             sections.append(
                 "## Tests\n"
                 + format_feedback(
@@ -372,8 +281,8 @@ class CythonToolEnvironment:
                 )
             )
 
-        # Benchmark (reuses loaded module)
-        if benchmark and cython_func and self._python_func:
+        # Benchmark (reuses loaded module) — skip if tests failed to avoid hanging on buggy code
+        if cython_func and self._python_func and step["correctness"] > 0:
             b_args = self._benchmark_args or ()
             bench_result = _run_benchmark(
                 python_func=self._python_func,
@@ -381,6 +290,10 @@ class CythonToolEnvironment:
                 args=b_args,
                 num_runs=3,
             )
+            if bench_result.success and bench_result.speedup > 1.0:
+                step["speedup"] = bench_result.speedup
+                step["performance"] = min(math.log2(bench_result.speedup) / math.log2(10), 1.0)
+            logger.info(f"[evaluate_cython] speedup={bench_result.speedup:.1f}x")
             sections.append(
                 "## Benchmark\n"
                 + format_feedback(
@@ -396,23 +309,106 @@ class CythonToolEnvironment:
             )
 
         cleanup_build(result)
+
+        # Compute weighted total for this step
+        step["total"] = self._weighted_score(step)
+        self.step_scores.append(step)
+        logger.info(
+            f"[evaluate_cython] step score: total={step['total']:.3f} "
+            f"(correct={step['correctness']:.2f}, perf={step['performance']:.2f}, "
+            f"ann={step['annotations']:.2f}, speedup={step['speedup']:.1f}x)"
+        )
+
         return "\n\n".join(sections)
 
-    def safe_evaluate(
+    def _weighted_score(self, scores: dict, weights: dict | None = None) -> float:
+        """Compute weighted composite score from a step's scores dict."""
+        w = weights or DEFAULT_WEIGHTS
+        if not scores.get("compiled"):
+            return 0.0
+        return (
+            w.get("correctness", 0.30) * scores["correctness"]
+            + w.get("performance", 0.25) * scores["performance"]
+            + w.get("annotations", 0.20) * scores["annotations"]
+            + w.get("lint", 0.10) * scores["lint"]
+            + w.get("memory_safety", 0.15) * scores["memory_safety"]
+        )
+
+    # -- Graduated reward methods (called by reward function) --
+
+    def _get_atomic_reward(self, weights: dict | None = None) -> float:
+        """R_atomic: Average quality across all tool calls.
+
+        Every call contributes signal — not just the last one.
+        """
+        if not self.step_scores:
+            return 0.0
+        return sum(self._weighted_score(s, weights) for s in self.step_scores) / len(
+            self.step_scores
+        )
+
+    def _get_progress_reward(self) -> float:
+        """R_progress: Average step-over-step improvement (delta-clipped).
+
+        Measures whether each tool call improves on the previous one.
+        Asymmetric clipping: improvements rewarded up to +0.5, regressions
+        penalized up to -0.3 (encourage exploration).
+        """
+        if len(self.step_scores) < 2:
+            return 0.0
+        deltas = []
+        for i in range(1, len(self.step_scores)):
+            prev = self.step_scores[i - 1]["total"]
+            curr = self.step_scores[i]["total"]
+            delta = max(-0.3, min(0.5, curr - prev))
+            deltas.append(delta)
+        return sum(deltas) / len(deltas)
+
+    def _get_bonus_reward(self) -> float:
+        """R_bonus: Small bonuses/penalties for desirable behaviors."""
+        bonus = 0.0
+        if not self.step_scores:
+            return bonus
+
+        last = self.step_scores[-1]
+        # Completion bonus: final code compiles and passes all tests
+        if last.get("compiled") and last.get("correctness", 0) >= 1.0:
+            bonus += 0.05
+        # Efficiency bonus: solved in ≤3 tool calls
+        if self.num_tool_calls <= 3 and last.get("compiled"):
+            bonus += 0.05
+        # Format penalty
+        if self.format_errors > 0:
+            bonus -= 0.1 * self.format_errors
+        return bonus
+
+    def _get_composite_score(self) -> float:
+        """Legacy: compute final reward from the last submitted code.
+
+        Kept for backward compatibility with existing code.
+        """
+        if not self.last_code or not self._python_func:
+            return 0.0
+
+        scores = composite_reward(
+            cython_code=self.last_code,
+            python_func=self._python_func,
+            func_name=self._func_name,
+            test_cases=self._test_cases,
+            benchmark_args=self._benchmark_args,
+            benchmark_runs=3,
+        )
+        return scores["total"]
+
+    def _safe_evaluate(
         self,
         code: str,
-        annotate: bool = True,
-        test: bool = True,
-        benchmark: bool = True,
         timeout: int = 60,
     ) -> str:
-        """Run evaluate() in a subprocess to isolate segfaults and hangs.
+        """Run evaluate_cython() in a subprocess to isolate segfaults and hangs.
 
         Args:
             code: Complete .pyx source code.
-            annotate: Run annotation analysis.
-            test: Run correctness tests.
-            benchmark: Measure speedup.
             timeout: Max seconds before killing the worker.
 
         Returns:
@@ -430,7 +426,7 @@ class CythonToolEnvironment:
 
         proc = ctx.Process(
             target=_evaluate_worker,
-            args=(queue, env_args, code, annotate, test, benchmark),
+            args=(queue, env_args, code, True, True, True),
         )
         proc.start()
         proc.join(timeout=timeout)
@@ -447,19 +443,3 @@ class CythonToolEnvironment:
             return queue.get()
 
         return "## Error\nEvaluation returned no result."
-
-    def get_composite_score(self) -> float:
-        """Compute final reward from the last submitted code."""
-        if not self.last_code or not self._python_func:
-            return 0.0
-
-        scores = composite_reward(
-            cython_code=self.last_code,
-            python_func=self._python_func,
-            func_name=self._func_name,
-            test_cases=self._test_cases,
-            benchmark_args=self._benchmark_args,
-            benchmark_runs=3,
-        )
-        self.last_scores = scores
-        return scores["total"]

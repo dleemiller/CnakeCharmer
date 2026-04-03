@@ -16,11 +16,7 @@ import pytest
 from cnake_charmer.rewards.composite import composite_reward
 from cnake_charmer.training.credit import RolloutNode, mars_credit, mers_credit
 from cnake_charmer.training.environment import CythonToolEnvironment
-from cnake_charmer.training.prompts import (
-    format_feedback,
-    format_user_prompt,
-    make_initial_messages,
-)
+from cnake_charmer.training.prompts import format_feedback, format_user_prompt
 from cnake_charmer.training.rollout import extract_code_from_content as _extract_code_from_content
 
 # --- Fixtures ---
@@ -86,18 +82,16 @@ def primes(nb_primes):
 
 
 class TestPrompts:
-    def test_make_initial_messages(self):
-        msgs = make_initial_messages("def foo(): pass", "A test function")
-        assert len(msgs) == 2
-        assert msgs[0]["role"] == "system"
-        assert msgs[1]["role"] == "user"
-        assert "foo" in msgs[1]["content"]
-        assert "A test function" in msgs[1]["content"]
+    def test_format_user_prompt_full(self):
+        prompt = format_user_prompt("def add(a, b): return a + b", "add", "Add numbers")
+        assert "python_code: def add" in prompt
+        assert "func_name: add" in prompt
+        assert "description: Add numbers" in prompt
 
-    def test_format_user_prompt(self):
+    def test_format_user_prompt_code_only(self):
         prompt = format_user_prompt("def add(a, b): return a + b")
-        assert "Translate" in prompt
-        assert "def add" in prompt
+        assert prompt == "python_code: def add(a, b): return a + b"
+        assert "func_name" not in prompt
 
     def test_format_feedback_compile_success(self):
         fb = format_feedback("compile", {"success": True, "errors": ""})
@@ -161,37 +155,96 @@ class TestToolEnvironment:
         )
         return e
 
-    def test_compile_good_code(self, env):
-        result = env.compile(PRIMES_CYTHON)
-        assert "successful" in result.lower() or "Compilation" in result
+    def test_evaluate_cython_good_code(self, env):
+        result = env.evaluate_cython(PRIMES_CYTHON)
+        assert "Compilation" in result
+        assert "successful" in result.lower() or "True" in result
 
-    def test_compile_bad_code(self, env):
-        result = env.compile(BAD_CYTHON)
+    def test_evaluate_cython_bad_code(self, env):
+        result = env.evaluate_cython(BAD_CYTHON)
         assert "failed" in result.lower() or "error" in result.lower()
 
-    def test_annotate(self, env):
-        result = env.annotate(PRIMES_CYTHON)
-        assert "score" in result.lower() or "annotation" in result.lower()
+    def test_evaluate_cython_tracks_steps(self, env):
+        env.evaluate_cython(PRIMES_CYTHON)
+        assert len(env.step_scores) == 1
+        assert env.num_tool_calls == 1
+        assert env.step_scores[0]["compiled"] is True
 
-    def test_test_correctness(self, env):
-        result = env.test(PRIMES_CYTHON)
-        assert "2/2" in result or "passed" in result.lower()
+    def test_evaluate_cython_multiple_calls(self, env):
+        env.evaluate_cython(BAD_CYTHON)
+        env.evaluate_cython(PRIMES_CYTHON)
+        assert len(env.step_scores) == 2
+        assert env.num_tool_calls == 2
+        assert env.step_scores[0]["compiled"] is False
+        assert env.step_scores[1]["compiled"] is True
 
-    def test_benchmark(self, env):
-        result = env.benchmark(PRIMES_CYTHON)
-        assert "speedup" in result.lower() or "x" in result.lower()
+    def test_correctness_score(self, env):
+        env.evaluate_cython(PRIMES_CYTHON)
+        assert env.step_scores[0]["correctness"] == 1.0
 
-    def test_composite_score(self, env):
-        env.compile(PRIMES_CYTHON)  # sets last_code
-        score = env.get_composite_score()
-        assert score > 0.3
+    def test_annotation_score(self, env):
+        env.evaluate_cython(PRIMES_CYTHON)
+        assert env.step_scores[0]["annotations"] > 0.0
 
-    def test_tool_methods_exist(self, env):
-        assert callable(env.compile)
-        assert callable(env.annotate)
-        assert callable(env.test)
-        assert callable(env.benchmark)
-        assert callable(env.reset)
+    def test_speedup_measured(self, env):
+        env.evaluate_cython(PRIMES_CYTHON)
+        assert env.step_scores[0]["speedup"] > 1.0
+
+    def test_weighted_total(self, env):
+        env.evaluate_cython(PRIMES_CYTHON)
+        assert env.step_scores[0]["total"] > 0.5
+
+    def test_atomic_reward(self, env):
+        env.evaluate_cython(PRIMES_CYTHON)
+        assert env._get_atomic_reward() > 0.5
+
+    def test_progress_reward_single_call(self, env):
+        env.evaluate_cython(PRIMES_CYTHON)
+        # Single call → no delta to compute
+        assert env._get_progress_reward() == 0.0
+
+    def test_progress_reward_improvement(self, env):
+        env.evaluate_cython(BAD_CYTHON)  # fails to compile → score 0
+        env.evaluate_cython(PRIMES_CYTHON)  # compiles + correct → high score
+        assert env._get_progress_reward() > 0.0
+
+    def test_progress_reward_regression(self, env):
+        env.evaluate_cython(PRIMES_CYTHON)  # good
+        env.evaluate_cython(BAD_CYTHON)  # bad
+        assert env._get_progress_reward() < 0.0
+
+    def test_bonus_reward_correct_code(self, env):
+        env.evaluate_cython(PRIMES_CYTHON)
+        bonus = env._get_bonus_reward()
+        # Should get completion bonus (+0.05) and efficiency bonus (+0.05)
+        assert bonus >= 0.05
+
+    def test_bonus_reward_failed_code(self, env):
+        env.evaluate_cython(BAD_CYTHON)
+        bonus = env._get_bonus_reward()
+        assert bonus <= 0.0  # no bonuses for failed compilation
+
+    def test_reset_clears_state(self, env):
+        env.evaluate_cython(PRIMES_CYTHON)
+        assert len(env.step_scores) == 1
+        env.reset(python_code=PRIMES_PY_CODE, func_name="primes", test_cases="[]")
+        assert len(env.step_scores) == 0
+        assert env.num_tool_calls == 0
+        assert env.last_code is None
+
+    def test_tool_methods_for_trl(self, env):
+        """Only evaluate_cython should be discoverable as a public method by TRL."""
+        public_methods = [
+            m
+            for m in dir(env)
+            if not m.startswith("_") and callable(getattr(env, m)) and m != "reset"
+        ]
+        assert "evaluate_cython" in public_methods
+        # Old individual tools should NOT be public
+        assert "compile" not in public_methods
+        assert "annotate" not in public_methods
+        assert "test" not in public_methods
+        assert "benchmark" not in public_methods
 
 
 # --- Credit Assignment ---
