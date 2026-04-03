@@ -198,7 +198,42 @@ uv run pytest tests/{category}/test_{name}.py -v
 - Target score: **>0.85** (85% C lines)
 - Common culprits: `list.append()`, Python list indexing, `sort()` on tuples, string ops
 
-### 5. Run benchmarks and commit
+### 5. Score with MCP and iterate
+
+Run the full composite scoring to check quality:
+
+```
+score_problem("{category}/{name}")
+```
+
+**Minimum thresholds for acceptance:**
+
+| Signal | Minimum | Target |
+|--------|---------|--------|
+| Total reward | **≥ 0.80** | > 0.90 |
+| Correctness | **1.0** (required) | — |
+| Speedup | **≥ 5x** | > 10x |
+| Annotation | **≥ 0.85** | > 0.90 |
+| Memory safety | **1.0** (required) | — |
+| Lint | **1.0** (required) | — |
+
+**If speedup is low (< 5x)**, check whether the Python baseline uses C-level builtins (`list.sort()`, `sum()`, `len()`) that already run in C. Replace with pure Python equivalents:
+- `arr.sort()` → hand-written quicksort/mergesort in Python
+- `sum(arr)` → explicit accumulation loop
+- Built-in `sorted()` → manual sort
+
+The Python version should be **idiomatic pure Python loops**, not wrappers around C-optimized builtins. This ensures the speedup reflects the real value of Cython optimization.
+
+**If annotation score is low (< 0.85)**, check `annotate_file` for yellow lines:
+- Add `cdef` to all loop variables and accumulators
+- Replace Python `list` operations with `malloc`/`free` C arrays
+- Add `with nogil:` around pure-C loop sections
+- Use `from libc.math cimport ...` instead of Python `math` module
+- Convert to Python objects only at the very end when returning
+
+Iterate until the problem meets all thresholds before committing.
+
+### 6. Run benchmarks and commit
 
 ```bash
 uv run run_benchmarks.py    # parallel, hash-cached, only re-runs changed
@@ -280,22 +315,46 @@ The benchmark report has two sections:
 
 ## Finding New Problems
 
-### From the Stack v2 DuckDB
+### Stack v2 DuckDB — Data Source & Tracking
+
+The primary source for new problems is **The Stack v2 (dedup, Cython subset)**, stored in DuckDB:
+
+| File | Size | Description |
+|------|------|-------------|
+| `utils/stack_data/stack_cython_full.duckdb` | 844 MB | Full dataset, 52,525 Cython files with downloaded content |
+| `utils/stack_data/stack_cython_1k.duckdb` | 8.6 MB | 1k sample (for quick exploration) |
+| `utils/stack_data/the-stack-v2-dedup-cython.parquet` | 15 MB | Raw parquet (metadata only, no content) |
+
+#### Partition tracking (`split` column)
+
+The `split` column in `stack_cython_full.duckdb` tracks which rows have been assigned to training splits:
+
+| `split` value | Count | Meaning |
+|---------------|-------|---------|
+| `sft` | 64 | Already converted to py/cy problem pairs and included in SFT dataset |
+| `sft_candidate` | 651 | Selected for SFT conversion, **not yet processed** |
+| `grpo_candidate` | 2,235 | Selected for GRPO training (plain Python problems) |
+| `NULL` | 49,575 | Unpartitioned — available for future selection |
+
+**When you process a candidate into a problem pair, update its split from `sft_candidate` to `sft`:**
+
+```sql
+UPDATE stack_cython SET split = 'sft' WHERE blob_id = '<blob_id>';
+```
+
+#### Querying candidates
 
 ```bash
-uv run python -c "
+uv run --no-sync python -c "
 import duckdb
-con = duckdb.connect('utils/stack_data/stack_cython_1k.duckdb', read_only=True)
+con = duckdb.connect('utils/stack_data/stack_cython_full.duckdb', read_only=True)
 rows = con.execute('''
-    SELECT filename, path, content, length_bytes
+    SELECT blob_id, filename, path, content, length_bytes
     FROM stack_cython
-    WHERE content IS NOT NULL
-      AND length_bytes BETWEEN 200 AND 2000
-      AND is_generated = false
-      AND content LIKE '%def %'
+    WHERE split = 'sft_candidate'
     ORDER BY length_bytes ASC LIMIT 30
 ''').fetchall()
-for fn, path, content, size in rows:
+for bid, fn, path, content, size in rows:
     defs = [l.strip() for l in content.split(chr(10)) if l.strip().startswith(('def ','cpdef '))]
     print(f'{size:5d}B  {fn:30s}  {defs[0][:80] if defs else \"(no def)\"}')
 con.close()
@@ -303,15 +362,19 @@ con.close()
 ```
 
 **Look for:** `libc.math` functions, numerical loops, `malloc`/`free` patterns, memoryviews.
-**Skip:** C/C++ library wrappers, `cdef class`, multi-module imports.
+**Skip:** C/C++ library wrappers, `cdef class`, multi-module imports, prange/OpenMP (Python baseline is single-threaded).
+
+SFT candidates range from 415B to 8,000B (median ~4KB).
 
 ### Adapting Stack code
 
 1. Read the source, identify the core algorithm
-2. Write a pure Python version (self-contained, deterministic)
+2. Write a pure Python version (self-contained, deterministic, no C-level builtins in hot paths)
 3. Write a Cython version using our conventions
 4. Parameterize by `n`, tune benchmark args to 10-500ms Python time
-5. Test, annotate, benchmark, commit
+5. Compile, test, then **run `score_problem` and iterate until ≥ 0.80 reward** (see Step 5 above)
+6. Mark duplicates as `split = 'duplicate'` in DuckDB, skip them
+7. **Update the DuckDB split**: mark converted rows as `sft`
 
 ## Memory Safety (ASan)
 

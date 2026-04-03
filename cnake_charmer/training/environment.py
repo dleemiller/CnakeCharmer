@@ -24,6 +24,20 @@ from cnake_charmer.validate.correctness import _load_module_from_path
 
 logger = logging.getLogger(__name__)
 
+
+def _exec_func(python_code: str, func_name: str):
+    """Execute Python code string and extract the named function."""
+    if not func_name or not python_code:
+        return None
+    namespace = {}
+    try:
+        exec(python_code, namespace)  # noqa: S102
+        return namespace.get(func_name)
+    except Exception as e:
+        logger.warning(f"Failed to exec Python for {func_name}: {e}")
+        return None
+
+
 ASSERTION_TIMEOUT = 5  # seconds per test line
 
 
@@ -113,21 +127,38 @@ class CythonToolEnvironment:
     Used with TRL GRPOTrainer's environment_factory parameter.
     """
 
-    def reset(self, *, python_code: str = "", **kwargs) -> str | None:
+    def reset(
+        self,
+        *,
+        python_code: str = "",
+        func_name: str = "",
+        test_cases: str | list = "[]",
+        benchmark_args: str | tuple | None = "null",
+        **kwargs,
+    ) -> str | None:
         """Reset the environment for a new episode.
 
-        During training, python_code from the dataset is stored as the ground
-        truth reference. The tool uses this for equivalence checking regardless
-        of what the model passes as python_code — prevents reward hacking by
-        modifying the reference.
-
-        In production (MCP), reset() is called with no args, so
-        _original_python is empty and the tool uses the model's python_code.
+        Accepts both the new-style (just python_code for TRL/GRPO) and
+        old-style (python_code + func_name + test_cases + benchmark_args
+        for DSPy trace collection) kwargs.
         """
+        import json as _json
+
         self.step_scores = []
         self.num_tool_calls = 0
         self.last_code = None
         self._original_python = python_code
+
+        # Old-style: store for legacy evaluate() used by DSPy agent
+        self._func_name = func_name
+        self._python_func = _exec_func(python_code, func_name) if func_name else None
+        self._test_cases = _json.loads(test_cases) if isinstance(test_cases, str) else test_cases
+        self._benchmark_args = (
+            _json.loads(benchmark_args) if isinstance(benchmark_args, str) else benchmark_args
+        )
+        if self._benchmark_args is not None and not isinstance(self._benchmark_args, tuple):
+            self._benchmark_args = tuple(self._benchmark_args) if self._benchmark_args else None
+
         return None
 
     def evaluate_cython(self, code: str, python_code: str, test_code: str) -> str:
@@ -261,6 +292,111 @@ class CythonToolEnvironment:
             f"ann={step['annotations']:.2f}, speedup={step['speedup']:.1f}x)"
         )
 
+        return "\n\n".join(sections)
+
+    def evaluate(
+        self, code: str, annotate: bool = True, test: bool = True, benchmark: bool = True
+    ) -> str:
+        """Legacy interface for DSPy trace collection.
+
+        Uses pre-loaded python_code/func_name/test_cases from reset().
+        The DSPy agent calls this with just the Cython code; the Python
+        reference and test cases come from the dataset via reset().
+        """
+        from cnake_charmer.validate.correctness import check_correctness
+
+        self.last_code = code
+        sections = []
+
+        comp = compile_cython(code, annotate=annotate, keep_build=True)
+        sections.append(
+            "## Compilation\n"
+            + format_feedback("compile", {"success": comp.success, "errors": comp.errors})
+        )
+        if not comp.success:
+            cleanup_build(comp)
+            return "\n\n".join(sections)
+
+        # Annotation
+        if annotate:
+            ann = parse_annotations(html_path=comp.html_path) if comp.html_path else None
+            if ann and ann.success:
+                sections.append(
+                    "## Annotation\n"
+                    + format_feedback(
+                        "annotate",
+                        {
+                            "success": True,
+                            "score": ann.score,
+                            "hints": ann.hints,
+                            "yellow_lines": ann.yellow_lines,
+                            "total_lines": ann.total_lines,
+                        },
+                    )
+                )
+
+        # Load compiled module
+        cython_func = None
+        if comp.module_path:
+            try:
+                module = _load_module_from_path(comp.module_path, "gen_module")
+                cython_func = getattr(module, self._func_name)
+            except Exception as e:
+                sections.append(f"## Load Error\nCould not load function: {e}")
+                cleanup_build(comp)
+                return "\n\n".join(sections)
+
+        # Test
+        if test and cython_func and self._python_func and self._test_cases:
+            test_result = check_correctness(
+                python_func=self._python_func,
+                cython_func=cython_func,
+                test_cases=self._test_cases,
+            )
+            sections.append(
+                "## Tests\n"
+                + format_feedback(
+                    "test",
+                    {
+                        "success": True,
+                        "passed": test_result.passed,
+                        "total": test_result.total,
+                        "failures": test_result.failures,
+                    },
+                )
+            )
+
+        # Benchmark (skip if tests failed)
+        if (
+            benchmark
+            and cython_func
+            and self._python_func
+            and self._test_cases
+            and test_result.passed == test_result.total
+            and test_result.total > 0
+        ):
+            b_args = self._benchmark_args or ()
+            bench_result = _run_benchmark(
+                python_func=self._python_func,
+                cython_func=cython_func,
+                args=b_args,
+                num_runs=3,
+            )
+            sections.append(
+                "## Benchmark\n"
+                + format_feedback(
+                    "benchmark",
+                    {
+                        "success": bench_result.success,
+                        "speedup": round(bench_result.speedup, 2),
+                        "cython_time": round(bench_result.cython_time, 6),
+                        "python_time": round(bench_result.python_time, 6),
+                        "errors": bench_result.error,
+                    },
+                )
+            )
+
+        cleanup_build(comp)
         return "\n\n".join(sections)
 
     def _run_benchmark(self, py_mod, cy_mod, test_code: str) -> dict | None:

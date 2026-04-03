@@ -72,10 +72,26 @@ def make_trace_record(
     traj = result.trajectory if result.trajectory else {}
     cython_code = extract_code_from_content(getattr(result, "cython_code", "") or "")
 
-    # Count iterations
-    num_iters = 0
-    while f"tool_name_{num_iters}" in traj:
-        num_iters += 1
+    # Fallback: extract code from the last tool call if output field is empty.
+    # Some models (e.g. Gemma 4) don't produce a clean final output with the
+    # cython_code field, but the code is in the tool call trajectory.
+    if not cython_code:
+        for i in range(20, -1, -1):
+            args = traj.get(f"tool_args_{i}")
+            if args and isinstance(args, dict) and "code" in args:
+                cython_code = args["code"]
+                break
+            elif args and isinstance(args, str):
+                try:
+                    parsed = json.loads(args)
+                    if "code" in parsed:
+                        cython_code = parsed["code"]
+                        break
+                except (json.JSONDecodeError, TypeError):
+                    pass
+
+    # Count iterations — just count all tool_name_* keys
+    num_iters = sum(1 for k in traj if k.startswith("tool_name_"))
 
     # Extract tool calls
     entry_for_tools = {"trajectory": dict(traj)}
@@ -246,6 +262,12 @@ def main():
     parser.add_argument(
         "--max-iters", type=int, default=5, help="Max evaluate_cython calls per attempt"
     )
+    parser.add_argument(
+        "--parallel",
+        type=int,
+        default=None,
+        help="Run N attempts concurrently via dspy.Parallel (use with vLLM prefix caching)",
+    )
 
     # Output
     parser.add_argument(
@@ -268,7 +290,12 @@ def main():
     else:
         api_key = "local"
 
-    lm_kwargs = {"api_key": api_key, "temperature": args.temperature, "cache": False}
+    lm_kwargs = {
+        "api_key": api_key,
+        "temperature": args.temperature,
+        "cache": False,
+        "max_tokens": 8192,
+    }
     if args.reasoning_effort:
         if is_remote:
             # OpenRouter doesn't support reasoning_effort natively; pass via extra_body
@@ -362,26 +389,114 @@ def main():
     # Run
     total = len(work)
     done = 0
-    for problem, attempt in work:
-        done += 1
-        logger.info(f"[{done}/{total}] {problem.problem_id} attempt {attempt + 1}/{args.attempts}")
-        try:
-            result, lm_history = run_problem(
-                problem, args.model, args.max_iters, optimized_program, seed_text
+
+    if args.parallel:
+        # Parallel execution using dspy.Parallel — ideal for vLLM prefix caching.
+        # Groups attempts by problem so same-prefix requests hit the KV cache.
+        from itertools import groupby
+
+        logger.info(f"Running {total} traces with {args.parallel} parallel threads")
+
+        # Group work by problem for prefix cache locality
+        work_sorted = sorted(work, key=lambda x: x[0].problem_id)
+
+        for pid, group in groupby(work_sorted, key=lambda x: x[0].problem_id):
+            group_items = list(group)
+            problem = group_items[0][0]
+
+            # Build exec pairs: each attempt gets its own module + example
+            exec_pairs = []
+            for prob, attempt in group_items:
+                module = dspy.Predict("question -> answer")  # placeholder, run_problem handles it
+                example = dspy.Example(
+                    problem=prob,
+                    attempt=attempt,
+                    model_id=args.model,
+                    max_iters=args.max_iters,
+                    optimized_program=optimized_program,
+                    seed_text=seed_text,
+                ).with_inputs(
+                    "problem", "attempt", "model_id", "max_iters", "optimized_program", "seed_text"
+                )
+                exec_pairs.append((module, example))
+
+            # Define a wrapper that dspy.Parallel can call
+            class TraceRunner:
+                def __call__(
+                    self,
+                    problem,
+                    attempt,
+                    model_id,
+                    max_iters,
+                    optimized_program,
+                    seed_text,
+                    **kwargs,
+                ):
+                    result, lm_history = run_problem(
+                        problem, model_id, max_iters, optimized_program, seed_text
+                    )
+                    return dspy.Example(
+                        result=result, lm_history=lm_history, problem=problem, attempt=attempt
+                    )
+
+            runner = TraceRunner()
+            exec_pairs = [(runner, ex) for _, ex in exec_pairs]
+
+            parallel = dspy.Parallel(
+                num_threads=min(args.parallel, len(exec_pairs)),
+                max_errors=len(exec_pairs),  # don't stop on errors
+                disable_progress_bar=False,
+                timeout=300,
             )
-            record = make_trace_record(problem, result, args.model, prompt_id, attempt, lm_history)
-            record["reward"] = score_trace(record, problem)
+            try:
+                results = parallel(exec_pairs=exec_pairs)
+            except Exception as e:
+                logger.error(f"  Parallel failed for {pid}: {e}")
+                results = []
 
-            # Append
-            with open(output_path, "a") as f:
-                f.write(json.dumps(record, default=str) + "\n")
-
+            for res in results:
+                if res is None:
+                    continue
+                try:
+                    record = make_trace_record(
+                        res.problem, res.result, args.model, prompt_id, res.attempt, res.lm_history
+                    )
+                    record["reward"] = score_trace(record, res.problem)
+                    with open(output_path, "a") as f:
+                        f.write(json.dumps(record, default=str) + "\n")
+                    done += 1
+                    logger.info(
+                        f"  [{done}/{total}] {res.problem.problem_id} attempt {res.attempt + 1}: "
+                        f"reward={record['reward']:.3f} iters={record['num_iterations']}"
+                    )
+                except Exception as e:
+                    logger.error(f"  Record failed: {e}")
+    else:
+        # Sequential execution
+        for problem, attempt in work:
+            done += 1
             logger.info(
-                f"  reward={record['reward']:.3f} iters={record['num_iterations']} "
-                f"tools={record['tools_used']}"
+                f"[{done}/{total}] {problem.problem_id} attempt {attempt + 1}/{args.attempts}"
             )
-        except Exception as e:
-            logger.error(f"  Failed: {e}")
+            try:
+                result, lm_history = run_problem(
+                    problem, args.model, args.max_iters, optimized_program, seed_text
+                )
+                record = make_trace_record(
+                    problem, result, args.model, prompt_id, attempt, lm_history
+                )
+                record["reward"] = score_trace(record, problem)
+
+                # Append
+                with open(output_path, "a") as f:
+                    f.write(json.dumps(record, default=str) + "\n")
+
+                logger.info(
+                    f"  reward={record['reward']:.3f} iters={record['num_iterations']} "
+                    f"tools={record['tools_used']}"
+                )
+            except Exception as e:
+                logger.error(f"  Failed: {e}")
 
     # Summary
     logger.info(f"\nSaved {done} traces to {output_path}")
