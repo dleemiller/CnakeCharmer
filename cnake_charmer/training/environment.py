@@ -35,6 +35,83 @@ def _exec_func(python_code: str, func_name: str):
         return None
 
 
+def _generate_test_cases(python_func, func_name: str, python_code: str) -> list:
+    """Auto-generate test cases by inspecting the function and trying small inputs.
+
+    Inspects the function signature to determine parameter count, then tries
+    a range of small inputs. Only keeps inputs that the Python function
+    handles without error.
+
+    Returns list of ((args,),) tuples compatible with check_correctness.
+    """
+    if python_func is None:
+        return []
+
+    import inspect
+
+    try:
+        sig = inspect.signature(python_func)
+    except (ValueError, TypeError):
+        return []
+
+    params = [
+        p
+        for p in sig.parameters.values()
+        if p.kind in (p.POSITIONAL_ONLY, p.POSITIONAL_OR_KEYWORD) and p.default is p.empty
+    ]
+    n_params = len(params)
+
+    if n_params == 0:
+        # No-arg function: just call it once
+        try:
+            python_func()
+            return [((),)]
+        except Exception:
+            return []
+
+    if n_params == 1:
+        # Single param — most common case. Try small ints.
+        candidates = [1, 5, 10, 50, 100, 500]
+        cases = []
+        for v in candidates:
+            try:
+                python_func(v)
+                cases.append(((v,),))
+            except Exception:
+                continue
+            if len(cases) >= 4:
+                break
+        return cases
+
+    if n_params == 2:
+        # Two params — try small pairs
+        candidates = [(1, 1), (5, 5), (10, 10), (3, 7), (20, 20)]
+        cases = []
+        for args in candidates:
+            try:
+                python_func(*args)
+                cases.append((args,))
+            except Exception:
+                continue
+            if len(cases) >= 4:
+                break
+        return cases
+
+    # 3+ params — try all-same small values
+    candidates = [1, 5, 10, 50]
+    cases = []
+    for v in candidates:
+        args = tuple([v] * n_params)
+        try:
+            python_func(*args)
+            cases.append((args,))
+        except Exception:
+            continue
+        if len(cases) >= 3:
+            break
+    return cases
+
+
 def _evaluate_worker(queue, env_args, code, annotate, test, benchmark):
     """Worker for safe_evaluate — runs in a spawned subprocess."""
     try:
@@ -78,6 +155,18 @@ class CythonToolEnvironment:
         )
         if self._benchmark_args is not None and not isinstance(self._benchmark_args, tuple):
             self._benchmark_args = tuple(self._benchmark_args) if self._benchmark_args else None
+
+        # Auto-generate test cases if none provided
+        if not self._test_cases and self._python_func:
+            self._test_cases = _generate_test_cases(self._python_func, self._func_name, python_code)
+            if not self._benchmark_args and self._test_cases:
+                # Use the largest test input as benchmark args
+                self._benchmark_args = self._test_cases[-1][0]
+            if self._test_cases:
+                logger.info(
+                    f"[reset] Auto-generated {len(self._test_cases)} test cases "
+                    f"for {self._func_name}"
+                )
 
         # Per-step tracking for graduated rewards
         self.step_scores = []  # List of score dicts per tool call
