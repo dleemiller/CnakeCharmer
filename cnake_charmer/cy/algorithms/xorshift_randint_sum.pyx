@@ -5,7 +5,7 @@ from cnake_charmer.benchmarks import cython_benchmark
 
 
 @cython_benchmark(syntax="cy", args=(2463534242, 500000, 1000))
-cpdef long long xorshift_randint_sum(unsigned int seed, int draws, int bucket):
+def xorshift_randint_sum(unsigned int seed, int draws, int bucket):
     return _xorshift_randint_sum_impl(seed, draws, bucket)
 
 
