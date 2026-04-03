@@ -12,8 +12,11 @@ Staged curriculum shifts R_atomic weights from correctness-heavy to performance-
 at the training midpoint.
 """
 
+import ast
 import json
 import logging
+import re
+from pathlib import Path
 
 from datasets import Dataset
 
@@ -22,6 +25,107 @@ from cnake_charmer.training.environment import CythonToolEnvironment
 from cnake_charmer.training.prompts import format_user_prompt, get_system_prompt
 
 logger = logging.getLogger(__name__)
+
+GRPO_PROBLEMS_DIR = Path("data/grpo_problems")
+
+
+def load_grpo_problems(problems_dir: str | Path | None = None) -> list[dict]:
+    """Load plain Python files from data/grpo_problems/ for GRPO training.
+
+    Each file is a standalone Python script with one public function.
+    No test files, no decorators, no Cython ground truth — just code
+    the agent must optimize.
+
+    Returns list of dicts with: python_code, func_name, description, problem_id
+    """
+    d = Path(problems_dir) if problems_dir else GRPO_PROBLEMS_DIR
+    if not d.exists():
+        logger.warning(f"GRPO problems directory not found: {d}")
+        return []
+
+    problems = []
+    for py_file in sorted(d.glob("*.py")):
+        code = py_file.read_text()
+        func_name = _extract_first_func(code)
+        if not func_name:
+            logger.warning(f"No function found in {py_file.name}, skipping")
+            continue
+        description = _extract_docstring(code, func_name)
+        problems.append(
+            {
+                "python_code": code,
+                "func_name": func_name,
+                "description": description,
+                "problem_id": py_file.stem,
+            }
+        )
+
+    logger.info(f"Loaded {len(problems)} GRPO problems from {d}")
+    return problems
+
+
+def build_grpo_dataset(
+    problems: list[dict] | None = None,
+    problems_dir: str | Path | None = None,
+) -> Dataset:
+    """Build a HuggingFace Dataset from plain Python files for GRPO training.
+
+    Loads from data/grpo_problems/ if problems not provided.
+    No test_cases or benchmark_args — the agent figures those out.
+    """
+    if problems is None:
+        problems = load_grpo_problems(problems_dir)
+
+    system_prompt = get_system_prompt()
+    rows = {
+        "prompt": [],
+        "python_code": [],
+        "func_name": [],
+        "test_cases": [],
+        "benchmark_args": [],
+    }
+
+    for p in problems:
+        rows["prompt"].append(
+            [
+                {"role": "system", "content": system_prompt},
+                {
+                    "role": "user",
+                    "content": format_user_prompt(
+                        p["python_code"],
+                        p["func_name"],
+                        p.get("description", ""),
+                    ),
+                },
+            ]
+        )
+        rows["python_code"].append(p["python_code"])
+        rows["func_name"].append(p["func_name"])
+        rows["test_cases"].append("[]")
+        rows["benchmark_args"].append("null")
+
+    return Dataset.from_dict(rows)
+
+
+def _extract_first_func(source: str) -> str:
+    """Extract the name of the first public function in source."""
+    for m in re.finditer(r"^def (\w+)\(", source, re.MULTILINE):
+        if not m.group(1).startswith("_"):
+            return m.group(1)
+    return ""
+
+
+def _extract_docstring(source: str, func_name: str) -> str:
+    """Extract the docstring of a function."""
+    try:
+        tree = ast.parse(source)
+        for node in ast.walk(tree):
+            if isinstance(node, ast.FunctionDef) and node.name == func_name:
+                return ast.get_docstring(node) or ""
+    except SyntaxError:
+        pass
+    return ""
+
 
 # Staged curriculum weights for R_atomic
 STAGE1_WEIGHTS = {
