@@ -91,23 +91,31 @@ def _harmony_parse_tool_calls(text: str) -> dict:
     import re as _re
 
     reasoning = ""
+    # Match analysis channel — may or may not have <|start|>assistant prefix
+    # (TRL strips the prefix since it's part of the generation prompt)
     m = _re.search(
-        r"<\|start\|>assistant<\|channel\|>analysis<\|message\|>(.*?)<\|end\|>",
+        r"(?:<\|start\|>assistant)?<\|channel\|>analysis<\|message\|>(.*?)<\|end\|>",
         text,
         _re.DOTALL,
     )
     if m:
         reasoning = m.group(1).strip()
 
+    # Only recognize tools that the environment actually exposes
+    _KNOWN_TOOLS = {"evaluate_cython"}
+
     tool_calls = []
     for m in _re.finditer(
-        r"<\|start\|>assistant to=functions\.(\w+)"
+        r"(?:<\|start\|>)?assistant to=functions\.(\w+)"
         r"<\|channel\|>commentary json<\|message\|>"
         r"(\{.+?\})<\|call\|>",
         text,
         _re.DOTALL,
     ):
         name = m.group(1)
+        if name not in _KNOWN_TOOLS:
+            logging.getLogger(__name__).warning(f"Ignoring hallucinated tool call: {name}")
+            continue
         try:
             args = _json.loads(m.group(2))
         except _json.JSONDecodeError:
@@ -130,8 +138,41 @@ def _patched_parse_response(tokenizer, ids):
         parsed = _harmony_parse_tool_calls(text)
         if "tool_calls" in parsed:
             _trl_chat_utils._validate_tool_calls(parsed["tool_calls"])
+            logger.info(
+                f"Harmony parser found {len(parsed['tool_calls'])} tool call(s): "
+                f"{[tc['function']['name'] for tc in parsed['tool_calls']]}"
+            )
         return parsed
     return _orig_parse_response(tokenizer, ids)
+
+
+def _patched_get_tool_suffix_ids(self, tool_messages):
+    """Harmony-compatible tool suffix ID computation.
+
+    In Harmony format, tool responses appear as:
+      <|start|>functions.NAME to=assistant<|channel|>commentary<|message|>CONTENT<|end|>
+    followed by the generation prompt:
+      <|start|>assistant
+
+    We directly construct these tokens rather than using apply_chat_template,
+    which has strict message ordering requirements.
+    """
+    tok = self.processing_class
+    parts = []
+    for msg in tool_messages:
+        name = msg.get("name", "evaluate_cython")
+        content = msg.get("content", "")
+        # Harmony tool response format
+        tool_response = (
+            f"<|start|>functions.{name} to=assistant"
+            f"<|channel|>commentary<|message|>{content}<|end|>"
+        )
+        parts.append(tool_response)
+    # Generation prompt for next assistant turn
+    parts.append("<|start|>assistant")
+
+    suffix_text = "".join(parts)
+    return tok.encode(suffix_text, add_special_tokens=False)
 
 
 # Apply patches
@@ -142,6 +183,8 @@ _trl_chat_utils.parse_response = _patched_parse_response
 _trl_grpo.add_response_schema = _patched_add_response_schema
 _trl_grpo.get_training_chat_template = _patched_get_training_chat_template
 _trl_grpo.parse_response = _patched_parse_response
+# Patch _get_tool_suffix_ids on the GRPOTrainer class
+_trl_grpo.GRPOTrainer._get_tool_suffix_ids = _patched_get_tool_suffix_ids
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 logger = logging.getLogger(__name__)

@@ -103,11 +103,17 @@ class CythonToolEnvironment:
         """
         self.last_code = code
         self.num_tool_calls += 1
+        code_preview = code[:80].replace("\n", "\\n") if code else "<empty>"
+        logger.info(
+            f"[evaluate_cython] call #{self.num_tool_calls} for {self._func_name} "
+            f"({len(code)} chars): {code_preview}..."
+        )
         sections = []
 
         # Compile with annotations enabled (one compilation for everything)
         result = compile_cython(code, annotate=True, keep_build=True)
         compiled = result.success
+        logger.info(f"[evaluate_cython] compiled={compiled}")
         sections.append(
             "## Compilation\n"
             + format_feedback("compile", {"success": result.success, "errors": result.errors})
@@ -168,6 +174,7 @@ class CythonToolEnvironment:
                 test_cases=self._test_cases,
             )
             step["correctness"] = test_result.score
+            logger.info(f"[evaluate_cython] tests={test_result.passed}/{test_result.total}")
             sections.append(
                 "## Tests\n"
                 + format_feedback(
@@ -181,8 +188,8 @@ class CythonToolEnvironment:
                 )
             )
 
-        # Benchmark (reuses loaded module)
-        if cython_func and self._python_func:
+        # Benchmark (reuses loaded module) — skip if tests failed to avoid hanging on buggy code
+        if cython_func and self._python_func and step["correctness"] > 0:
             b_args = self._benchmark_args or ()
             bench_result = _run_benchmark(
                 python_func=self._python_func,
@@ -193,6 +200,7 @@ class CythonToolEnvironment:
             if bench_result.success and bench_result.speedup > 1.0:
                 step["speedup"] = bench_result.speedup
                 step["performance"] = min(math.log2(bench_result.speedup) / math.log2(10), 1.0)
+            logger.info(f"[evaluate_cython] speedup={bench_result.speedup:.1f}x")
             sections.append(
                 "## Benchmark\n"
                 + format_feedback(
@@ -212,6 +220,11 @@ class CythonToolEnvironment:
         # Compute weighted total for this step
         step["total"] = self._weighted_score(step)
         self.step_scores.append(step)
+        logger.info(
+            f"[evaluate_cython] step score: total={step['total']:.3f} "
+            f"(correct={step['correctness']:.2f}, perf={step['performance']:.2f}, "
+            f"ann={step['annotations']:.2f}, speedup={step['speedup']:.1f}x)"
+        )
 
         return "\n\n".join(sections)
 
