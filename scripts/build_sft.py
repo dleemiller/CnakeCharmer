@@ -293,11 +293,32 @@ def main():
     #   (Harmony template drops analysis when a future non-tool-call assistant message exists)
     # - Reasoning effort assigned AFTER rendering by analysis length terciles (see below)
 
+    def _generate_test_code(func_name, test_cases):
+        """Generate py/cy equivalence test code from test_cases.
+
+        Transforms [((10,),), ((100,),)] into:
+            py.func(10) == cy.func(10)
+            py.func(100) == cy.func(100)
+        """
+        lines = []
+        for tc in test_cases or []:
+            if isinstance(tc, (list, tuple)) and len(tc) >= 1:
+                args = tc[0] if isinstance(tc[0], (list, tuple)) else tc
+                args_str = ", ".join(repr(a) for a in args)
+                lines.append(f"py.{func_name}({args_str}) == cy.{func_name}({args_str})")
+        return "\n".join(lines)
+
     def build_messages(trace, system_prompt):
         """Build OpenAI-format messages from a trace for Harmony rendering."""
         traj = trace.get("trajectory", {})
         is_thinking = trace.get("_thinking", False)
         inputs = trace.get("inputs", {})
+
+        # Extract python_code and test_code for the new 3-param tool format
+        python_code = inputs.get("python_code", "")
+        func_name = inputs.get("func_name", "")
+        test_cases = inputs.get("test_cases", [])
+        test_code = _generate_test_code(func_name, test_cases)
 
         msgs = []
         if system_prompt:
@@ -316,6 +337,16 @@ def main():
 
             if not tool_name:
                 continue
+
+            # Inject python_code and test_code into tool call arguments
+            if isinstance(tool_args, str):
+                try:
+                    tool_args = json.loads(tool_args)
+                except (json.JSONDecodeError, TypeError):
+                    tool_args = {}
+            if isinstance(tool_args, dict) and "code" in tool_args:
+                tool_args["python_code"] = python_code
+                tool_args["test_code"] = test_code
 
             # Select reasoning for analysis channel
             if is_thinking:
