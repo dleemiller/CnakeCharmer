@@ -66,7 +66,7 @@ cdef inline double distance_point_ellipse(double a, double b, double x, double y
     return sqrt(dx * dx + dy * dy)
 
 
-@cython_benchmark(syntax="cy", args=(6.0, 3.0, 70000, 23))
+@cython_benchmark(syntax="cy", args=(6.0, 3.0, 50000, 23))
 def ellipse_point_distance_batch(double a, double b, int n_points, int seed):
     cdef unsigned int state = <unsigned int>((seed * 1664525 + 1013904223) & MASK32)
     cdef int i, inside = 0

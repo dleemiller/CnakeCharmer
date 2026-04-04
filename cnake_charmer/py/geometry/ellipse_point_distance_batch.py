@@ -62,7 +62,7 @@ def _distance_point_ellipse(a: float, b: float, x: float, y: float) -> float:
     return (dx * dx + dy * dy) ** 0.5
 
 
-@python_benchmark(args=(6.0, 3.0, 70000, 23))
+@python_benchmark(args=(6.0, 3.0, 50000, 23))
 def ellipse_point_distance_batch(a: float, b: float, n_points: int, seed: int) -> tuple:
     state = (seed * 1664525 + 1013904223) & 0xFFFFFFFF
     total = 0.0
