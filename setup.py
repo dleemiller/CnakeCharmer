@@ -66,7 +66,7 @@ def get_cython_extensions(syntax: Literal["cy"]):
     """
     extensions = []
     file_extension = ".pyx"
-    for root, _, files in os.walk(os.path.join("cnake_charmer", syntax)):
+    for root, _, files in os.walk(os.path.join("cnake_data", syntax)):
         for file in files:
             if file.endswith(file_extension):
                 file_path = os.path.join(root, file)
@@ -106,7 +106,9 @@ setup(
     author="Lee Miller",
     author_email="dleemiller@protonmail.com",
     url="https://github.com/dleemiller/CnakeCharmer",
-    packages=find_packages(include=["cnake_charmer", "cnake_charmer.*"]),
+    packages=find_packages(
+        include=["cnake_charmer", "cnake_charmer.*", "cnake_data", "cnake_data.*"]
+    ),
     # ext_modules=extensions,
     ext_modules=cythonize(
         get_cython_extensions(syntax="cy"),

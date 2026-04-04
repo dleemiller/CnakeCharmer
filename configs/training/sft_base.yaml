@@ -1,0 +1,36 @@
+# SFT training defaults for gpt-oss-20b
+model:
+  base: openai/gpt-oss-20b
+  output: models/gpt-oss-20b-cython-sft
+
+dataset:
+  path: data/sft_dataset_v2.jsonl
+  max_length: 16384
+  packing: false
+
+lora:
+  rank: 64
+  alpha: 128
+  dropout: 0.05
+  target_modules: all-linear
+
+training:
+  epochs: 1
+  batch_size: 1
+  gradient_accumulation_steps: 8
+  learning_rate: 2e-4
+  lr_scheduler_type: cosine_with_min_lr
+  lr_scheduler_kwargs:
+    min_lr_rate: 0.1
+  warmup_ratio: 0.1
+  logging_steps: 1
+  save_steps: 25
+  save_total_limit: 3
+  max_steps: -1
+  bf16: true
+  gradient_checkpointing: true
+  report_to: trackio
+
+merge:
+  enabled: true
+  mxfp4: true

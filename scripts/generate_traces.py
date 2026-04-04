@@ -20,7 +20,6 @@ Usage:
 import argparse
 import json
 import logging
-import os
 import sys
 from collections import defaultdict
 from pathlib import Path
@@ -29,17 +28,16 @@ import dspy
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from cnake_charmer.dataset.loader import discover_pairs
+from cnake_charmer.traces.lm import configure_dspy_lm, load_optimized_prompt
 from cnake_charmer.training.dspy_agent import (
     CythonOptimization,
     collect_reward,
     make_tools,
 )
+from cnake_data.loader import discover_pairs
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname)s %(message)s")
 logger = logging.getLogger(__name__)
-
-PROMPTS_DIR = Path(__file__).parent.parent / "data" / "optimized_prompts"
 
 
 class PerProblemReAct(dspy.Module):
@@ -66,37 +64,11 @@ class PerProblemReAct(dspy.Module):
 
         # Apply optimized signatures from GEPA if available
         if self.optimized_program is not None:
-            _apply_optimized_signatures(react, self.optimized_program)
+            from cnake_charmer.traces.lm import apply_optimized_signatures
+
+            apply_optimized_signatures(react, self.optimized_program)
 
         return react(python_code=python_code, func_name=func_name, description=description)
-
-
-def _apply_optimized_signatures(react_module, optimized_program):
-    """Copy optimized signatures from a saved GEPA program to a fresh ReAct module."""
-    opt_params = dict(optimized_program.named_parameters())
-    for name, param in react_module.named_parameters():
-        if name in opt_params:
-            opt_param = opt_params[name]
-            if hasattr(opt_param, "signature") and hasattr(param, "signature"):
-                param.signature = opt_param.signature
-
-
-def load_optimized_program(model_id: str) -> dspy.Module | None:
-    """Load a GEPA-optimized program for a model, if available."""
-    slug = model_id.replace("/", "_").replace(":", "_")
-    program_path = PROMPTS_DIR / slug / "program.json"
-
-    if not program_path.exists():
-        logger.info(f"No optimized program found at {program_path}")
-        return None
-
-    # Load into a placeholder CythonReActAgent to get the signatures
-    from scripts.optimize_prompt import CythonReActAgent
-
-    agent = CythonReActAgent(max_iters=5)
-    agent.load(program_path)
-    logger.info(f"Loaded optimized program from {program_path}")
-    return agent
 
 
 def select_best_traces(entries: list[dict], require_all_tools: bool = False) -> list[dict]:
@@ -251,28 +223,18 @@ def main():
     )
     args = parser.parse_args()
 
-    # Configure DSPy LM
-    if args.api_key:
-        api_key = args.api_key
-    elif "localhost" in args.base_url or "127.0.0.1" in args.base_url:
-        api_key = "local"
-    else:
-        api_key = os.environ.get("APIKEY", os.environ.get("OPENROUTER_API_KEY", "local"))
-
-    lm = dspy.LM(
+    # Configure DSPy LM (shared utility)
+    configure_dspy_lm(
         args.model,
-        api_base=args.base_url,
-        api_key=api_key,
+        base_url=args.base_url,
+        api_key=args.api_key,
         temperature=args.temperature,
-        cache=False,  # disable DSPy cache so N traces per problem are diverse
     )
-    dspy.settings.configure(lm=lm)
-    logger.info(f"Configured LM: {args.model} @ {args.base_url}")
 
     # Load GEPA-optimized program if available
     optimized = None
     if not args.no_optimized_prompt:
-        optimized = load_optimized_program(args.model)
+        optimized, _prompt_id = load_optimized_prompt(model_id=args.model)
 
     # Load problems
     problems = discover_pairs()

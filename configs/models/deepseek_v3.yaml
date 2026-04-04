@@ -1,0 +1,8 @@
+# DeepSeek V3.2 — OpenRouter
+model:
+  id: openrouter/deepseek/deepseek-v3.2
+  api_key_env: OPENROUTER_API_KEY
+
+prompt:
+  program: data/optimized_prompts/openrouter_deepseek_deepseek-v3.2/program.json
+  id: gepa_deepseek

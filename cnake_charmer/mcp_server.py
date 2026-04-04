@@ -15,19 +15,19 @@ from pathlib import Path
 
 from mcp.server.fastmcp import FastMCP
 
-from cnake_charmer.dataset.loader import discover_pairs
 from cnake_charmer.eval.annotations import parse_annotations
 from cnake_charmer.eval.compiler import cleanup_build, compile_cython
 from cnake_charmer.eval.memory_safety import check_memory_safety
 from cnake_charmer.eval.pipeline import composite_reward as _composite_reward
+from cnake_data.loader import discover_pairs
 
 logger = logging.getLogger(__name__)
 
 mcp = FastMCP("cnake-charmer")
 
-PACKAGE_ROOT = Path(__file__).parent
-PY_DIR = PACKAGE_ROOT / "py"
-CY_DIR = PACKAGE_ROOT / "cy"
+CNAKE_DATA_ROOT = Path(__file__).resolve().parent.parent / "cnake_data"
+PY_DIR = CNAKE_DATA_ROOT / "py"
+CY_DIR = CNAKE_DATA_ROOT / "cy"
 
 
 # ---------------------------------------------------------------------------

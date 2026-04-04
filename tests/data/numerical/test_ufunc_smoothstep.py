@@ -1,0 +1,15 @@
+"""Test ufunc_smoothstep equivalence."""
+
+import pytest
+
+from cnake_data.cy.numerical.ufunc_smoothstep import ufunc_smoothstep as cy_func
+from cnake_data.py.numerical.ufunc_smoothstep import ufunc_smoothstep as py_func
+
+
+@pytest.mark.parametrize("n", [100, 1000, 100000])
+def test_ufunc_smoothstep_equivalence(n):
+    py_result = py_func(n)
+    cy_result = cy_func(n)
+    assert abs(py_result - cy_result) / max(abs(py_result), 1) < 1e-4, (
+        f"Mismatch: py={py_result}, cy={cy_result}"
+    )

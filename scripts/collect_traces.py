@@ -32,7 +32,6 @@ Usage:
 import argparse
 import json
 import logging
-import os
 import random
 import sys
 from collections import Counter
@@ -46,14 +45,19 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent / "dspy-data-module" 
 
 from dspy_data.loader import extract_tool_calls
 
-from cnake_charmer.dataset.loader import discover_pairs
+from cnake_charmer.traces.lm import (
+    apply_optimized_signatures,
+    configure_dspy_lm,
+    get_seed_text,
+    load_optimized_prompt,
+    model_slug,
+)
 from cnake_charmer.training.dspy_agent import CythonOptimization, make_tools
 from cnake_charmer.training.rollout import extract_code_from_content
+from cnake_data.loader import discover_pairs
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 logger = logging.getLogger(__name__)
-
-SEED_PROMPT = Path(__file__).parent.parent / "data" / "optimized_prompts" / "seed_prompt.txt"
 
 # ---- Standardized trace format ----
 # Every JSONL line has these fields. Do not change without versioning.
@@ -146,47 +150,6 @@ def score_trace(record: dict, problem) -> float:
     return scores["total"]
 
 
-def load_prompt(program_path: str | None) -> tuple[object | None, str]:
-    """Load a GEPA program or seed prompt. Returns (program, prompt_id)."""
-    if program_path:
-        path = Path(program_path)
-        if not path.exists():
-            logger.error(f"Program not found: {path}")
-            sys.exit(1)
-        from scripts.optimize_prompt import CythonReActAgent
-
-        agent = CythonReActAgent(max_iters=5)
-        agent.load(path)
-        prompt_id = path.stem
-        logger.info(f"Loaded program: {path} (prompt_id={prompt_id})")
-        return agent, prompt_id
-
-    # Default: seed prompt
-    if SEED_PROMPT.exists():
-        prompt_id = "seed_v1"
-        logger.info(f"Using seed prompt (prompt_id={prompt_id})")
-        return None, prompt_id
-
-    prompt_id = "base"
-    logger.info("Using base signature (no optimized prompt)")
-    return None, prompt_id
-
-
-def apply_prompt(react_module, optimized_program, seed_text=None):
-    """Apply optimized signatures or seed prompt to a ReAct module."""
-    if optimized_program is not None:
-        opt_params = dict(optimized_program.named_parameters())
-        for name, param in react_module.named_parameters():
-            if name in opt_params:
-                opt = opt_params[name]
-                if hasattr(opt, "signature") and hasattr(param, "signature"):
-                    param.signature = opt.signature
-    elif seed_text:
-        for _name, param in react_module.named_parameters():
-            if hasattr(param, "signature"):
-                param.signature = param.signature.with_instructions(seed_text)
-
-
 def run_problem(problem, model_id, max_iters, optimized_program, seed_text):
     """Run a single problem and return (result, lm_history)."""
     from copy import deepcopy
@@ -198,7 +161,7 @@ def run_problem(problem, model_id, max_iters, optimized_program, seed_text):
         problem.benchmark_args,
     )
     react = dspy.ReAct(CythonOptimization, tools=tools, max_iters=max_iters)
-    apply_prompt(react, optimized_program, seed_text)
+    apply_optimized_signatures(react, optimized_program, seed_text)
 
     thread_local_lm = deepcopy(dspy.settings.lm)
     thread_local_lm.history = []
@@ -279,43 +242,23 @@ def main():
 
     args = parser.parse_args()
 
-    # Resolve model and API
-    is_remote = args.model.startswith("openrouter/")
-    if args.api_key:
-        api_key = args.api_key
-    elif is_remote:
-        api_key = os.environ.get("APIKEY", os.environ.get("OPENROUTER_API_KEY", ""))
-        if not api_key:
-            parser.error("API key required for OpenRouter (set APIKEY env var)")
-    else:
-        api_key = "local"
-
-    lm_kwargs = {
-        "api_key": api_key,
-        "temperature": args.temperature,
-        "cache": False,
-        "max_tokens": 8192,
-    }
-    if args.reasoning_effort:
-        if is_remote:
-            # OpenRouter doesn't support reasoning_effort natively; pass via extra_body
-            lm_kwargs["extra_body"] = {"reasoning_effort": args.reasoning_effort}
-        else:
-            lm_kwargs["reasoning_effort"] = args.reasoning_effort
-    if not is_remote:
-        lm_kwargs["api_base"] = args.base_url or "http://localhost:8000/v1"
-
-    lm = dspy.LM(args.model, **lm_kwargs)
-    dspy.settings.configure(lm=lm)
+    # Configure LM (shared utility handles remote vs local detection)
+    configure_dspy_lm(
+        args.model,
+        base_url=args.base_url,
+        api_key=args.api_key,
+        temperature=args.temperature,
+        reasoning_effort=args.reasoning_effort,
+    )
     logger.info(f"Model: {args.model}")
 
     # Load prompt
-    optimized_program, prompt_id = load_prompt(args.program)
+    optimized_program, prompt_id = load_optimized_prompt(
+        model_id=args.model, program_path=args.program
+    )
     if args.prompt_id:
         prompt_id = args.prompt_id
-    seed_text = (
-        SEED_PROMPT.read_text().strip() if SEED_PROMPT.exists() and not optimized_program else None
-    )
+    seed_text = get_seed_text() if not optimized_program else None
 
     # Resolve problems
     all_problems = {p.problem_id: p for p in discover_pairs()}
@@ -342,8 +285,8 @@ def main():
     if args.output:
         output_path = Path(args.output)
     else:
-        model_slug = args.model.replace("/", "_").replace(":", "_")
-        output_path = Path(f"data/traces/{model_slug}_{prompt_id}.jsonl")
+        slug = model_slug(args.model)
+        output_path = Path(f"data/traces/{slug}_{prompt_id}.jsonl")
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
     # Resume: count existing traces per problem for this model

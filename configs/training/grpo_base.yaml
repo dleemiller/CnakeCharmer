@@ -1,0 +1,40 @@
+# GRPO training defaults
+model:
+  base: models/gpt-oss-20b-cython-sft-merged
+  output: models/gpt-oss-20b-cython-grpo
+
+data:
+  n_problems: -1   # all
+  eval_holdout: 50
+  seed: 42
+
+grpo:
+  num_generations: 8
+  max_completion_length: 8192
+  max_tool_iters: 5
+  loss_type: cispo
+  scale_rewards: batch
+  beta: 0.001
+  temperature: 1.0
+  cache_impl: static
+
+lora:
+  rank: 32
+  alpha: 64
+  dropout: 0.05
+  target_modules: all-linear
+
+training:
+  epochs: 3
+  batch_size: 8
+  gradient_accumulation_steps: 4
+  learning_rate: 5e-7
+  lr_scheduler_type: cosine
+  warmup_ratio: 0.05
+  logging_steps: 1
+  save_steps: 25
+  max_steps: -1
+  bf16: true
+  gradient_checkpointing: true
+  optim: adamw_8bit
+  report_to: tensorboard

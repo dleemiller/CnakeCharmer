@@ -9,17 +9,20 @@ A living dataset of parallel Python/Cython implementations for training AI model
 uv sync
 
 # Build Cython extensions
-uv run python setup.py build_ext --inplace
+make compile
 
 # Run tests
-uv run pytest tests/ -q
+make test-tooling
 
 # Run benchmarks (parallel, hash-cached)
-uv run run_benchmarks.py
+make benchmark
+
+# See all available commands
+make help
 ```
 
 > `uv sync` only installs Python dependencies — it does **not** compile Cython.
-> Run `setup.py build_ext --inplace` when you add or change `.pyx` files.
+> Run `make compile` when you add or change `.pyx` files.
 
 ## Project Goals
 
@@ -27,45 +30,58 @@ LLMs can write decent Python but struggle with efficient Cython. This is a train
 
 This repo is both the **dataset** and the **training infrastructure**:
 
-- **Dataset**: 523 matched Python/Cython pairs across 19 categories, version-controlled and CI-testable
+- **Dataset**: 665 matched Python/Cython pairs across 19 categories, version-controlled and CI-testable
 - **Training**: Multi-turn GRPO with TRL GRPOTrainer — the model iteratively compiles, reviews HTML annotations, and optimizes its Cython output
-- **nn_ops**: XNNPACK-style SIMD kernels (AVX2+FMA) for neural network operations, within 1.3x of hand-written C
 - **Tools**: MCP server for AI-assisted development (compile, annotate, benchmark, score, memory safety via ASan)
 
 ## Project Structure
 
 ```
-cnake_charmer/
-  py/{category}/{name}.py       ← Pure Python (training prompt)
-  cy/{category}/{name}.pyx      ← Portable Cython (scalar, ground truth)
-  cy_simd/{category}/{name}.pyx ← SIMD-optimized Cython (AVX2+FMA)
-  engine/
-    tensor.pxd                  ← TensorView struct (future inference)
-    kernels/                    ← Extracted nogil kernels (shared compute)
-  validate/                     ← Compilation, annotation, correctness tools
-  rewards/                      ← Reward functions for GRPO training
-  training/                     ← TRL GRPOTrainer integration
-  dataset/                      ← Loader that discovers pairs from repo
-  mcp_server.py                 ← MCP server for Claude Code
-tests/
-  {category}/test_{name}.py     ← Equivalence tests
+CnakeCharmer/
+├── cnake_data/                    # Living dataset
+│   ├── py/{category}/{name}.py    # Pure Python (training prompts)
+│   ├── cy/{category}/{name}.pyx   # Cython implementations (ground truth)
+│   ├── benchmarks/                # Benchmark decorator registry
+│   ├── loader.py                  # Problem pair discovery
+│   └── difficulty.py              # Difficulty classification
+│
+├── cnake_charmer/                 # Tooling
+│   ├── eval/                      # Unified evaluation pipeline
+│   │   ├── compiler.py            # Cython compilation
+│   │   ├── annotations.py         # HTML annotation parsing
+│   │   ├── correctness.py         # Test execution
+│   │   ├── benchmark.py           # Performance timing
+│   │   ├── memory_safety.py       # ASan integration
+│   │   ├── lint.py                # cython-lint
+│   │   └── pipeline.py            # Orchestration + composite scoring
+│   ├── training/                  # SFT + GRPO
+│   │   ├── environment.py         # CythonToolEnvironment
+│   │   ├── grpo.py                # GRPO reward + dataset
+│   │   └── dspy_agent.py          # DSPy ReAct agent
+│   ├── traces/                    # Trace collection + models
+│   │   ├── models.py              # Pydantic trace format (v2)
+│   │   ├── io.py                  # Load/save with auto-detect
+│   │   └── lm.py                  # Shared LM configuration
+│   ├── config.py                  # OmegaConf config loader
+│   └── mcp_server.py              # MCP server for Claude Code
+│
+├── configs/
+│   ├── models/                    # Model profiles (YAML)
+│   └── training/                  # Training hyperparameters (YAML)
+│
+├── tests/
+│   ├── data/{category}/           # Dataset equivalence tests
+│   └── tooling/                   # Tooling unit tests
+│
+├── scripts/                       # CLI entry points
+├── data/                          # Traces, prompts, tool schemas
+├── Makefile                       # Primary workflow interface
+└── run_benchmarks.py              # Benchmark runner
 ```
 
 ### Categories
 
 `algorithms`, `numerical`, `sorting`, `string_processing`, `math_problems`, `dynamic_programming`, `geometry`, `simulation`, `graph`, `statistics`, `cryptography`, `nn_ops`, `image_processing`, `compression`, `leetcode`, `physics`, `diff_equations`, `dsp`, `optimization`
-
-### Three Tiers
-
-For compute-intensive operations (e.g. `nn_ops`), three implementations exist:
-
-| Tier | Directory | What it teaches |
-|------|-----------|----------------|
-| Python | `py/` | Naive baseline |
-| Portable Cython | `cy/` | `cdef` types, C arrays, `libc.math`, extension types, memoryviews |
-| SIMD Cython | `cy_simd/` | AVX2+FMA intrinsics, cache tiling, XNNPACK-style microkernels |
-
-The SIMD kernels are extracted into `engine/kernels/` as `cdef void ... noexcept nogil` functions, ready for a future inference engine.
 
 ### Cython Feature Coverage
 
@@ -74,76 +90,60 @@ The problem set covers a broad range of Cython features beyond basic typed funct
 | Feature | Examples |
 |---------|---------|
 | `cdef class` (extension types) | `__cinit__`/`__dealloc__`, typed C attributes, `cdef`/`cpdef` methods |
-| Special methods | `__getitem__`, `__setitem__`, `__len__`, `__contains__`, `__iter__`/`__next__`, `__add__`/`__mul__`/`__neg__`, `__richcmp__`, `__call__`, `__hash__` |
+| Special methods | `__getitem__`, `__setitem__`, `__len__`, `__contains__`, `__iter__`/`__next__`, `__richcmp__`, `__call__`, `__hash__` |
 | Inheritance | `cdef class Child(Parent)` with `cpdef` method dispatch |
-| Class decorators | `@cython.final`, `@cython.freelist`, `@cython.dataclasses.dataclass`, `cdef readonly`, `not None` |
-| Properties | `@property` with getter and setter |
-| `cdef enum` / `cpdef enum` | State machines, token types, direction enums, anonymous enums |
-| Typed memoryviews | 1D/2D, C-contiguous `[::1]`, Fortran `[::1, :]`, `const`, `.T`, `.copy()`, `&view[0]`, `cython.view.array` |
-| `cdef struct` / `cdef union` | Nested structs, packed structs, tagged unions, struct↔dict conversion, struct return |
-| Fused types | `ctypedef fused` with type dispatch, memoryview params, type checking branches |
-| `ctypedef` | Type aliases, function pointer typedefs |
-| Function pointers | Dispatch tables, callbacks, `qsort` comparators |
-| Buffer protocol | `__getbuffer__`/`__releasebuffer__` for 1D and 2D custom buffers |
-| C-tuples | `(double, double)` return types from `cdef` functions |
-| Error return specs | `except -1`, `except? -1.0`, `except *` |
-| `cpdef` functions | Standalone module-level hybrid functions |
-| `cdef extern from` | Direct C header access (`math.h`, `stdlib.h`, `string.h`) |
-| C memory ops | `malloc`/`free`/`realloc`/`calloc`, `memcpy`/`memset`/`memcmp` |
-| Stack arrays | Fixed-size `cdef int[1024]` on the stack |
-| Forward declarations | `cdef class` forward declaration for recursive types |
-| `prange` / `nogil` | OpenMP parallel loops, GIL release for C computation, schedule policies |
-| NumPy interop | `cimport numpy`, typed memoryviews from arrays, `cnp.float64_t`, prange+NumPy |
-| C++ interop | `libcpp.vector`/`map`/`set`/`unordered_map`, `cdef cppclass`, `except +`, `std::sort` templates, `enum class` |
-| NumPy ufuncs | `@cython.ufunc` with scalar, fused-type, and integer-output ufuncs |
-| NumPy + Pythran | `# cython: np_pythran=True` for fused NumPy expression templates |
+| Typed memoryviews | 1D/2D, C-contiguous `[::1]`, Fortran `[::1, :]`, `const`, `.T`, `.copy()` |
+| `cdef struct` / `cdef union` | Nested structs, packed structs, tagged unions, struct return |
+| Fused types | `ctypedef fused` with type dispatch, memoryview params |
+| C++ interop | `libcpp.vector`/`map`/`set`/`unordered_map`, `cdef cppclass`, `except +` |
+| `prange` / `nogil` | OpenMP parallel loops, GIL release for C computation |
+| NumPy interop | `cimport numpy`, typed memoryviews from arrays, prange+NumPy |
 
-See [FEATURE_COVERAGE.md](FEATURE_COVERAGE.md) for the full checklist (18/18 categories complete).
+See [FEATURE_COVERAGE.md](FEATURE_COVERAGE.md) for the full checklist.
 
 ### Benchmarks
 
 ```bash
-uv run run_benchmarks.py         # 4 parallel workers, hash caching
+make benchmark              # 4 parallel workers, hash caching
 uv run run_benchmarks.py --all   # force re-run everything
 uv run run_benchmarks.py -j 8    # 8 workers
 ```
 
-Two benchmark tables in `benchmarks.md`:
-1. **Full Operation** — allocation + compute + reduce (standard Python vs Cython comparison)
-2. **Kernel-Only (Inference Mode)** — pre-allocated tensors, compute only. Compares portable Cython vs platform SIMD (AVX2+FMA on x86, NEON on ARM in future)
+## Configuration
 
-### XNNPACK Comparison
+Model profiles and training configs live in `configs/`:
 
 ```bash
-# Clone XNNPACK for reference comparison
-git clone --depth 1 https://github.com/google/XNNPACK /tmp/xnnpack
+# Collect traces with a specific model profile
+make traces PROFILE=deepseek_v3
 
-# Run comparison (builds C microkernels, compares against our Cython)
-uv run python scripts/compare_xnnpack.py
+# Override config values via CLI
+uv run --no-sync python -c "
+from cnake_charmer.config import load_model_profile
+cfg = load_model_profile('gpt_oss_120b', overrides=['model.temperature=0.8'])
+"
 ```
-
-Current results: GEMM kernel within **1.3x** of hand-written C, ReLU kernel **matches C speed**.
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for the full guide to adding new problem pairs and nn_ops.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the full guide to adding new problem pairs.
 
 ## Training
 
 The training pipeline uses TRL's GRPOTrainer with `environment_factory` for multi-turn tool-calling RL:
 
 ```python
+from cnake_data.loader import discover_pairs
 from cnake_charmer.training.grpo import create_trainer
-from cnake_charmer.dataset.loader import discover_pairs
 
 trainer = create_trainer(
-    model="Qwen/Qwen3-0.6B",
+    model="openai/gpt-oss-20b",
     problems=discover_pairs(),
 )
 trainer.train()
 ```
 
-The model learns to call `compile`, `annotate`, `test`, and `benchmark` tools to iteratively improve its Cython output.
+The model learns to call `evaluate_cython` to iteratively compile, test, and benchmark its Cython output.
 
 ### Reward Signals
 
