@@ -69,6 +69,24 @@ Before finalizing a new problem, quickly check:
 - Is `n` only one part of the configuration rather than the whole interface?
 - Would this signature still make sense outside a benchmark harness?
 
+## Non-Negotiable: No Templates / No Clones
+
+The purpose of this dataset is to teach real code transformation, not pattern memorization.
+
+**Templating is absolutely forbidden** for new problems:
+- Do not mass-produce problems by copying one implementation and only renaming symbols, changing constants, or swapping minor arithmetic.
+- Do not create families of near-identical problems across categories.
+- Do not keep the same control flow/data model and just re-skin names (`*_class` variants with identical loops are not acceptable).
+
+Every new problem must be **distinct and unique** in:
+- Core algorithmic behavior (what it computes)
+- Data layout / state transitions
+- Failure modes and edge-case behavior
+- Return-signal structure (what correctness evidence it exposes)
+
+If two problems share more than superficial similarity, keep one and rewrite or delete the others.
+When adapting Stack v2 candidates, preserve the original algorithmic intent of the source rather than forcing it into a reusable template shell.
+
 **Class-based problems are encouraged.** Many real Cython conversions involve stateful objects — `cdef class` with typed attributes, `cdef` helper methods, and `__init__` that pre-allocates C arrays. The Stack v2 candidate pool includes class-based implementations that make good training examples. For classes:
 
 ```python
