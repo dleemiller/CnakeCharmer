@@ -6,7 +6,7 @@ Keywords: string processing, longest common substring, dynamic programming, benc
 from cnake_data.benchmarks import python_benchmark
 
 
-@python_benchmark(args=(5000,))
+@python_benchmark(args=(2000,))
 def longest_common_substring_rolling(n: int) -> tuple:
     """Find longest common substring using DP with rolling row.
 

@@ -14,7 +14,7 @@ from cython.operator cimport dereference, predecrement
 from cnake_data.benchmarks import cython_benchmark
 
 
-@cython_benchmark(syntax="cy", args=(200000,))
+@cython_benchmark(syntax="cy", args=(70000,))
 def stl_map_interval_count(int n):
     """Insert/remove keys in a sliding window, tracking min/max spread.
 

@@ -12,7 +12,7 @@ import bisect
 from cnake_data.benchmarks import python_benchmark
 
 
-@python_benchmark(args=(200000,))
+@python_benchmark(args=(70000,))
 def stl_map_interval_count(n: int) -> tuple:
     """Insert keys into a sorted frequency counter, tracking min/max spread.
 
