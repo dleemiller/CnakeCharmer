@@ -5,7 +5,6 @@ Keywords: cryptography, sha256, hash, digest, block cipher, cython, benchmark
 """
 
 from libc.stdlib cimport malloc, free
-from libc.string cimport memset
 from cnake_data.benchmarks import cython_benchmark
 
 # SHA-256 round constants (cube roots of first 64 primes)

@@ -10,4 +10,4 @@ repos:
     hooks:
       - id: cython-lint
         args: [--no-pycodestyle]
-        files: ^cnake_charmer/
+        files: ^(cnake_charmer|cnake_data)/

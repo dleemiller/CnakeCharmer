@@ -64,8 +64,9 @@ test-tooling:  ## Run tooling tests only
 compile:  ## Compile Cython extensions
 	uv run python setup.py build_ext --inplace
 
-lint:  ## Lint Python code with ruff
-	$(UV_RUN) ruff check cnake_charmer/ scripts/
+lint:  ## Lint Python and Cython code
+	$(UV_RUN) ruff check cnake_charmer/ cnake_data/ scripts/
+	$(UV_RUN) cython-lint --no-pycodestyle cnake_data/cy/
 
 # --- Prompt Optimization ---
 .PHONY: optimize-prompt
