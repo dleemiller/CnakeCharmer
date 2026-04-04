@@ -10,7 +10,7 @@ from cnake_data.benchmarks import cython_benchmark
 
 
 @cython_benchmark(syntax="cy", args=(5000,))
-def longest_common_substring(int n):
+def longest_common_substring_rolling(int n):
     """Find longest common substring using DP with rolling row."""
     cdef int *sa = <int *>malloc(n * sizeof(int))
     cdef int *sb = <int *>malloc(n * sizeof(int))
