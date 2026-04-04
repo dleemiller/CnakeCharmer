@@ -5,10 +5,22 @@ Ranks traces by speedup tier first, then tiebreaks within tier
 by annotation, efficiency, conciseness, and compactness.
 
 Used for: best-per-model-per-problem selection, GRPO reward baseline.
+
+Accepts both v1 dicts and v2 Trace objects — Trace objects are converted
+to v1 dicts internally so all parsing logic stays consistent.
 """
 
 import math
 import re
+
+from cnake_charmer.traces.models import Trace
+
+
+def _to_v1_dict(trace) -> dict:
+    """Normalize input to v1 dict for scoring. Accepts Trace or dict."""
+    if isinstance(trace, Trace):
+        return trace.to_v1_dict()
+    return trace
 
 
 def sft_score(
@@ -45,8 +57,9 @@ def sft_score(
 
 
 # Hard filters — trace must pass ALL of these
-def passes_hard_filters(trace: dict) -> bool:
+def passes_hard_filters(trace) -> bool:
     """Check if a trace passes all hard filters for SFT inclusion."""
+    trace = _to_v1_dict(trace)
     # Must have valid tool calls (no None)
     tools = trace.get("tools_used", [])
     if None in tools or "None" in [str(t) for t in tools]:
@@ -64,8 +77,9 @@ def passes_hard_filters(trace: dict) -> bool:
     return (trace.get("reward") or 0) != 0
 
 
-def parse_trace_metrics(trace: dict) -> dict:
+def parse_trace_metrics(trace) -> dict:
     """Extract scoring metrics from a trace record."""
+    trace = _to_v1_dict(trace)
     traj = trace.get("trajectory", {})
 
     # Find last observation with results
@@ -119,7 +133,7 @@ def parse_trace_metrics(trace: dict) -> dict:
     }
 
 
-def score_trace(trace: dict) -> float:
+def score_trace(trace) -> float:
     """Score a trace for SFT selection. Returns 0.0 if hard filters fail."""
     if not passes_hard_filters(trace):
         return 0.0

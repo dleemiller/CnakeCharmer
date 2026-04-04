@@ -41,10 +41,8 @@ from pathlib import Path
 import dspy
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
-sys.path.insert(0, str(Path(__file__).parent.parent.parent / "dspy-data-module" / "src"))
 
-from dspy_data.loader import extract_tool_calls
-
+from cnake_charmer.traces.io import append_trace
 from cnake_charmer.traces.lm import (
     apply_optimized_signatures,
     configure_dspy_lm,
@@ -52,6 +50,7 @@ from cnake_charmer.traces.lm import (
     load_optimized_prompt,
     model_slug,
 )
+from cnake_charmer.traces.models import ToolStep, Trace
 from cnake_charmer.training.dspy_agent import CythonOptimization, make_tools
 from cnake_charmer.training.rollout import extract_code_from_content
 from cnake_data.loader import discover_pairs
@@ -59,20 +58,31 @@ from cnake_data.loader import discover_pairs
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 logger = logging.getLogger(__name__)
 
-# ---- Standardized trace format ----
-# Every JSONL line has these fields. Do not change without versioning.
-TRACE_VERSION = "1.0"
+
+def _parse_tool_args_raw(args) -> dict:
+    """Normalize tool args from DSPy trajectory to dict."""
+    if isinstance(args, dict):
+        return args
+    if isinstance(args, str):
+        try:
+            parsed = json.loads(args)
+            if isinstance(parsed, dict):
+                return parsed
+        except (json.JSONDecodeError, TypeError):
+            pass
+        return {"raw": args}
+    return {}
 
 
-def make_trace_record(
+def make_trace(
     problem,
     result,
     model: str,
     prompt_id: str,
     attempt: int,
     lm_history: list | None = None,
-) -> dict:
-    """Build a standardized trace record from a DSPy ReAct result."""
+) -> Trace:
+    """Build a v2 Trace object from a DSPy ReAct result."""
     traj = result.trajectory if result.trajectory else {}
     cython_code = extract_code_from_content(getattr(result, "cython_code", "") or "")
 
@@ -94,15 +104,8 @@ def make_trace_record(
                 except (json.JSONDecodeError, TypeError):
                     pass
 
-    # Count iterations — just count all tool_name_* keys
-    num_iters = sum(1 for k in traj if k.startswith("tool_name_"))
-
-    # Extract tool calls
-    entry_for_tools = {"trajectory": dict(traj)}
-    calls = extract_tool_calls(entry_for_tools)
-
-    # Extract reasoning_content from LM history (thinking models)
-    traj = dict(traj)
+    # Build reasoning map from LM history (thinking models)
+    reasoning_map = {}  # idx -> reasoning_content
     if lm_history:
         for idx, interaction in enumerate(lm_history):
             response = interaction.get("response")
@@ -111,32 +114,57 @@ def make_trace_record(
             for choice in getattr(response, "choices", []):
                 rc = getattr(getattr(choice, "message", None), "reasoning_content", None)
                 if rc:
-                    traj[f"reasoning_{idx}"] = rc
+                    reasoning_map[idx] = rc
 
-    return {
-        "version": TRACE_VERSION,
-        "model": model,
-        "prompt_id": prompt_id,
-        "problem_id": problem.problem_id,
-        "func_name": problem.func_name,
-        "category": problem.category,
-        "difficulty": problem.difficulty,
-        "attempt": attempt,
-        "num_iterations": num_iters,
-        "tools_used": list({c["tool_name"] for c in calls}),
-        "trajectory": traj,
-        "cython_code": cython_code,
-        "output": dict(result) if result else None,
-        "reward": None,  # filled in by score_trace
-        "timestamp": datetime.now(UTC).isoformat(),
-    }
+    # Parse tool steps
+    steps = []
+    i = 0
+    while f"tool_name_{i}" in traj:
+        tool_name = traj[f"tool_name_{i}"]
+        if tool_name is not None:
+            steps.append(
+                ToolStep(
+                    tool_name=str(tool_name),
+                    tool_args=_parse_tool_args_raw(traj.get(f"tool_args_{i}", {})),
+                    observation=str(traj.get(f"observation_{i}", "")),
+                    thought=traj.get(f"thought_{i}"),
+                    reasoning=reasoning_map.get(i),
+                )
+            )
+        i += 1
+
+    # Collect trailing reasoning entries (beyond tool steps)
+    n_steps = len(steps)
+    trailing = []
+    j = n_steps
+    while j in reasoning_map:
+        trailing.append(reasoning_map[j])
+        j += 1
+
+    thinking = bool(reasoning_map)
+
+    return Trace(
+        problem_id=problem.problem_id,
+        model=model,
+        prompt_id=prompt_id,
+        attempt=attempt,
+        timestamp=datetime.now(UTC),
+        steps=steps,
+        trailing_reasoning=trailing,
+        final_code=cython_code,
+        reward=0.0,
+        thinking=thinking,
+        func_name=problem.func_name,
+        category=problem.category,
+        difficulty=problem.difficulty,
+    )
 
 
-def score_trace(record: dict, problem) -> float:
+def score_trace(trace: Trace, problem) -> float:
     """Score the generated cython code using composite reward."""
     from cnake_charmer.training.dspy_agent import _safe_composite_reward
 
-    code = record.get("cython_code", "")
+    code = trace.final_code or ""
     if not code:
         return 0.0
 
@@ -401,16 +429,15 @@ def main():
                 if res is None:
                     continue
                 try:
-                    record = make_trace_record(
+                    trace = make_trace(
                         res.problem, res.result, args.model, prompt_id, res.attempt, res.lm_history
                     )
-                    record["reward"] = score_trace(record, res.problem)
-                    with open(output_path, "a") as f:
-                        f.write(json.dumps(record, default=str) + "\n")
+                    trace.reward = score_trace(trace, res.problem)
+                    append_trace(trace, output_path)
                     done += 1
                     logger.info(
                         f"  [{done}/{total}] {res.problem.problem_id} attempt {res.attempt + 1}: "
-                        f"reward={record['reward']:.3f} iters={record['num_iterations']}"
+                        f"reward={trace.reward:.3f} iters={trace.num_iterations}"
                     )
                 except Exception as e:
                     logger.error(f"  Record failed: {e}")
@@ -425,18 +452,13 @@ def main():
                 result, lm_history = run_problem(
                     problem, args.model, args.max_iters, optimized_program, seed_text
                 )
-                record = make_trace_record(
-                    problem, result, args.model, prompt_id, attempt, lm_history
-                )
-                record["reward"] = score_trace(record, problem)
-
-                # Append
-                with open(output_path, "a") as f:
-                    f.write(json.dumps(record, default=str) + "\n")
+                trace = make_trace(problem, result, args.model, prompt_id, attempt, lm_history)
+                trace.reward = score_trace(trace, problem)
+                append_trace(trace, output_path)
 
                 logger.info(
-                    f"  reward={record['reward']:.3f} iters={record['num_iterations']} "
-                    f"tools={record['tools_used']}"
+                    f"  reward={trace.reward:.3f} iters={trace.num_iterations} "
+                    f"tools={trace.tools_used}"
                 )
             except Exception as e:
                 logger.error(f"  Failed: {e}")
