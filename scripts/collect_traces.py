@@ -46,9 +46,9 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent / "dspy-data-module" 
 
 from dspy_data.loader import extract_tool_calls
 
-from cnake_charmer.dataset.loader import discover_pairs
 from cnake_charmer.training.dspy_agent import CythonOptimization, make_tools
 from cnake_charmer.training.rollout import extract_code_from_content
+from cnake_data.loader import discover_pairs
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 logger = logging.getLogger(__name__)

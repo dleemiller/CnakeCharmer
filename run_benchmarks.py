@@ -28,7 +28,7 @@ from rich.console import Console
 from rich.logging import RichHandler
 from rich.table import Table
 
-from cnake_charmer.benchmarks.registry import BenchmarkItem, Variant, benchmark_registry
+from cnake_data.benchmarks.registry import BenchmarkItem, Variant, benchmark_registry
 
 console = Console()
 logging.basicConfig(
@@ -39,8 +39,8 @@ logging.basicConfig(
 log = logging.getLogger("benchmark")
 
 CACHE_FILE = Path(".benchmark_cache.json")
-PY_DIR = Path("cnake_charmer/py")
-CY_DIR = Path("cnake_charmer/cy")
+PY_DIR = Path("cnake_data/py")
+CY_DIR = Path("cnake_data/cy")
 
 
 def import_all_submodules(package_name: str) -> None:
@@ -113,9 +113,9 @@ def run_benchmark(item: BenchmarkItem) -> tuple[float, float]:
 def _run_single_benchmark(benchmark_id: str) -> dict:
     """Run a single benchmark in a subprocess. Returns results dict."""
     # Re-import everything in this process
-    import_all_submodules("cnake_charmer")
-    from cnake_charmer.benchmarks.registry import Variant
-    from cnake_charmer.benchmarks.registry import benchmark_registry as reg
+    import_all_submodules("cnake_data")
+    from cnake_data.benchmarks.registry import Variant
+    from cnake_data.benchmarks.registry import benchmark_registry as reg
 
     variants = reg.get(benchmark_id, {})
     python_variant = variants.get(Variant.PYTHON)
@@ -375,7 +375,7 @@ if __name__ == "__main__":
         if arg == "-j" and i + 1 < len(sys.argv):
             num_workers = int(sys.argv[i + 1])
 
-    import_all_submodules("cnake_charmer")
+    import_all_submodules("cnake_data")
 
     results = run_all_benchmarks(force_all=force, num_workers=num_workers)
     generate_markdown_report(results)

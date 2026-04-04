@@ -10,4 +10,4 @@ repos:
     hooks:
       - id: cython-lint
         args: [--no-pycodestyle]
-        exclude: ^prompt/docs/
+        files: ^cnake_charmer/

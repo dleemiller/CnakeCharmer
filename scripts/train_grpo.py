@@ -45,9 +45,9 @@ from peft import LoraConfig
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from trl import GRPOConfig, GRPOTrainer
 
-from cnake_charmer.dataset.loader import discover_pairs
 from cnake_charmer.training.environment import CythonToolEnvironment
 from cnake_charmer.training.grpo import build_dataset, cython_reward
+from cnake_data.loader import discover_pairs
 
 _orig_add_response_schema = _trl_chat_utils.add_response_schema
 _orig_get_training_template = _trl_chat_utils.get_training_chat_template

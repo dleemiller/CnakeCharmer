@@ -1,0 +1,13 @@
+"""Test predator_prey equivalence."""
+
+import pytest
+
+from cnake_data.cy.simulation.predator_prey import predator_prey as cy_func
+from cnake_data.py.simulation.predator_prey import predator_prey as py_func
+
+
+@pytest.mark.parametrize("n", [10, 100, 500, 1000])
+def test_predator_prey_equivalence(n):
+    py_result = py_func(n)
+    cy_result = cy_func(n)
+    assert abs(py_result - cy_result) < 1e-6

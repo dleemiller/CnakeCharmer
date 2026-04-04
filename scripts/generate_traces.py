@@ -29,12 +29,12 @@ import dspy
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from cnake_charmer.dataset.loader import discover_pairs
 from cnake_charmer.training.dspy_agent import (
     CythonOptimization,
     collect_reward,
     make_tools,
 )
+from cnake_data.loader import discover_pairs
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname)s %(message)s")
 logger = logging.getLogger(__name__)

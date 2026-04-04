@@ -33,8 +33,8 @@ import httpx
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from cnake_charmer.dataset.loader import discover_pairs
 from cnake_charmer.training.environment import CythonToolEnvironment
+from cnake_data.loader import discover_pairs
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
 logger = logging.getLogger(__name__)

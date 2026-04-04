@@ -328,7 +328,7 @@ def _strip_decorators(code: str) -> str:
         stripped = line.strip()
         if stripped.startswith("@cython_benchmark") or stripped.startswith("@python_benchmark"):
             continue
-        if "from cnake_charmer.benchmarks import" in stripped:
+        if "from cnake_data.benchmarks import" in stripped:
             continue
         filtered.append(line)
     return "\n".join(filtered)

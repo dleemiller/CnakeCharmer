@@ -37,13 +37,13 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from cnake_charmer.dataset.loader import discover_pairs
 from cnake_charmer.training.sft_scoring import parse_trace_metrics, score_trace
 from cnake_charmer.training.sft_validation import (
     total_analysis_length,
     validate_rendered_example,
     validate_trace_for_rendering,
 )
+from cnake_data.loader import discover_pairs
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
 logger = logging.getLogger(__name__)
