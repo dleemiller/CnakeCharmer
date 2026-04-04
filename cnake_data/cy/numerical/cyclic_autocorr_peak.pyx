@@ -33,7 +33,7 @@ cdef void _autocorr_kernel(
     lag1_val_out[0] = lag1_val
 
 
-@cython_benchmark(syntax="cy", args=(8000,))
+@cython_benchmark(syntax="cy", args=(16000,))
 def cyclic_autocorr_peak(int n):
     cdef int *seq = <int *>malloc(n * sizeof(int))
     cdef int i

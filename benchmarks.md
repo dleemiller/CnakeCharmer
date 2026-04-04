@@ -7,6 +7,7 @@
 | cryptography | sha256_blocks | cython | 71.968 | 0.154 | 468.4x |
 | image_processing | central_moments | cython | 7.541 | 0.017 | 449.7x |
 | statistics | prange_histogram_partial | cython | 90.228 | 0.318 | 283.3x |
+| string_processing | stack_invoice_digit_sum | cython | 12.349 | 0.044 | 281.0x |
 | numerical | prange_schedule_static | cython | 124.167 | 0.442 | 281.0x |
 | image_processing | union_color_channels | cython | 9.176 | 0.033 | 280.3x |
 | algorithms | struct_to_dict | cython | 15.532 | 0.060 | 259.3x |
@@ -80,6 +81,7 @@
 | numerical | fortran_mat_scale | cython | 18.598 | 0.153 | 121.3x |
 | optimization | conjugate_gradient | cython | 20.810 | 0.173 | 120.5x |
 | string_processing | token_shingle_distance | cython | 85.113 | 0.708 | 120.2x |
+| image_processing | stack_byte_flip_convert | cython | 28.021 | 0.234 | 119.8x |
 | algorithms | longest_common_subsequence | cython | 527.337 | 4.416 | 119.4x |
 | simulation | nested_struct_particle | cython | 74.603 | 0.626 | 119.2x |
 | geometry | nested_struct_rect | cython | 44.462 | 0.378 | 117.6x |
@@ -158,6 +160,7 @@
 | statistics | bicluster_vet_score | cython | 36.572 | 0.416 | 88.0x |
 | physics | coulomb_force | cython | 345.105 | 3.931 | 87.8x |
 | numerical | cpdef_clamp_sum | cython | 11.048 | 0.126 | 87.7x |
+| string_processing | stack_kmer_hamming_scan | cython | 17.223 | 0.196 | 87.7x |
 | algorithms | counter_call_overhead | cython | 71.313 | 0.814 | 87.7x |
 | numerical | signal_distance | cython | 58.769 | 0.671 | 87.6x |
 | numerical | cholesky_decompose | cython | 216.747 | 2.475 | 87.6x |
@@ -299,6 +302,7 @@
 | algorithms | count_inversions | cython | 45.041 | 0.845 | 53.3x |
 | numerical | callback_transform | cython | 15.548 | 0.295 | 52.7x |
 | math_problems | laguerre_polynomial | cython | 60.651 | 1.154 | 52.6x |
+| statistics | stack_naive_tree_distance | cython | 105.074 | 2.007 | 52.4x |
 | geometry | immutable_point_distance | cython | 316.840 | 6.096 | 52.0x |
 | numerical | final_accumulator | cython | 86.032 | 1.657 | 51.9x |
 | compression | rle_encode | cython | 18.782 | 0.363 | 51.7x |
@@ -374,9 +378,9 @@
 | algorithms | stable_marriage | cython | 407.707 | 10.341 | 39.4x |
 | graph | connected_components | cython | 392.029 | 10.031 | 39.1x |
 | dynamic_programming | longest_increasing_subsequence | cython | 0.664 | 0.017 | 38.8x |
+| numerical | cyclic_autocorr_peak | cython | 14.596 | 0.376 | 38.8x |
 | algorithms | rabin_karp_search | cython | 77.954 | 2.009 | 38.8x |
 | numerical | fused_minmax | cython | 10.389 | 0.269 | 38.6x |
-| numerical | cyclic_autocorr_peak | cython | 6.225 | 0.163 | 38.2x |
 | geometry | triangle_angles_3d | cython | 225.420 | 5.905 | 38.2x |
 | string_processing | rabin_karp | cython | 164.645 | 4.360 | 37.8x |
 | diff_equations | rk2_ode_step | cython | 80.500 | 2.154 | 37.4x |
@@ -415,6 +419,7 @@
 | algorithms | typedef_hash_table | cython | 3.189 | 0.105 | 30.5x |
 | numerical | memview_weighted_sum | cython | 11.496 | 0.378 | 30.4x |
 | math_problems | extended_gcd_batch | cython | 366.526 | 12.115 | 30.3x |
+| statistics | stack_mmckm_probability | cython | 23.655 | 0.797 | 29.7x |
 | simulation | cellular_automaton_1d | cython | 398.852 | 13.457 | 29.6x |
 | numerical | activation_functions | cython | 2.089 | 0.071 | 29.6x |
 | numerical | mandelbrot_tile_stats | cython | 196.804 | 6.692 | 29.4x |
@@ -471,6 +476,7 @@
 | graph | graph_coloring_greedy | cython | 78.400 | 3.771 | 20.8x |
 | simulation | langtons_ant | cython | 26.523 | 1.296 | 20.5x |
 | algorithms | fused_search | cython | 65.559 | 3.209 | 20.4x |
+| math_problems | stack_inttools_profile | cython | 13.410 | 0.660 | 20.3x |
 | graph | vertex_cover_greedy | cython | 41.019 | 2.058 | 19.9x |
 | algorithms | fibonacci | cython | 28.198 | 1.416 | 19.9x |
 | math_problems | modular_exponentiation | cython | 93.326 | 4.698 | 19.9x |
@@ -480,6 +486,7 @@
 | nn_ops | cross_entropy | cython | 9.391 | 0.477 | 19.7x |
 | leetcode | climbing_stairs | cython | 167.444 | 8.557 | 19.6x |
 | algorithms | heap_sort | cython | 302.329 | 15.586 | 19.4x |
+| numerical | stack_fixpoint_pipeline | cython | 12.409 | 0.644 | 19.3x |
 | nn_ops | instance_norm | cython | 136.758 | 7.109 | 19.2x |
 | math_problems | lucas_numbers | cython | 165.740 | 8.617 | 19.2x |
 | numerical | tridiagonal_solve | cython | 163.341 | 8.524 | 19.2x |
@@ -526,6 +533,7 @@
 | algorithms | sorted_array_search | cython | 54.837 | 3.923 | 14.0x |
 | cryptography | wyhash | cython | 494.977 | 35.452 | 14.0x |
 | numerical | property_bounded_value | cython | 18.848 | 1.362 | 13.8x |
+| algorithms | stack_prime_bubble_combo | cython | 18.279 | 1.322 | 13.8x |
 | simulation | epidemic_sir | cython | 0.052 | 0.004 | 13.8x |
 | simulation | predator_prey | cython | 28.726 | 2.086 | 13.8x |
 | numerical | great_circle | cython | 41.429 | 3.068 | 13.5x |
@@ -585,6 +593,7 @@
 | numerical | fft_naive | cython | 325.120 | 35.401 | 9.2x |
 | numerical | simpson_integration | cython | 256.598 | 28.029 | 9.2x |
 | numerical | romberg_integration | cython | 19.647 | 2.169 | 9.1x |
+| algorithms | stack_ece_segments | cython | 12.993 | 1.484 | 8.8x |
 | numerical | discrete_cosine_transform | cython | 239.404 | 27.789 | 8.6x |
 | geometry | convex_hull_perimeter | cython | 39.622 | 4.601 | 8.6x |
 | math_problems | totient_sum | cython | 282.300 | 32.802 | 8.6x |
@@ -611,6 +620,7 @@
 | optimization | simulated_annealing_deterministic | cython | 763.088 | 108.217 | 7.1x |
 | numerical | ufunc_clamp | cython | 82.185 | 11.717 | 7.0x |
 | algorithms | forward_decl_tree_sum | cython | 18.727 | 2.673 | 7.0x |
+| algorithms | stack_date_window_counts | cython | 10.726 | 1.542 | 7.0x |
 | numerical | matrix2x2_power | cython | 80.635 | 11.720 | 6.9x |
 | numerical | numpy_cummax | cython | 40.152 | 5.956 | 6.7x |
 | algorithms | freelist_pair_hash | cython | 29.279 | 4.387 | 6.7x |

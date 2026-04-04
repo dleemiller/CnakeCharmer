@@ -6,7 +6,7 @@ Keywords: numerical, autocorrelation, cyclic, signal, benchmark
 from cnake_data.benchmarks import python_benchmark
 
 
-@python_benchmark(args=(8000,))
+@python_benchmark(args=(16000,))
 def cyclic_autocorr_peak(n: int) -> tuple:
     """Compute cyclic autocorrelation for lags 1..16 and return peak info."""
     seq = [0] * n
