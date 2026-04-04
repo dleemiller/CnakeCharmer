@@ -664,7 +664,26 @@
     "trapezoid_integrate_pair": "c0b1ec4ad453934c",
     "mandelbrot_escape_stats": "df3fe9389cc1b04b",
     "canonical_kmer_count": "b3f1fa042278e1d0",
-    "poly_tail_trim_indices": "69d05a94f46462ab"
+    "poly_tail_trim_indices": "69d05a94f46462ab",
+    "coin_change_count": "36073b5fc0685113",
+    "dateline_bbox": "67f8a8ced9edfc49",
+    "rle_encode": "0eeca4f33dad133e",
+    "prime_sum": "81c59ff46b8a49f9",
+    "bfs_shortest_paths": "842ca76068b93ccb",
+    "jacobian_inverse": "c8f75031ab20a66f",
+    "delta_decode": "2f43019219fdebd1",
+    "matrix_product": "1a15547867fb4a9f",
+    "prefix_sum_2d": "2ae4c7a6e45f91fd",
+    "sparse_matvec": "5f433baa452a5a6e",
+    "coulomb_lattice": "fd722337d32ee133",
+    "exponential_moving_average": "5973b9fea6f0511b",
+    "welford_variance": "23848f2770136562",
+    "diagonal_scan": "0bbd27e18d66847a",
+    "rolling_hash_distinct": "41b8197bc1259d49",
+    "random_walk_2d": "c42efee072e1145f",
+    "running_stats": "dbff23d052f84658",
+    "sequence_identity": "45cd7538be365476",
+    "polygon_winding": "472a25f8816349d1"
   },
   "results": {
     "a_star_grid": [
@@ -8865,6 +8884,234 @@
         "cy_avg": 0.0053235079860314725,
         "cy_std": 9.149524595397129e-05,
         "speedup": 62.138144837517764
+      }
+    ],
+    "coin_change_count": [
+      {
+        "benchmark": "coin_change_count",
+        "category": "dynamic_programming",
+        "syntax": "cython",
+        "py_avg": 0.0009684209711849689,
+        "py_std": 1.1249420588225331e-05,
+        "cy_avg": 3.850250504910946e-05,
+        "cy_std": 3.235439946849156e-06,
+        "speedup": 25.152154903940932
+      }
+    ],
+    "dateline_bbox": [
+      {
+        "benchmark": "dateline_bbox",
+        "category": "geometry",
+        "syntax": "cython",
+        "py_avg": 0.004924047272652388,
+        "py_std": 0.00010956117849915643,
+        "cy_avg": 0.00028512279968708756,
+        "cy_std": 5.286305580202982e-06,
+        "speedup": 17.26991765673022
+      }
+    ],
+    "rle_encode": [
+      {
+        "benchmark": "rle_encode",
+        "category": "compression",
+        "syntax": "cython",
+        "py_avg": 0.023335992405191065,
+        "py_std": 0.0001219025456007997,
+        "cy_avg": 0.0003983099013566971,
+        "cy_std": 3.251903892282468e-05,
+        "speedup": 58.58752776595695
+      }
+    ],
+    "prime_sum": [
+      {
+        "benchmark": "prime_sum",
+        "category": "algorithms",
+        "syntax": "cython",
+        "py_avg": 0.04034106824547053,
+        "py_std": 0.0002015071585009977,
+        "cy_avg": 0.001909814402461052,
+        "cy_std": 3.966402622853862e-06,
+        "speedup": 21.123030695278896
+      }
+    ],
+    "bfs_shortest_paths": [
+      {
+        "benchmark": "bfs_shortest_paths",
+        "category": "graph",
+        "syntax": "cython",
+        "py_avg": 0.03513308819383383,
+        "py_std": 0.04611333231113525,
+        "cy_avg": 0.0004717511823400855,
+        "cy_std": 3.9365872325266605e-06,
+        "speedup": 74.4737681833861
+      }
+    ],
+    "jacobian_inverse": [
+      {
+        "benchmark": "jacobian_inverse",
+        "category": "numerical",
+        "syntax": "cython",
+        "py_avg": 0.004245129693299532,
+        "py_std": 0.00027685472350286915,
+        "cy_avg": 1.7935456708073615e-05,
+        "cy_std": 5.749553666697626e-07,
+        "speedup": 236.6892442381238
+      }
+    ],
+    "delta_decode": [
+      {
+        "benchmark": "delta_decode",
+        "category": "image_processing",
+        "syntax": "cython",
+        "py_avg": 0.13184787440113724,
+        "py_std": 0.0016166693066953471,
+        "cy_avg": 0.0006441088626161218,
+        "cy_std": 3.7420744300273303e-06,
+        "speedup": 204.69812178274032
+      }
+    ],
+    "matrix_product": [
+      {
+        "benchmark": "matrix_product",
+        "category": "numerical",
+        "syntax": "cython",
+        "py_avg": 0.15985136351082474,
+        "py_std": 0.0013059922052356336,
+        "cy_avg": 0.002552573732100427,
+        "cy_std": 1.0754636004149857e-05,
+        "speedup": 62.623602797670586
+      }
+    ],
+    "prefix_sum_2d": [
+      {
+        "benchmark": "prefix_sum_2d",
+        "category": "numerical",
+        "syntax": "cython",
+        "py_avg": 0.16305412454530596,
+        "py_std": 0.0018421649269624195,
+        "cy_avg": 0.001870653498917818,
+        "cy_std": 0.00045697165105717066,
+        "speedup": 87.16425818016728
+      }
+    ],
+    "sparse_matvec": [
+      {
+        "benchmark": "sparse_matvec",
+        "category": "numerical",
+        "syntax": "cython",
+        "py_avg": 0.081855260534212,
+        "py_std": 0.0008338856825251536,
+        "cy_avg": 0.0011640434386208653,
+        "cy_std": 0.00023497919146591207,
+        "speedup": 70.31976455379743
+      }
+    ],
+    "coulomb_lattice": [
+      {
+        "benchmark": "coulomb_lattice",
+        "category": "physics",
+        "syntax": "cython",
+        "py_avg": 0.06885971107985825,
+        "py_std": 0.0004107399342781524,
+        "cy_avg": 0.0017142811324447394,
+        "cy_std": 2.9812540005623953e-06,
+        "speedup": 40.16827215595454
+      }
+    ],
+    "exponential_moving_average": [
+      {
+        "benchmark": "exponential_moving_average",
+        "category": "statistics",
+        "syntax": "cython",
+        "py_avg": 0.0034058121033012866,
+        "py_std": 0.00018289544347011372,
+        "cy_avg": 9.94889996945858e-05,
+        "cy_std": 4.303000683476639e-06,
+        "speedup": 34.23305203345643
+      }
+    ],
+    "welford_variance": [
+      {
+        "benchmark": "welford_variance",
+        "category": "statistics",
+        "syntax": "cython",
+        "py_avg": 0.04689956281799823,
+        "py_std": 0.002952263340339932,
+        "cy_avg": 0.002111014327965677,
+        "cy_std": 1.5312141677730313e-05,
+        "speedup": 22.216600899717236
+      }
+    ],
+    "diagonal_scan": [
+      {
+        "benchmark": "diagonal_scan",
+        "category": "string_processing",
+        "syntax": "cython",
+        "py_avg": 0.14456259889993817,
+        "py_std": 0.0016009226629656935,
+        "cy_avg": 0.0013693516608327626,
+        "cy_std": 6.309801319058145e-06,
+        "speedup": 105.57010520732368
+      }
+    ],
+    "rolling_hash_distinct": [
+      {
+        "benchmark": "rolling_hash_distinct",
+        "category": "string_processing",
+        "syntax": "cython",
+        "py_avg": 0.01679521838668734,
+        "py_std": 0.000282826156579355,
+        "cy_avg": 0.002282623783685267,
+        "cy_std": 2.8826754154593397e-05,
+        "speedup": 7.357856562578908
+      }
+    ],
+    "random_walk_2d": [
+      {
+        "benchmark": "random_walk_2d",
+        "category": "simulation",
+        "syntax": "cython",
+        "py_avg": 0.4328349953982979,
+        "py_std": 0.005522443912159233,
+        "cy_avg": 0.0033276678761467336,
+        "cy_std": 4.07476690129936e-05,
+        "speedup": 130.0715730980636
+      }
+    ],
+    "running_stats": [
+      {
+        "benchmark": "running_stats",
+        "category": "numerical",
+        "syntax": "cython",
+        "py_avg": 0.6389075620099902,
+        "py_std": 0.0032782383339889673,
+        "cy_avg": 0.010542412288486958,
+        "cy_std": 0.00010630761133031769,
+        "speedup": 60.603545424581945
+      }
+    ],
+    "sequence_identity": [
+      {
+        "benchmark": "sequence_identity",
+        "category": "string_processing",
+        "syntax": "cython",
+        "py_avg": 0.07571535781025887,
+        "py_std": 0.0024600466932686656,
+        "cy_avg": 0.0011973682790994643,
+        "cy_std": 1.3846771158918663e-05,
+        "speedup": 63.23481182180981
+      }
+    ],
+    "polygon_winding": [
+      {
+        "benchmark": "polygon_winding",
+        "category": "geometry",
+        "syntax": "cython",
+        "py_avg": 1.0123506490373984,
+        "py_std": 0.03456697062697358,
+        "cy_avg": 0.02089351797476411,
+        "cy_std": 0.0001282643025459025,
+        "speedup": 48.45285749676763
       }
     ]
   }
