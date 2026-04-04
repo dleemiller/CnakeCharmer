@@ -284,6 +284,11 @@ score_problem("{category}/{name}")
 | Memory safety | **1.0** (required) | — |
 | Lint | **1.0** (required) | — |
 
+**Class/object coverage exception:** if a new problem intentionally preserves a class-heavy design (`class` / `cdef class`, stateful methods, object lifecycle) to improve dataset diversity, you may accept **high-0.8 annotation scores** (roughly `0.85-0.89`) when all of the following are true:
+- `correctness = 1.0` (required)
+- speedup is strong and meaningful (generally double-digit, often much higher)
+- class/object structure is preserved on purpose (not flattened into purely procedural code just to raise annotation)
+
 **If speedup is low (< 5x)**, check whether the Python baseline uses C-level builtins (`list.sort()`, `sum()`, `len()`) that already run in C. Replace with pure Python equivalents:
 - `arr.sort()` → hand-written quicksort/mergesort in Python
 - `sum(arr)` → explicit accumulation loop
@@ -512,3 +517,8 @@ For new Stack-to-triplet conversions, treat this as a required quality gate befo
 - Require `correctness = 1.0`
 - Require `annotation_score > 0.90`
 - Require a meaningful speedup versus Python (typically >2x; if lower, document why the workload is already close to C/NumPy-limited)
+
+For intentionally class-heavy conversions (to improve representation of object-oriented Cython patterns), use this adjusted gate:
+- Require `correctness = 1.0`
+- Require strong speedup versus Python
+- Prefer `annotation_score > 0.90`, but allow high-`0.8x` when class/object structure is intentionally preserved.
