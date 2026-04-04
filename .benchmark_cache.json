@@ -251,7 +251,7 @@
     "prange_count_primes": "4375de321b565f11",
     "prime_factorization_sum": "cbefb09bb9208cac",
     "pascal_triangle_row": "b74099ef278133e1",
-    "sieve_of_eratosthenes": "0fcd21b2b513e257",
+    "sieve_of_eratosthenes": "774cce371cb448b1",
     "prime_sieve": "a6fab9342c648996",
     "matrix_power": "7bc962db58da59e1",
     "attention_scores": "e679d644ec8233db",
@@ -526,7 +526,29 @@
     "hopcroft_karp": "c251f8a779f85229",
     "fft_radix2": "289553a1988d952a",
     "sha256_blocks": "6a174e650e58452c",
-    "genetic_algorithm": "51f0f8bdd0f30df8"
+    "genetic_algorithm": "51f0f8bdd0f30df8",
+    "coin_change_count": "36073b5fc0685113",
+    "rle_encode": "0eeca4f33dad133e",
+    "dateline_bbox": "6db41c7c6b2ccaeb",
+    "prime_sum": "f1779f17f94e2455",
+    "central_moments": "25d0a581305639c4",
+    "bfs_shortest_paths": "842ca76068b93ccb",
+    "jacobian_inverse": "c8f75031ab20a66f",
+    "piecewise_interp": "0979291d8d6b6f62",
+    "delta_decode": "2f43019219fdebd1",
+    "matrix_product": "1a15547867fb4a9f",
+    "prefix_sum_2d": "2ae4c7a6e45f91fd",
+    "sparse_matvec": "5f433baa452a5a6e",
+    "coulomb_lattice": "fd722337d32ee133",
+    "exponential_moving_average": "5973b9fea6f0511b",
+    "welford_variance": "23848f2770136562",
+    "diagonal_scan": "0bbd27e18d66847a",
+    "kmer_frequency": "148a34a81c681e52",
+    "running_stats": "dbff23d052f84658",
+    "random_walk_2d": "c42efee072e1145f",
+    "rolling_hash_distinct": "41b8197bc1259d49",
+    "sequence_identity": "45cd7538be365476",
+    "polygon_winding": "472a25f8816349d1"
   },
   "results": {
     "a_star_grid": [
@@ -3541,18 +3563,7 @@
         "speedup": 166.4992612256888
       }
     ],
-    "sieve_of_eratosthenes": [
-      {
-        "benchmark": "sieve_of_eratosthenes",
-        "category": "math_problems",
-        "syntax": "cython",
-        "py_avg": 0.05150036287959665,
-        "py_std": 0.003092163587376871,
-        "cy_avg": 0.00703442299272865,
-        "cy_std": 0.0002059150420624117,
-        "speedup": 7.321192219010941
-      }
-    ],
+    "sieve_of_eratosthenes": [],
     "prime_sieve": [
       {
         "benchmark": "prime_sieve",
@@ -7071,6 +7082,270 @@
         "cy_avg": 0.018598762340843678,
         "cy_std": 3.885324199002747e-05,
         "speedup": 17.821971275149075
+      }
+    ],
+    "coin_change_count": [
+      {
+        "benchmark": "coin_change_count",
+        "category": "dynamic_programming",
+        "syntax": "cython",
+        "py_avg": 0.0012214071117341518,
+        "py_std": 0.0002163686445788413,
+        "cy_avg": 3.788410685956478e-05,
+        "cy_std": 2.785565209304618e-07,
+        "speedup": 32.240620486629666
+      }
+    ],
+    "rle_encode": [
+      {
+        "benchmark": "rle_encode",
+        "category": "compression",
+        "syntax": "cython",
+        "py_avg": 0.02310923736076802,
+        "py_std": 0.0003042326958225672,
+        "cy_avg": 0.0003717741696164012,
+        "cy_std": 3.5314623614575606e-06,
+        "speedup": 62.159340937032475
+      }
+    ],
+    "dateline_bbox": [
+      {
+        "benchmark": "dateline_bbox",
+        "category": "geometry",
+        "syntax": "cython",
+        "py_avg": 0.00474280291236937,
+        "py_std": 3.262574861301867e-05,
+        "cy_avg": 0.0002799260197207332,
+        "cy_std": 3.161194796604974e-06,
+        "speedup": 16.94305844487413
+      }
+    ],
+    "prime_sum": [
+      {
+        "benchmark": "prime_sum",
+        "category": "algorithms",
+        "syntax": "cython",
+        "py_avg": 0.051947318762540814,
+        "py_std": 0.001999602895767127,
+        "cy_avg": 0.002270350162871182,
+        "cy_std": 5.397043737213343e-05,
+        "speedup": 22.880751882276176
+      }
+    ],
+    "central_moments": [
+      {
+        "benchmark": "central_moments",
+        "category": "image_processing",
+        "syntax": "cython",
+        "py_avg": 0.012574715609662234,
+        "py_std": 0.00232890204415204,
+        "cy_avg": 8.703889325261116e-05,
+        "cy_std": 4.16025219491123e-06,
+        "speedup": 144.4723748171625
+      }
+    ],
+    "bfs_shortest_paths": [
+      {
+        "benchmark": "bfs_shortest_paths",
+        "category": "graph",
+        "syntax": "cython",
+        "py_avg": 0.02501031388528645,
+        "py_std": 0.029651997797935835,
+        "cy_avg": 0.0005312227876856923,
+        "cy_std": 1.2995876420375299e-05,
+        "speedup": 47.080649522294706
+      }
+    ],
+    "jacobian_inverse": [
+      {
+        "benchmark": "jacobian_inverse",
+        "category": "numerical",
+        "syntax": "cython",
+        "py_avg": 0.00443294420838356,
+        "py_std": 0.00018776670298855375,
+        "cy_avg": 1.8348917365074158e-05,
+        "cy_std": 2.280147271936662e-06,
+        "speedup": 241.59159476195308
+      }
+    ],
+    "piecewise_interp": [
+      {
+        "benchmark": "piecewise_interp",
+        "category": "numerical",
+        "syntax": "cython",
+        "py_avg": 0.0011503863148391246,
+        "py_std": 2.2836562041218165e-05,
+        "cy_avg": 4.057218320667744e-05,
+        "cy_std": 2.1287268856636012e-07,
+        "speedup": 28.354064876888163
+      }
+    ],
+    "delta_decode": [
+      {
+        "benchmark": "delta_decode",
+        "category": "image_processing",
+        "syntax": "cython",
+        "py_avg": 0.12951046538073568,
+        "py_std": 0.0003445382454192656,
+        "cy_avg": 0.0006453905254602433,
+        "cy_std": 5.7414526818294085e-06,
+        "speedup": 200.6699204150521
+      }
+    ],
+    "matrix_product": [
+      {
+        "benchmark": "matrix_product",
+        "category": "numerical",
+        "syntax": "cython",
+        "py_avg": 0.16746327141299844,
+        "py_std": 0.009720527867271699,
+        "cy_avg": 0.0026073328917846084,
+        "cy_std": 2.322035879556817e-05,
+        "speedup": 64.22780610050026
+      }
+    ],
+    "prefix_sum_2d": [
+      {
+        "benchmark": "prefix_sum_2d",
+        "category": "numerical",
+        "syntax": "cython",
+        "py_avg": 0.16269010407850146,
+        "py_std": 0.0023450155066520924,
+        "cy_avg": 0.0018901065224781633,
+        "cy_std": 0.0005542973106814988,
+        "speedup": 86.0745688900087
+      }
+    ],
+    "sparse_matvec": [
+      {
+        "benchmark": "sparse_matvec",
+        "category": "numerical",
+        "syntax": "cython",
+        "py_avg": 0.08734456521924586,
+        "py_std": 0.005904516954425432,
+        "cy_avg": 0.0011038780678063631,
+        "cy_std": 1.2560853683432992e-05,
+        "speedup": 79.12519305036814
+      }
+    ],
+    "coulomb_lattice": [
+      {
+        "benchmark": "coulomb_lattice",
+        "category": "physics",
+        "syntax": "cython",
+        "py_avg": 0.06962551977485418,
+        "py_std": 0.0020873119991165734,
+        "cy_avg": 0.001685769995674491,
+        "cy_std": 1.398231476307912e-05,
+        "speedup": 41.30190948557986
+      }
+    ],
+    "exponential_moving_average": [
+      {
+        "benchmark": "exponential_moving_average",
+        "category": "statistics",
+        "syntax": "cython",
+        "py_avg": 0.0031831564847379923,
+        "py_std": 2.45502653289229e-05,
+        "cy_avg": 9.987612720578909e-05,
+        "cy_std": 5.4767339553050395e-06,
+        "speedup": 31.871044400623173
+      }
+    ],
+    "welford_variance": [
+      {
+        "benchmark": "welford_variance",
+        "category": "statistics",
+        "syntax": "cython",
+        "py_avg": 0.04467536006122828,
+        "py_std": 0.000777698759100205,
+        "cy_avg": 0.0020811089081689714,
+        "cy_std": 4.723650500252321e-06,
+        "speedup": 21.467093762303453
+      }
+    ],
+    "diagonal_scan": [
+      {
+        "benchmark": "diagonal_scan",
+        "category": "string_processing",
+        "syntax": "cython",
+        "py_avg": 0.14173217276111244,
+        "py_std": 0.001301985326735649,
+        "cy_avg": 0.0013657344272360206,
+        "cy_std": 3.5849011333820186e-06,
+        "speedup": 103.77725708207461
+      }
+    ],
+    "kmer_frequency": [
+      {
+        "benchmark": "kmer_frequency",
+        "category": "string_processing",
+        "syntax": "cython",
+        "py_avg": 0.03483464268501848,
+        "py_std": 0.00043189571049733963,
+        "cy_avg": 0.00034631588496267793,
+        "cy_std": 6.56906578974648e-05,
+        "speedup": 100.58632652317571
+      }
+    ],
+    "running_stats": [
+      {
+        "benchmark": "running_stats",
+        "category": "numerical",
+        "syntax": "cython",
+        "py_avg": 0.6480592413805425,
+        "py_std": 0.009035360253611381,
+        "cy_avg": 0.010388378566130996,
+        "cy_std": 0.00024099736221794594,
+        "speedup": 62.3830983107793
+      }
+    ],
+    "random_walk_2d": [
+      {
+        "benchmark": "random_walk_2d",
+        "category": "simulation",
+        "syntax": "cython",
+        "py_avg": 0.45509309130720793,
+        "py_std": 0.006092205855526829,
+        "cy_avg": 0.003375333431176841,
+        "cy_std": 1.1466826043024992e-05,
+        "speedup": 134.8290770635171
+      }
+    ],
+    "rolling_hash_distinct": [
+      {
+        "benchmark": "rolling_hash_distinct",
+        "category": "string_processing",
+        "syntax": "cython",
+        "py_avg": 0.017089398321695627,
+        "py_std": 0.00019460983028092926,
+        "cy_avg": 0.002318708528764546,
+        "cy_std": 1.6419505361482685e-05,
+        "speedup": 7.370222738086532
+      }
+    ],
+    "sequence_identity": [
+      {
+        "benchmark": "sequence_identity",
+        "category": "string_processing",
+        "syntax": "cython",
+        "py_avg": 0.07889400464482606,
+        "py_std": 0.0014263847189298537,
+        "cy_avg": 0.001209301920607686,
+        "cy_std": 5.480849322663201e-05,
+        "speedup": 65.23929491915554
+      }
+    ],
+    "polygon_winding": [
+      {
+        "benchmark": "polygon_winding",
+        "category": "geometry",
+        "syntax": "cython",
+        "py_avg": 0.9786968776257708,
+        "py_std": 0.004598357659371881,
+        "cy_avg": 0.021390411327593027,
+        "cy_std": 0.00024026265825991723,
+        "speedup": 45.75399989448915
       }
     ]
   }
