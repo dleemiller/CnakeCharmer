@@ -323,8 +323,8 @@
     "depthwise_conv": "3d5fdd8e7da84f07",
     "conv1d": "9d9eb21a8a7a5111",
     "dropout_mask": "6c7c5c7cf2d25fd4",
-    "elementwise_add": "9f26072ab6c8c0f4",
-    "elementwise_mul": "9d4e1afc5815a983",
+    "elementwise_add": "f4479ad10e8fda50",
+    "elementwise_mul": "4be5d91fa15961ac",
     "global_avg_pool": "58e868de47844d7e",
     "embedding_lookup": "f2ddc3925554afae",
     "gemm": "4e542a26d8d98fb8",
@@ -663,8 +663,15 @@
     "cpp_except_safe_divide": "fce185703266160c",
     "stl_unordered_map_group_sum": "f522e50378a29fd5",
     "cpp_sort_by_popcount": "7b89ab15ab88addb",
-    "longest_common_substring_rolling": "eb9fe59d27e58cf5",
-    "stl_map_interval_count": "5b4679d1f6d6a7d6"
+    "longest_common_substring_rolling": "3e2848de91b59d56",
+    "stl_map_interval_count": "5b4679d1f6d6a7d6",
+    "cyclic_autocorr_peak": "ceafddcb39477b3e",
+    "finite_diff_curvature": "73f0670ae1a488a2",
+    "lattice_walk_moments": "af05c8f18ecb8e88",
+    "logistic_lcg_bands": "d57197c3b680e0f5",
+    "polynomial_horner_triplet": "bb667cc19f31a22c",
+    "toeplitz_band_energy": "f120894e6ee72098",
+    "vandermonde_checksum": "aec8726f8fbdbe71"
   },
   "results": {
     "a_star_grid": [
@@ -4548,11 +4555,11 @@
         "benchmark": "elementwise_add",
         "category": "nn_ops",
         "syntax": "cython",
-        "py_avg": 0.4711649097269401,
-        "py_std": 0.021427789170516257,
-        "cy_avg": 0.022845666226930916,
-        "cy_std": 0.00043813228552017655,
-        "speedup": 20.623820073652382
+        "py_avg": 0.47243764116428794,
+        "py_std": 0.010867691077562488,
+        "cy_avg": 0.007185999932698905,
+        "cy_std": 0.0008261954360073148,
+        "speedup": 65.74417556205718
       }
     ],
     "elementwise_mul": [
@@ -4560,11 +4567,11 @@
         "benchmark": "elementwise_mul",
         "category": "nn_ops",
         "syntax": "cython",
-        "py_avg": 0.47071392585057764,
-        "py_std": 0.026835368505966718,
-        "cy_avg": 0.011642596195451915,
-        "cy_std": 0.000940316150426366,
-        "speedup": 40.43032309532973
+        "py_avg": 0.4698692975798622,
+        "py_std": 0.011005113975847837,
+        "cy_avg": 0.007054493576288223,
+        "cy_std": 6.863661738671281e-06,
+        "speedup": 66.60567374519995
       }
     ],
     "global_avg_pool": [
@@ -8628,11 +8635,11 @@
         "benchmark": "longest_common_substring_rolling",
         "category": "string_processing",
         "syntax": "cython",
-        "py_avg": 0.196704548667185,
-        "py_std": 0.008417533231523255,
-        "cy_avg": 0.0023072846001014114,
-        "cy_std": 8.172507167577512e-05,
-        "speedup": 85.25369980735766
+        "py_avg": 0.19671357357874514,
+        "py_std": 0.004795448264952816,
+        "cy_avg": 0.0014927370939403772,
+        "cy_std": 2.470077174341651e-05,
+        "speedup": 131.7804550964031
       }
     ],
     "stl_map_interval_count": [
@@ -8645,6 +8652,90 @@
         "cy_avg": 0.011500095599330962,
         "cy_std": 0.00018831961589536116,
         "speedup": 14.459797065080755
+      }
+    ],
+    "cyclic_autocorr_peak": [
+      {
+        "benchmark": "cyclic_autocorr_peak",
+        "category": "numerical",
+        "syntax": "cython",
+        "py_avg": 0.006225050007924437,
+        "py_std": 4.813013144134562e-05,
+        "cy_avg": 0.00016302724834531545,
+        "cy_std": 9.58679496214093e-07,
+        "speedup": 38.184107694309326
+      }
+    ],
+    "finite_diff_curvature": [
+      {
+        "benchmark": "finite_diff_curvature",
+        "category": "numerical",
+        "syntax": "cython",
+        "py_avg": 0.03970607437659055,
+        "py_std": 0.004482486895010695,
+        "cy_avg": 0.0003921785857528448,
+        "cy_std": 2.080348267252242e-06,
+        "speedup": 101.24488133478494
+      }
+    ],
+    "lattice_walk_moments": [
+      {
+        "benchmark": "lattice_walk_moments",
+        "category": "numerical",
+        "syntax": "cython",
+        "py_avg": 0.05855263802222908,
+        "py_std": 0.0008521273857244709,
+        "cy_avg": 0.0002897170139476657,
+        "cy_std": 7.268221370316808e-06,
+        "speedup": 202.1028631504741
+      }
+    ],
+    "logistic_lcg_bands": [
+      {
+        "benchmark": "logistic_lcg_bands",
+        "category": "numerical",
+        "syntax": "cython",
+        "py_avg": 0.06298782231751829,
+        "py_std": 0.0009807223439061213,
+        "cy_avg": 0.0009064950048923492,
+        "cy_std": 5.22326125018099e-06,
+        "speedup": 69.48501864607451
+      }
+    ],
+    "polynomial_horner_triplet": [
+      {
+        "benchmark": "polynomial_horner_triplet",
+        "category": "numerical",
+        "syntax": "cython",
+        "py_avg": 0.059005528688430786,
+        "py_std": 0.005484566790106694,
+        "cy_avg": 0.0006524781230837107,
+        "cy_std": 4.701016932051157e-06,
+        "speedup": 90.43296104635922
+      }
+    ],
+    "toeplitz_band_energy": [
+      {
+        "benchmark": "toeplitz_band_energy",
+        "category": "numerical",
+        "syntax": "cython",
+        "py_avg": 0.02857161781284958,
+        "py_std": 0.0004069435479358048,
+        "cy_avg": 0.00023550302721560002,
+        "cy_std": 8.55237765170518e-07,
+        "speedup": 121.32165836956578
+      }
+    ],
+    "vandermonde_checksum": [
+      {
+        "benchmark": "vandermonde_checksum",
+        "category": "numerical",
+        "syntax": "cython",
+        "py_avg": 0.07511309189721942,
+        "py_std": 0.0005924089629947451,
+        "cy_avg": 0.0015497393906116486,
+        "cy_std": 1.4324640325080353e-05,
+        "speedup": 48.4682084950902
       }
     ]
   }

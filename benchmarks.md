@@ -20,6 +20,7 @@
 | algorithms | union_tagged_value | cython | 10.587 | 0.051 | 208.2x |
 | algorithms | buffer_byte_histogram | cython | 14.259 | 0.069 | 207.0x |
 | string_processing | alignment_identity | cython | 322.724 | 1.574 | 205.0x |
+| numerical | lattice_walk_moments | cython | 58.553 | 0.290 | 202.1x |
 | math_problems | assoc_legendre_sum | cython | 222.419 | 1.116 | 199.4x |
 | math_problems | matrix_power | cython | 406.845 | 2.043 | 199.1x |
 | image_processing | gamma_correction | cython | 35.587 | 0.179 | 198.8x |
@@ -62,6 +63,7 @@
 | image_processing | sharpen_filter | cython | 213.072 | 1.582 | 134.7x |
 | numerical | stack_lut_transform | cython | 5.791 | 0.043 | 133.8x |
 | dynamic_programming | knapsack | cython | 39.838 | 0.302 | 132.1x |
+| string_processing | longest_common_substring_rolling | cython | 196.714 | 1.493 | 131.8x |
 | simulation | wave_equation | cython | 175.925 | 1.353 | 130.0x |
 | cryptography | aes_sbox | cython | 232.334 | 1.791 | 129.7x |
 | numerical | jacobi_iteration | cython | 355.317 | 2.740 | 129.7x |
@@ -74,6 +76,7 @@
 | compression | delta_encoding | cython | 562.010 | 4.603 | 122.1x |
 | string_processing | longest_repeated_substring | cython | 284.573 | 2.335 | 121.9x |
 | graph | topological_sort_kahn | cython | 52.741 | 0.434 | 121.5x |
+| numerical | toeplitz_band_energy | cython | 28.572 | 0.236 | 121.3x |
 | numerical | fortran_mat_scale | cython | 18.598 | 0.153 | 121.3x |
 | optimization | conjugate_gradient | cython | 20.810 | 0.173 | 120.5x |
 | string_processing | token_shingle_distance | cython | 85.113 | 0.708 | 120.2x |
@@ -119,6 +122,7 @@
 | numerical | prange_dot_product | cython | 120.264 | 1.179 | 102.0x |
 | algorithms | card_hand_transition_class | cython | 94.943 | 0.936 | 101.5x |
 | nn_ops | max_pool_1d | cython | 186.059 | 1.834 | 101.4x |
+| numerical | finite_diff_curvature | cython | 39.706 | 0.392 | 101.2x |
 | string_processing | extern_string_ops | cython | 32.237 | 0.319 | 101.2x |
 | statistics | histogram_bucket | cython | 7.530 | 0.075 | 100.7x |
 | nn_ops | batch_norm | cython | 348.075 | 3.463 | 100.5x |
@@ -140,6 +144,7 @@
 | algorithms | topological_sort | cython | 27.946 | 0.305 | 91.7x |
 | algorithms | bit_array_count | cython | 19.487 | 0.215 | 90.8x |
 | compression | lz4_block | cython | 19.750 | 0.218 | 90.6x |
+| numerical | polynomial_horner_triplet | cython | 59.006 | 0.652 | 90.4x |
 | numerical | nested_loop_sum | cython | 16.276 | 0.181 | 90.1x |
 | compression | arithmetic_coding_freq | cython | 119.028 | 1.322 | 90.0x |
 | leetcode | trapping_rain_water | cython | 338.408 | 3.760 | 90.0x |
@@ -163,7 +168,6 @@
 | dynamic_programming | palindrome_partition | cython | 166.431 | 1.940 | 85.8x |
 | string_processing | run_length_encode | cython | 177.978 | 2.081 | 85.5x |
 | compression | delta_decode_rows | cython | 15.095 | 0.177 | 85.4x |
-| string_processing | longest_common_substring_rolling | cython | 196.705 | 2.307 | 85.3x |
 | statistics | linear_regression | cython | 90.028 | 1.058 | 85.1x |
 | numerical | variance | cython | 58.785 | 0.695 | 84.6x |
 | numerical | power_iteration | cython | 307.937 | 3.674 | 83.8x |
@@ -219,6 +223,7 @@
 | physics | ideal_gas | cython | 407.379 | 5.806 | 70.2x |
 | numerical | interpolation_plane_scan | cython | 5.934 | 0.085 | 70.0x |
 | image_processing | histogram_equalize | cython | 35.868 | 0.514 | 69.8x |
+| numerical | logistic_lcg_bands | cython | 62.988 | 0.906 | 69.5x |
 | dsp | hilbert_envelope | cython | 49.901 | 0.719 | 69.4x |
 | sorting | cycle_sort | cython | 230.782 | 3.326 | 69.4x |
 | string_processing | diagonal_scan | cython | 136.756 | 1.975 | 69.2x |
@@ -237,8 +242,10 @@
 | physics | lennard_jones | cython | 413.327 | 6.163 | 67.1x |
 | graph | strongly_connected | cython | 126.861 | 1.894 | 67.0x |
 | simulation | monte_carlo_pi | cython | 660.765 | 9.864 | 67.0x |
+| nn_ops | elementwise_mul | cython | 469.869 | 7.054 | 66.6x |
 | algorithms | levenshtein_automaton | cython | 356.244 | 5.399 | 66.0x |
 | algorithms | boyer_moore_vote | cython | 706.148 | 10.714 | 65.9x |
+| nn_ops | elementwise_add | cython | 472.438 | 7.186 | 65.7x |
 | numerical | fused_clamp | cython | 14.543 | 0.221 | 65.7x |
 | numerical | memview_pass_to_c | cython | 8.457 | 0.130 | 65.1x |
 | image_processing | contig_threshold_count | cython | 25.868 | 0.399 | 64.8x |
@@ -314,6 +321,7 @@
 | numerical | approx_pi | cython | 20.613 | 0.423 | 48.7x |
 | numerical | dispatch_table_eval | cython | 9.306 | 0.191 | 48.6x |
 | string_processing | suffix_array_lcp | cython | 170.295 | 3.504 | 48.6x |
+| numerical | vandermonde_checksum | cython | 75.113 | 1.550 | 48.5x |
 | geometry | point_in_polygon | cython | 381.823 | 7.902 | 48.3x |
 | simulation | schelling_segregation | cython | 282.874 | 5.874 | 48.2x |
 | numerical | generator_match_count | cython | 284.604 | 5.933 | 48.0x |
@@ -357,7 +365,6 @@
 | algorithms | sorted_cell_storage_class | cython | 189.386 | 4.591 | 41.2x |
 | simulation | monte_carlo_integration | cython | 523.666 | 12.713 | 41.2x |
 | numerical | fused_memview_sum | cython | 9.715 | 0.239 | 40.7x |
-| nn_ops | elementwise_mul | cython | 470.714 | 11.643 | 40.4x |
 | numerical | const_dot_product | cython | 9.930 | 0.247 | 40.1x |
 | numerical | cubic_spline_eval | cython | 21.485 | 0.536 | 40.1x |
 | geometry | closest_pair_distance | cython | 435.650 | 10.922 | 39.9x |
@@ -369,6 +376,7 @@
 | dynamic_programming | longest_increasing_subsequence | cython | 0.664 | 0.017 | 38.8x |
 | algorithms | rabin_karp_search | cython | 77.954 | 2.009 | 38.8x |
 | numerical | fused_minmax | cython | 10.389 | 0.269 | 38.6x |
+| numerical | cyclic_autocorr_peak | cython | 6.225 | 0.163 | 38.2x |
 | geometry | triangle_angles_3d | cython | 225.420 | 5.905 | 38.2x |
 | string_processing | rabin_karp | cython | 164.645 | 4.360 | 37.8x |
 | diff_equations | rk2_ode_step | cython | 80.500 | 2.154 | 37.4x |
@@ -461,7 +469,6 @@
 | diff_equations | verlet_integration | cython | 1030.087 | 49.301 | 20.9x |
 | algorithms | ring_buffer_mean | cython | 10.375 | 0.498 | 20.8x |
 | graph | graph_coloring_greedy | cython | 78.400 | 3.771 | 20.8x |
-| nn_ops | elementwise_add | cython | 471.165 | 22.846 | 20.6x |
 | simulation | langtons_ant | cython | 26.523 | 1.296 | 20.5x |
 | algorithms | fused_search | cython | 65.559 | 3.209 | 20.4x |
 | graph | vertex_cover_greedy | cython | 41.019 | 2.058 | 19.9x |
