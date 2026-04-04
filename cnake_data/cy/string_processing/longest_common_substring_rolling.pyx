@@ -9,39 +9,31 @@ from libc.string cimport memset
 from cnake_data.benchmarks import cython_benchmark
 
 
-@cython_benchmark(syntax="cy", args=(2000,))
-def longest_common_substring_rolling(int n):
-    """Find longest common substring using DP with rolling row."""
-    cdef int *sa = <int *>malloc(n * sizeof(int))
-    cdef int *sb = <int *>malloc(n * sizeof(int))
+cdef void _lcs_kernel(
+    int n,
+    int* sa,
+    int* sb,
+    int* max_len_out,
+    int* start_a_out,
+    int* start_b_out,
+) noexcept nogil:
     cdef int *prev = <int *>malloc((n + 1) * sizeof(int))
     cdef int *curr = <int *>malloc((n + 1) * sizeof(int))
     cdef int *temp
-    if not sa or not sb or not prev or not curr:
-        free(sa); free(sb); free(prev); free(curr)
-        raise MemoryError()
-
     cdef int i, j
     cdef int max_len = 0
     cdef int start_a = 0
     cdef int start_b = 0
-    cdef unsigned int s
 
-    # Generate string A with xorshift PRNG
-    s = 12345
-    for i in range(n):
-        s ^= (s << 13) & 0xFFFFFFFF
-        s ^= (s >> 17) & 0xFFFFFFFF
-        s ^= (s << 5) & 0xFFFFFFFF
-        sa[i] = s % 4
-
-    # Generate string B with xorshift PRNG
-    s = 67890
-    for i in range(n):
-        s ^= (s << 13) & 0xFFFFFFFF
-        s ^= (s >> 17) & 0xFFFFFFFF
-        s ^= (s << 5) & 0xFFFFFFFF
-        sb[i] = s % 4
+    if not prev or not curr:
+        if prev:
+            free(prev)
+        if curr:
+            free(curr)
+        max_len_out[0] = 0
+        start_a_out[0] = 0
+        start_b_out[0] = 0
+        return
 
     memset(prev, 0, (n + 1) * sizeof(int))
     memset(curr, 0, (n + 1) * sizeof(int))
@@ -56,14 +48,50 @@ def longest_common_substring_rolling(int n):
                     start_b = j - max_len
             else:
                 curr[j] = 0
-        # Swap rows
         temp = prev
         prev = curr
         curr = temp
         memset(curr, 0, (n + 1) * sizeof(int))
 
-    free(sa)
-    free(sb)
     free(prev)
     free(curr)
+    max_len_out[0] = max_len
+    start_a_out[0] = start_a
+    start_b_out[0] = start_b
+
+
+@cython_benchmark(syntax="cy", args=(2000,))
+def longest_common_substring_rolling(int n):
+    """Find longest common substring using DP with rolling row."""
+    cdef int *sa = <int *>malloc(n * sizeof(int))
+    cdef int *sb = <int *>malloc(n * sizeof(int))
+    if not sa or not sb:
+        free(sa); free(sb)
+        raise MemoryError()
+
+    cdef int i
+    cdef int max_len = 0
+    cdef int start_a = 0
+    cdef int start_b = 0
+    cdef unsigned int s, mask = 0xFFFFFFFF
+
+    s = 12345
+    for i in range(n):
+        s ^= (s << 13) & mask
+        s ^= (s >> 17) & mask
+        s ^= (s << 5) & mask
+        sa[i] = s % 4
+
+    s = 67890
+    for i in range(n):
+        s ^= (s << 13) & mask
+        s ^= (s >> 17) & mask
+        s ^= (s << 5) & mask
+        sb[i] = s % 4
+
+    with nogil:
+        _lcs_kernel(n, sa, sb, &max_len, &start_a, &start_b)
+
+    free(sa)
+    free(sb)
     return (max_len, start_a, start_b)
