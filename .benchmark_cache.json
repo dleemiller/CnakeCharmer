@@ -683,13 +683,13 @@
     "stack_fixpoint_pipeline": "9bdd99f209640446",
     "stack_naive_tree_distance": "c5e203910e797fa0",
     "stack2_bitfield_codec": "f2e5a6880e3660f7",
-    "stack2_rk4_descent": "b41c3464244bd5e4",
+    "stack2_rk4_descent": "91ae9249bf8aeecc",
     "stack2_partition_cut_ratio": "09e612271461444c",
-    "stack2_tile_min_diffs": "9ad7f0d0f10d35e2",
+    "stack2_tile_min_diffs": "aca85d8677ccd2a5",
     "stack2_triangle_modes": "0a47cc12b91e5ef9",
     "stack2_joint_histogram": "03b3edf1ea8ad22d",
     "stack2_kmer_profile": "7f7208b0b223a17c",
-    "stack2_stream_moments": "892b1f660b6aa9b1",
+    "stack2_stream_moments": "60abae3fd1c71a7e",
     "stack2_rng_weighted_walk": "c1a29400b8279928",
     "stack2_threshold_exp_scan": "adedce157696f974"
   },
@@ -8895,11 +8895,11 @@
         "benchmark": "stack2_rk4_descent",
         "category": "numerical",
         "syntax": "cython",
-        "py_avg": 0.2831902424339205,
-        "py_std": 0.006406275936352267,
-        "cy_avg": 0.0730620599584654,
-        "cy_std": 0.0006884355825627314,
-        "speedup": 3.876023240994157
+        "py_avg": 0.2841209423262626,
+        "py_std": 0.007684551476115488,
+        "cy_avg": 0.07361501990817487,
+        "cy_std": 8.777615704524809e-06,
+        "speedup": 3.8595512530006295
       }
     ],
     "stack2_partition_cut_ratio": [
@@ -8919,11 +8919,11 @@
         "benchmark": "stack2_tile_min_diffs",
         "category": "algorithms",
         "syntax": "cython",
-        "py_avg": 0.027402052516117693,
-        "py_std": 0.00035238605913949847,
-        "cy_avg": 0.00024468861520290377,
-        "cy_std": 3.9299563684397225e-06,
-        "speedup": 111.98744368795016
+        "py_avg": 0.027091652969829738,
+        "py_std": 0.00045690269108787917,
+        "cy_avg": 0.00024058790877461432,
+        "cy_std": 2.306534610859715e-06,
+        "speedup": 112.60604536535345
       }
     ],
     "stack2_triangle_modes": [
@@ -8967,11 +8967,11 @@
         "benchmark": "stack2_stream_moments",
         "category": "statistics",
         "syntax": "cython",
-        "py_avg": 0.12917844112962484,
-        "py_std": 0.0020990426573481314,
-        "cy_avg": 0.0011078959796577692,
-        "cy_std": 6.987979405935034e-06,
-        "speedup": 116.5979870867735
+        "py_avg": 0.12487542466260493,
+        "py_std": 0.004722043944978218,
+        "cy_avg": 0.0010894144186750054,
+        "cy_std": 7.172005895577244e-06,
+        "speedup": 114.62619047624136
       }
     ],
     "stack2_rng_weighted_walk": [

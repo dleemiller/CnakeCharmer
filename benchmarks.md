@@ -89,16 +89,16 @@
 | leetcode | valid_parentheses_gen | cython | 184.627 | 1.579 | 116.9x |
 | image_processing | erosion | cython | 96.224 | 0.824 | 116.8x |
 | algorithms | rpn_eval | cython | 16.906 | 0.145 | 116.8x |
-| statistics | stack2_stream_moments | cython | 129.178 | 1.108 | 116.6x |
 | numerical | memview_mat_transpose | cython | 12.869 | 0.110 | 116.5x |
 | algorithms | cmd_frame_parser_class | cython | 43.192 | 0.373 | 115.7x |
 | numerical | extern_abs_sum | cython | 19.572 | 0.169 | 115.6x |
 | algorithms | fastclass_state_machine | cython | 41.492 | 0.361 | 114.9x |
 | statistics | moving_median | cython | 501.743 | 4.377 | 114.6x |
+| statistics | stack2_stream_moments | cython | 124.875 | 1.089 | 114.6x |
 | cryptography | chacha20_block | cython | 251.817 | 2.210 | 114.0x |
 | string_processing | hamming_distance_sum | cython | 327.743 | 2.909 | 112.7x |
+| algorithms | stack2_tile_min_diffs | cython | 27.092 | 0.241 | 112.6x |
 | nn_ops | layer_norm | cython | 191.579 | 1.706 | 112.3x |
-| algorithms | stack2_tile_min_diffs | cython | 27.402 | 0.245 | 112.0x |
 | numerical | euclid_distance_pair | cython | 15.807 | 0.141 | 111.8x |
 | cryptography | simple_hash | cython | 279.008 | 2.497 | 111.7x |
 | algorithms | fenwick_tree | cython | 490.400 | 4.390 | 111.7x |
@@ -663,7 +663,7 @@
 | math_problems | euler_totient_sieve | cython | 16.844 | 3.898 | 4.3x |
 | image_processing | image_flip_checksum | cython | 67.061 | 16.696 | 4.0x |
 | numerical | cumulative_sum | cython | 29.310 | 7.526 | 3.9x |
-| numerical | stack2_rk4_descent | cython | 283.190 | 73.062 | 3.9x |
+| numerical | stack2_rk4_descent | cython | 284.121 | 73.615 | 3.9x |
 | sorting | stl_set_kth_largest | cython | 42.511 | 11.123 | 3.8x |
 | algorithms | expression_eval | cython | 400.804 | 105.242 | 3.8x |
 | numerical | not_none_transform | cython | 23.003 | 6.074 | 3.8x |
