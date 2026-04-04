@@ -15,10 +15,10 @@ traces:  ## Collect traces using a model profile
 		--model $$($(UV_RUN) python -c "from cnake_charmer.config import load_model_profile; c=load_model_profile('$(PROFILE)'); print(c.model.id)") \
 		--all --shuffle
 
-traces-best:  ## Collect best-of-N traces
-	$(UV_RUN) python scripts/generate_traces.py \
+traces-best:  ## Collect best-of-N traces (5 attempts, keep best)
+	$(UV_RUN) python scripts/collect_traces.py \
 		--model $$($(UV_RUN) python -c "from cnake_charmer.config import load_model_profile; c=load_model_profile('$(PROFILE)'); print(c.model.id)") \
-		--best-output data/traces/best_$(PROFILE).jsonl
+		--all --shuffle --attempts 5
 
 consolidate:  ## Consolidate trace files into master JSONL
 	$(UV_RUN) python scripts/consolidate_traces.py
@@ -44,9 +44,10 @@ test-model:  ## Test trained model on unseen problems
 benchmark:  ## Run benchmarks (hash-cached, only changed files)
 	$(UV_RUN) python run_benchmarks.py
 
-sample:  ## Sample problems with a model
-	$(UV_RUN) python scripts/sample_openrouter.py \
-		--model $$($(UV_RUN) python -c "from cnake_charmer.config import load_model_profile; c=load_model_profile('$(PROFILE)'); print(c.model.id)")
+sample:  ## Sample 3 random problems with a model
+	$(UV_RUN) python scripts/collect_traces.py \
+		--model $$($(UV_RUN) python -c "from cnake_charmer.config import load_model_profile; c=load_model_profile('$(PROFILE)'); print(c.model.id)") \
+		--n-random 3 --attempts 1
 
 # --- Development ---
 .PHONY: test test-data test-tooling compile lint
@@ -63,8 +64,9 @@ test-tooling:  ## Run tooling tests only
 compile:  ## Compile Cython extensions
 	uv run python setup.py build_ext --inplace
 
-lint:  ## Lint Python code with ruff
-	$(UV_RUN) ruff check cnake_charmer/ scripts/
+lint:  ## Lint Python and Cython code
+	$(UV_RUN) ruff check cnake_charmer/ cnake_data/ scripts/
+	$(UV_RUN) cython-lint --no-pycodestyle cnake_data/cy/
 
 # --- Prompt Optimization ---
 .PHONY: optimize-prompt
@@ -74,10 +76,7 @@ optimize-prompt:  ## Optimize prompt for a model profile
 		--model $$($(UV_RUN) python -c "from cnake_charmer.config import load_model_profile; c=load_model_profile('$(PROFILE)'); print(c.model.id)")
 
 # --- Utilities ---
-.PHONY: convert-traces list-problems
-
-convert-traces:  ## Convert v1 traces to v2 Pydantic format
-	$(UV_RUN) python scripts/convert_traces_v2.py
+.PHONY: list-problems
 
 list-problems:  ## List all problem pairs in the dataset
 	$(UV_RUN) python -c "from cnake_data.loader import discover_pairs; pairs=discover_pairs(); print(f'{len(pairs)} problems'); [print(f'  {p.problem_id} ({p.category})') for p in sorted(pairs, key=lambda x: x.problem_id)[:20]]; print('  ...' if len(pairs)>20 else '')"

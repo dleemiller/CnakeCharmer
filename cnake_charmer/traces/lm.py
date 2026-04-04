@@ -1,10 +1,11 @@
 """
 DRY utilities for configuring DSPy language models and prompts.
 
-Shared across trace collection scripts (collect_traces, generate_traces,
-sample_openrouter, optimize_prompt) to eliminate ~130 lines of duplication.
+Shared across trace collection scripts (collect_traces, optimize_prompt)
+to eliminate duplication of LM setup and prompt loading.
 """
 
+import json
 import logging
 import os
 from pathlib import Path
@@ -104,12 +105,84 @@ def load_optimized_prompt(
 
 def _load_program(path: Path, max_iters: int):
     """Load a GEPA program from path."""
-    from scripts.optimize_prompt import CythonReActAgent
-
     agent = CythonReActAgent(max_iters=max_iters)
     agent.load(path)
     logger.info(f"Loaded optimized program: {path}")
     return agent
+
+
+class CythonReActAgent:
+    """ReAct agent that creates fresh tools per problem.
+
+    GEPA optimizes the instructions in this module's internal
+    ReAct predictor across multiple problems. Also used by
+    _load_program() to deserialize saved GEPA programs.
+    """
+
+    def __init__(self, max_iters: int = 5):
+        import dspy
+
+        self.max_iters = max_iters
+        self._dspy = dspy
+        self._init_react()
+
+    def _init_react(self):
+        dspy = self._dspy
+        from cnake_charmer.training.dspy_agent import CythonOptimization
+
+        def evaluate_cython(code: str) -> str:
+            """Compile, analyze, test, and benchmark Cython code in one step."""
+            return "placeholder"
+
+        self.react = dspy.ReAct(
+            CythonOptimization,
+            tools=[evaluate_cython],
+            max_iters=self.max_iters,
+        )
+
+        seed_text = get_seed_text()
+        if seed_text:
+            for _name, param in self.react.named_parameters():
+                if hasattr(param, "signature"):
+                    param.signature = param.signature.with_instructions(seed_text)
+
+    def forward(
+        self,
+        python_code: str,
+        func_name: str,
+        description: str = "",
+        test_cases: str = "[]",
+        benchmark_args: str = "null",
+    ):
+        dspy = self._dspy
+        from cnake_charmer.training.dspy_agent import CythonOptimization, make_tools
+
+        tc = json.loads(test_cases) if isinstance(test_cases, str) else test_cases
+        ba = json.loads(benchmark_args) if isinstance(benchmark_args, str) else benchmark_args
+
+        tools, _env = make_tools(python_code, func_name, tc, ba)
+        real_react = dspy.ReAct(CythonOptimization, tools=tools, max_iters=self.max_iters)
+
+        for name, param in self.react.named_parameters():
+            for real_name, real_param in real_react.named_parameters():
+                if (
+                    name == real_name
+                    and hasattr(param, "signature")
+                    and hasattr(real_param, "signature")
+                ):
+                    real_param.signature = param.signature
+
+        return real_react(python_code=python_code, func_name=func_name, description=description)
+
+    # Delegate dspy.Module methods for save/load compatibility
+    def save(self, path):
+        self.react.save(path)
+
+    def load(self, path):
+        self.react.load(path)
+
+    def named_parameters(self):
+        return self.react.named_parameters()
 
 
 def apply_optimized_signatures(react_module, optimized_program, seed_text=None):

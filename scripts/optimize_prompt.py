@@ -32,10 +32,9 @@ import dspy
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+from cnake_charmer.traces.lm import CythonReActAgent, model_slug
 from cnake_charmer.training.dspy_agent import (
-    CythonOptimization,
     cython_metric,
-    make_tools,
     problem_to_example,
 )
 from cnake_data.loader import discover_pairs
@@ -44,76 +43,6 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname
 logger = logging.getLogger(__name__)
 
 PROMPTS_DIR = Path(__file__).parent.parent / "data" / "optimized_prompts"
-
-
-def model_slug(model_id: str) -> str:
-    """Convert model ID to filesystem-safe slug."""
-    return model_id.replace("/", "_").replace(":", "_")
-
-
-class CythonReActAgent(dspy.Module):
-    """ReAct agent that creates fresh tools per problem.
-
-    GEPA optimizes the instructions in this module's internal
-    ReAct predictor across multiple problems.
-    """
-
-    def __init__(self, max_iters: int = 5):
-        super().__init__()
-        self.max_iters = max_iters
-        # Create a ReAct with placeholder tools — GEPA optimizes its instructions.
-        # Actual tools are swapped in per-problem in forward().
-        self._init_react()
-
-    def _init_react(self):
-        """Initialize the ReAct module with placeholder tools and seed prompt."""
-
-        def evaluate_cython(code: str) -> str:
-            """Compile, analyze, test, and benchmark Cython code in one step."""
-            return "placeholder"
-
-        self.react = dspy.ReAct(
-            CythonOptimization,
-            tools=[evaluate_cython],
-            max_iters=self.max_iters,
-        )
-
-        # Load seed prompt if available (merged best of mimo + GLM-5)
-        seed_path = Path(__file__).parent.parent / "data" / "optimized_prompts" / "seed_prompt.txt"
-        if seed_path.exists():
-            seed = seed_path.read_text().strip()
-            for _name, param in self.react.named_parameters():
-                if hasattr(param, "signature"):
-                    param.signature = param.signature.with_instructions(seed)
-
-    def forward(
-        self,
-        python_code: str,
-        func_name: str,
-        description: str = "",
-        test_cases: str = "[]",
-        benchmark_args: str = "null",
-    ):
-        tc = json.loads(test_cases) if isinstance(test_cases, str) else test_cases
-        ba = json.loads(benchmark_args) if isinstance(benchmark_args, str) else benchmark_args
-
-        # Create real tools for this problem
-        tools, _env = make_tools(python_code, func_name, tc, ba)
-
-        # Build a fresh ReAct with real tools but COPY the optimized signatures
-        real_react = dspy.ReAct(CythonOptimization, tools=tools, max_iters=self.max_iters)
-
-        # Transfer optimized instructions from self.react to real_react
-        for name, param in self.react.named_parameters():
-            for real_name, real_param in real_react.named_parameters():
-                if (
-                    name == real_name
-                    and hasattr(param, "signature")
-                    and hasattr(real_param, "signature")
-                ):
-                    real_param.signature = param.signature
-
-        return real_react(python_code=python_code, func_name=func_name, description=description)
 
 
 def run_optimization(

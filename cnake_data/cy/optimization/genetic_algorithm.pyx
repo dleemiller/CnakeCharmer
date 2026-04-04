@@ -4,7 +4,7 @@
 Keywords: optimization, genetic algorithm, rastrigin, evolutionary, cython, benchmark
 """
 
-from libc.math cimport cos, fabs
+from libc.math cimport cos
 from libc.stdlib cimport malloc, free
 from cnake_data.benchmarks import cython_benchmark
 
@@ -52,7 +52,7 @@ def genetic_algorithm(int n):
 
     cdef unsigned int state = 98765  # same seed as Python
     cdef int i, g, gen, ia, ib, ic, id_, p1, p2, cut
-    cdef double fval, best_ever, best_half, mean_final, gen_best, delta, v
+    cdef double best_ever, best_half, mean_final, gen_best, delta, v
     cdef double *child
     cdef double *parent1
     cdef double *parent2
