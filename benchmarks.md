@@ -89,6 +89,7 @@
 | leetcode | valid_parentheses_gen | cython | 184.627 | 1.579 | 116.9x |
 | image_processing | erosion | cython | 96.224 | 0.824 | 116.8x |
 | algorithms | rpn_eval | cython | 16.906 | 0.145 | 116.8x |
+| statistics | stack2_stream_moments | cython | 129.178 | 1.108 | 116.6x |
 | numerical | memview_mat_transpose | cython | 12.869 | 0.110 | 116.5x |
 | algorithms | cmd_frame_parser_class | cython | 43.192 | 0.373 | 115.7x |
 | numerical | extern_abs_sum | cython | 19.572 | 0.169 | 115.6x |
@@ -97,6 +98,7 @@
 | cryptography | chacha20_block | cython | 251.817 | 2.210 | 114.0x |
 | string_processing | hamming_distance_sum | cython | 327.743 | 2.909 | 112.7x |
 | nn_ops | layer_norm | cython | 191.579 | 1.706 | 112.3x |
+| algorithms | stack2_tile_min_diffs | cython | 27.402 | 0.245 | 112.0x |
 | numerical | euclid_distance_pair | cython | 15.807 | 0.141 | 111.8x |
 | cryptography | simple_hash | cython | 279.008 | 2.497 | 111.7x |
 | algorithms | fenwick_tree | cython | 490.400 | 4.390 | 111.7x |
@@ -129,9 +131,11 @@
 | statistics | histogram_bucket | cython | 7.530 | 0.075 | 100.7x |
 | nn_ops | batch_norm | cython | 348.075 | 3.463 | 100.5x |
 | dynamic_programming | optimal_bst | cython | 193.982 | 1.940 | 100.0x |
+| string_processing | stack_kmer_hamming_scan | cython | 20.292 | 0.204 | 99.6x |
 | numerical | vandermonde_solve | cython | 280.515 | 2.817 | 99.6x |
 | numerical | prefix_sum_2d | cython | 177.539 | 1.790 | 99.2x |
 | image_processing | convolution_2d | cython | 3.382 | 0.034 | 98.6x |
+| graph | stack2_partition_cut_ratio | cython | 23.581 | 0.240 | 98.1x |
 | graph | topological_sort_dfs | cython | 34.612 | 0.353 | 98.1x |
 | string_processing | z_function | cython | 129.005 | 1.316 | 98.0x |
 | simulation | heat_diffusion | cython | 43.189 | 0.441 | 97.9x |
@@ -160,7 +164,6 @@
 | statistics | bicluster_vet_score | cython | 36.572 | 0.416 | 88.0x |
 | physics | coulomb_force | cython | 345.105 | 3.931 | 87.8x |
 | numerical | cpdef_clamp_sum | cython | 11.048 | 0.126 | 87.7x |
-| string_processing | stack_kmer_hamming_scan | cython | 17.223 | 0.196 | 87.7x |
 | algorithms | counter_call_overhead | cython | 71.313 | 0.814 | 87.7x |
 | numerical | signal_distance | cython | 58.769 | 0.671 | 87.6x |
 | numerical | cholesky_decompose | cython | 216.747 | 2.475 | 87.6x |
@@ -171,6 +174,7 @@
 | dynamic_programming | palindrome_partition | cython | 166.431 | 1.940 | 85.8x |
 | string_processing | run_length_encode | cython | 177.978 | 2.081 | 85.5x |
 | compression | delta_decode_rows | cython | 15.095 | 0.177 | 85.4x |
+| statistics | stack2_joint_histogram | cython | 52.449 | 0.616 | 85.1x |
 | statistics | linear_regression | cython | 90.028 | 1.058 | 85.1x |
 | numerical | variance | cython | 58.785 | 0.695 | 84.6x |
 | numerical | power_iteration | cython | 307.937 | 3.674 | 83.8x |
@@ -215,6 +219,7 @@
 | numerical | histogram | cython | 45.794 | 0.637 | 71.9x |
 | dynamic_programming | rod_cutting | cython | 139.361 | 1.946 | 71.6x |
 | simulation | nogil_nbody_step | cython | 198.315 | 2.769 | 71.6x |
+| algorithms | stack2_bitfield_codec | cython | 49.356 | 0.690 | 71.6x |
 | graph | floyd_warshall_apsp | cython | 2360.210 | 33.053 | 71.4x |
 | simulation | game_of_life | cython | 497.867 | 7.001 | 71.1x |
 | physics | doppler_shift | cython | 340.867 | 4.800 | 71.0x |
@@ -246,6 +251,7 @@
 | graph | strongly_connected | cython | 126.861 | 1.894 | 67.0x |
 | simulation | monte_carlo_pi | cython | 660.765 | 9.864 | 67.0x |
 | nn_ops | elementwise_mul | cython | 469.869 | 7.054 | 66.6x |
+| string_processing | stack2_kmer_profile | cython | 23.173 | 0.350 | 66.2x |
 | algorithms | levenshtein_automaton | cython | 356.244 | 5.399 | 66.0x |
 | algorithms | boyer_moore_vote | cython | 706.148 | 10.714 | 65.9x |
 | nn_ops | elementwise_add | cython | 472.438 | 7.186 | 65.7x |
@@ -419,7 +425,6 @@
 | algorithms | typedef_hash_table | cython | 3.189 | 0.105 | 30.5x |
 | numerical | memview_weighted_sum | cython | 11.496 | 0.378 | 30.4x |
 | math_problems | extended_gcd_batch | cython | 366.526 | 12.115 | 30.3x |
-| statistics | stack_mmckm_probability | cython | 23.655 | 0.797 | 29.7x |
 | simulation | cellular_automaton_1d | cython | 398.852 | 13.457 | 29.6x |
 | numerical | activation_functions | cython | 2.089 | 0.071 | 29.6x |
 | numerical | mandelbrot_tile_stats | cython | 196.804 | 6.692 | 29.4x |
@@ -428,6 +433,7 @@
 | geometry | line_segment_intersections | cython | 391.041 | 13.462 | 29.0x |
 | algorithms | union_find | cython | 323.048 | 11.126 | 29.0x |
 | compression | arithmetic_coding_sim | cython | 163.586 | 5.652 | 28.9x |
+| statistics | stack_mmckm_probability | cython | 21.707 | 0.751 | 28.9x |
 | physics | orbital_mechanics | cython | 318.809 | 11.053 | 28.8x |
 | algorithms | eggs_affine_iterate | cython | 78.374 | 2.730 | 28.7x |
 | numerical | nogil_newton_roots | cython | 121.257 | 4.240 | 28.6x |
@@ -476,17 +482,16 @@
 | graph | graph_coloring_greedy | cython | 78.400 | 3.771 | 20.8x |
 | simulation | langtons_ant | cython | 26.523 | 1.296 | 20.5x |
 | algorithms | fused_search | cython | 65.559 | 3.209 | 20.4x |
-| math_problems | stack_inttools_profile | cython | 13.410 | 0.660 | 20.3x |
 | graph | vertex_cover_greedy | cython | 41.019 | 2.058 | 19.9x |
 | algorithms | fibonacci | cython | 28.198 | 1.416 | 19.9x |
 | math_problems | modular_exponentiation | cython | 93.326 | 4.698 | 19.9x |
+| math_problems | stack_inttools_profile | cython | 11.844 | 0.596 | 19.9x |
 | sorting | quick_sort | cython | 155.493 | 7.834 | 19.8x |
 | statistics | running_variance | cython | 466.119 | 23.574 | 19.8x |
 | math_problems | derangement_count | cython | 58.405 | 2.967 | 19.7x |
 | nn_ops | cross_entropy | cython | 9.391 | 0.477 | 19.7x |
 | leetcode | climbing_stairs | cython | 167.444 | 8.557 | 19.6x |
 | algorithms | heap_sort | cython | 302.329 | 15.586 | 19.4x |
-| numerical | stack_fixpoint_pipeline | cython | 12.409 | 0.644 | 19.3x |
 | nn_ops | instance_norm | cython | 136.758 | 7.109 | 19.2x |
 | math_problems | lucas_numbers | cython | 165.740 | 8.617 | 19.2x |
 | numerical | tridiagonal_solve | cython | 163.341 | 8.524 | 19.2x |
@@ -496,11 +501,13 @@
 | dsp | spectral_centroid | cython | 760.793 | 40.023 | 19.0x |
 | dsp | downsample | cython | 260.920 | 13.845 | 18.8x |
 | graph | bipartite_check | cython | 455.927 | 24.301 | 18.8x |
+| numerical | stack_fixpoint_pipeline | cython | 12.621 | 0.673 | 18.8x |
 | math_problems | sum_primes | cython | 14.167 | 0.757 | 18.7x |
 | algorithms | circular_buffer_sum | cython | 490.715 | 26.258 | 18.7x |
 | statistics | covariance_matrix | cython | 338.937 | 18.207 | 18.6x |
 | sorting | introsort | cython | 156.956 | 8.456 | 18.6x |
 | algorithms | memcmp_dedup_count | cython | 47.075 | 2.547 | 18.5x |
+| statistics | stack2_rng_weighted_walk | cython | 137.075 | 7.464 | 18.4x |
 | numerical | range_iterator_sum | cython | 3.404 | 0.186 | 18.3x |
 | numerical | softmax | cython | 15.989 | 0.878 | 18.2x |
 | optimization | levenberg_marquardt | cython | 75.800 | 4.167 | 18.2x |
@@ -589,6 +596,7 @@
 | nn_ops | gelu | cython | 643.722 | 67.429 | 9.5x |
 | physics | capacitor_discharge | cython | 284.829 | 30.456 | 9.4x |
 | statistics | poisson_pmf_sum | cython | 1.776 | 0.190 | 9.3x |
+| numerical | stack2_triangle_modes | cython | 13.767 | 1.484 | 9.3x |
 | statistics | js_entropy_grid | cython | 9.054 | 0.983 | 9.2x |
 | numerical | fft_naive | cython | 325.120 | 35.401 | 9.2x |
 | numerical | simpson_integration | cython | 256.598 | 28.029 | 9.2x |
@@ -611,6 +619,7 @@
 | geometry | rotating_calipers | cython | 34.905 | 4.437 | 7.9x |
 | statistics | spearman_correlation | cython | 47.061 | 6.085 | 7.7x |
 | diff_equations | riemann_sum_midpoint | cython | 521.190 | 67.566 | 7.7x |
+| algorithms | stack_date_window_counts | cython | 10.899 | 1.416 | 7.7x |
 | optimization | golden_section | cython | 43.817 | 5.761 | 7.6x |
 | numerical | sin_squared_sum | cython | 2.540 | 0.340 | 7.5x |
 | math_problems | sieve_of_eratosthenes | cython | 50.431 | 6.762 | 7.5x |
@@ -620,7 +629,6 @@
 | optimization | simulated_annealing_deterministic | cython | 763.088 | 108.217 | 7.1x |
 | numerical | ufunc_clamp | cython | 82.185 | 11.717 | 7.0x |
 | algorithms | forward_decl_tree_sum | cython | 18.727 | 2.673 | 7.0x |
-| algorithms | stack_date_window_counts | cython | 10.726 | 1.542 | 7.0x |
 | numerical | matrix2x2_power | cython | 80.635 | 11.720 | 6.9x |
 | numerical | numpy_cummax | cython | 40.152 | 5.956 | 6.7x |
 | algorithms | freelist_pair_hash | cython | 29.279 | 4.387 | 6.7x |
@@ -629,6 +637,7 @@
 | numerical | running_mean | cython | 8.288 | 1.295 | 6.4x |
 | math_problems | miller_rabin | cython | 73.552 | 11.541 | 6.4x |
 | graph | kruskal_mst | cython | 85.629 | 13.633 | 6.3x |
+| numerical | stack2_threshold_exp_scan | cython | 328.684 | 52.623 | 6.2x |
 | geometry | convex_hull_area | cython | 56.063 | 9.012 | 6.2x |
 | sorting | priority_queue_sort | cython | 58.827 | 9.491 | 6.2x |
 | algorithms | patience_sort | cython | 89.881 | 14.702 | 6.1x |
@@ -654,6 +663,7 @@
 | math_problems | euler_totient_sieve | cython | 16.844 | 3.898 | 4.3x |
 | image_processing | image_flip_checksum | cython | 67.061 | 16.696 | 4.0x |
 | numerical | cumulative_sum | cython | 29.310 | 7.526 | 3.9x |
+| numerical | stack2_rk4_descent | cython | 283.190 | 73.062 | 3.9x |
 | sorting | stl_set_kth_largest | cython | 42.511 | 11.123 | 3.8x |
 | algorithms | expression_eval | cython | 400.804 | 105.242 | 3.8x |
 | numerical | not_none_transform | cython | 23.003 | 6.074 | 3.8x |
