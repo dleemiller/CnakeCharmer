@@ -1,0 +1,9 @@
+# GPT-OSS 120B — local vLLM server
+model:
+  id: openai/gpt-oss-120b
+  base_url: http://localhost:8000/v1
+  api_key_env: APIKEY
+
+prompt:
+  program: data/optimized_prompts/openai_gpt-oss-120b/program.json
+  id: gepa_gptoss

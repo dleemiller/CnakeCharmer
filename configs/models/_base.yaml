@@ -1,0 +1,11 @@
+# Base model profile — all profiles inherit from this.
+model:
+  temperature: 1.0
+  max_tokens: 8192
+  cache: false
+
+collection:
+  attempts: 2
+  max_iters: 5
+  shuffle: true
+  output: null  # auto-generated from model slug

@@ -1,0 +1,8 @@
+# GLM-5 — OpenRouter
+model:
+  id: openrouter/z-ai/glm-5
+  api_key_env: OPENROUTER_API_KEY
+
+prompt:
+  program: data/optimized_prompts/openrouter_z-ai_glm-5/program.json
+  id: gepa_glm5
