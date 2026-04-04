@@ -69,6 +69,24 @@ Before finalizing a new problem, quickly check:
 - Is `n` only one part of the configuration rather than the whole interface?
 - Would this signature still make sense outside a benchmark harness?
 
+## Non-Negotiable: No Templates / No Clones
+
+The purpose of this dataset is to teach real code transformation, not pattern memorization.
+
+**Templating is absolutely forbidden** for new problems:
+- Do not mass-produce problems by copying one implementation and only renaming symbols, changing constants, or swapping minor arithmetic.
+- Do not create families of near-identical problems across categories.
+- Do not keep the same control flow/data model and just re-skin names (`*_class` variants with identical loops are not acceptable).
+
+Every new problem must be **distinct and unique** in:
+- Core algorithmic behavior (what it computes)
+- Data layout / state transitions
+- Failure modes and edge-case behavior
+- Return-signal structure (what correctness evidence it exposes)
+
+If two problems share more than superficial similarity, keep one and rewrite or delete the others.
+When adapting Stack v2 candidates, preserve the original algorithmic intent of the source rather than forcing it into a reusable template shell.
+
 **Class-based problems are encouraged.** Many real Cython conversions involve stateful objects — `cdef class` with typed attributes, `cdef` helper methods, and `__init__` that pre-allocates C arrays. The Stack v2 candidate pool includes class-based implementations that make good training examples. For classes:
 
 ```python
@@ -283,6 +301,11 @@ score_problem("{category}/{name}")
 | Annotation | **≥ 0.85** | > 0.90 |
 | Memory safety | **1.0** (required) | — |
 | Lint | **1.0** (required) | — |
+
+**Class/object coverage exception:** if a new problem intentionally preserves a class-heavy design (`class` / `cdef class`, stateful methods, object lifecycle) to improve dataset diversity, you may accept **high-0.8 annotation scores** (roughly `0.85-0.89`) when all of the following are true:
+- `correctness = 1.0` (required)
+- speedup is strong and meaningful (generally double-digit, often much higher)
+- class/object structure is preserved on purpose (not flattened into purely procedural code just to raise annotation)
 
 **If speedup is low (< 5x)**, check whether the Python baseline uses C-level builtins (`list.sort()`, `sum()`, `len()`) that already run in C. Replace with pure Python equivalents:
 - `arr.sort()` → hand-written quicksort/mergesort in Python
@@ -512,3 +535,8 @@ For new Stack-to-triplet conversions, treat this as a required quality gate befo
 - Require `correctness = 1.0`
 - Require `annotation_score > 0.90`
 - Require a meaningful speedup versus Python (typically >2x; if lower, document why the workload is already close to C/NumPy-limited)
+
+For intentionally class-heavy conversions (to improve representation of object-oriented Cython patterns), use this adjusted gate:
+- Require `correctness = 1.0`
+- Require strong speedup versus Python
+- Prefer `annotation_score > 0.90`, but allow high-`0.8x` when class/object structure is intentionally preserved.
