@@ -20,7 +20,7 @@ from pathlib import Path
 
 from datasets import Dataset
 
-from cnake_charmer.sources.base import ProblemSpec
+from cnake_charmer.dataset.loader import ProblemSpec
 from cnake_charmer.training.environment import CythonToolEnvironment
 from cnake_charmer.training.prompts import format_user_prompt, get_system_prompt
 

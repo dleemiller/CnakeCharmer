@@ -13,10 +13,38 @@ ProblemSpecs suitable for training.
 import ast
 import logging
 import re
+from dataclasses import dataclass, field
 from pathlib import Path
 
 from cnake_charmer.dataset.difficulty import classify_difficulty
-from cnake_charmer.sources.base import ProblemSpec
+
+
+@dataclass
+class ProblemSpec:
+    problem_id: str
+    description: str = ""
+    python_code: str = ""
+    cython_code: str = ""
+    func_name: str = ""
+    test_cases: list = field(default_factory=list)
+    benchmark_args: tuple | None = None
+    category: str = ""
+    difficulty: str = ""
+    source: str = ""
+    metadata: dict = field(default_factory=dict)
+
+    @property
+    def has_python(self) -> bool:
+        return bool(self.python_code.strip())
+
+    @property
+    def has_cython(self) -> bool:
+        return bool(self.cython_code.strip())
+
+    @property
+    def is_complete(self) -> bool:
+        return self.has_python and self.has_cython and bool(self.func_name)
+
 
 logger = logging.getLogger(__name__)
 

@@ -41,8 +41,6 @@ log = logging.getLogger("benchmark")
 CACHE_FILE = Path(".benchmark_cache.json")
 PY_DIR = Path("cnake_charmer/py")
 CY_DIR = Path("cnake_charmer/cy")
-PP_DIR = Path("cnake_charmer/pp")
-SIMD_DIR = Path("cnake_charmer/cy_simd")
 
 
 def import_all_submodules(package_name: str) -> None:
@@ -63,7 +61,7 @@ def _hash_file(path: Path) -> str:
 
 def _find_source_files(benchmark_id: str) -> list[Path]:
     files = []
-    for base_dir in [PY_DIR, CY_DIR, PP_DIR, SIMD_DIR]:
+    for base_dir in [PY_DIR, CY_DIR]:
         for ext in ["*.py", "*.pyx"]:
             for f in base_dir.rglob(ext):
                 if f.stem == benchmark_id and f.name != "__init__.py":

@@ -202,7 +202,7 @@ class TestDatasetFormat:
 
     def test_dataset_has_system_message(self):
         """Each prompt starts with system message containing the SFT system prompt."""
-        from cnake_charmer.sources.base import ProblemSpec
+        from cnake_charmer.dataset.loader import ProblemSpec
         from cnake_charmer.training.grpo import build_dataset
         from cnake_charmer.training.prompts import get_system_prompt
 
@@ -231,7 +231,7 @@ class TestDatasetFormat:
 
     def test_dataset_user_format(self):
         """User message uses key-value format, not markdown."""
-        from cnake_charmer.sources.base import ProblemSpec
+        from cnake_charmer.dataset.loader import ProblemSpec
         from cnake_charmer.training.grpo import build_dataset
 
         problem = ProblemSpec(

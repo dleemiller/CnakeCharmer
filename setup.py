@@ -7,11 +7,8 @@ from setuptools import Extension, find_packages, setup
 
 NUMPY_INCLUDE = [np.get_include()]
 
-SIMD_COMPILE_ARGS = ["-mavx2", "-mfma", "-O3"]
 OPENMP_COMPILE_ARGS = ["-fopenmp"]
 OPENMP_LINK_ARGS = ["-fopenmp"]
-SIMD_CATEGORIES = {"nn_ops"}
-ENGINE_DIRS = ["cnake_charmer/engine"]  # always compiled with SIMD flags
 
 
 def _uses_openmp(file_path):
@@ -62,46 +59,22 @@ def _get_pythran_include():
         return []
 
 
-def _get_engine_extensions():
-    """Collect engine .pyx files, all compiled with SIMD flags."""
-    extensions = []
-    for engine_dir in ENGINE_DIRS:
-        for root, _, files in os.walk(engine_dir):
-            for f in files:
-                if f.endswith(".pyx"):
-                    file_path = os.path.join(root, f)
-                    module_name = file_path.replace(os.path.sep, ".").replace(".pyx", "")
-                    extensions.append(
-                        Extension(
-                            module_name,
-                            [file_path],
-                            include_dirs=NUMPY_INCLUDE,
-                            extra_compile_args=SIMD_COMPILE_ARGS,
-                        )
-                    )
-    return extensions
-
-
-def get_cython_extensions(syntax: Literal["cy", "pp", "cy_simd"]):
+def get_cython_extensions(syntax: Literal["cy"]):
     """
     Walk through the cnake_charmer/{syntax} directory and collect
     all .pyx or .py files to compile as Cython extensions.
     """
     extensions = []
-    file_extension = ".py" if syntax == "pp" else ".pyx"
+    file_extension = ".pyx"
     for root, _, files in os.walk(os.path.join("cnake_charmer", syntax)):
         for file in files:
             if file.endswith(file_extension):
                 file_path = os.path.join(root, file)
                 module_name = file_path.replace(os.path.sep, ".").replace(file_extension, "")
-                # Add SIMD flags for cy_simd/ tree or nn_ops category
-                category = os.path.basename(root)
                 extra_compile = []
                 extra_link = []
                 include_dirs = list(NUMPY_INCLUDE)
                 lang = None
-                if syntax == "cy_simd" or category in SIMD_CATEGORIES:
-                    extra_compile = SIMD_COMPILE_ARGS
                 if _uses_openmp(file_path):
                     extra_compile = extra_compile + OPENMP_COMPILE_ARGS
                     extra_link = OPENMP_LINK_ARGS
@@ -136,10 +109,7 @@ setup(
     packages=find_packages(include=["cnake_charmer", "cnake_charmer.*"]),
     # ext_modules=extensions,
     ext_modules=cythonize(
-        get_cython_extensions(syntax="cy")
-        + get_cython_extensions(syntax="pp")
-        + get_cython_extensions(syntax="cy_simd")
-        + _get_engine_extensions(),
+        get_cython_extensions(syntax="cy"),
         compiler_directives={
             "language_level": "3",
             "boundscheck": False,

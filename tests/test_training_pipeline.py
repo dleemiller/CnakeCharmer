@@ -12,7 +12,6 @@ These tests verify the non-inference parts of the pipeline:
 import pytest
 
 from cnake_charmer.rewards.composite import composite_reward
-from cnake_charmer.training.credit import RolloutNode, mars_credit, mers_credit
 from cnake_charmer.training.environment import CythonToolEnvironment
 from cnake_charmer.training.prompts import format_feedback, format_user_prompt
 from cnake_charmer.training.rollout import extract_code_from_content as _extract_code_from_content
@@ -259,50 +258,6 @@ class TestToolEnvironment:
         assert "annotate" not in public_methods
         assert "test" not in public_methods
         assert "benchmark" not in public_methods
-
-
-# --- Credit Assignment ---
-
-
-class TestCredit:
-    def test_mars_leaf(self):
-        node = RolloutNode(code="x", reward=0.5)
-        assert mars_credit(node) == 0.5
-
-    def test_mars_propagation(self):
-        root = RolloutNode(
-            code="",
-            turn=0,
-            children=[
-                RolloutNode(
-                    code="v1",
-                    reward=0.3,
-                    turn=1,
-                    children=[
-                        RolloutNode(code="v1.1", reward=0.9, turn=2, solved=True),
-                    ],
-                ),
-                RolloutNode(code="v2", reward=0.7, turn=1, solved=True),
-            ],
-        )
-        mars_credit(root)
-        assert root.credit > 0.7
-
-    def test_mers_leaf(self):
-        node = RolloutNode(code="x", reward=0.5)
-        assert mers_credit(node) == 0.5
-
-    def test_mers_smoothing(self):
-        root = RolloutNode(
-            code="",
-            turn=0,
-            children=[
-                RolloutNode(code="a", reward=0.2, turn=1),
-                RolloutNode(code="b", reward=0.8, turn=1),
-            ],
-        )
-        mers_credit(root)
-        assert 0.0 < root.credit < 1.0
 
 
 # --- Composite Reward ---
