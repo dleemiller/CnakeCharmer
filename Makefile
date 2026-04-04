@@ -6,18 +6,22 @@
 PROFILE ?= gpt_oss_120b
 TRAINING_CONFIG ?= sft_base
 UV_RUN := uv run --no-sync
+# Helper: read a dotted key from a model profile
+PROFILE_GET = $(UV_RUN) python -c "from cnake_charmer.config import load_model_profile; c=load_model_profile('$(PROFILE)'); print(c.$(1))"
 
 # --- Data Collection ---
 .PHONY: traces traces-best consolidate build-sft
 
 traces:  ## Collect traces using a model profile
 	$(UV_RUN) python scripts/collect_traces.py \
-		--model $$($(UV_RUN) python -c "from cnake_charmer.config import load_model_profile; c=load_model_profile('$(PROFILE)'); print(c.model.id)") \
+		--model $$($(call PROFILE_GET,model.id)) \
+		-o $$($(call PROFILE_GET,collection.output)) \
 		--all --shuffle
 
 traces-best:  ## Collect best-of-N traces (5 attempts, keep best)
 	$(UV_RUN) python scripts/collect_traces.py \
-		--model $$($(UV_RUN) python -c "from cnake_charmer.config import load_model_profile; c=load_model_profile('$(PROFILE)'); print(c.model.id)") \
+		--model $$($(call PROFILE_GET,model.id)) \
+		-o $$($(call PROFILE_GET,collection.output)) \
 		--all --shuffle --attempts 5
 
 consolidate:  ## Consolidate trace files into master JSONL
@@ -46,7 +50,7 @@ benchmark:  ## Run benchmarks (hash-cached, only changed files)
 
 sample:  ## Sample 3 random problems with a model
 	$(UV_RUN) python scripts/collect_traces.py \
-		--model $$($(UV_RUN) python -c "from cnake_charmer.config import load_model_profile; c=load_model_profile('$(PROFILE)'); print(c.model.id)") \
+		--model $$($(call PROFILE_GET,model.id)) \
 		--n-random 3 --attempts 1
 
 # --- Development ---
@@ -73,7 +77,7 @@ lint:  ## Lint Python and Cython code
 
 optimize-prompt:  ## Optimize prompt for a model profile
 	$(UV_RUN) python scripts/optimize_prompt.py \
-		--model $$($(UV_RUN) python -c "from cnake_charmer.config import load_model_profile; c=load_model_profile('$(PROFILE)'); print(c.model.id)")
+		--model $$($(call PROFILE_GET,model.id))
 
 # --- Utilities ---
 .PHONY: list-problems

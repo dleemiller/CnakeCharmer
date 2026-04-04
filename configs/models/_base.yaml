@@ -8,4 +8,4 @@ collection:
   attempts: 2
   max_iters: 5
   shuffle: true
-  output: null  # auto-generated from model slug
+  output: data/traces/master_traces.jsonl

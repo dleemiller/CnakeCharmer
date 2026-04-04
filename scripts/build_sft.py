@@ -37,6 +37,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+from cnake_charmer.traces.io import load_traces as _load_traces
+from cnake_charmer.traces.models import Trace
 from cnake_charmer.training.sft_scoring import parse_trace_metrics, score_trace
 from cnake_charmer.training.sft_validation import (
     total_analysis_length,
@@ -49,31 +51,9 @@ logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
 logger = logging.getLogger(__name__)
 
 TRACES_DIR = Path("data/traces")
-# master_nothink.jsonl excluded: all models there were thinking models with uncaptured reasoning
-MASTER_FILES = [TRACES_DIR / "master_thinking.jsonl"]
+MASTER_FILES = [TRACES_DIR / "master_traces.jsonl"]
 TOOLS_FILE = Path("data/tools.json")
 SYSTEM_PROMPT_FILE = Path("data/system_prompt.txt")
-
-
-def load_traces(paths: list[str]) -> list[dict]:
-    traces = []
-    for p in paths:
-        path = Path(p)
-        if not path.exists():
-            logger.warning(f"Skipping missing file: {path}")
-            continue
-        count = 0
-        with open(path) as f:
-            for line in f:
-                line = line.strip()
-                if line:
-                    try:
-                        traces.append(json.loads(line))
-                        count += 1
-                    except json.JSONDecodeError:
-                        pass
-        logger.info(f"  {path.name}: {count} traces")
-    return traces
 
 
 def main():
@@ -138,14 +118,14 @@ def main():
     else:
         logger.warning(f"No tools file at {tools_path} — 'tools' column will be omitted")
 
-    # Load all traces
+    # Load all traces (v2 Trace objects)
     logger.info("Loading traces...")
-    traces = load_traces(input_paths)
+    traces = _load_traces(input_paths)
     logger.info(f"Total: {len(traces)} traces")
 
     # Score and augment with inputs
     logger.info("Scoring and augmenting traces...")
-    scored = []
+    scored: list[tuple[Trace, float, dict]] = []  # (trace, sft_score, inputs)
     skipped_no_problem = 0
     skipped_no_finish = 0
     skipped_min_iters = 0
@@ -154,41 +134,35 @@ def main():
         if sft < args.min_score:
             continue
 
-        # Filter: require finish tool call (exclude force-exits that hit max iterations)
-        traj = trace.get("trajectory", {})
-        if args.require_finish:
-            called_finish = any(v == "finish" for k, v in traj.items() if k.startswith("tool_name"))
-            if not called_finish:
-                skipped_no_finish += 1
-                continue
+        # Filter: require finish tool call
+        if args.require_finish and not any(s.tool_name == "finish" for s in trace.steps):
+            skipped_no_finish += 1
+            continue
 
         # Filter: minimum iterations (eval calls excluding finish)
-        # 1-eval traces are allowed if they scored very well (annotation >0.9, speedup >2x)
         if args.min_iters > 0:
-            n_evals = sum(1 for k, v in traj.items() if k.startswith("tool_name") and v != "finish")
+            n_evals = sum(1 for s in trace.steps if s.tool_name != "finish")
             if n_evals < args.min_iters:
-                # Allow high-quality 1-shot traces through
                 if n_evals == 1 and sft >= 0.9:
                     pass  # keep it — model nailed it first try
                 else:
                     skipped_min_iters += 1
                     continue
 
-        pid = trace.get("problem_id", "")
-        problem = problems.get(pid)
+        problem = problems.get(trace.problem_id)
         if problem is None:
             skipped_no_problem += 1
             continue
 
-        trace["reward"] = sft
-        trace["inputs"] = {
+        trace.reward = sft
+        inputs = {
             "python_code": problem.python_code,
             "func_name": problem.func_name,
             "description": problem.description or "",
             "test_cases": problem.test_cases,
             "benchmark_args": problem.benchmark_args,
         }
-        scored.append(trace)
+        scored.append((trace, sft, inputs))
 
     logger.info(
         f"  {len(scored)} traces passed (skipped {skipped_no_problem} unknown problem_ids, "
@@ -196,56 +170,47 @@ def main():
     )
 
     # Trace-level validation: reject traces with malformed tool args before rendering
-    valid_traces = []
+    # validate_trace_for_rendering expects v1 dicts
+    valid_scored = []
     skipped_validation = 0
-    for trace in scored:
-        errs = validate_trace_for_rendering(trace)
+    for trace, sft, inputs in scored:
+        v1 = trace.to_v1_dict()
+        errs = validate_trace_for_rendering(v1)
         if errs:
             skipped_validation += 1
-            logger.debug(f"  Trace validation failed ({trace.get('problem_id')}): {errs[0]}")
+            logger.debug(f"  Trace validation failed ({trace.problem_id}): {errs[0]}")
             continue
-        valid_traces.append(trace)
+        valid_scored.append((trace, sft, inputs))
     if skipped_validation:
         logger.info(f"  Trace validation: dropped {skipped_validation} traces with malformed data")
-    scored = valid_traces
-
-    # Classify thinking vs non-thinking
-    def has_thinking(trace):
-        return any(k.startswith("reasoning_") for k in trace.get("trajectory", {}))
+    scored = valid_scored
 
     # Step 1: best per (problem, model, thinking) — deduplicate
-    by_key = defaultdict(list)
-    for trace in scored:
-        key = (trace["problem_id"], trace.get("model", "unknown"), has_thinking(trace))
-        by_key[key].append(trace)
-
-    best_per_key = {}
-    for key, candidates in by_key.items():
-        best_per_key[key] = max(candidates, key=lambda t: t["reward"])
+    by_key: dict[tuple, tuple[Trace, float, dict]] = {}
+    for trace, sft, inputs in scored:
+        key = (trace.problem_id, trace.model, trace.thinking)
+        if key not in by_key or sft > by_key[key][1]:
+            by_key[key] = (trace, sft, inputs)
 
     # Step 2: top-k per problem per thinking split, unique models
-    thinking_pool = defaultdict(list)  # pid -> [traces with reasoning]
-    nothink_pool = defaultdict(list)  # pid -> [traces without reasoning]
-    for (pid, _model, is_thinking), trace in best_per_key.items():
+    thinking_pool: dict[str, list[tuple[Trace, float, dict]]] = defaultdict(list)
+    nothink_pool: dict[str, list[tuple[Trace, float, dict]]] = defaultdict(list)
+    for (pid, _model, is_thinking), entry in by_key.items():
         if is_thinking:
-            thinking_pool[pid].append(trace)
+            thinking_pool[pid].append(entry)
         else:
-            nothink_pool[pid].append(trace)
+            nothink_pool[pid].append(entry)
 
-    best = []
+    best: list[tuple[Trace, float, dict]] = []
     all_pids = sorted(set(list(thinking_pool.keys()) + list(nothink_pool.keys())))
     for pid in all_pids:
         for pool in (thinking_pool, nothink_pool):
             candidates = pool.get(pid, [])
-            ranked = sorted(candidates, key=lambda t: t["reward"], reverse=True)
+            ranked = sorted(candidates, key=lambda e: e[1], reverse=True)
             best.extend(ranked[: args.top_k])
 
-    # Tag thinking
-    for trace in best:
-        trace["_thinking"] = has_thinking(trace)
-
     problems_covered = len(all_pids)
-    n_thinking = sum(1 for t in best if t["_thinking"])
+    n_thinking = sum(1 for t, _, _ in best if t.thinking)
     n_nothink = len(best) - n_thinking
     logger.info(
         f"Top-{args.top_k} selection: {len(best)} examples from {problems_covered} problems"
@@ -253,12 +218,11 @@ def main():
     logger.info(f"  thinking={n_thinking}, nothink={n_nothink}")
 
     # Per-model breakdown
-    raw_counts = Counter(t.get("model", "?") for t in traces)
+    raw_counts = Counter(t.model for t in traces)
     sel_models = defaultdict(lambda: {"total": 0, "think": 0, "nothink": 0})
-    for t in best:
-        m = t.get("model", "?")
-        sel_models[m]["total"] += 1
-        sel_models[m]["think" if t["_thinking"] else "nothink"] += 1
+    for t, _, _ in best:
+        sel_models[t.model]["total"] += 1
+        sel_models[t.model]["think" if t.thinking else "nothink"] += 1
 
     logger.info("Per-model breakdown:")
     logger.info(
@@ -390,10 +354,13 @@ def main():
         return msgs
 
     # Phase 1: Render all examples with placeholder effort ("medium")
+    # Convert Trace objects to v1 dicts for build_messages (Harmony rendering reads flat trajectory)
     rendered = []
-    for trace in best:
-        is_thinking = trace.get("_thinking", False)
-        msgs = build_messages(trace, system_prompt)
+    for trace, sft, inputs in best:
+        v1 = trace.to_v1_dict()
+        v1["inputs"] = inputs
+        v1["_thinking"] = trace.thinking
+        msgs = build_messages(v1, system_prompt)
 
         text = tokenizer.apply_chat_template(
             msgs,
@@ -402,21 +369,19 @@ def main():
             reasoning_effort="medium",
         )
 
-        record = {"text": text}
-        for k in (
-            "model",
-            "prompt_id",
-            "problem_id",
-            "func_name",
-            "category",
-            "difficulty",
-            "num_iterations",
-        ):
-            if k in trace:
-                record[k] = trace[k]
-        record["sft_score"] = trace["reward"]
-        record["speedup"] = parse_trace_metrics(trace).get("speedup", 0.0)
-        record["thinking"] = is_thinking
+        record = {
+            "text": text,
+            "model": trace.model,
+            "prompt_id": trace.prompt_id,
+            "problem_id": trace.problem_id,
+            "func_name": trace.func_name,
+            "category": trace.category,
+            "difficulty": trace.difficulty,
+            "num_iterations": trace.num_iterations,
+            "sft_score": sft,
+            "speedup": parse_trace_metrics(trace).get("speedup", 0.0),
+            "thinking": trace.thinking,
+        }
         rendered.append(record)
 
     # Phase 2: Assign reasoning effort by rendered analysis length terciles

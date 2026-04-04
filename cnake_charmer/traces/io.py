@@ -1,7 +1,5 @@
 """
-Trace I/O: load and save traces in v1 or v2 format.
-
-Auto-detects format on read. Writers always produce v2.
+Trace I/O: load and save traces in v2 format.
 """
 
 import json
@@ -14,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 
 def load_traces(paths: list[str | Path]) -> list[Trace]:
-    """Load traces from JSONL files, auto-detecting v1 or v2 format."""
+    """Load traces from JSONL files (v2 format)."""
     traces = []
     for p in paths:
         path = Path(p)
@@ -29,10 +27,7 @@ def load_traces(paths: list[str | Path]) -> list[Trace]:
                     continue
                 try:
                     raw = json.loads(line)
-                    if raw.get("version") == "2.0" and "steps" in raw:
-                        traces.append(Trace.model_validate(raw))
-                    else:
-                        traces.append(Trace.from_v1_dict(raw))
+                    traces.append(Trace.model_validate(raw))
                     count += 1
                 except Exception as e:
                     logger.debug(f"Skipping malformed trace in {path.name}: {e}")
