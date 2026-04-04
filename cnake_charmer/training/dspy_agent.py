@@ -14,7 +14,7 @@ import re
 import dspy
 from dspy.teleprompt.gepa.gepa import ScoreWithFeedback
 
-from cnake_charmer.rewards.composite import composite_reward
+from cnake_charmer.eval.pipeline import composite_reward
 from cnake_charmer.training.environment import CythonToolEnvironment, _exec_func
 from cnake_charmer.training.rollout import extract_code_from_content
 

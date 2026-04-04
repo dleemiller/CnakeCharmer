@@ -503,7 +503,7 @@ check_memory("cnake_charmer/cy/algorithms/max_flow.pyx", "max_flow", "(100,)")
 
 Via Python:
 ```python
-from cnake_charmer.validate.memory_safety import check_memory_safety
+from cnake_charmer.eval.memory_safety import check_memory_safety
 code = open("cnake_charmer/cy/algorithms/max_flow.pyx").read()
 result = check_memory_safety(code, "max_flow", test_args=(100,))
 print(result.score, result.errors)

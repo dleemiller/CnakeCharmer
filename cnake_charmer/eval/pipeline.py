@@ -4,19 +4,20 @@ benchmarking, and annotation analysis.
 """
 
 import logging
+import math
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from cnake_charmer.rewards.lint import LintResult, run_cython_lint
-from cnake_charmer.validate.annotations import AnnotationResult, parse_annotations
-from cnake_charmer.validate.benchmark import BenchmarkResult, run_benchmark
-from cnake_charmer.validate.compiler import CompilationResult, cleanup_build, compile_cython
-from cnake_charmer.validate.correctness import (
+from cnake_charmer.eval.annotations import AnnotationResult, parse_annotations
+from cnake_charmer.eval.benchmark import BenchmarkResult, run_benchmark
+from cnake_charmer.eval.compiler import CompilationResult, cleanup_build, compile_cython
+from cnake_charmer.eval.correctness import (
     CorrectnessResult,
     _load_module_from_path,
     check_correctness,
 )
-from cnake_charmer.validate.memory_safety import MemorySafetyResult, check_memory_safety
+from cnake_charmer.eval.lint import LintResult, run_cython_lint
+from cnake_charmer.eval.memory_safety import MemorySafetyResult, check_memory_safety
 
 logger = logging.getLogger(__name__)
 
@@ -208,3 +209,97 @@ def _shrink_args(args: tuple) -> tuple:
         else:
             shrunk.append(a)
     return tuple(shrunk)
+
+
+# ---------------------------------------------------------------------------
+# Composite scoring (absorbed from rewards/composite.py)
+# ---------------------------------------------------------------------------
+
+DEFAULT_WEIGHTS = {
+    "correctness": 0.30,
+    "performance": 0.25,
+    "annotations": 0.20,
+    "lint": 0.10,
+    "memory_safety": 0.15,
+}
+
+
+def composite_reward(
+    cython_code: str,
+    python_func: Callable,
+    func_name: str,
+    test_cases: list,
+    benchmark_args: tuple | None = None,
+    benchmark_runs: int = 5,
+    weights: dict | None = None,
+    **kwargs,
+) -> dict:
+    """
+    Compute the full composite reward.
+
+    Returns a dict with individual scores and the weighted total.
+    Compilation is a gate — 0 total if it fails.
+    """
+    w = weights or DEFAULT_WEIGHTS
+
+    result = validate(
+        cython_code=cython_code,
+        python_func=python_func,
+        func_name=func_name,
+        test_cases=test_cases,
+        benchmark_args=benchmark_args,
+        benchmark_runs=benchmark_runs,
+    )
+
+    scores = {
+        "compiled": result.compiled,
+        "compilation_errors": result.compilation.errors if result.compilation else "",
+        "correctness": 0.0,
+        "performance": 0.0,
+        "annotations": 0.0,
+        "lint": 0.0,
+        "memory_safety": 0.0,
+        "speedup": 0.0,
+        "correctness_failures": [],
+        "annotation_hints": [],
+        "lint_violations": [],
+        "memory_safety_errors": [],
+        "total": 0.0,
+    }
+
+    if not result.compiled:
+        return scores
+
+    if result.correctness is not None:
+        scores["correctness"] = result.correctness.score
+        scores["correctness_failures"] = result.correctness.failures
+
+    if result.benchmark is not None and result.benchmark.success:
+        speedup = result.benchmark.speedup
+        scores["speedup"] = speedup
+        if speedup > 1.0:
+            scores["performance"] = min(math.log2(speedup) / math.log2(10), 1.0)
+
+    if result.annotations is not None and result.annotations.success:
+        scores["annotations"] = result.annotations.score
+        scores["annotation_hints"] = result.annotations.hints
+
+    if result.lint is not None and result.lint.success:
+        scores["lint"] = result.lint.score
+        scores["lint_violations"] = result.lint.violations
+
+    if result.memory_safety is not None and result.memory_safety.success:
+        scores["memory_safety"] = result.memory_safety.score
+        scores["memory_safety_errors"] = result.memory_safety.errors
+    else:
+        scores["memory_safety"] = 1.0
+
+    scores["total"] = (
+        w.get("correctness", 0.30) * scores["correctness"]
+        + w.get("performance", 0.25) * scores["performance"]
+        + w.get("annotations", 0.20) * scores["annotations"]
+        + w.get("lint", 0.10) * scores["lint"]
+        + w.get("memory_safety", 0.15) * scores["memory_safety"]
+    )
+
+    return scores

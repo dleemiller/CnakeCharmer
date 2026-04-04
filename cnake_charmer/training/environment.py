@@ -15,12 +15,12 @@ import math
 import signal
 import types
 
-from cnake_charmer.rewards.composite import DEFAULT_WEIGHTS
+from cnake_charmer.eval.annotations import parse_annotations
+from cnake_charmer.eval.benchmark import run_benchmark as _run_benchmark
+from cnake_charmer.eval.compiler import cleanup_build, compile_cython
+from cnake_charmer.eval.correctness import _load_module_from_path
+from cnake_charmer.eval.pipeline import DEFAULT_WEIGHTS
 from cnake_charmer.training.prompts import format_feedback
-from cnake_charmer.validate.annotations import parse_annotations
-from cnake_charmer.validate.benchmark import run_benchmark as _run_benchmark
-from cnake_charmer.validate.compiler import cleanup_build, compile_cython
-from cnake_charmer.validate.correctness import _load_module_from_path
 
 logger = logging.getLogger(__name__)
 
@@ -303,7 +303,7 @@ class CythonToolEnvironment:
         The DSPy agent calls this with just the Cython code; the Python
         reference and test cases come from the dataset via reset().
         """
-        from cnake_charmer.validate.correctness import check_correctness
+        from cnake_charmer.eval.correctness import check_correctness
 
         self.last_code = code
         sections = []

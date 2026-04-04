@@ -16,10 +16,10 @@ from pathlib import Path
 from mcp.server.fastmcp import FastMCP
 
 from cnake_charmer.dataset.loader import discover_pairs
-from cnake_charmer.rewards.composite import composite_reward as _composite_reward
-from cnake_charmer.validate.annotations import parse_annotations
-from cnake_charmer.validate.compiler import cleanup_build, compile_cython
-from cnake_charmer.validate.memory_safety import check_memory_safety
+from cnake_charmer.eval.annotations import parse_annotations
+from cnake_charmer.eval.compiler import cleanup_build, compile_cython
+from cnake_charmer.eval.memory_safety import check_memory_safety
+from cnake_charmer.eval.pipeline import composite_reward as _composite_reward
 
 logger = logging.getLogger(__name__)
 

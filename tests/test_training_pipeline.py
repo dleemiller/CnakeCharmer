@@ -11,7 +11,7 @@ These tests verify the non-inference parts of the pipeline:
 
 import pytest
 
-from cnake_charmer.rewards.composite import composite_reward
+from cnake_charmer.eval.pipeline import composite_reward
 from cnake_charmer.training.environment import CythonToolEnvironment
 from cnake_charmer.training.prompts import format_feedback, format_user_prompt
 from cnake_charmer.training.rollout import extract_code_from_content as _extract_code_from_content
