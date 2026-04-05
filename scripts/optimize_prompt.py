@@ -122,8 +122,13 @@ def run_optimization(
     valset = examples[:actual_val]
     logger.info(f"Train: {len(trainset)}, Val: {len(valset)}")
 
-    # Create agent
-    agent = CythonReActAgent(max_iters=max_iters)
+    # Create agent — use ThinkingReAct when thinking mode is enabled
+    use_thinking = bool(
+        extra_body and extra_body.get("chat_template_kwargs", {}).get("enable_thinking")
+    )
+    if use_thinking:
+        logger.info("Using ThinkingReAct (native LM thinking mode)")
+    agent = CythonReActAgent(max_iters=max_iters, use_thinking=use_thinking)
 
     # Output dir for this model
     slug = model_slug(model_id)
