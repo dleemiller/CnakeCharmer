@@ -14,17 +14,25 @@ PROFILE_GET = $(UV_RUN) python -c "from cnake_charmer.config import load_model_p
 
 traces:  ## Collect traces using a model profile
 	$(eval _TR := $(shell $(call PROFILE_GET,model.thinking_react)))
+	$(eval _URL := $(shell $(call PROFILE_GET,model.base_url)))
+	$(eval _EB := $(shell $(UV_RUN) python -c "from cnake_charmer.config import load_model_profile; import json; from omegaconf import OmegaConf; c=load_model_profile('$(PROFILE)'); eb=c.get('model',{}).get('extra_body'); print(json.dumps(OmegaConf.to_container(eb)) if eb else 'None')"))
 	$(UV_RUN) python scripts/collect_traces.py \
 		--model $$($(call PROFILE_GET,model.id)) \
 		-o $$($(call PROFILE_GET,collection.output)) \
+		$(if $(filter-out None,$(_URL)),--base-url $(_URL)) \
+		$(if $(filter-out None,$(_EB)),--extra-body '$(_EB)') \
 		$(if $(filter True,$(_TR)),--thinking-react) \
 		--all --shuffle
 
 traces-best:  ## Collect best-of-N traces (5 attempts, keep best)
 	$(eval _TR := $(shell $(call PROFILE_GET,model.thinking_react)))
+	$(eval _URL := $(shell $(call PROFILE_GET,model.base_url)))
+	$(eval _EB := $(shell $(UV_RUN) python -c "from cnake_charmer.config import load_model_profile; import json; from omegaconf import OmegaConf; c=load_model_profile('$(PROFILE)'); eb=c.get('model',{}).get('extra_body'); print(json.dumps(OmegaConf.to_container(eb)) if eb else 'None')"))
 	$(UV_RUN) python scripts/collect_traces.py \
 		--model $$($(call PROFILE_GET,model.id)) \
 		-o $$($(call PROFILE_GET,collection.output)) \
+		$(if $(filter-out None,$(_URL)),--base-url $(_URL)) \
+		$(if $(filter-out None,$(_EB)),--extra-body '$(_EB)') \
 		$(if $(filter True,$(_TR)),--thinking-react) \
 		--all --shuffle --attempts 5
 

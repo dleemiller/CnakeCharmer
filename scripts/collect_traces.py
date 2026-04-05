@@ -271,6 +271,12 @@ def main():
         default=False,
         help="Use ThinkingReAct (native LM thinking) instead of standard ReAct",
     )
+    parser.add_argument(
+        "--extra-body",
+        type=json.loads,
+        default=None,
+        help='JSON extra_body for LM (e.g. \'{"chat_template_kwargs": {"enable_thinking": true}}\')',
+    )
 
     # Output
     parser.add_argument(
@@ -283,12 +289,16 @@ def main():
     args = parser.parse_args()
 
     # Configure LM (shared utility handles remote vs local detection)
+    lm_extra = {}
+    if args.extra_body:
+        lm_extra["extra_body"] = args.extra_body
     configure_dspy_lm(
         args.model,
         base_url=args.base_url,
         api_key=args.api_key,
         temperature=args.temperature,
         reasoning_effort=args.reasoning_effort,
+        **lm_extra,
     )
     logger.info(f"Model: {args.model}")
 
