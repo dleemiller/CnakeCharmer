@@ -3,9 +3,16 @@ model:
   temperature: 1.0
   max_tokens: 8192
   cache: false
+  base_url: null
 
 collection:
   attempts: 2
   max_iters: 5
   shuffle: true
   output: data/traces/master_traces.jsonl
+
+optimization:
+  reflection_model: null
+  val_size: 50
+  subset: 150
+  threads: 2

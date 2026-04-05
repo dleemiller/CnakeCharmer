@@ -76,8 +76,20 @@ lint:  ## Lint Python and Cython code
 .PHONY: optimize-prompt
 
 optimize-prompt:  ## Optimize prompt for a model profile
+	$(eval _REF := $(shell $(call PROFILE_GET,optimization.reflection_model)))
+	$(eval _URL := $(shell $(call PROFILE_GET,model.base_url)))
+	$(eval _VAL := $(shell $(call PROFILE_GET,optimization.val_size)))
+	$(eval _SUB := $(shell $(call PROFILE_GET,optimization.subset)))
+	$(eval _THR := $(shell $(call PROFILE_GET,optimization.threads)))
+	$(eval _EB := $(shell $(UV_RUN) python -c "from cnake_charmer.config import load_model_profile; import json; from omegaconf import OmegaConf; c=load_model_profile('$(PROFILE)'); eb=c.get('model',{}).get('extra_body'); print(json.dumps(OmegaConf.to_container(eb)) if eb else 'None')"))
 	$(UV_RUN) python scripts/optimize_prompt.py \
-		--model $$($(call PROFILE_GET,model.id))
+		--model $$($(call PROFILE_GET,model.id)) \
+		$(if $(filter-out None,$(_URL)),--base-url $(_URL)) \
+		$(if $(filter-out None,$(_REF)),--reflection-model $(_REF)) \
+		$(if $(filter-out None,$(_VAL)),--val-size $(_VAL)) \
+		$(if $(filter-out None,$(_SUB)),--subset $(_SUB)) \
+		$(if $(filter-out None,$(_THR)),--threads $(_THR)) \
+		$(if $(filter-out None,$(_EB)),--extra-body '$(_EB)')
 
 # --- Utilities ---
 .PHONY: list-problems

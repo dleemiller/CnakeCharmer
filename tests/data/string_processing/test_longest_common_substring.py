@@ -2,11 +2,11 @@
 
 import pytest
 
-from cnake_data.cy.string_processing.longest_common_substring import (
-    longest_common_substring as cy_func,
+from cnake_data.cy.string_processing.longest_common_substring_rolling import (
+    longest_common_substring_rolling as cy_func,
 )
-from cnake_data.py.string_processing.longest_common_substring import (
-    longest_common_substring as py_func,
+from cnake_data.py.string_processing.longest_common_substring_rolling import (
+    longest_common_substring_rolling as py_func,
 )
 
 

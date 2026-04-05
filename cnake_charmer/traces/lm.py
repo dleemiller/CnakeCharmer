@@ -10,6 +10,8 @@ import logging
 import os
 from pathlib import Path
 
+import dspy
+
 logger = logging.getLogger(__name__)
 
 PROMPTS_DIR = Path(__file__).parent.parent.parent / "data" / "optimized_prompts"
@@ -31,8 +33,6 @@ def configure_dspy_lm(
 
     Returns the configured dspy.LM instance.
     """
-    import dspy
-
     is_remote = model_id.startswith("openrouter/")
 
     # Resolve API key
@@ -111,7 +111,7 @@ def _load_program(path: Path, max_iters: int):
     return agent
 
 
-class CythonReActAgent:
+class CythonReActAgent(dspy.Module):
     """ReAct agent that creates fresh tools per problem.
 
     GEPA optimizes the instructions in this module's internal
@@ -120,14 +120,11 @@ class CythonReActAgent:
     """
 
     def __init__(self, max_iters: int = 5):
-        import dspy
-
+        super().__init__()
         self.max_iters = max_iters
-        self._dspy = dspy
         self._init_react()
 
     def _init_react(self):
-        dspy = self._dspy
         from cnake_charmer.training.dspy_agent import CythonOptimization
 
         def evaluate_cython(code: str) -> str:
@@ -154,7 +151,6 @@ class CythonReActAgent:
         test_cases: str = "[]",
         benchmark_args: str = "null",
     ):
-        dspy = self._dspy
         from cnake_charmer.training.dspy_agent import CythonOptimization, make_tools
 
         tc = json.loads(test_cases) if isinstance(test_cases, str) else test_cases
@@ -173,16 +169,6 @@ class CythonReActAgent:
                     real_param.signature = param.signature
 
         return real_react(python_code=python_code, func_name=func_name, description=description)
-
-    # Delegate dspy.Module methods for save/load compatibility
-    def save(self, path):
-        self.react.save(path)
-
-    def load(self, path):
-        self.react.load(path)
-
-    def named_parameters(self):
-        return self.react.named_parameters()
 
 
 def apply_optimized_signatures(react_module, optimized_program, seed_text=None):
