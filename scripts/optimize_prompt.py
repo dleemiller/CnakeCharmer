@@ -139,6 +139,13 @@ def run_optimization(
     log_dir = save_dir / "gepa_logs"
     log_dir.mkdir(parents=True, exist_ok=True)
 
+    # File-based graceful stop: `touch <save_dir>/gepa.stop` to end early
+    stop_file = save_dir / "gepa.stop"
+    if stop_file.exists():
+        stop_file.unlink()  # clear stale stop file from previous run
+
+    from gepa.utils.stop_condition import FileStopper
+
     gepa_kwargs = {
         "metric": cython_metric,
         "auto": budget,
@@ -148,7 +155,9 @@ def run_optimization(
         "add_format_failure_as_feedback": True,
         "warn_on_score_mismatch": False,
         "log_dir": str(log_dir),
+        "stop_callbacks": FileStopper(str(stop_file)),
     }
+    logger.info(f"To stop gracefully: touch {stop_file}")
     if reflection_lm:
         gepa_kwargs["reflection_lm"] = reflection_lm
 
