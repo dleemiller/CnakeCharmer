@@ -13,15 +13,19 @@ PROFILE_GET = $(UV_RUN) python -c "from cnake_charmer.config import load_model_p
 .PHONY: traces traces-best consolidate build-sft
 
 traces:  ## Collect traces using a model profile
+	$(eval _TR := $(shell $(call PROFILE_GET,model.thinking_react)))
 	$(UV_RUN) python scripts/collect_traces.py \
 		--model $$($(call PROFILE_GET,model.id)) \
 		-o $$($(call PROFILE_GET,collection.output)) \
+		$(if $(filter True,$(_TR)),--thinking-react) \
 		--all --shuffle
 
 traces-best:  ## Collect best-of-N traces (5 attempts, keep best)
+	$(eval _TR := $(shell $(call PROFILE_GET,model.thinking_react)))
 	$(UV_RUN) python scripts/collect_traces.py \
 		--model $$($(call PROFILE_GET,model.id)) \
 		-o $$($(call PROFILE_GET,collection.output)) \
+		$(if $(filter True,$(_TR)),--thinking-react) \
 		--all --shuffle --attempts 5
 
 consolidate:  ## Consolidate trace files into master JSONL
@@ -82,6 +86,7 @@ optimize-prompt:  ## Optimize prompt for a model profile
 	$(eval _SUB := $(shell $(call PROFILE_GET,optimization.subset)))
 	$(eval _THR := $(shell $(call PROFILE_GET,optimization.threads)))
 	$(eval _EB := $(shell $(UV_RUN) python -c "from cnake_charmer.config import load_model_profile; import json; from omegaconf import OmegaConf; c=load_model_profile('$(PROFILE)'); eb=c.get('model',{}).get('extra_body'); print(json.dumps(OmegaConf.to_container(eb)) if eb else 'None')"))
+	$(eval _TR := $(shell $(call PROFILE_GET,model.thinking_react)))
 	$(UV_RUN) python scripts/optimize_prompt.py \
 		--model $$($(call PROFILE_GET,model.id)) \
 		$(if $(filter-out None,$(_URL)),--base-url $(_URL)) \
@@ -89,7 +94,8 @@ optimize-prompt:  ## Optimize prompt for a model profile
 		$(if $(filter-out None,$(_VAL)),--val-size $(_VAL)) \
 		$(if $(filter-out None,$(_SUB)),--subset $(_SUB)) \
 		$(if $(filter-out None,$(_THR)),--threads $(_THR)) \
-		$(if $(filter-out None,$(_EB)),--extra-body '$(_EB)')
+		$(if $(filter-out None,$(_EB)),--extra-body '$(_EB)') \
+		$(if $(filter True,$(_TR)),--thinking-react)
 
 # --- Utilities ---
 .PHONY: list-problems

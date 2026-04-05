@@ -59,6 +59,7 @@ def run_optimization(
     reflection_minibatch_size: int = 3,
     temperature: float = 0.7,
     extra_body: dict | None = None,
+    use_thinking: bool = False,
 ):
     """Run GEPA optimization for a specific model.
 
@@ -122,10 +123,7 @@ def run_optimization(
     valset = examples[:actual_val]
     logger.info(f"Train: {len(trainset)}, Val: {len(valset)}")
 
-    # Create agent — use ThinkingReAct when thinking mode is enabled
-    use_thinking = bool(
-        extra_body and extra_body.get("chat_template_kwargs", {}).get("enable_thinking")
-    )
+    # Create agent
     if use_thinking:
         logger.info("Using ThinkingReAct (native LM thinking mode)")
     agent = CythonReActAgent(max_iters=max_iters, use_thinking=use_thinking)
@@ -252,6 +250,12 @@ def main():
         default=None,
         help='JSON extra_body for student LM (e.g. \'{"chat_template_kwargs": {"enable_thinking": true}}\')',
     )
+    parser.add_argument(
+        "--thinking-react",
+        action="store_true",
+        default=False,
+        help="Use ThinkingReAct (native LM thinking) instead of standard ReAct",
+    )
     parser.add_argument("--list", action="store_true", help="List saved optimized prompts")
     args = parser.parse_args()
 
@@ -284,6 +288,7 @@ def main():
         reflection_minibatch_size=args.reflection_minibatch_size,
         temperature=args.temperature,
         extra_body=args.extra_body,
+        use_thinking=args.thinking_react,
     )
 
 

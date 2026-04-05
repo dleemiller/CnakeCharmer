@@ -4,6 +4,7 @@ model:
   max_tokens: 8192
   cache: false
   base_url: null
+  thinking_react: false
 
 collection:
   attempts: 2
