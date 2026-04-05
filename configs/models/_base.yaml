@@ -10,6 +10,7 @@ collection:
   attempts: 2
   max_iters: 5
   shuffle: true
+  parallel: null
   output: data/traces/master_traces.jsonl
 
 optimization:

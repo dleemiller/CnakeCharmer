@@ -8,6 +8,10 @@ model:
     chat_template_kwargs:
       enable_thinking: true
 
+collection:
+  attempts: 4
+  parallel: 4
+
 prompt:
   program: data/optimized_prompts/openai_gemma-4-31b/program.json
   id: gepa_gemma4
