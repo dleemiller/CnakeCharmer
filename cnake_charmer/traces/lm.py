@@ -24,6 +24,7 @@ def configure_dspy_lm(
     base_url: str | None = None,
     api_key: str | None = None,
     temperature: float = 1.0,
+    top_p: float | None = None,
     max_tokens: int = 8192,
     cache: bool = False,
     reasoning_effort: str | None = None,
@@ -51,6 +52,9 @@ def configure_dspy_lm(
         "max_tokens": max_tokens,
         **extra_kwargs,
     }
+
+    if top_p is not None:
+        lm_kwargs["top_p"] = top_p
 
     if reasoning_effort:
         if is_remote:

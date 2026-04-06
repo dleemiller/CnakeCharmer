@@ -58,6 +58,7 @@ def run_optimization(
     num_threads: int = 2,
     reflection_minibatch_size: int = 3,
     temperature: float = 0.7,
+    top_p: float | None = None,
     extra_body: dict | None = None,
     use_thinking: bool = False,
 ):
@@ -70,6 +71,8 @@ def run_optimization(
 
     # Configure student LM
     lm_kwargs = {"api_key": api_key, "temperature": temperature}
+    if top_p is not None:
+        lm_kwargs["top_p"] = top_p
     # Only set api_base for local models — OpenRouter models route via litellm
     if base_url and not model_id.startswith("openrouter/"):
         lm_kwargs["api_base"] = base_url
@@ -255,6 +258,7 @@ def main():
         default=1.0,
         help="Sampling temperature (default: 1.0, recommended for gpt-oss)",
     )
+    parser.add_argument("--top-p", type=float, default=None, help="Top-p sampling (optional)")
     parser.add_argument(
         "--extra-body",
         type=json.loads,
@@ -298,6 +302,7 @@ def main():
         num_threads=args.threads,
         reflection_minibatch_size=args.reflection_minibatch_size,
         temperature=args.temperature,
+        top_p=args.top_p,
         extra_body=args.extra_body,
         use_thinking=args.thinking_react,
     )

@@ -1,6 +1,7 @@
 # Base model profile — all profiles inherit from this.
 model:
   temperature: 1.0
+  top_p: null
   max_tokens: 8192
   cache: false
   base_url: null

@@ -221,6 +221,7 @@ def main():
     )
     parser.add_argument("--api-key", default=None)
     parser.add_argument("--temperature", type=float, default=1.0)
+    parser.add_argument("--top-p", type=float, default=None)
 
     # Prompt
     parser.add_argument(
@@ -297,6 +298,7 @@ def main():
         base_url=args.base_url,
         api_key=args.api_key,
         temperature=args.temperature,
+        top_p=args.top_p,
         reasoning_effort=args.reasoning_effort,
         **lm_extra,
     )
@@ -386,15 +388,20 @@ def main():
     if args.parallel:
         # Parallel execution using dspy.Parallel — ideal for vLLM prefix caching.
         # Groups attempts by problem so same-prefix requests hit the KV cache.
-        from itertools import groupby
-
         logger.info(f"Running {total} traces with {args.parallel} parallel threads")
 
-        # Group work by problem for prefix cache locality
-        work_sorted = sorted(work, key=lambda x: x[0].problem_id)
+        # Group work by problem — shuffle already controls problem order
+        work_by_pid = {}
+        pid_order = []
+        for problem, attempt in work:
+            pid = problem.problem_id
+            if pid not in work_by_pid:
+                work_by_pid[pid] = []
+                pid_order.append(pid)
+            work_by_pid[pid].append((problem, attempt))
 
-        for pid, group in groupby(work_sorted, key=lambda x: x[0].problem_id):
-            group_items = list(group)
+        for pid in pid_order:
+            group_items = work_by_pid[pid]
             problem = group_items[0][0]
 
             # Build exec pairs: each attempt gets its own module + example
