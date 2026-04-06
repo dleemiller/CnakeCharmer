@@ -10,6 +10,8 @@ import logging
 import os
 from pathlib import Path
 
+import dspy
+
 logger = logging.getLogger(__name__)
 
 PROMPTS_DIR = Path(__file__).parent.parent.parent / "data" / "optimized_prompts"
@@ -22,6 +24,7 @@ def configure_dspy_lm(
     base_url: str | None = None,
     api_key: str | None = None,
     temperature: float = 1.0,
+    top_p: float | None = None,
     max_tokens: int = 8192,
     cache: bool = False,
     reasoning_effort: str | None = None,
@@ -31,8 +34,6 @@ def configure_dspy_lm(
 
     Returns the configured dspy.LM instance.
     """
-    import dspy
-
     is_remote = model_id.startswith("openrouter/")
 
     # Resolve API key
@@ -51,6 +52,9 @@ def configure_dspy_lm(
         "max_tokens": max_tokens,
         **extra_kwargs,
     }
+
+    if top_p is not None:
+        lm_kwargs["top_p"] = top_p
 
     if reasoning_effort:
         if is_remote:
@@ -71,6 +75,7 @@ def load_optimized_prompt(
     model_id: str | None = None,
     program_path: str | None = None,
     max_iters: int = 5,
+    use_thinking: bool = False,
 ) -> tuple[object | None, str]:
     """Load a GEPA-optimized program or seed prompt.
 
@@ -78,6 +83,7 @@ def load_optimized_prompt(
         model_id: Model ID to look up optimized prompt by slug.
         program_path: Explicit path to program.json (overrides model_id lookup).
         max_iters: Max iterations for the loaded agent.
+        use_thinking: If True, load as ThinkingReAct agent.
 
     Returns:
         (program, prompt_id) tuple. program is None if using seed/base prompt.
@@ -87,13 +93,13 @@ def load_optimized_prompt(
         if not path.exists():
             logger.warning(f"Program not found: {path}")
             return None, "base"
-        return _load_program(path, max_iters), path.stem
+        return _load_program(path, max_iters, use_thinking), path.stem
 
     if model_id:
         slug = model_slug(model_id)
         path = PROMPTS_DIR / slug / "program.json"
         if path.exists():
-            return _load_program(path, max_iters), f"gepa_{slug}"
+            return _load_program(path, max_iters, use_thinking), f"gepa_{slug}"
 
     if SEED_PROMPT.exists():
         logger.info("Using seed prompt")
@@ -103,38 +109,49 @@ def load_optimized_prompt(
     return None, "base"
 
 
-def _load_program(path: Path, max_iters: int):
+def _load_program(path: Path, max_iters: int, use_thinking: bool = False):
     """Load a GEPA program from path."""
-    agent = CythonReActAgent(max_iters=max_iters)
+    agent = CythonReActAgent(max_iters=max_iters, use_thinking=use_thinking)
     agent.load(path)
     logger.info(f"Loaded optimized program: {path}")
     return agent
 
 
-class CythonReActAgent:
+class CythonReActAgent(dspy.Module):
     """ReAct agent that creates fresh tools per problem.
 
     GEPA optimizes the instructions in this module's internal
     ReAct predictor across multiple problems. Also used by
     _load_program() to deserialize saved GEPA programs.
+
+    Args:
+        max_iters: Maximum tool-call iterations per problem.
+        use_thinking: If True, use ThinkingReAct (native LM thinking mode)
+            instead of dspy.ReAct (explicit next_thought field).
     """
 
-    def __init__(self, max_iters: int = 5):
-        import dspy
-
+    def __init__(self, max_iters: int = 5, use_thinking: bool = False):
+        super().__init__()
         self.max_iters = max_iters
-        self._dspy = dspy
+        self.use_thinking = use_thinking
         self._init_react()
 
+    @property
+    def _react_cls(self):
+        if self.use_thinking:
+            from cnake_charmer.traces.thinking_react import ThinkingReAct
+
+            return ThinkingReAct
+        return dspy.ReAct
+
     def _init_react(self):
-        dspy = self._dspy
         from cnake_charmer.training.dspy_agent import CythonOptimization
 
         def evaluate_cython(code: str) -> str:
             """Compile, analyze, test, and benchmark Cython code in one step."""
             return "placeholder"
 
-        self.react = dspy.ReAct(
+        self.react = self._react_cls(
             CythonOptimization,
             tools=[evaluate_cython],
             max_iters=self.max_iters,
@@ -154,14 +171,13 @@ class CythonReActAgent:
         test_cases: str = "[]",
         benchmark_args: str = "null",
     ):
-        dspy = self._dspy
         from cnake_charmer.training.dspy_agent import CythonOptimization, make_tools
 
         tc = json.loads(test_cases) if isinstance(test_cases, str) else test_cases
         ba = json.loads(benchmark_args) if isinstance(benchmark_args, str) else benchmark_args
 
         tools, _env = make_tools(python_code, func_name, tc, ba)
-        real_react = dspy.ReAct(CythonOptimization, tools=tools, max_iters=self.max_iters)
+        real_react = self._react_cls(CythonOptimization, tools=tools, max_iters=self.max_iters)
 
         for name, param in self.react.named_parameters():
             for real_name, real_param in real_react.named_parameters():
@@ -173,16 +189,6 @@ class CythonReActAgent:
                     real_param.signature = param.signature
 
         return real_react(python_code=python_code, func_name=func_name, description=description)
-
-    # Delegate dspy.Module methods for save/load compatibility
-    def save(self, path):
-        self.react.save(path)
-
-    def load(self, path):
-        self.react.load(path)
-
-    def named_parameters(self):
-        return self.react.named_parameters()
 
 
 def apply_optimized_signatures(react_module, optimized_program, seed_text=None):

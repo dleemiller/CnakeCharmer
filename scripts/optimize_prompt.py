@@ -58,7 +58,9 @@ def run_optimization(
     num_threads: int = 2,
     reflection_minibatch_size: int = 3,
     temperature: float = 0.7,
+    top_p: float | None = None,
     extra_body: dict | None = None,
+    use_thinking: bool = False,
 ):
     """Run GEPA optimization for a specific model.
 
@@ -69,6 +71,8 @@ def run_optimization(
 
     # Configure student LM
     lm_kwargs = {"api_key": api_key, "temperature": temperature}
+    if top_p is not None:
+        lm_kwargs["top_p"] = top_p
     # Only set api_base for local models — OpenRouter models route via litellm
     if base_url and not model_id.startswith("openrouter/"):
         lm_kwargs["api_base"] = base_url
@@ -123,7 +127,9 @@ def run_optimization(
     logger.info(f"Train: {len(trainset)}, Val: {len(valset)}")
 
     # Create agent
-    agent = CythonReActAgent(max_iters=max_iters)
+    if use_thinking:
+        logger.info("Using ThinkingReAct (native LM thinking mode)")
+    agent = CythonReActAgent(max_iters=max_iters, use_thinking=use_thinking)
 
     # Output dir for this model
     slug = model_slug(model_id)
@@ -136,6 +142,13 @@ def run_optimization(
     log_dir = save_dir / "gepa_logs"
     log_dir.mkdir(parents=True, exist_ok=True)
 
+    # File-based graceful stop: `touch <save_dir>/gepa.stop` to end early
+    stop_file = save_dir / "gepa.stop"
+    if stop_file.exists():
+        stop_file.unlink()  # clear stale stop file from previous run
+
+    from gepa.utils.stop_condition import FileStopper
+
     gepa_kwargs = {
         "metric": cython_metric,
         "auto": budget,
@@ -145,7 +158,11 @@ def run_optimization(
         "add_format_failure_as_feedback": True,
         "warn_on_score_mismatch": False,
         "log_dir": str(log_dir),
+        "gepa_kwargs": {
+            "stop_callbacks": FileStopper(str(stop_file)),
+        },
     }
+    logger.info(f"To stop gracefully: touch {stop_file}")
     if reflection_lm:
         gepa_kwargs["reflection_lm"] = reflection_lm
 
@@ -241,11 +258,18 @@ def main():
         default=1.0,
         help="Sampling temperature (default: 1.0, recommended for gpt-oss)",
     )
+    parser.add_argument("--top-p", type=float, default=None, help="Top-p sampling (optional)")
     parser.add_argument(
         "--extra-body",
         type=json.loads,
         default=None,
         help='JSON extra_body for student LM (e.g. \'{"chat_template_kwargs": {"enable_thinking": true}}\')',
+    )
+    parser.add_argument(
+        "--thinking-react",
+        action="store_true",
+        default=False,
+        help="Use ThinkingReAct (native LM thinking) instead of standard ReAct",
     )
     parser.add_argument("--list", action="store_true", help="List saved optimized prompts")
     args = parser.parse_args()
@@ -278,7 +302,9 @@ def main():
         num_threads=args.threads,
         reflection_minibatch_size=args.reflection_minibatch_size,
         temperature=args.temperature,
+        top_p=args.top_p,
         extra_body=args.extra_body,
+        use_thinking=args.thinking_react,
     )
 
 

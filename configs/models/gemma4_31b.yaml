@@ -1,0 +1,25 @@
+# Gemma 4 31B — local vLLM server
+# Sampling: https://huggingface.co/google/gemma-4-31B-it#1-sampling-parameters
+model:
+  id: openai/gemma-4-31b
+  base_url: http://localhost:8004/v1
+  api_key_env: APIKEY
+  thinking_react: true
+  top_p: 0.95
+  extra_body:
+    top_k: 64
+    chat_template_kwargs:
+      enable_thinking: true
+
+collection:
+  attempts: 5
+  parallel: 5
+
+prompt:
+  program: data/optimized_prompts/openai_gemma-4-31b/program.json
+  id: gepa_gemma4
+
+optimization:
+  reflection_model: openrouter/z-ai/glm-5
+  val_size: 10
+  threads: 8

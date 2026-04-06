@@ -1,11 +1,24 @@
 # Base model profile — all profiles inherit from this.
 model:
   temperature: 1.0
+  top_p: null
   max_tokens: 8192
   cache: false
+  base_url: null
+  thinking_react: false
 
 collection:
   attempts: 2
   max_iters: 5
   shuffle: true
+  parallel: null
   output: data/traces/master_traces.jsonl
+
+prompt:
+  program: null
+
+optimization:
+  reflection_model: null
+  val_size: 50
+  subset: 150
+  threads: 2

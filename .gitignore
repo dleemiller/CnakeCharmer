@@ -41,6 +41,7 @@ uv.lock
 
 # Models / checkpoints
 models/
+!configs/models/
 
 # Large data files
 utils/stack_data/*.duckdb

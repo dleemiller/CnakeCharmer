@@ -178,7 +178,7 @@ def score_trace(trace: Trace, problem) -> float:
     return scores["total"]
 
 
-def run_problem(problem, model_id, max_iters, optimized_program, seed_text):
+def run_problem(problem, model_id, max_iters, optimized_program, seed_text, use_thinking=False):
     """Run a single problem and return (result, lm_history)."""
     from copy import deepcopy
 
@@ -188,7 +188,12 @@ def run_problem(problem, model_id, max_iters, optimized_program, seed_text):
         problem.test_cases,
         problem.benchmark_args,
     )
-    react = dspy.ReAct(CythonOptimization, tools=tools, max_iters=max_iters)
+    if use_thinking:
+        from cnake_charmer.traces.thinking_react import ThinkingReAct
+
+        react = ThinkingReAct(CythonOptimization, tools=tools, max_iters=max_iters)
+    else:
+        react = dspy.ReAct(CythonOptimization, tools=tools, max_iters=max_iters)
     apply_optimized_signatures(react, optimized_program, seed_text)
 
     thread_local_lm = deepcopy(dspy.settings.lm)
@@ -216,6 +221,7 @@ def main():
     )
     parser.add_argument("--api-key", default=None)
     parser.add_argument("--temperature", type=float, default=1.0)
+    parser.add_argument("--top-p", type=float, default=None)
 
     # Prompt
     parser.add_argument(
@@ -260,6 +266,19 @@ def main():
         help="Run N attempts concurrently via dspy.Parallel (use with vLLM prefix caching)",
     )
 
+    parser.add_argument(
+        "--thinking-react",
+        action="store_true",
+        default=False,
+        help="Use ThinkingReAct (native LM thinking) instead of standard ReAct",
+    )
+    parser.add_argument(
+        "--extra-body",
+        type=json.loads,
+        default=None,
+        help='JSON extra_body for LM (e.g. \'{"chat_template_kwargs": {"enable_thinking": true}}\')',
+    )
+
     # Output
     parser.add_argument(
         "--output",
@@ -271,12 +290,17 @@ def main():
     args = parser.parse_args()
 
     # Configure LM (shared utility handles remote vs local detection)
+    lm_extra = {}
+    if args.extra_body:
+        lm_extra["extra_body"] = args.extra_body
     configure_dspy_lm(
         args.model,
         base_url=args.base_url,
         api_key=args.api_key,
         temperature=args.temperature,
+        top_p=args.top_p,
         reasoning_effort=args.reasoning_effort,
+        **lm_extra,
     )
     logger.info(f"Model: {args.model}")
 
@@ -364,15 +388,20 @@ def main():
     if args.parallel:
         # Parallel execution using dspy.Parallel — ideal for vLLM prefix caching.
         # Groups attempts by problem so same-prefix requests hit the KV cache.
-        from itertools import groupby
-
         logger.info(f"Running {total} traces with {args.parallel} parallel threads")
 
-        # Group work by problem for prefix cache locality
-        work_sorted = sorted(work, key=lambda x: x[0].problem_id)
+        # Group work by problem — shuffle already controls problem order
+        work_by_pid = {}
+        pid_order = []
+        for problem, attempt in work:
+            pid = problem.problem_id
+            if pid not in work_by_pid:
+                work_by_pid[pid] = []
+                pid_order.append(pid)
+            work_by_pid[pid].append((problem, attempt))
 
-        for pid, group in groupby(work_sorted, key=lambda x: x[0].problem_id):
-            group_items = list(group)
+        for pid in pid_order:
+            group_items = work_by_pid[pid]
             problem = group_items[0][0]
 
             # Build exec pairs: each attempt gets its own module + example
@@ -386,8 +415,15 @@ def main():
                     max_iters=args.max_iters,
                     optimized_program=optimized_program,
                     seed_text=seed_text,
+                    use_thinking=args.thinking_react,
                 ).with_inputs(
-                    "problem", "attempt", "model_id", "max_iters", "optimized_program", "seed_text"
+                    "problem",
+                    "attempt",
+                    "model_id",
+                    "max_iters",
+                    "optimized_program",
+                    "seed_text",
+                    "use_thinking",
                 )
                 exec_pairs.append((module, example))
 
@@ -401,10 +437,16 @@ def main():
                     max_iters,
                     optimized_program,
                     seed_text,
+                    use_thinking=False,
                     **kwargs,
                 ):
                     result, lm_history = run_problem(
-                        problem, model_id, max_iters, optimized_program, seed_text
+                        problem,
+                        model_id,
+                        max_iters,
+                        optimized_program,
+                        seed_text,
+                        use_thinking=use_thinking,
                     )
                     return dspy.Example(
                         result=result, lm_history=lm_history, problem=problem, attempt=attempt
@@ -450,7 +492,12 @@ def main():
             )
             try:
                 result, lm_history = run_problem(
-                    problem, args.model, args.max_iters, optimized_program, seed_text
+                    problem,
+                    args.model,
+                    args.max_iters,
+                    optimized_program,
+                    seed_text,
+                    use_thinking=args.thinking_react,
                 )
                 trace = make_trace(problem, result, args.model, prompt_id, attempt, lm_history)
                 trace.reward = score_trace(trace, problem)
