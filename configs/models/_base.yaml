@@ -13,6 +13,9 @@ collection:
   parallel: null
   output: data/traces/master_traces.jsonl
 
+prompt:
+  program: null
+
 optimization:
   reflection_model: null
   val_size: 50
