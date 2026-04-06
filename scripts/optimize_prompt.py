@@ -155,7 +155,9 @@ def run_optimization(
         "add_format_failure_as_feedback": True,
         "warn_on_score_mismatch": False,
         "log_dir": str(log_dir),
-        "stop_callbacks": FileStopper(str(stop_file)),
+        "gepa_kwargs": {
+            "stop_callbacks": FileStopper(str(stop_file)),
+        },
     }
     logger.info(f"To stop gracefully: touch {stop_file}")
     if reflection_lm:
