@@ -28,110 +28,6 @@ class BenchmarkResult:
     error: str = ""
 
 
-# ---------------------------------------------------------------------------
-# Runner script for sandboxed benchmark
-# ---------------------------------------------------------------------------
-
-_BENCHMARK_RUNNER = """\
-import sys, json, os, importlib, importlib.util, time, statistics, types
-
-def _load_module(path, name):
-    spec = importlib.util.spec_from_file_location(name, path)
-    if spec is None or spec.loader is None:
-        raise ImportError(f"Cannot load module from {path}")
-    mod = importlib.util.module_from_spec(spec)
-    mod_dir = os.path.dirname(os.path.abspath(path))
-    if mod_dir not in sys.path:
-        sys.path.insert(0, mod_dir)
-    spec.loader.exec_module(mod)
-    return mod
-
-def _time_function(func, args, kwargs, num_runs, max_total):
-    times = []
-    cumulative = 0.0
-    for _ in range(num_runs):
-        start = time.perf_counter()
-        func(*args, **kwargs)
-        elapsed = time.perf_counter() - start
-        times.append(elapsed)
-        cumulative += elapsed
-        if cumulative > max_total and len(times) >= 2:
-            break
-    return times
-
-config = json.loads(open(os.path.join(os.path.dirname(__file__), "_bench_config.json")).read())
-python_code = config["python_code"]
-func_name = config["func_name"]
-cython_module_path = config["cython_module_path"]
-args = tuple(config.get("args", ()))
-kwargs = config.get("kwargs", {})
-num_runs = config.get("num_runs", 10)
-warmup_runs = config.get("warmup_runs", 2)
-max_total_seconds = config.get("max_total_seconds", 5.0)
-
-# Load Python function
-py_ns = {}
-exec(python_code, py_ns)
-python_func = py_ns.get(func_name)
-if python_func is None:
-    print(json.dumps({"error": f"Function {func_name!r} not found in Python code"}))
-    sys.exit(0)
-
-# Load Cython module
-so_basename = os.path.basename(cython_module_path)
-module_name = so_basename.split(".")[0]
-try:
-    cy_module = _load_module(cython_module_path, module_name)
-    cython_func = getattr(cy_module, func_name)
-except Exception as e:
-    print(json.dumps({"error": f"Failed to load Cython module: {e}"}))
-    sys.exit(0)
-
-# Warmup
-try:
-    for _ in range(warmup_runs):
-        start = time.perf_counter()
-        python_func(*args, **kwargs)
-        elapsed = time.perf_counter() - start
-        if elapsed > max_total_seconds:
-            num_runs = min(num_runs, 2)
-        cython_func(*args, **kwargs)
-except Exception as e:
-    print(json.dumps({"error": f"Warmup failed: {e}"}))
-    sys.exit(0)
-
-# Time Python
-try:
-    py_times = _time_function(python_func, args, kwargs, num_runs, max_total_seconds)
-except Exception as e:
-    print(json.dumps({"error": f"Python benchmark failed: {e}"}))
-    sys.exit(0)
-
-# Time Cython
-try:
-    cy_times = _time_function(cython_func, args, kwargs, num_runs, max_total_seconds)
-except Exception as e:
-    print(json.dumps({"error": f"Cython benchmark failed: {e}"}))
-    sys.exit(0)
-
-py_mean = statistics.mean(py_times)
-cy_mean = statistics.mean(cy_times)
-py_std = statistics.stdev(py_times) if len(py_times) > 1 else 0.0
-cy_std = statistics.stdev(cy_times) if len(cy_times) > 1 else 0.0
-speedup = py_mean / cy_mean if cy_mean > 0 else float("inf")
-
-print(json.dumps({
-    "success": True,
-    "speedup": speedup,
-    "python_time": py_mean,
-    "cython_time": cy_mean,
-    "python_std": py_std,
-    "cython_std": cy_std,
-    "num_runs": len(py_times),
-}))
-"""
-
-
 def run_benchmark(
     python_func: Callable | None = None,
     cython_func: Callable | None = None,
@@ -272,33 +168,9 @@ def _run_benchmark_sandboxed(
     max_total_seconds: float = 5.0,
 ) -> BenchmarkResult:
     """Run benchmark in a sandboxed subprocess."""
-    from cnake_charmer.eval.sandbox import execute_config, run_python_sandboxed
+    from cnake_charmer.eval.sandbox import execute_config, run_runner_sandboxed
 
     module_dir = os.path.dirname(os.path.abspath(cython_module_path))
-
-    config_data = json.dumps(
-        {
-            "python_code": python_code,
-            "func_name": func_name,
-            "cython_module_path": cython_module_path,
-            "args": list(args),
-            "kwargs": kwargs or {},
-            "num_runs": num_runs,
-            "warmup_runs": warmup_runs,
-            "max_total_seconds": max_total_seconds,
-        }
-    )
-
-    # Build script that writes config then runs the benchmark
-    full_script = (
-        f"""\
-import os
-with open(os.path.join(os.path.dirname(__file__), '_bench_config.json'), 'w') as f:
-    f.write({config_data!r})
-"""
-        + "\n"
-        + _BENCHMARK_RUNNER
-    )
 
     # Wall clock: enough for warmup + timing of both functions
     total_timeout = max(30, int(max_total_seconds * 3) + 15)
@@ -308,7 +180,20 @@ with open(os.path.join(os.path.dirname(__file__), '_bench_config.json'), 'w') as
         extra_ro_binds=(module_dir,),
     )
 
-    result = run_python_sandboxed(full_script, config=sandbox_cfg)
+    result = run_runner_sandboxed(
+        "benchmark_runner",
+        {
+            "python_code": python_code,
+            "func_name": func_name,
+            "cython_module_path": cython_module_path,
+            "args": list(args),
+            "kwargs": kwargs or {},
+            "num_runs": num_runs,
+            "warmup_runs": warmup_runs,
+            "max_total_seconds": max_total_seconds,
+        },
+        config=sandbox_cfg,
+    )
 
     if result.timed_out:
         return BenchmarkResult(

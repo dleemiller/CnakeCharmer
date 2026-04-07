@@ -535,6 +535,80 @@ def run_python_sandboxed(
 
 
 # ---------------------------------------------------------------------------
+# Convenience: run a sandbox_runners/*.py script with JSON config
+# ---------------------------------------------------------------------------
+
+
+def run_runner_sandboxed(
+    runner_name: str,
+    config_data: dict,
+    *,
+    config: SandboxConfig = _DEFAULT_CONFIG,
+    env: dict[str, str] | None = None,
+) -> SandboxResult:
+    """Execute a runner from sandbox_runners/ with a JSON config file.
+
+    Unlike run_python_sandboxed (which writes a script string to disk),
+    this invokes an existing .py file from the sandbox_runners package
+    and ro-binds it into the sandbox.  The runner is a real, lintable
+    Python file — not an embedded string.
+
+    Resource limits are injected into the config dict under ``_rlimits``
+    so the runner can apply them via ``_common.apply_rlimits(config)``.
+
+    Args:
+        runner_name: Basename without extension, e.g. "correctness_runner".
+        config_data: Dict to serialize as the runner's JSON config.
+        config: SandboxConfig controlling resource limits and mounts.
+        env: Extra environment variables for the sandbox.
+    """
+    from cnake_charmer.eval.sandbox_runners import RUNNERS_DIR
+
+    runner_path = RUNNERS_DIR / f"{runner_name}.py"
+    if not runner_path.exists():
+        raise FileNotFoundError(f"Runner not found: {runner_path}")
+
+    paths = _discover_paths()
+    python = paths["python"]
+
+    # Inject rlimits so the runner can apply them inside the sandbox
+    config_data = {
+        **config_data,
+        "_rlimits": {
+            "memory_mb": config.memory_limit_mb,
+            "cpu_time_s": config.cpu_time_limit_s,
+            "max_processes": config.max_processes,
+            "max_file_size_mb": config.max_file_size_mb,
+        },
+    }
+
+    with tempfile.TemporaryDirectory(prefix="cnake_runner_") as tmpdir:
+        config_path = os.path.join(tmpdir, "_config.json")
+        with open(config_path, "w") as f:
+            json.dump(config_data, f)
+
+        augmented = SandboxConfig(
+            memory_limit_mb=config.memory_limit_mb,
+            cpu_time_limit_s=config.cpu_time_limit_s,
+            wall_time_limit_s=config.wall_time_limit_s,
+            max_processes=config.max_processes,
+            max_file_size_mb=config.max_file_size_mb,
+            tmpfs_size_mb=config.tmpfs_size_mb,
+            network=config.network,
+            writable_paths=config.writable_paths + (tmpdir,),
+            extra_ro_binds=config.extra_ro_binds + (str(RUNNERS_DIR),),
+            extra_env=config.extra_env,
+        )
+
+        return run_sandboxed(
+            [python, str(runner_path), config_path],
+            config=augmented,
+            cwd=tmpdir,
+            env=env,
+        )
+
+
+# ---------------------------------------------------------------------------
 # Logging configuration
 # ---------------------------------------------------------------------------
 

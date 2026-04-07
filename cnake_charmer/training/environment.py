@@ -23,7 +23,6 @@ from cnake_charmer.eval.benchmark import run_benchmark as _run_benchmark
 from cnake_charmer.eval.compiler import cleanup_build, compile_cython
 from cnake_charmer.eval.correctness import _load_module_from_path
 from cnake_charmer.eval.pipeline import DEFAULT_WEIGHTS
-from cnake_charmer.eval.runners import COMBINED_RUNNER
 from cnake_charmer.training.prompts import format_feedback
 
 logger = logging.getLogger(__name__)
@@ -133,29 +132,9 @@ def _run_combined_sandboxed(
     Returns dict with: py_loaded, cy_loaded, tests, benchmark, and any errors.
     On timeout, returns partial results with a timeout indicator.
     """
-    from cnake_charmer.eval.sandbox import execute_config, run_python_sandboxed
+    from cnake_charmer.eval.sandbox import execute_config, run_runner_sandboxed
 
     module_dir = os.path.dirname(os.path.abspath(cython_module_path))
-
-    config_data = json.dumps(
-        {
-            "python_code": python_code,
-            "cython_module_path": cython_module_path,
-            "test_code": test_code,
-            "do_benchmark": do_benchmark,
-        }
-    )
-
-    # Script that writes config, then runs the combined runner
-    full_script = (
-        f"""\
-import os
-with open(os.path.join(os.path.dirname(__file__), '_combined_config.json'), 'w') as f:
-    f.write({config_data!r})
-"""
-        + "\n"
-        + COMBINED_RUNNER
-    )
 
     sandbox_cfg = execute_config(
         wall_time_limit_s=45,
@@ -163,7 +142,16 @@ with open(os.path.join(os.path.dirname(__file__), '_combined_config.json'), 'w')
         extra_ro_binds=(module_dir,),
     )
 
-    result = run_python_sandboxed(full_script, config=sandbox_cfg)
+    result = run_runner_sandboxed(
+        "combined_runner",
+        {
+            "python_code": python_code,
+            "cython_module_path": cython_module_path,
+            "test_code": test_code,
+            "do_benchmark": do_benchmark,
+        },
+        config=sandbox_cfg,
+    )
 
     if result.timed_out:
         # Return what we can — stdout may have partial output
