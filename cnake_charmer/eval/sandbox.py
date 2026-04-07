@@ -407,38 +407,3 @@ def _log_event(event: str, profile: str = "", **extra):
     """Emit structured log event."""
     data = {"event": event, "profile": profile, **extra}
     logger.info(json.dumps(data, default=str))
-
-
-def configure_logging():
-    """Configure logging based on CNAKE_LOG_* environment variables.
-
-    CNAKE_LOG_FORMAT: "json" for structured JSON lines, "text" for human-readable (default)
-    CNAKE_LOG_LEVEL: DEBUG, INFO (default), WARNING, ERROR
-    CNAKE_LOG_FILE: Optional file path for log output (with rotation)
-    """
-    log_format = os.environ.get("CNAKE_LOG_FORMAT", "text")
-    log_level = os.environ.get("CNAKE_LOG_LEVEL", "INFO").upper()
-    log_file = os.environ.get("CNAKE_LOG_FILE", "")
-
-    root_logger = logging.getLogger("cnake_charmer")
-    root_logger.setLevel(getattr(logging, log_level, logging.INFO))
-
-    if log_format == "json":
-        formatter = logging.Formatter("%(message)s")
-    else:
-        formatter = logging.Formatter(
-            "%(asctime)s %(levelname)-7s %(name)s: %(message)s",
-            datefmt="%Y-%m-%d %H:%M:%S",
-        )
-
-    if not root_logger.handlers:
-        console = logging.StreamHandler()
-        console.setFormatter(formatter)
-        root_logger.addHandler(console)
-
-    if log_file:
-        from logging.handlers import RotatingFileHandler
-
-        file_handler = RotatingFileHandler(log_file, maxBytes=10 * 1024 * 1024, backupCount=5)
-        file_handler.setFormatter(formatter)
-        root_logger.addHandler(file_handler)
