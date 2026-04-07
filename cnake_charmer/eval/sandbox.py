@@ -27,7 +27,7 @@ import sys
 import tempfile
 import time
 import warnings
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from functools import lru_cache
 
 logger = logging.getLogger(__name__)
@@ -38,10 +38,6 @@ logger = logging.getLogger(__name__)
 
 _BWRAP = shutil.which("bwrap")
 _SANDBOX_ENABLED = os.environ.get("CNAKE_SANDBOX_ENABLED", "1" if _BWRAP else "0") == "1"
-
-# Environment-based overrides for resource limits
-_MEMORY_MB = int(os.environ.get("CNAKE_SANDBOX_MEMORY_MB", "0")) or None
-_WALL_TIMEOUT = int(os.environ.get("CNAKE_SANDBOX_WALL_TIMEOUT_S", "0")) or None
 
 
 @dataclass(frozen=True)
@@ -73,34 +69,42 @@ class SandboxResult:
 
 
 # ---------------------------------------------------------------------------
-# Profile factories
+# Profiles
 # ---------------------------------------------------------------------------
 
-
-def compile_config(**overrides) -> SandboxConfig:
-    """Profile for Cython compilation. Needs gcc, Python headers, Cython."""
-    defaults = dict(
+_PROFILES: dict[str, SandboxConfig] = {
+    "compile": SandboxConfig(
         cpu_time_limit_s=120,
         wall_time_limit_s=150,
         memory_limit_mb=2048,
         max_file_size_mb=256,
         tmpfs_size_mb=512,
-    )
-    defaults.update(overrides)
-    return SandboxConfig(**defaults)
-
-
-def execute_config(**overrides) -> SandboxConfig:
-    """Profile for running compiled code. Read-only — no writable bind mounts."""
-    defaults = dict(
+    ),
+    "execute": SandboxConfig(
         cpu_time_limit_s=30,
         wall_time_limit_s=45,
         memory_limit_mb=2048,
         max_file_size_mb=64,
         tmpfs_size_mb=128,
-    )
-    defaults.update(overrides)
-    return SandboxConfig(**defaults)
+    ),
+    "asan": SandboxConfig(
+        cpu_time_limit_s=60,
+        wall_time_limit_s=90,
+        memory_limit_mb=2048,
+        max_file_size_mb=256,
+        tmpfs_size_mb=512,
+    ),
+}
+
+
+def compile_config(**overrides) -> SandboxConfig:
+    """Profile for Cython compilation. Needs gcc, Python headers, Cython."""
+    return replace(_PROFILES["compile"], **overrides)
+
+
+def execute_config(**overrides) -> SandboxConfig:
+    """Profile for running compiled code. Read-only — no writable bind mounts."""
+    return replace(_PROFILES["execute"], **overrides)
 
 
 def asan_config(**overrides) -> SandboxConfig:
@@ -114,22 +118,19 @@ def asan_config(**overrides) -> SandboxConfig:
 
     extra_env = dict(overrides.pop("extra_env", {}))
     extra_env.setdefault("PYTHONMALLOC", "malloc")
-    asan_opts = "detect_leaks=1:fast_unwind_on_malloc=0:print_legend=0:log_path=stderr"
-    extra_env.setdefault("ASAN_OPTIONS", asan_opts)
+    extra_env.setdefault(
+        "ASAN_OPTIONS",
+        "detect_leaks=1:fast_unwind_on_malloc=0:print_legend=0:log_path=stderr",
+    )
     if asan_lib:
         extra_env.setdefault("LD_PRELOAD", asan_lib)
 
-    defaults = dict(
-        cpu_time_limit_s=60,
-        wall_time_limit_s=90,
-        memory_limit_mb=2048,
-        max_file_size_mb=256,
-        tmpfs_size_mb=512,
+    return replace(
+        _PROFILES["asan"],
         extra_ro_binds=extra_ro,
         extra_env=extra_env,
+        **overrides,
     )
-    defaults.update(overrides)
-    return SandboxConfig(**defaults)
 
 
 # ---------------------------------------------------------------------------
@@ -140,17 +141,74 @@ def asan_config(**overrides) -> SandboxConfig:
 @lru_cache(maxsize=1)
 def _discover_paths() -> dict[str, str]:
     """Discover and cache system paths needed for bwrap mounts."""
-    venv = sys.prefix
-    python = sys.executable
-    return {
-        "venv": venv,
-        "python": python,
-    }
+    return {"venv": sys.prefix, "python": sys.executable}
 
 
 # ---------------------------------------------------------------------------
-# Bwrap command construction
+# Bwrap command construction (decomposed into readable sections)
 # ---------------------------------------------------------------------------
+
+
+def _namespace_flags(config: SandboxConfig) -> list[str]:
+    """Isolation flags: namespaces, capabilities, session."""
+    flags = [
+        "--unshare-user",
+        "--unshare-ipc",
+        "--unshare-pid",
+        "--unshare-uts",
+        "--unshare-cgroup-try",
+        "--disable-userns",
+        "--die-with-parent",
+        "--new-session",
+    ]
+    if not config.network:
+        flags.append("--unshare-net")
+    return flags
+
+
+def _filesystem_mounts(config: SandboxConfig, venv: str) -> list[str]:
+    """Filesystem layout: system libs, tmpfs, venv, caller-specified binds."""
+    mounts = [
+        # Core
+        "--proc", "/proc",
+        "--dev", "/dev",
+        # System libraries (/lib, /lib64 are symlinks to /usr/*)
+        "--ro-bind", "/usr", "/usr",
+        "--symlink", "usr/lib", "/lib",
+        "--symlink", "usr/lib64", "/lib64",
+        # Linker cache
+        "--ro-bind", "/etc/ld.so.cache", "/etc/ld.so.cache",
+        "--ro-bind-try", "/etc/alternatives", "/etc/alternatives",
+        # Writable tmpfs
+        "--size", str(config.tmpfs_size_mb * 1024 * 1024), "--tmpfs", "/tmp",
+        "--size", str(10 * 1024 * 1024), "--tmpfs", "/home",
+        # Venv (read-only)
+        "--ro-bind", venv, venv,
+    ]  # fmt: skip
+    for path in config.extra_ro_binds:
+        if path and os.path.exists(path):
+            mounts += ["--ro-bind", path, path]
+    for path in config.writable_paths:
+        mounts += ["--bind", path, path]
+    return mounts
+
+
+def _environment_vars(config: SandboxConfig, venv: str, env: dict[str, str] | None) -> list[str]:
+    """Environment: clearenv + whitelisted vars."""
+    evars = [
+        "--clearenv",
+        "--setenv", "HOME", "/tmp",
+        "--setenv", "PATH", f"{venv}/bin:/usr/bin:/usr/local/bin",
+        "--setenv", "VIRTUAL_ENV", venv,
+        "--setenv", "PYTHONDONTWRITEBYTECODE", "1",
+        "--setenv", "PYTHONPYCACHEPREFIX", "/tmp/__pycache__",
+    ]  # fmt: skip
+    for key, value in config.extra_env.items():
+        evars += ["--setenv", key, value]
+    if env:
+        for key, value in env.items():
+            evars += ["--setenv", key, value]
+    return evars
 
 
 def _build_bwrap_cmd(
@@ -160,155 +218,20 @@ def _build_bwrap_cmd(
     env: dict[str, str] | None = None,
 ) -> list[str]:
     """Build the full bwrap command line."""
-    paths = _discover_paths()
-    venv = paths["venv"]
-
-    cmd = [
-        _BWRAP,
-        # Namespace isolation
-        "--unshare-user",
-        "--unshare-ipc",
-        "--unshare-pid",
-        "--unshare-uts",
-        "--unshare-cgroup-try",
-        "--disable-userns",  # prevent nested namespace escape
-        "--die-with-parent",  # cleanup if parent dies
-        "--new-session",  # prevent tty injection (CVE-2017-5226)
-    ]
-
-    # Network: unshare by default, share only if explicitly requested
-    if not config.network:
-        cmd.append("--unshare-net")
-
-    # Core filesystem
-    cmd.extend(
-        [
-            "--proc",
-            "/proc",
-            "--dev",
-            "/dev",
-            # System libraries (covers /lib, /lib64 which are symlinks to /usr/*)
-            "--ro-bind",
-            "/usr",
-            "/usr",
-            "--symlink",
-            "usr/lib",
-            "/lib",
-            "--symlink",
-            "usr/lib64",
-            "/lib64",
-            # Linker cache
-            "--ro-bind",
-            "/etc/ld.so.cache",
-            "/etc/ld.so.cache",
-            "--ro-bind-try",
-            "/etc/alternatives",
-            "/etc/alternatives",
-        ]
-    )
-
-    # Writable tmpfs areas
-    cmd.extend(["--size", str(config.tmpfs_size_mb * 1024 * 1024), "--tmpfs", "/tmp"])
-    # Ephemeral tmpfs over /home so parent dirs for venv mount are writable
-    # only in RAM, not on real filesystem
-    cmd.extend(["--size", str(10 * 1024 * 1024), "--tmpfs", "/home"])
-
-    # Venv (read-only)
-    cmd.extend(["--ro-bind", venv, venv])
-
-    # Extra read-only binds
-    for path in config.extra_ro_binds:
-        if path and os.path.exists(path):
-            cmd.extend(["--ro-bind", path, path])
-
-    # Writable bind mounts (e.g., compilation temp dir)
-    for path in config.writable_paths:
-        cmd.extend(["--bind", path, path])
-
-    # Environment: start clean, set only what's needed
-    cmd.append("--clearenv")
-    cmd.extend(["--setenv", "HOME", "/tmp"])
-    cmd.extend(["--setenv", "PATH", f"{venv}/bin:/usr/bin:/usr/local/bin"])
-    cmd.extend(["--setenv", "VIRTUAL_ENV", venv])
-    cmd.extend(["--setenv", "PYTHONDONTWRITEBYTECODE", "1"])
-    # Avoid .pyc write errors in read-only locations
-    cmd.extend(["--setenv", "PYTHONPYCACHEPREFIX", "/tmp/__pycache__"])
-
-    # Profile-specific env vars
-    for key, value in config.extra_env.items():
-        cmd.extend(["--setenv", key, value])
-
-    # Caller-specified env vars
-    if env:
-        for key, value in env.items():
-            cmd.extend(["--setenv", key, value])
-
-    # Working directory
+    venv = _discover_paths()["venv"]
+    cmd = [_BWRAP]
+    cmd += _namespace_flags(config)
+    cmd += _filesystem_mounts(config, venv)
+    cmd += _environment_vars(config, venv, env)
     if cwd:
-        cmd.extend(["--chdir", cwd])
-
-    # The actual command to run
-    cmd.extend(command)
+        cmd += ["--chdir", cwd]
+    cmd += command
     return cmd
 
 
 # ---------------------------------------------------------------------------
-# Resource limits (prlimit via preexec_fn)
+# Process lifecycle (shared by bwrap and fallback paths)
 # ---------------------------------------------------------------------------
-
-
-def _make_preexec_fn(config: SandboxConfig, *, apply_rlimits: bool = True):
-    """Create a preexec_fn that sets resource limits before exec.
-
-    When wrapping bwrap, set apply_rlimits=False — bwrap needs full
-    process/memory allowance to set up namespaces. Resource limits are
-    applied inside the sandbox via _rlimit_preamble() instead.
-    """
-    mem_bytes = config.memory_limit_mb * 1024 * 1024
-    fsize_bytes = config.max_file_size_mb * 1024 * 1024
-
-    def _set_limits():
-        # New process group so killpg works for wall-clock watchdog
-        os.setpgrp()
-        if apply_rlimits:
-            resource.setrlimit(resource.RLIMIT_AS, (mem_bytes, mem_bytes))
-            resource.setrlimit(
-                resource.RLIMIT_CPU, (config.cpu_time_limit_s, config.cpu_time_limit_s)
-            )
-            resource.setrlimit(resource.RLIMIT_NPROC, (config.max_processes, config.max_processes))
-            resource.setrlimit(resource.RLIMIT_FSIZE, (fsize_bytes, fsize_bytes))
-            resource.setrlimit(resource.RLIMIT_CORE, (0, 0))
-
-    return _set_limits
-
-
-def _rlimit_preamble(config: SandboxConfig) -> str:
-    """Python code snippet that sets resource limits. Injected into sandbox scripts."""
-    mem_bytes = config.memory_limit_mb * 1024 * 1024
-    fsize_bytes = config.max_file_size_mb * 1024 * 1024
-    return f"""\
-import resource as _r
-_r.setrlimit(_r.RLIMIT_AS, ({mem_bytes}, {mem_bytes}))
-_r.setrlimit(_r.RLIMIT_CPU, ({config.cpu_time_limit_s}, {config.cpu_time_limit_s}))
-_r.setrlimit(_r.RLIMIT_NPROC, ({config.max_processes}, {config.max_processes}))
-_r.setrlimit(_r.RLIMIT_FSIZE, ({fsize_bytes}, {fsize_bytes}))
-_r.setrlimit(_r.RLIMIT_CORE, (0, 0))
-del _r
-"""
-
-
-# ---------------------------------------------------------------------------
-# Core execution
-# ---------------------------------------------------------------------------
-
-
-def _log_event(event: str, profile: str = "", **extra):
-    """Emit structured log event."""
-    data = {"event": event, "profile": profile, **extra}
-    logger.info(json.dumps(data, default=str))
-
-
-_DEFAULT_CONFIG = SandboxConfig()
 
 
 def _kill_proc_tree(proc: subprocess.Popen) -> None:
@@ -316,128 +239,29 @@ def _kill_proc_tree(proc: subprocess.Popen) -> None:
     try:
         os.killpg(os.getpgid(proc.pid), signal.SIGKILL)
     except OSError:
-        # Process already dead, wrong pgid, or no permission — fall back
         with contextlib.suppress(OSError):
             proc.kill()
 
 
-def run_sandboxed(
-    command: list[str],
-    *,
-    config: SandboxConfig = _DEFAULT_CONFIG,
-    cwd: str | None = None,
-    env: dict[str, str] | None = None,
-) -> SandboxResult:
-    """Execute a command inside a bwrap sandbox with resource limits.
-
-    This is the single choke point for all sandboxed execution.
-    Falls back to prlimit-only if bwrap is unavailable.
-    """
-    if not _SANDBOX_ENABLED or not _BWRAP:
-        return _run_prlimit_only(command, config=config, cwd=cwd, env=env)
-
-    bwrap_cmd = _build_bwrap_cmd(command, config, cwd=cwd, env=env)
-
-    cmd_summary = " ".join(command)[:200]
-    _log_event("sandbox.start", command_summary=cmd_summary)
-    start = time.monotonic()
-
-    timed_out = False
-    oom_killed = False
-
-    try:
-        proc = subprocess.Popen(
-            bwrap_cmd,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            # Don't apply rlimits to bwrap itself — it needs full resources
-            # to create namespaces. Limits are applied inside the sandbox.
-            preexec_fn=_make_preexec_fn(config, apply_rlimits=False),
-        )
-
-        try:
-            stdout_bytes, stderr_bytes = proc.communicate(timeout=config.wall_time_limit_s)
-        except subprocess.TimeoutExpired:
-            timed_out = True
-            _kill_proc_tree(proc)
-            try:
-                stdout_bytes, stderr_bytes = proc.communicate(timeout=5)
-            except subprocess.TimeoutExpired:
-                # Process is truly stuck — reap it to avoid zombie
-                proc.kill()
-                proc.wait()
-                stdout_bytes, stderr_bytes = b"", b""
-
-        wall_time = time.monotonic() - start
-        returncode = proc.returncode
-
-        # Detect OOM kill (signal 9 = returncode -9 or 137)
-        oom_killed = returncode in (-9, 137)
-
-        result = SandboxResult(
-            returncode=returncode,
-            stdout=stdout_bytes.decode("utf-8", errors="replace"),
-            stderr=stderr_bytes.decode("utf-8", errors="replace"),
-            wall_time_s=wall_time,
-            timed_out=timed_out,
-            oom_killed=oom_killed,
-        )
-
-        _log_event(
-            "sandbox.complete",
-            wall_time_s=round(wall_time, 3),
-            returncode=returncode,
-            timed_out=timed_out,
-            oom_killed=oom_killed,
-            command_summary=cmd_summary,
-        )
-        return result
-
-    except Exception as e:
-        wall_time = time.monotonic() - start
-        _log_event("sandbox.error", error=str(e), wall_time_s=round(wall_time, 3))
-        return SandboxResult(
-            returncode=-1,
-            stdout="",
-            stderr=str(e),
-            wall_time_s=wall_time,
-            timed_out=False,
-            oom_killed=False,
-        )
-
-
-def _run_prlimit_only(
+def _execute(
     command: list[str],
     *,
     config: SandboxConfig,
     cwd: str | None = None,
     env: dict[str, str] | None = None,
+    preexec_fn=None,
 ) -> SandboxResult:
-    """Fallback: run with resource limits but no filesystem/network isolation."""
-    if not hasattr(_run_prlimit_only, "_warned"):
-        warnings.warn(
-            "bwrap unavailable — running without OS-level sandboxing. "
-            "Only prlimit resource limits will be applied.",
-            RuntimeWarning,
-            stacklevel=3,
-        )
-        _run_prlimit_only._warned = True
-
-    full_env = dict(os.environ)
-    if env:
-        full_env.update(env)
-
+    """Shared Popen lifecycle: spawn, communicate, timeout, kill, decode."""
     start = time.monotonic()
     timed_out = False
-
     try:
         proc = subprocess.Popen(
             command,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             cwd=cwd,
-            env=full_env,
-            preexec_fn=_make_preexec_fn(config),
+            env=env,
+            preexec_fn=preexec_fn,
         )
         try:
             stdout_bytes, stderr_bytes = proc.communicate(timeout=config.wall_time_limit_s)
@@ -451,12 +275,11 @@ def _run_prlimit_only(
                 proc.wait()
                 stdout_bytes, stderr_bytes = b"", b""
 
-        wall_time = time.monotonic() - start
         return SandboxResult(
             returncode=proc.returncode,
             stdout=stdout_bytes.decode("utf-8", errors="replace"),
             stderr=stderr_bytes.decode("utf-8", errors="replace"),
-            wall_time_s=wall_time,
+            wall_time_s=time.monotonic() - start,
             timed_out=timed_out,
             oom_killed=proc.returncode in (-9, 137),
         )
@@ -472,71 +295,49 @@ def _run_prlimit_only(
 
 
 # ---------------------------------------------------------------------------
-# Convenience: run a Python script in the sandbox
+# Public API
 # ---------------------------------------------------------------------------
 
+_DEFAULT_CONFIG = SandboxConfig()
 
-def run_python_sandboxed(
-    script: str,
+
+def run_sandboxed(
+    command: list[str],
     *,
     config: SandboxConfig = _DEFAULT_CONFIG,
-    script_dir: str | None = None,
+    cwd: str | None = None,
     env: dict[str, str] | None = None,
 ) -> SandboxResult:
-    """Write a Python script to a temp dir and execute it in the sandbox.
+    """Execute a command inside a bwrap sandbox with resource limits.
 
-    If script_dir is provided, the script is written there and that dir
-    must already be in config.writable_paths or config.extra_ro_binds.
-    Otherwise a temp dir is created and added as a writable path.
+    This is the single choke point for all sandboxed execution.
+    Falls back to prlimit-only if bwrap is unavailable.
     """
-    paths = _discover_paths()
-    python = paths["python"]
+    if not _SANDBOX_ENABLED or not _BWRAP:
+        return _run_fallback(command, config=config, cwd=cwd, env=env)
 
-    # Prepend resource limits to the script
-    full_script = _rlimit_preamble(config) + script
+    bwrap_cmd = _build_bwrap_cmd(command, config, cwd=cwd, env=env)
+    cmd_summary = " ".join(command)[:200]
+    _log_event("sandbox.start", command_summary=cmd_summary)
 
-    if script_dir:
-        script_path = os.path.join(script_dir, "_sandbox_runner.py")
-        with open(script_path, "w") as f:
-            f.write(full_script)
-        return run_sandboxed(
-            [python, script_path],
-            config=config,
-            cwd=script_dir,
-            env=env,
-        )
+    # Apply inheritable rlimits (AS, CPU, FSIZE, CORE) to the bwrap
+    # process — they propagate to the sandboxed child.  RLIMIT_NPROC is
+    # deliberately excluded: clone() for namespace creation counts against
+    # it, causing "Resource temporarily unavailable".  The PID namespace
+    # provides equivalent fork-bomb protection.  Runner scripts also apply
+    # all rlimits (including NPROC) from the _rlimits config key as a
+    # belt-and-suspenders measure.
+    result = _execute(bwrap_cmd, config=config, preexec_fn=_make_bwrap_preexec_fn(config))
 
-    # TemporaryDirectory guarantees cleanup even if finally itself raises
-    with tempfile.TemporaryDirectory(prefix="cnake_sandbox_") as tmpdir:
-        script_path = os.path.join(tmpdir, "_sandbox_runner.py")
-        with open(script_path, "w") as f:
-            f.write(full_script)
-
-        # Add tmpdir as writable (for script + any output files)
-        augmented = SandboxConfig(
-            memory_limit_mb=config.memory_limit_mb,
-            cpu_time_limit_s=config.cpu_time_limit_s,
-            wall_time_limit_s=config.wall_time_limit_s,
-            max_processes=config.max_processes,
-            max_file_size_mb=config.max_file_size_mb,
-            tmpfs_size_mb=config.tmpfs_size_mb,
-            network=config.network,
-            writable_paths=config.writable_paths + (tmpdir,),
-            extra_ro_binds=config.extra_ro_binds,
-            extra_env=config.extra_env,
-        )
-
-        return run_sandboxed(
-            [python, script_path],
-            config=augmented,
-            cwd=tmpdir,
-            env=env,
-        )
-
-
-# ---------------------------------------------------------------------------
-# Convenience: run a sandbox_runners/*.py script with JSON config
-# ---------------------------------------------------------------------------
+    _log_event(
+        "sandbox.complete",
+        wall_time_s=round(result.wall_time_s, 3),
+        returncode=result.returncode,
+        timed_out=result.timed_out,
+        oom_killed=result.oom_killed,
+        command_summary=cmd_summary,
+    )
+    return result
 
 
 def run_runner_sandboxed(
@@ -548,11 +349,7 @@ def run_runner_sandboxed(
 ) -> SandboxResult:
     """Execute a runner from sandbox_runners/ with a JSON config file.
 
-    Unlike run_python_sandboxed (which writes a script string to disk),
-    this invokes an existing .py file from the sandbox_runners package
-    and ro-binds it into the sandbox.  The runner is a real, lintable
-    Python file — not an embedded string.
-
+    The runner is a real, lintable Python file — ro-bound into the sandbox.
     Resource limits are injected into the config dict under ``_rlimits``
     so the runner can apply them via ``_common.apply_rlimits(config)``.
 
@@ -568,10 +365,8 @@ def run_runner_sandboxed(
     if not runner_path.exists():
         raise FileNotFoundError(f"Runner not found: {runner_path}")
 
-    paths = _discover_paths()
-    python = paths["python"]
+    python = _discover_paths()["python"]
 
-    # Inject rlimits so the runner can apply them inside the sandbox
     config_data = {
         **config_data,
         "_rlimits": {
@@ -587,17 +382,10 @@ def run_runner_sandboxed(
         with open(config_path, "w") as f:
             json.dump(config_data, f)
 
-        augmented = SandboxConfig(
-            memory_limit_mb=config.memory_limit_mb,
-            cpu_time_limit_s=config.cpu_time_limit_s,
-            wall_time_limit_s=config.wall_time_limit_s,
-            max_processes=config.max_processes,
-            max_file_size_mb=config.max_file_size_mb,
-            tmpfs_size_mb=config.tmpfs_size_mb,
-            network=config.network,
+        augmented = replace(
+            config,
             writable_paths=config.writable_paths + (tmpdir,),
             extra_ro_binds=config.extra_ro_binds + (str(RUNNERS_DIR),),
-            extra_env=config.extra_env,
         )
 
         return run_sandboxed(
@@ -609,8 +397,85 @@ def run_runner_sandboxed(
 
 
 # ---------------------------------------------------------------------------
-# Logging configuration
+# Fallback (no bwrap)
 # ---------------------------------------------------------------------------
+
+
+def _make_preexec_fn(config: SandboxConfig):
+    """Create a preexec_fn that sets process group + all resource limits."""
+    mem_bytes = config.memory_limit_mb * 1024 * 1024
+    fsize_bytes = config.max_file_size_mb * 1024 * 1024
+
+    def _set_limits():
+        os.setpgrp()
+        resource.setrlimit(resource.RLIMIT_AS, (mem_bytes, mem_bytes))
+        resource.setrlimit(resource.RLIMIT_CPU, (config.cpu_time_limit_s, config.cpu_time_limit_s))
+        resource.setrlimit(resource.RLIMIT_NPROC, (config.max_processes, config.max_processes))
+        resource.setrlimit(resource.RLIMIT_FSIZE, (fsize_bytes, fsize_bytes))
+        resource.setrlimit(resource.RLIMIT_CORE, (0, 0))
+
+    return _set_limits
+
+
+def _make_bwrap_preexec_fn(config: SandboxConfig):
+    """Create a preexec_fn for the bwrap process itself.
+
+    Sets process group + inheritable limits (AS, CPU, FSIZE, CORE).
+    Excludes RLIMIT_NPROC because clone() for namespace creation counts
+    against it.  The PID namespace provides equivalent fork-bomb protection.
+    """
+    mem_bytes = config.memory_limit_mb * 1024 * 1024
+    fsize_bytes = config.max_file_size_mb * 1024 * 1024
+
+    def _set_limits():
+        os.setpgrp()
+        resource.setrlimit(resource.RLIMIT_AS, (mem_bytes, mem_bytes))
+        resource.setrlimit(resource.RLIMIT_CPU, (config.cpu_time_limit_s, config.cpu_time_limit_s))
+        resource.setrlimit(resource.RLIMIT_FSIZE, (fsize_bytes, fsize_bytes))
+        resource.setrlimit(resource.RLIMIT_CORE, (0, 0))
+
+    return _set_limits
+
+
+def _run_fallback(
+    command: list[str],
+    *,
+    config: SandboxConfig,
+    cwd: str | None = None,
+    env: dict[str, str] | None = None,
+) -> SandboxResult:
+    """Fallback: run with resource limits but no filesystem/network isolation."""
+    if not hasattr(_run_fallback, "_warned"):
+        warnings.warn(
+            "bwrap unavailable — running without OS-level sandboxing. "
+            "Only prlimit resource limits will be applied.",
+            RuntimeWarning,
+            stacklevel=3,
+        )
+        _run_fallback._warned = True
+
+    full_env = dict(os.environ)
+    if env:
+        full_env.update(env)
+
+    return _execute(
+        command,
+        config=config,
+        cwd=cwd,
+        env=full_env,
+        preexec_fn=_make_preexec_fn(config),
+    )
+
+
+# ---------------------------------------------------------------------------
+# Logging
+# ---------------------------------------------------------------------------
+
+
+def _log_event(event: str, profile: str = "", **extra):
+    """Emit structured log event."""
+    data = {"event": event, "profile": profile, **extra}
+    logger.info(json.dumps(data, default=str))
 
 
 def configure_logging():
@@ -635,13 +500,11 @@ def configure_logging():
             datefmt="%Y-%m-%d %H:%M:%S",
         )
 
-    # Console handler (if not already present)
     if not root_logger.handlers:
         console = logging.StreamHandler()
         console.setFormatter(formatter)
         root_logger.addHandler(console)
 
-    # File handler with rotation
     if log_file:
         from logging.handlers import RotatingFileHandler
 

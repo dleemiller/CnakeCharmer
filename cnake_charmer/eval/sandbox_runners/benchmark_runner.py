@@ -32,10 +32,9 @@ Output JSON:
 
 import json
 import statistics
-import sys
 import time
 
-from _common import apply_rlimits, load_cython_func, load_python_func
+from _common import exit_error, load_both_funcs, load_config
 
 # ── helpers ───────────────────────────────────────────────────────────
 
@@ -56,31 +55,14 @@ def _time_function(func, args, kwargs, num_runs, max_total):
 
 # ── main ──────────────────────────────────────────────────────────────
 
-config = json.loads(open(sys.argv[1]).read())  # noqa: SIM115
-apply_rlimits(config)
+config = load_config()
+python_func, cython_func = load_both_funcs(config)
 
-python_code = config["python_code"]
-func_name = config["func_name"]
-cython_module_path = config["cython_module_path"]
 args = tuple(config.get("args", ()))
 kwargs = config.get("kwargs", {})
 num_runs = config.get("num_runs", 10)
 warmup_runs = config.get("warmup_runs", 2)
 max_total_seconds = config.get("max_total_seconds", 5.0)
-
-# Load Python function
-try:
-    python_func = load_python_func(python_code, func_name)
-except Exception as e:
-    print(json.dumps({"error": f"Function {func_name!r} not found in Python code: {e}"}))
-    sys.exit(0)
-
-# Load Cython module
-try:
-    cython_func = load_cython_func(cython_module_path, func_name)
-except Exception as e:
-    print(json.dumps({"error": f"Failed to load Cython module: {e}"}))
-    sys.exit(0)
 
 # Warmup
 try:
@@ -92,22 +74,19 @@ try:
             num_runs = min(num_runs, 2)
         cython_func(*args, **kwargs)
 except Exception as e:
-    print(json.dumps({"error": f"Warmup failed: {e}"}))
-    sys.exit(0)
+    exit_error(f"Warmup failed: {e}")
 
 # Time Python
 try:
     py_times = _time_function(python_func, args, kwargs, num_runs, max_total_seconds)
 except Exception as e:
-    print(json.dumps({"error": f"Python benchmark failed: {e}"}))
-    sys.exit(0)
+    exit_error(f"Python benchmark failed: {e}")
 
 # Time Cython
 try:
     cy_times = _time_function(cython_func, args, kwargs, num_runs, max_total_seconds)
 except Exception as e:
-    print(json.dumps({"error": f"Cython benchmark failed: {e}"}))
-    sys.exit(0)
+    exit_error(f"Cython benchmark failed: {e}")
 
 py_mean = statistics.mean(py_times)
 cy_mean = statistics.mean(cy_times)

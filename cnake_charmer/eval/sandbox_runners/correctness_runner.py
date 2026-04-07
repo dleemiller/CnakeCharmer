@@ -25,10 +25,8 @@ Output JSON:
 """
 
 import json
-import sys
 
-# _common.py is in the same directory — Python adds it to sys.path[0]
-from _common import apply_rlimits, load_cython_func, load_python_func
+from _common import load_both_funcs, load_config
 
 # ── helpers (self-contained, no external deps) ────────────────────────
 
@@ -85,29 +83,10 @@ def _unpack_test_case(test_case):
 
 # ── main ──────────────────────────────────────────────────────────────
 
-config = json.loads(open(sys.argv[1]).read())  # noqa: SIM115
-apply_rlimits(config)
-
-python_code = config["python_code"]
-func_name = config["func_name"]
-cython_module_path = config["cython_module_path"]
+config = load_config()
+python_func, cython_func = load_both_funcs(config)
 test_cases = config["test_cases"]
 
-# Load Python function
-try:
-    python_func = load_python_func(python_code, func_name)
-except Exception as e:
-    print(json.dumps({"error": f"Function {func_name!r} not found in Python code: {e}"}))
-    sys.exit(0)
-
-# Load Cython module
-try:
-    cython_func = load_cython_func(cython_module_path, func_name)
-except Exception as e:
-    print(json.dumps({"error": f"Failed to load Cython module: {e}"}))
-    sys.exit(0)
-
-# Run test cases
 passed = 0
 total = len(test_cases)
 failures = []

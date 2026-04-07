@@ -17,9 +17,52 @@ SANDBOX CONSTRAINTS — read before editing:
 
 import importlib
 import importlib.util
+import json
 import os
 import resource
 import sys
+
+# ---------------------------------------------------------------------------
+# Bootstrap
+# ---------------------------------------------------------------------------
+
+
+def load_config():
+    """Read config JSON from sys.argv[1] and apply resource limits.
+
+    Standard entry point for all runners.
+    """
+    config = json.loads(open(sys.argv[1]).read())  # noqa: SIM115
+    apply_rlimits(config)
+    return config
+
+
+def load_both_funcs(config):
+    """Load Python + Cython functions from config dict.
+
+    Returns (py_func, cy_func).  On failure, prints error JSON and exits
+    so the caller never sees a partial result.
+    """
+    try:
+        py_func = load_python_func(config["python_code"], config["func_name"])
+    except Exception as e:
+        exit_error(f"Function {config['func_name']!r} not found in Python code: {e}")
+    try:
+        cy_func = load_cython_func(config["cython_module_path"], config["func_name"])
+    except Exception as e:
+        exit_error(f"Failed to load Cython module: {e}")
+    return py_func, cy_func
+
+
+def exit_error(msg):
+    """Print an error JSON object and exit cleanly."""
+    print(json.dumps({"error": msg}))
+    sys.exit(0)
+
+
+# ---------------------------------------------------------------------------
+# Resource limits
+# ---------------------------------------------------------------------------
 
 
 def apply_rlimits(config):
@@ -39,6 +82,11 @@ def apply_rlimits(config):
     resource.setrlimit(resource.RLIMIT_NPROC, (limits["max_processes"], limits["max_processes"]))
     resource.setrlimit(resource.RLIMIT_FSIZE, (fsize_bytes, fsize_bytes))
     resource.setrlimit(resource.RLIMIT_CORE, (0, 0))
+
+
+# ---------------------------------------------------------------------------
+# Module loading
+# ---------------------------------------------------------------------------
 
 
 def load_module_from_path(path, name):

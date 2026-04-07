@@ -36,7 +36,7 @@ import sys
 import time
 import types
 
-from _common import apply_rlimits, load_module_from_path
+from _common import load_config, load_module_from_path
 
 # ── timeout context manager ───────────────────────────────────────────
 
@@ -178,8 +178,7 @@ def _time_benchmark(py_func, cy_func, args, num_runs=3, max_total=5.0):
 
 # ── main ──────────────────────────────────────────────────────────────
 
-config = json.loads(open(sys.argv[1]).read())  # noqa: SIM115
-apply_rlimits(config)
+config = load_config()
 
 python_code = config["python_code"]
 cython_module_path = config["cython_module_path"]
