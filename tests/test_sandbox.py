@@ -31,6 +31,25 @@ def _run_script(script: str, config: SandboxConfig | None = None):
 
 
 # ---------------------------------------------------------------------------
+# Config
+# ---------------------------------------------------------------------------
+
+
+def test_to_rlimits_dict_keys():
+    """to_rlimits_dict() returns the exact keys apply_rlimits() expects."""
+    cfg = SandboxConfig(
+        memory_limit_mb=1024, cpu_time_limit_s=10, max_processes=16, max_file_size_mb=32
+    )
+    d = cfg.to_rlimits_dict()
+    assert d == {
+        "memory_mb": 1024,
+        "cpu_time_s": 10,
+        "max_processes": 16,
+        "max_file_size_mb": 32,
+    }
+
+
+# ---------------------------------------------------------------------------
 # Basic execution
 # ---------------------------------------------------------------------------
 

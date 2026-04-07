@@ -30,6 +30,8 @@ import warnings
 from dataclasses import dataclass, field, replace
 from functools import lru_cache
 
+from cnake_charmer.eval.bwrap import build_command as _build_bwrap_cmd
+
 logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
@@ -54,6 +56,20 @@ class SandboxConfig:
     writable_paths: tuple[str, ...] = ()
     extra_ro_binds: tuple[str, ...] = ()
     extra_env: dict[str, str] = field(default_factory=dict)
+
+    def to_rlimits_dict(self) -> dict[str, int]:
+        """Serialize resource limits for injection into runner config JSON.
+
+        The keys here are the contract with sandbox_runners/_common.py's
+        apply_rlimits().  If you add a limit field, update both this
+        method and apply_rlimits().
+        """
+        return {
+            "memory_mb": self.memory_limit_mb,
+            "cpu_time_s": self.cpu_time_limit_s,
+            "max_processes": self.max_processes,
+            "max_file_size_mb": self.max_file_size_mb,
+        }
 
 
 @dataclass
@@ -145,88 +161,8 @@ def _discover_paths() -> dict[str, str]:
 
 
 # ---------------------------------------------------------------------------
-# Bwrap command construction (decomposed into readable sections)
+# Bwrap command construction lives in bwrap.py (pure functions, no I/O)
 # ---------------------------------------------------------------------------
-
-
-def _namespace_flags(config: SandboxConfig) -> list[str]:
-    """Isolation flags: namespaces, capabilities, session."""
-    flags = [
-        "--unshare-user",
-        "--unshare-ipc",
-        "--unshare-pid",
-        "--unshare-uts",
-        "--unshare-cgroup-try",
-        "--disable-userns",
-        "--die-with-parent",
-        "--new-session",
-    ]
-    if not config.network:
-        flags.append("--unshare-net")
-    return flags
-
-
-def _filesystem_mounts(config: SandboxConfig, venv: str) -> list[str]:
-    """Filesystem layout: system libs, tmpfs, venv, caller-specified binds."""
-    mounts = [
-        # Core
-        "--proc", "/proc",
-        "--dev", "/dev",
-        # System libraries (/lib, /lib64 are symlinks to /usr/*)
-        "--ro-bind", "/usr", "/usr",
-        "--symlink", "usr/lib", "/lib",
-        "--symlink", "usr/lib64", "/lib64",
-        # Linker cache
-        "--ro-bind", "/etc/ld.so.cache", "/etc/ld.so.cache",
-        "--ro-bind-try", "/etc/alternatives", "/etc/alternatives",
-        # Writable tmpfs
-        "--size", str(config.tmpfs_size_mb * 1024 * 1024), "--tmpfs", "/tmp",
-        "--size", str(10 * 1024 * 1024), "--tmpfs", "/home",
-        # Venv (read-only)
-        "--ro-bind", venv, venv,
-    ]  # fmt: skip
-    for path in config.extra_ro_binds:
-        if path and os.path.exists(path):
-            mounts += ["--ro-bind", path, path]
-    for path in config.writable_paths:
-        mounts += ["--bind", path, path]
-    return mounts
-
-
-def _environment_vars(config: SandboxConfig, venv: str, env: dict[str, str] | None) -> list[str]:
-    """Environment: clearenv + whitelisted vars."""
-    evars = [
-        "--clearenv",
-        "--setenv", "HOME", "/tmp",
-        "--setenv", "PATH", f"{venv}/bin:/usr/bin:/usr/local/bin",
-        "--setenv", "VIRTUAL_ENV", venv,
-        "--setenv", "PYTHONDONTWRITEBYTECODE", "1",
-        "--setenv", "PYTHONPYCACHEPREFIX", "/tmp/__pycache__",
-    ]  # fmt: skip
-    for key, value in config.extra_env.items():
-        evars += ["--setenv", key, value]
-    if env:
-        for key, value in env.items():
-            evars += ["--setenv", key, value]
-    return evars
-
-
-def _build_bwrap_cmd(
-    command: list[str],
-    config: SandboxConfig,
-    cwd: str | None = None,
-    env: dict[str, str] | None = None,
-) -> list[str]:
-    """Build the full bwrap command line."""
-    venv = _discover_paths()["venv"]
-    cmd = [_BWRAP]
-    cmd += _namespace_flags(config)
-    cmd += _filesystem_mounts(config, venv)
-    cmd += _environment_vars(config, venv, env)
-    if cwd:
-        cmd += ["--chdir", cwd]
-    cmd += command
-    return cmd
 
 
 # ---------------------------------------------------------------------------
@@ -251,7 +187,15 @@ def _execute(
     env: dict[str, str] | None = None,
     preexec_fn=None,
 ) -> SandboxResult:
-    """Shared Popen lifecycle: spawn, communicate, timeout, kill, decode."""
+    """Shared Popen lifecycle: spawn, communicate, timeout, kill, decode.
+
+    State transitions::
+
+        SPAWN → RUNNING → COMPLETED
+                        → TIMED_OUT → KILL_TREE → DRAIN(5s) → DONE
+                                                 → FORCE_KILL(5s) → DONE
+        SPAWN → ERROR
+    """
     start = time.monotonic()
     timed_out = False
     try:
@@ -272,7 +216,8 @@ def _execute(
                 stdout_bytes, stderr_bytes = proc.communicate(timeout=5)
             except subprocess.TimeoutExpired:
                 proc.kill()
-                proc.wait()
+                with contextlib.suppress(subprocess.TimeoutExpired):
+                    proc.wait(timeout=5)
                 stdout_bytes, stderr_bytes = b"", b""
 
         return SandboxResult(
@@ -316,7 +261,9 @@ def run_sandboxed(
     if not _SANDBOX_ENABLED or not _BWRAP:
         return _run_fallback(command, config=config, cwd=cwd, env=env)
 
-    bwrap_cmd = _build_bwrap_cmd(command, config, cwd=cwd, env=env)
+    bwrap_cmd = _build_bwrap_cmd(
+        command, config, bwrap_path=_BWRAP, venv=_discover_paths()["venv"], cwd=cwd, env=env
+    )
     cmd_summary = " ".join(command)[:200]
     _log_event("sandbox.start", command_summary=cmd_summary)
 
@@ -327,7 +274,9 @@ def run_sandboxed(
     # provides equivalent fork-bomb protection.  Runner scripts also apply
     # all rlimits (including NPROC) from the _rlimits config key as a
     # belt-and-suspenders measure.
-    result = _execute(bwrap_cmd, config=config, preexec_fn=_make_bwrap_preexec_fn(config))
+    result = _execute(
+        bwrap_cmd, config=config, preexec_fn=_make_preexec_fn(config, exclude_nproc=True)
+    )
 
     _log_event(
         "sandbox.complete",
@@ -369,12 +318,7 @@ def run_runner_sandboxed(
 
     config_data = {
         **config_data,
-        "_rlimits": {
-            "memory_mb": config.memory_limit_mb,
-            "cpu_time_s": config.cpu_time_limit_s,
-            "max_processes": config.max_processes,
-            "max_file_size_mb": config.max_file_size_mb,
-        },
+        "_rlimits": config.to_rlimits_dict(),
     }
 
     with tempfile.TemporaryDirectory(prefix="cnake_runner_") as tmpdir:
@@ -401,28 +345,13 @@ def run_runner_sandboxed(
 # ---------------------------------------------------------------------------
 
 
-def _make_preexec_fn(config: SandboxConfig):
-    """Create a preexec_fn that sets process group + all resource limits."""
-    mem_bytes = config.memory_limit_mb * 1024 * 1024
-    fsize_bytes = config.max_file_size_mb * 1024 * 1024
+def _make_preexec_fn(config: SandboxConfig, *, exclude_nproc: bool = False):
+    """Create a preexec_fn that sets process group + resource limits.
 
-    def _set_limits():
-        os.setpgrp()
-        resource.setrlimit(resource.RLIMIT_AS, (mem_bytes, mem_bytes))
-        resource.setrlimit(resource.RLIMIT_CPU, (config.cpu_time_limit_s, config.cpu_time_limit_s))
-        resource.setrlimit(resource.RLIMIT_NPROC, (config.max_processes, config.max_processes))
-        resource.setrlimit(resource.RLIMIT_FSIZE, (fsize_bytes, fsize_bytes))
-        resource.setrlimit(resource.RLIMIT_CORE, (0, 0))
-
-    return _set_limits
-
-
-def _make_bwrap_preexec_fn(config: SandboxConfig):
-    """Create a preexec_fn for the bwrap process itself.
-
-    Sets process group + inheritable limits (AS, CPU, FSIZE, CORE).
-    Excludes RLIMIT_NPROC because clone() for namespace creation counts
-    against it.  The PID namespace provides equivalent fork-bomb protection.
+    Args:
+        config: Sandbox configuration with limit values.
+        exclude_nproc: If True, skip RLIMIT_NPROC.  Required for bwrap
+            because clone() for namespace creation counts against it.
     """
     mem_bytes = config.memory_limit_mb * 1024 * 1024
     fsize_bytes = config.max_file_size_mb * 1024 * 1024
@@ -431,6 +360,8 @@ def _make_bwrap_preexec_fn(config: SandboxConfig):
         os.setpgrp()
         resource.setrlimit(resource.RLIMIT_AS, (mem_bytes, mem_bytes))
         resource.setrlimit(resource.RLIMIT_CPU, (config.cpu_time_limit_s, config.cpu_time_limit_s))
+        if not exclude_nproc:
+            resource.setrlimit(resource.RLIMIT_NPROC, (config.max_processes, config.max_processes))
         resource.setrlimit(resource.RLIMIT_FSIZE, (fsize_bytes, fsize_bytes))
         resource.setrlimit(resource.RLIMIT_CORE, (0, 0))
 

@@ -68,9 +68,13 @@ def exit_error(msg):
 def apply_rlimits(config):
     """Apply resource limits from the ``_rlimits`` key in the config dict.
 
-    The calling code (sandbox.py) injects ``_rlimits`` into every config
-    before writing it.  If the key is missing the function is a no-op,
-    so runners can also be tested outside the sandbox.
+    The key names here (``memory_mb``, ``cpu_time_s``, ``max_processes``,
+    ``max_file_size_mb``) must match ``SandboxConfig.to_rlimits_dict()``
+    in ``cnake_charmer/eval/sandbox.py``.  If you add a limit field,
+    update both places.
+
+    If the ``_rlimits`` key is missing the function is a no-op, so
+    runners can also be tested outside the sandbox.
     """
     limits = config.get("_rlimits")
     if not limits:
