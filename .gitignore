@@ -46,6 +46,8 @@ models/
 # Large data files
 utils/stack_data/*.duckdb
 utils/stack_data/*.parquet
+sft_candidates.duckdb
+data/checkouts/
 data/trajectories/
 data/traces/
 data/samples/

@@ -147,6 +147,34 @@ optimize-prompt:  ## Optimize prompt for a model profile
 		$(if $(filter-out None,$(_TOP)),--top-p $(_TOP)) \
 		$(if $(filter True,$(_TR)),--thinking-react)
 
+# --- Dataset Publishing ---
+.PHONY: upload-corpus publish-dataset publish-dataset-dry
+
+upload-corpus:  ## One-time: upload Stack v2 corpus to bsmith925/cnake-charmer-stack-v2
+	$(UV_RUN) python scripts/upload_corpus.py
+
+publish-dataset:  ## Push curated dataset to bsmith925/cnake-charmer
+	$(UV_RUN) python scripts/publish_dataset.py
+
+publish-dataset-dry:  ## Dry-run curated export (stats only, no push)
+	$(UV_RUN) python scripts/publish_dataset.py --dry-run
+
+# --- Problem Checkout ---
+.PHONY: checkout checkout-status checkout-list
+
+WORKER ?= anonymous
+N ?= 10
+
+checkout:  ## Claim N problems for a worker (WORKER=myid N=10)
+	$(UV_RUN) python scripts/checkout.py checkout --worker $(WORKER) --n $(N)
+
+checkout-status:  ## Show checkout status summary
+	$(UV_RUN) python scripts/checkout.py status
+
+checkout-list:  ## List active checkouts (optionally WORKER=xxx)
+	$(UV_RUN) python scripts/checkout.py list \
+		$(if $(filter-out anonymous,$(WORKER)),--worker $(WORKER))
+
 # --- Utilities ---
 .PHONY: list-problems
 
