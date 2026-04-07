@@ -81,7 +81,8 @@ def apply_rlimits(config):
         return
     mem_bytes = limits["memory_mb"] * 1024 * 1024
     fsize_bytes = limits["max_file_size_mb"] * 1024 * 1024
-    resource.setrlimit(resource.RLIMIT_AS, (mem_bytes, mem_bytes))
+    if mem_bytes:  # 0 = unlimited (needed for ASan shadow memory)
+        resource.setrlimit(resource.RLIMIT_AS, (mem_bytes, mem_bytes))
     resource.setrlimit(resource.RLIMIT_CPU, (limits["cpu_time_s"], limits["cpu_time_s"]))
     resource.setrlimit(resource.RLIMIT_NPROC, (limits["max_processes"], limits["max_processes"]))
     resource.setrlimit(resource.RLIMIT_FSIZE, (fsize_bytes, fsize_bytes))

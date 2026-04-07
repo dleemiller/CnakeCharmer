@@ -237,6 +237,10 @@ print(f"OK: {{result}}")
         writable_paths=(tmpdir,),
         extra_env=asan_extra_env,
     )
+    assert run_sandbox_cfg.memory_limit_mb == 0, (
+        f"ASan requires unlimited virtual address space for shadow memory, "
+        f"but memory_limit_mb={run_sandbox_cfg.memory_limit_mb}"
+    )
     run_sandbox = run_sandboxed(
         [sys.executable, "run_asan_test.py"],
         config=run_sandbox_cfg,

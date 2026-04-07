@@ -414,6 +414,40 @@ def test_mcp_evaluate_cython():
 
 
 # ---------------------------------------------------------------------------
+# Memory safety (ASan)
+# ---------------------------------------------------------------------------
+
+
+def test_asan_clean_code():
+    """ASan check passes for memory-safe Cython code."""
+    from cnake_charmer.eval.memory_safety import check_memory_safety
+
+    code = "def add(int a, int b):\n    return a + b\n"
+    result = check_memory_safety(code, "add", test_args=(3, 4))
+    assert result.score == 1.0, f"Expected clean ASan run, got: {result.errors}"
+
+
+def test_asan_in_composite_reward():
+    """Memory safety component scores > 0 in composite_reward."""
+    from cnake_charmer.eval.pipeline import composite_reward
+
+    python_code = "def double(n):\n    return n * 2\n"
+    cython_code = "def double(int n):\n    return n * 2\n"
+
+    scores = composite_reward(
+        cython_code=cython_code,
+        python_code=python_code,
+        func_name="double",
+        test_cases=[((0,),), ((5,),), ((10,),)],
+        benchmark_args=(1000,),
+        benchmark_runs=3,
+    )
+    assert scores["memory_safety"] > 0, (
+        f"memory_safety=0 means ASan failed to run: {scores.get('memory_safety_errors')}"
+    )
+
+
+# ---------------------------------------------------------------------------
 # Adversarial: dangerous code patterns
 # ---------------------------------------------------------------------------
 

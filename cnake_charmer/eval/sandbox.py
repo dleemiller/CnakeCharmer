@@ -106,7 +106,7 @@ _PROFILES: dict[str, SandboxConfig] = {
     "asan": SandboxConfig(
         cpu_time_limit_s=60,
         wall_time_limit_s=90,
-        memory_limit_mb=2048,
+        memory_limit_mb=0,  # ASan needs ~15TB virtual address space for shadow memory
         max_file_size_mb=256,
         tmpfs_size_mb=512,
     ),
@@ -358,7 +358,8 @@ def _make_preexec_fn(config: SandboxConfig, *, exclude_nproc: bool = False):
 
     def _set_limits():
         os.setpgrp()
-        resource.setrlimit(resource.RLIMIT_AS, (mem_bytes, mem_bytes))
+        if mem_bytes:  # 0 = unlimited (needed for ASan shadow memory)
+            resource.setrlimit(resource.RLIMIT_AS, (mem_bytes, mem_bytes))
         resource.setrlimit(resource.RLIMIT_CPU, (config.cpu_time_limit_s, config.cpu_time_limit_s))
         if not exclude_nproc:
             resource.setrlimit(resource.RLIMIT_NPROC, (config.max_processes, config.max_processes))
