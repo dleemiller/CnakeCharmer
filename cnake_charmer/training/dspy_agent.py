@@ -80,7 +80,12 @@ class CythonOptimization(dspy.Signature):
 
 
 def _tool_worker(queue, tool_name, env_args, code):
-    """Worker for sandboxed tool calls. Runs in a spawn subprocess."""
+    """Worker for sandboxed tool calls. Runs in a spawn subprocess.
+
+    Note: Compilation is additionally sandboxed via bwrap in compiler.py.
+    The spawn subprocess provides secondary isolation for segfaults from
+    loading compiled .so files in the legacy evaluate() path.
+    """
     try:
         env = CythonToolEnvironment()
         env.reset(**env_args)

@@ -43,6 +43,12 @@ class CompilationResult:
     module_path: str | None = None
     html_path: str | None = None
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc):
+        cleanup_build(self)
+
 
 def compile_cython(
     code: str,
@@ -106,14 +112,33 @@ def compile_cython(
                 result.errors = f"Failed to install dependencies: {dep_result.stderr}"
                 return result
 
-        # Compile using the same Python that's running this process
-        compile_result = subprocess.run(
+        # Compile inside sandbox (filesystem + network isolation, resource limits)
+        from cnake_charmer.eval.sandbox import compile_config, run_sandboxed
+
+        sandbox_cfg = compile_config(
+            wall_time_limit_s=timeout + 30,
+            cpu_time_limit_s=timeout,
+            writable_paths=(tmpdir,),
+        )
+        sandbox_result = run_sandboxed(
             [sys.executable, "setup.py", "build_ext", "--inplace"],
-            capture_output=True,
-            text=True,
+            config=sandbox_cfg,
             cwd=tmpdir,
-            timeout=timeout,
-            env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1"},
+        )
+        # Check sandbox-level failures
+        if sandbox_result.timed_out:
+            result.errors = f"Compilation timed out after {timeout}s"
+            return result
+        if sandbox_result.oom_killed:
+            result.errors = "Compilation killed: out of memory"
+            return result
+
+        # Adapt SandboxResult to look like subprocess.CompletedProcess
+        compile_result = subprocess.CompletedProcess(
+            args=[],
+            returncode=sandbox_result.returncode,
+            stdout=sandbox_result.stdout,
+            stderr=sandbox_result.stderr,
         )
 
         # Capture warnings from stderr even on success
@@ -145,6 +170,10 @@ def compile_cython(
 
     except subprocess.TimeoutExpired:
         result.errors = f"Compilation timed out after {timeout}s"
+        return result
+    except ImportError:
+        # Sandbox module not available — shouldn't happen but handle gracefully
+        result.errors = "Sandbox module unavailable"
         return result
     except Exception as e:
         result.errors = str(e)

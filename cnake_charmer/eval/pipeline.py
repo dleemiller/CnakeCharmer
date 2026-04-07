@@ -1,6 +1,9 @@
 """
 Validation pipeline that orchestrates compilation, correctness,
 benchmarking, and annotation analysis.
+
+All code execution (correctness, benchmark) runs in a bwrap sandbox.
+The pipeline never loads untrusted .so files into its own process.
 """
 
 import logging
@@ -92,15 +95,21 @@ def validate(
     skip_correctness: bool = False,
     skip_memory_safety: bool = False,
     module_name: str = "gen_module",
+    python_code: str | None = None,
 ) -> ValidationResult:
     """
     Run the full validation pipeline on a Cython code string.
 
-    Pipeline: compile -> correctness -> benchmark -> annotate
+    Pipeline: compile -> lint -> annotate -> correctness -> benchmark -> ASan
+
+    When python_code (source string) is provided, correctness and benchmark
+    run in a sandboxed subprocess. When only python_func (callable) is
+    provided, falls back to legacy in-process execution.
 
     Args:
         cython_code: The .pyx source code as a string.
-        python_func: Reference Python function for correctness/benchmark.
+        python_func: Reference Python callable (legacy, in-process).
+        python_code: Python source code string (sandboxed, preferred).
         func_name: Name of the function to extract from the compiled module.
         test_cases: Test cases for correctness checking.
         benchmark_args: Args for benchmarking (defaults to first test case args).
@@ -108,6 +117,7 @@ def validate(
         benchmark_runs: Number of benchmark iterations.
         skip_benchmark: Skip the benchmark step.
         skip_correctness: Skip the correctness step.
+        skip_memory_safety: Skip the memory safety step.
         module_name: Name for the compiled module.
 
     Returns:
@@ -134,37 +144,52 @@ def validate(
     if result.compilation.html_path:
         result.annotations = parse_annotations(html_path=result.compilation.html_path)
 
-    # Load the compiled function for correctness and benchmarking
+    module_path = result.compilation.module_path
+
+    # Determine execution mode: sandboxed (preferred) or legacy in-process
+    use_sandbox = python_code and func_name and module_path
+
+    # Legacy path: load the compiled function in-process (backward compat)
     cython_func = None
-    if func_name and result.compilation.module_path:
+    if not use_sandbox and func_name and module_path:
         try:
-            module = _load_module_from_path(result.compilation.module_path, module_name)
+            module = _load_module_from_path(module_path, module_name)
             cython_func = getattr(module, func_name)
         except Exception as e:
             logger.warning(f"Could not load function '{func_name}' from compiled module: {e}")
 
     # Step 4: Correctness check
-    if not skip_correctness and python_func and cython_func and test_cases:
-        result.correctness = check_correctness(
-            python_func=python_func,
-            cython_func=cython_func,
-            test_cases=test_cases,
-        )
+    if not skip_correctness and test_cases:
+        if use_sandbox:
+            result.correctness = check_correctness(
+                python_code=python_code,
+                func_name=func_name,
+                cython_module_path=module_path,
+                test_cases=test_cases,
+            )
+        elif python_func and cython_func:
+            result.correctness = check_correctness(
+                python_func=python_func,
+                cython_func=cython_func,
+                test_cases=test_cases,
+            )
 
     # Step 5: Benchmark
-    if not skip_benchmark and python_func and cython_func:
-        b_args = benchmark_args
-        if b_args is None and test_cases:
-            # Use first test case as benchmark args
-            case = test_cases[0]
-            if isinstance(case, dict):
-                b_args = tuple(case.get("args", ()))
-            elif isinstance(case, (list, tuple)) and len(case) > 0:
-                b_args = tuple(case[0]) if isinstance(case[0], (list, tuple)) else tuple(case)
-            else:
-                b_args = (case,) if case is not None else ()
+    b_args = benchmark_args
+    if b_args is None and test_cases:
+        b_args = _extract_benchmark_args(test_cases)
 
-        if b_args is not None:
+    if not skip_benchmark and b_args is not None:
+        if use_sandbox:
+            result.benchmark = run_benchmark(
+                python_code=python_code,
+                func_name=func_name,
+                cython_module_path=module_path,
+                args=b_args,
+                kwargs=benchmark_kwargs,
+                num_runs=benchmark_runs,
+            )
+        elif python_func and cython_func:
             result.benchmark = run_benchmark(
                 python_func=python_func,
                 cython_func=cython_func,
@@ -177,16 +202,9 @@ def validate(
     if not skip_memory_safety and func_name:
         asan_args = benchmark_args
         if asan_args is None and test_cases:
-            case = test_cases[0]
-            if isinstance(case, dict):
-                asan_args = tuple(case.get("args", ()))
-            elif isinstance(case, (list, tuple)) and len(case) > 0:
-                asan_args = tuple(case[0]) if isinstance(case[0], (list, tuple)) else tuple(case)
-            else:
-                asan_args = (case,) if case is not None else ()
+            asan_args = _extract_benchmark_args(test_cases)
 
         if asan_args is not None:
-            # Use small inputs to keep ASan check fast
             small_args = _shrink_args(asan_args)
             result.memory_safety = check_memory_safety(
                 cython_code=cython_code,
@@ -198,6 +216,19 @@ def validate(
     cleanup_build(result.compilation)
 
     return result
+
+
+def _extract_benchmark_args(test_cases: list) -> tuple | None:
+    """Extract benchmark args from the first test case."""
+    if not test_cases:
+        return None
+    case = test_cases[0]
+    if isinstance(case, dict):
+        return tuple(case.get("args", ()))
+    elif isinstance(case, (list, tuple)) and len(case) > 0:
+        return tuple(case[0]) if isinstance(case[0], (list, tuple)) else tuple(case)
+    else:
+        return (case,) if case is not None else ()
 
 
 def _shrink_args(args: tuple) -> tuple:
@@ -226,12 +257,13 @@ DEFAULT_WEIGHTS = {
 
 def composite_reward(
     cython_code: str,
-    python_func: Callable,
-    func_name: str,
-    test_cases: list,
+    python_func: Callable | None = None,
+    func_name: str = "",
+    test_cases: list | None = None,
     benchmark_args: tuple | None = None,
     benchmark_runs: int = 5,
     weights: dict | None = None,
+    python_code: str | None = None,
     **kwargs,
 ) -> dict:
     """
@@ -239,12 +271,16 @@ def composite_reward(
 
     Returns a dict with individual scores and the weighted total.
     Compilation is a gate — 0 total if it fails.
+
+    When python_code (source string) is provided, execution runs in
+    a sandboxed subprocess for safety.
     """
     w = weights or DEFAULT_WEIGHTS
 
     result = validate(
         cython_code=cython_code,
         python_func=python_func,
+        python_code=python_code,
         func_name=func_name,
         test_cases=test_cases,
         benchmark_args=benchmark_args,

@@ -5,10 +5,14 @@ These are the same tools used during GRPO training — compile, annotate,
 test, benchmark, and composite_reward. Claude Code can call them to
 iterate on Cython implementations while adding new problems.
 
+All code execution is sandboxed via bubblewrap (bwrap) with filesystem
+and network isolation, resource limits, and wall-clock watchdog.
+
 Usage:
     claude mcp add cnake-charmer -- uv run python -m cnake_charmer.mcp_server
 """
 
+import ast
 import json
 import logging
 from pathlib import Path
@@ -70,20 +74,10 @@ def score_problem(problem_id: str) -> str:
     if not match.has_cython:
         return json.dumps({"error": f"No Cython implementation found for '{problem_id}'"})
 
-    # Exec the Python function
-    namespace = {}
-    try:
-        exec(match.python_code, namespace)  # noqa: S102
-        py_func = namespace.get(match.func_name)
-    except Exception as e:
-        return json.dumps({"error": f"Failed to load Python function: {e}"})
-
-    if py_func is None:
-        return json.dumps({"error": f"Function '{match.func_name}' not found in Python code"})
-
+    # Use python_code string for sandboxed execution (no in-process exec)
     scores = _composite_reward(
         cython_code=match.cython_code,
-        python_func=py_func,
+        python_code=match.python_code,
         func_name=match.func_name,
         test_cases=match.test_cases,
         benchmark_args=match.benchmark_args,
@@ -271,10 +265,10 @@ def check_memory(pyx_path: str, func_name: str, test_args: str = "(100,)") -> st
         return json.dumps({"success": False, "errors": [f"File not found: {pyx_path}"]})
 
     try:
-        args = eval(test_args)  # noqa: S307
+        args = ast.literal_eval(test_args)
         if not isinstance(args, tuple):
             args = (args,)
-    except Exception as e:
+    except (ValueError, SyntaxError) as e:
         return json.dumps({"success": False, "errors": [f"Invalid test_args: {e}"]})
 
     code = path.read_text()

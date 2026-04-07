@@ -125,119 +125,139 @@ def check_memory_safety(
         MemorySafetyResult with score (1.0 = clean, 0.0 = errors found).
     """
     result = MemorySafetyResult()
-    tmpdir = tempfile.mkdtemp(prefix="cnake_asan_")
 
-    try:
-        # Write .pyx file (strip benchmark decorators)
-        clean_code = _strip_decorators(cython_code)
-        pyx_path = os.path.join(tmpdir, f"{module_name}.pyx")
-        with open(pyx_path, "w") as f:
-            f.write(clean_code)
-
-        # Build compile flags
-        compile_flags = list(ASAN_COMPILE_FLAGS)
-        if extra_compile_args:
-            compile_flags.extend(extra_compile_args)
-
-        # Write setup.py
-        setup_content = SETUP_PY_TEMPLATE.format(
-            module_name=module_name,
-            extra_compile_args=compile_flags,
-            extra_link_args=ASAN_LINK_FLAGS,
-        )
-        with open(os.path.join(tmpdir, "setup.py"), "w") as f:
-            f.write(setup_content)
-
-        # Compile with ASan
-        compile_result = subprocess.run(
-            [sys.executable, "setup.py", "build_ext", "--inplace"],
-            capture_output=True,
-            text=True,
-            cwd=tmpdir,
-            timeout=timeout,
-            env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1"},
-        )
-
-        if compile_result.returncode != 0:
+    with tempfile.TemporaryDirectory(prefix="cnake_asan_") as tmpdir:
+        try:
+            result = _run_asan_in_dir(
+                tmpdir,
+                result,
+                cython_code,
+                func_name,
+                test_args,
+                module_name,
+                timeout,
+                extra_compile_args,
+            )
+        except subprocess.TimeoutExpired:
             result.success = False
-            result.errors = [f"ASan build failed: {compile_result.stderr[:500]}"]
-            result.score = 1.0  # Don't penalize build failures (separate concern)
-            return result
+            result.errors = [f"ASan check timed out after {timeout}s"]
+            result.score = 1.0  # Don't penalize timeouts
+        except Exception as e:
+            result.success = False
+            result.errors = [str(e)]
+            result.score = 1.0  # Don't penalize infrastructure failures
 
-        # Build the test runner script
-        args_repr = repr(test_args)
-        runner_code = f"""\
+    return result
+
+
+def _run_asan_in_dir(
+    tmpdir: str,
+    result: MemorySafetyResult,
+    cython_code: str,
+    func_name: str,
+    test_args: tuple,
+    module_name: str,
+    timeout: int,
+    extra_compile_args: list | None,
+) -> MemorySafetyResult:
+    """Inner ASan logic, separated so TemporaryDirectory handles cleanup."""
+    # Write .pyx file (strip benchmark decorators)
+    clean_code = _strip_decorators(cython_code)
+    pyx_path = os.path.join(tmpdir, f"{module_name}.pyx")
+    with open(pyx_path, "w") as f:
+        f.write(clean_code)
+
+    # Build compile flags
+    compile_flags = list(ASAN_COMPILE_FLAGS)
+    if extra_compile_args:
+        compile_flags.extend(extra_compile_args)
+
+    # Write setup.py
+    setup_content = SETUP_PY_TEMPLATE.format(
+        module_name=module_name,
+        extra_compile_args=compile_flags,
+        extra_link_args=ASAN_LINK_FLAGS,
+    )
+    with open(os.path.join(tmpdir, "setup.py"), "w") as f:
+        f.write(setup_content)
+
+    # Compile with ASan flags (sandboxed, but WITHOUT ASan runtime env)
+    from cnake_charmer.eval.sandbox import asan_config, compile_config, run_sandboxed
+
+    compile_sandbox_cfg = compile_config(
+        wall_time_limit_s=timeout + 30,
+        cpu_time_limit_s=timeout,
+        writable_paths=(tmpdir,),
+    )
+    compile_sandbox = run_sandboxed(
+        [sys.executable, "setup.py", "build_ext", "--inplace"],
+        config=compile_sandbox_cfg,
+        cwd=tmpdir,
+    )
+
+    if compile_sandbox.returncode != 0:
+        result.success = False
+        result.errors = [f"ASan build failed: {compile_sandbox.stderr[:500]}"]
+        result.score = 1.0  # Don't penalize build failures (separate concern)
+        return result
+
+    # Build the test runner script
+    args_repr = repr(test_args)
+    runner_code = f"""\
 import sys
 sys.path.insert(0, '.')
 from {module_name} import {func_name}
 result = {func_name}(*{args_repr})
 print(f"OK: {{result}}")
 """
-        runner_path = os.path.join(tmpdir, "run_asan_test.py")
-        with open(runner_path, "w") as f:
-            f.write(runner_code)
+    runner_path = os.path.join(tmpdir, "run_asan_test.py")
+    with open(runner_path, "w") as f:
+        f.write(runner_code)
 
-        # Run with ASan environment
-        env = {**os.environ}
-        env["PYTHONMALLOC"] = "malloc"
-        env["PYTHONDONTWRITEBYTECODE"] = "1"
+    # Run the test with ASan in sandbox
+    asan_lib = _find_asan_lib()
+    asan_opts = "detect_leaks=1:fast_unwind_on_malloc=0:print_legend=0:log_path=stderr"
 
-        asan_lib = _find_asan_lib()
-        if asan_lib:
-            env["LD_PRELOAD"] = asan_lib
+    # No LSan suppressions — we filter leaks by module in _parse_asan_output
+    supp_path = os.path.join(tmpdir, "lsan.supp")
+    with open(supp_path, "w") as f:
+        f.write("")  # empty file
 
-        asan_opts = [
-            "detect_leaks=1",
-            "fast_unwind_on_malloc=0",
-            "print_legend=0",
-            "log_path=stderr",
-        ]
-        env["ASAN_OPTIONS"] = ":".join(asan_opts)
-        env["LSAN_OPTIONS"] = "suppressions=" + os.path.join(tmpdir, "lsan.supp")
+    asan_extra_env = {
+        "PYTHONMALLOC": "malloc",
+        "ASAN_OPTIONS": asan_opts,
+        "LSAN_OPTIONS": "suppressions=" + supp_path,
+    }
+    if asan_lib:
+        asan_extra_env["LD_PRELOAD"] = asan_lib
 
-        # No LSan suppressions — we filter leaks by module in _parse_asan_output
-        supp_path = os.path.join(tmpdir, "lsan.supp")
-        with open(supp_path, "w") as f:
-            f.write("")  # empty file
+    run_sandbox_cfg = asan_config(
+        wall_time_limit_s=timeout + 30,
+        cpu_time_limit_s=timeout,
+        writable_paths=(tmpdir,),
+        extra_env=asan_extra_env,
+    )
+    run_sandbox = run_sandboxed(
+        [sys.executable, "run_asan_test.py"],
+        config=run_sandbox_cfg,
+        cwd=tmpdir,
+    )
 
-        # Run the test
-        run_result = subprocess.run(
-            [sys.executable, "run_asan_test.py"],
-            capture_output=True,
-            text=True,
-            cwd=tmpdir,
-            timeout=timeout,
-            env=env,
-        )
+    result.raw_output = run_sandbox.stderr
 
-        result.raw_output = run_result.stderr
+    # Parse ASan output — only count errors from user function
+    _parse_asan_output(
+        run_sandbox.stderr,
+        result,
+        module_name=module_name,
+        func_name=func_name,
+    )
 
-        # Parse ASan output — only count errors from user function
-        _parse_asan_output(
-            run_result.stderr,
-            result,
-            module_name=module_name,
-            func_name=func_name,
-        )
-
-        # Check if the function actually ran successfully
-        if "OK:" not in run_result.stdout and run_result.returncode != 0 and not result.errors:
-            result.errors.append(f"Function crashed (exit code {run_result.returncode})")
-            result.error_count += 1
-            result.score = 0.0
-
-    except subprocess.TimeoutExpired:
-        result.success = False
-        result.errors = [f"ASan check timed out after {timeout}s"]
-        result.score = 1.0  # Don't penalize timeouts
-    except Exception as e:
-        result.success = False
-        result.errors = [str(e)]
-        result.score = 1.0  # Don't penalize infrastructure failures
-    finally:
-        import shutil
-
-        shutil.rmtree(tmpdir, ignore_errors=True)
+    # Check if the function actually ran successfully
+    if "OK:" not in run_sandbox.stdout and run_sandbox.returncode != 0 and not result.errors:
+        result.errors.append(f"Function crashed (exit code {run_sandbox.returncode})")
+        result.error_count += 1
+        result.score = 0.0
 
     return result
 
