@@ -41,12 +41,13 @@ def row_l2_normalize(int n, int m):
         for j in range(m):
             mat[i * m + j] /= norm
 
-    # Checksum
     total = 0.0
     for i in range(n):
         for j in range(m):
             val = mat[i * m + j]
             total += val * val
 
+    cdef double first = mat[0]
+    cdef double last = mat[(n - 1) * m + m - 1]
     free(mat)
-    return total
+    return (total, first, last)

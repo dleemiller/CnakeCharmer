@@ -10,7 +10,7 @@ from cnake_data.benchmarks import python_benchmark
 
 
 @python_benchmark(args=(5000,))
-def newton_sqrt_sum(n: int) -> float:
+def newton_sqrt_sum(n: int) -> tuple:
     """Sum of Newton's-method square roots for integers 1..n.
 
     Each sqrt is computed via Heron's iterative method starting from 1.0,
@@ -20,9 +20,12 @@ def newton_sqrt_sum(n: int) -> float:
         n: Upper bound (inclusive).
 
     Returns:
-        Sum of sqrt(1) + sqrt(2) + ... + sqrt(n).
+        Tuple of (total_sum, midpoint_sqrt, last_sqrt).
     """
     total = 0.0
+    mid_val = 0.0
+    last_val = 0.0
+    mid = n // 2
     for v in range(1, n + 1):
         x = 1.0
         fv = float(v)
@@ -33,4 +36,7 @@ def newton_sqrt_sum(n: int) -> float:
             if diff < 1e-14:
                 break
         total += x
-    return total
+        if v == mid:
+            mid_val = x
+        last_val = x
+    return (total, mid_val, last_val)

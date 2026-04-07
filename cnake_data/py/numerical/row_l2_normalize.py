@@ -13,7 +13,7 @@ from cnake_data.benchmarks import python_benchmark
 
 
 @python_benchmark(args=(300, 200))
-def row_l2_normalize(n: int, m: int) -> float:
+def row_l2_normalize(n: int, m: int) -> tuple:
     """L2-normalize each row of a deterministically generated n×m matrix.
 
     Args:
@@ -21,7 +21,7 @@ def row_l2_normalize(n: int, m: int) -> float:
         m: Number of columns.
 
     Returns:
-        Sum of all squared elements after normalization (≈ number of non-zero rows).
+        Tuple of (sum_of_squares, first_row_first_elem, last_row_last_elem).
     """
     # Generate deterministic matrix values in [-1, 1]
     mat = [[math.sin(i * 1.7 + j * 0.9) for j in range(m)] for i in range(n)]
@@ -37,9 +37,8 @@ def row_l2_normalize(n: int, m: int) -> float:
         for j in range(m):
             mat[i][j] /= norm
 
-    # Checksum: sum of squares (should equal count of non-zero rows)
     total = 0.0
     for i in range(n):
         for j in range(m):
             total += mat[i][j] * mat[i][j]
-    return total
+    return (total, mat[0][0], mat[n - 1][m - 1])

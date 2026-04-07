@@ -19,6 +19,7 @@ def vec3_cross_normalize(int n):
     cdef int i
     cdef double fi, ax, ay, az, bx, by, bz
     cdef double cx, cy, cz, norm, total
+    cdef double first_norm = 0.0, last_cx = 0.0
 
     total = 0.0
     for i in range(n):
@@ -41,4 +42,7 @@ def vec3_cross_normalize(int n):
             cz /= norm
 
         total += cx + cy + cz
-    return total
+        if i == 0:
+            first_norm = norm
+        last_cx = cx
+    return (total, first_norm, last_cx)

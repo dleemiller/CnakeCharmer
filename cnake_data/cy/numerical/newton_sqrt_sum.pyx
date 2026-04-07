@@ -14,12 +14,14 @@ def newton_sqrt_sum(int n):
         n: Upper bound (inclusive).
 
     Returns:
-        Sum of sqrt(1) + sqrt(2) + ... + sqrt(n).
+        Tuple of (total_sum, midpoint_sqrt, last_sqrt).
     """
-    cdef int v, k
+    cdef int v, k, mid
     cdef double total = 0.0
+    cdef double mid_val = 0.0, last_val = 0.0
     cdef double x, xprev, fv, diff
 
+    mid = n // 2
     for v in range(1, n + 1):
         x = 1.0
         fv = <double>v
@@ -30,4 +32,7 @@ def newton_sqrt_sum(int n):
             if diff < 1e-14:
                 break
         total += x
-    return total
+        if v == mid:
+            mid_val = x
+        last_val = x
+    return (total, mid_val, last_val)

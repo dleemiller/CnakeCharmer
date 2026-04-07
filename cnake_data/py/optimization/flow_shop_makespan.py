@@ -12,7 +12,7 @@ from cnake_data.benchmarks import python_benchmark
 
 
 @python_benchmark(args=(40, 8))
-def flow_shop_makespan(n: int, m: int) -> float:
+def flow_shop_makespan(n: int, m: int) -> tuple:
     """Compute mean job completion time for a permutation flow shop.
 
     Generates deterministic processing times from (n, m) via sin/cos,
@@ -23,7 +23,7 @@ def flow_shop_makespan(n: int, m: int) -> float:
         m: Number of machines.
 
     Returns:
-        Mean completion time (float).
+        Tuple of (mean_completion, first_job_completion, last_job_completion).
     """
     # Generate deterministic processing times in [1, 20]
     orders = [
@@ -53,4 +53,6 @@ def flow_shop_makespan(n: int, m: int) -> float:
             mat[idx][j] = max(mat[prev][j], mat[idx][j - 1]) + orders[idx][j]
         total += mat[idx][m - 1]
 
-    return total / n
+    first_completion = mat[sol[0] - 1][m - 1]
+    last_completion = mat[sol[-1] - 1][m - 1]
+    return (total / n, first_completion, last_completion)

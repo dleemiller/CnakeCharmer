@@ -23,6 +23,7 @@ def flow_shop_makespan(int n, int m):
     """
     cdef int i, j, idx, prev, c
     cdef double total, val
+    cdef int first_completion, last_completion
     cdef int *orders = <int *>malloc(n * m * sizeof(int))
     cdef int *mat = <int *>malloc(n * m * sizeof(int))
     cdef int *sol = <int *>malloc(n * sizeof(int))
@@ -59,7 +60,9 @@ def flow_shop_makespan(int n, int m):
             mat[idx * m + j] = <int>val + orders[idx * m + j]
         total += mat[idx * m + m - 1]
 
+    first_completion = mat[(sol[0] - 1) * m + m - 1]
+    last_completion = mat[(sol[n - 1] - 1) * m + m - 1]
     free(orders)
     free(mat)
     free(sol)
-    return total / n
+    return (total / n, first_completion, last_completion)
