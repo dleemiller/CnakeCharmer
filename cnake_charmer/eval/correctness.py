@@ -35,9 +35,15 @@ def _load_module_from_path(module_path: str, module_name: str = "loaded_module")
     module = importlib.util.module_from_spec(spec)
     # Add the module's directory to sys.path temporarily for deps
     module_dir = os.path.dirname(os.path.abspath(module_path))
-    if module_dir not in sys.path:
+    added = module_dir not in sys.path
+    if added:
         sys.path.insert(0, module_dir)
-    spec.loader.exec_module(module)
+    try:
+        spec.loader.exec_module(module)
+    except Exception:
+        if added:
+            sys.path.remove(module_dir)
+        raise
     return module
 
 

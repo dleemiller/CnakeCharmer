@@ -291,88 +291,90 @@ class CythonToolEnvironment:
             cleanup_build(comp)
             return "\n\n".join(sections)
 
-        # 2. Annotation (safe — just HTML parsing)
-        ann = parse_annotations(html_path=comp.html_path) if comp.html_path else None
-        if ann and ann.success:
-            step["annotations"] = ann.score
-            sections.append(
-                "## Annotation\n"
-                + format_feedback(
-                    "annotate",
-                    {
-                        "success": True,
-                        "score": ann.score,
-                        "hints": ann.hints,
-                        "yellow_lines": ann.yellow_lines,
-                        "total_lines": ann.total_lines,
-                    },
-                )
-            )
-
-        # 3. Run tests + benchmark in sandboxed subprocess
-        if comp.module_path:
-            combined = _run_combined_sandboxed(
-                python_code=effective_python,
-                cython_module_path=comp.module_path,
-                test_code=test_code,
-                do_benchmark=True,
-            )
-
-            # Handle module load errors
-            if "py_error" in combined:
-                sections.append(f"## Python Error\n{combined['py_error']}")
-                self.step_scores.append(step)
-                cleanup_build(comp)
-                return "\n\n".join(sections)
-
-            if "cy_error" in combined:
-                sections.append(f"## Load Error\n{combined['cy_error']}")
-                self.step_scores.append(step)
-                cleanup_build(comp)
-                return "\n\n".join(sections)
-
-            if "sandbox_error" in combined:
-                sections.append(f"## Error\n{combined['sandbox_error']}")
-                self.step_scores.append(step)
-                cleanup_build(comp)
-                return "\n\n".join(sections)
-
-            # Process test results
-            test_results = combined.get("tests", {"passed": 0, "total": 0, "failures": []})
-            step["correctness"] = (
-                test_results["passed"] / test_results["total"] if test_results["total"] > 0 else 0.0
-            )
-            logger.info(f"[evaluate_cython] tests={test_results['passed']}/{test_results['total']}")
-            sections.append(
-                "## Tests\n"
-                + format_feedback(
-                    "test",
-                    {
-                        "success": True,
-                        "passed": test_results["passed"],
-                        "total": test_results["total"],
-                        "failures": test_results["failures"],
-                    },
-                )
-            )
-
-            # Process benchmark results
-            bench = combined.get("benchmark")
-            if bench:
-                if bench.get("success") and bench.get("speedup", 0) > 1.0:
-                    step["speedup"] = bench["speedup"]
-                    step["performance"] = min(math.log2(bench["speedup"]) / math.log2(10), 1.0)
-                logger.info(f"[evaluate_cython] speedup={bench.get('speedup', 0):.1f}x")
-                sections.append("## Benchmark\n" + format_feedback("benchmark", bench))
-
-            # Note timeout if it occurred
-            if combined.get("timed_out"):
+        try:
+            # 2. Annotation (safe — just HTML parsing)
+            ann = parse_annotations(html_path=comp.html_path) if comp.html_path else None
+            if ann and ann.success:
+                step["annotations"] = ann.score
                 sections.append(
-                    "## Timeout\nThe evaluation timed out. "
-                    "This may indicate the function is too slow or has an infinite loop."
+                    "## Annotation\n"
+                    + format_feedback(
+                        "annotate",
+                        {
+                            "success": True,
+                            "score": ann.score,
+                            "hints": ann.hints,
+                            "yellow_lines": ann.yellow_lines,
+                            "total_lines": ann.total_lines,
+                        },
+                    )
                 )
 
-        cleanup_build(comp)
+            # 3. Run tests + benchmark in sandboxed subprocess
+            if comp.module_path:
+                combined = _run_combined_sandboxed(
+                    python_code=effective_python,
+                    cython_module_path=comp.module_path,
+                    test_code=test_code,
+                    do_benchmark=True,
+                )
+
+                # Handle module load errors
+                if "py_error" in combined:
+                    sections.append(f"## Python Error\n{combined['py_error']}")
+                    self.step_scores.append(step)
+                    return "\n\n".join(sections)
+
+                if "cy_error" in combined:
+                    sections.append(f"## Load Error\n{combined['cy_error']}")
+                    self.step_scores.append(step)
+                    return "\n\n".join(sections)
+
+                if "sandbox_error" in combined:
+                    sections.append(f"## Error\n{combined['sandbox_error']}")
+                    self.step_scores.append(step)
+                    return "\n\n".join(sections)
+
+                # Process test results
+                test_results = combined.get("tests", {"passed": 0, "total": 0, "failures": []})
+                step["correctness"] = (
+                    test_results["passed"] / test_results["total"]
+                    if test_results["total"] > 0
+                    else 0.0
+                )
+                logger.info(
+                    f"[evaluate_cython] tests={test_results['passed']}/{test_results['total']}"
+                )
+                sections.append(
+                    "## Tests\n"
+                    + format_feedback(
+                        "test",
+                        {
+                            "success": True,
+                            "passed": test_results["passed"],
+                            "total": test_results["total"],
+                            "failures": test_results["failures"],
+                        },
+                    )
+                )
+
+                # Process benchmark results
+                bench = combined.get("benchmark")
+                if bench:
+                    if bench.get("success") and bench.get("speedup", 0) > 1.0:
+                        step["speedup"] = bench["speedup"]
+                        step["performance"] = min(math.log2(bench["speedup"]) / math.log2(10), 1.0)
+                    logger.info(f"[evaluate_cython] speedup={bench.get('speedup', 0):.1f}x")
+                    sections.append("## Benchmark\n" + format_feedback("benchmark", bench))
+
+                # Note timeout if it occurred
+                if combined.get("timed_out"):
+                    sections.append(
+                        "## Timeout\nThe evaluation timed out. "
+                        "This may indicate the function is too slow or has an infinite loop."
+                    )
+        finally:
+            cleanup_build(comp)
 
         # Compute step total
         step["total"] = self._weighted_score(step)
@@ -408,86 +410,87 @@ class CythonToolEnvironment:
             cleanup_build(comp)
             return "\n\n".join(sections)
 
-        # Annotation
-        if annotate:
-            ann = parse_annotations(html_path=comp.html_path) if comp.html_path else None
-            if ann and ann.success:
+        try:
+            # Annotation
+            if annotate:
+                ann = parse_annotations(html_path=comp.html_path) if comp.html_path else None
+                if ann and ann.success:
+                    sections.append(
+                        "## Annotation\n"
+                        + format_feedback(
+                            "annotate",
+                            {
+                                "success": True,
+                                "score": ann.score,
+                                "hints": ann.hints,
+                                "yellow_lines": ann.yellow_lines,
+                                "total_lines": ann.total_lines,
+                            },
+                        )
+                    )
+
+            # Load compiled module
+            cython_func = None
+            if comp.module_path:
+                try:
+                    module = _load_module_from_path(comp.module_path, "gen_module")
+                    cython_func = getattr(module, self._func_name)
+                except Exception as e:
+                    sections.append(f"## Load Error\nCould not load function: {e}")
+                    return "\n\n".join(sections)
+
+            # Test
+            if test and cython_func and self._python_func and self._test_cases:
+                test_result = check_correctness(
+                    python_func=self._python_func,
+                    cython_func=cython_func,
+                    test_cases=self._test_cases,
+                )
                 sections.append(
-                    "## Annotation\n"
+                    "## Tests\n"
                     + format_feedback(
-                        "annotate",
+                        "test",
                         {
                             "success": True,
-                            "score": ann.score,
-                            "hints": ann.hints,
-                            "yellow_lines": ann.yellow_lines,
-                            "total_lines": ann.total_lines,
+                            "passed": test_result.passed,
+                            "total": test_result.total,
+                            "failures": test_result.failures,
                         },
                     )
                 )
 
-        # Load compiled module
-        cython_func = None
-        if comp.module_path:
-            try:
-                module = _load_module_from_path(comp.module_path, "gen_module")
-                cython_func = getattr(module, self._func_name)
-            except Exception as e:
-                sections.append(f"## Load Error\nCould not load function: {e}")
-                cleanup_build(comp)
-                return "\n\n".join(sections)
-
-        # Test
-        if test and cython_func and self._python_func and self._test_cases:
-            test_result = check_correctness(
-                python_func=self._python_func,
-                cython_func=cython_func,
-                test_cases=self._test_cases,
-            )
-            sections.append(
-                "## Tests\n"
-                + format_feedback(
-                    "test",
-                    {
-                        "success": True,
-                        "passed": test_result.passed,
-                        "total": test_result.total,
-                        "failures": test_result.failures,
-                    },
+            # Benchmark (skip if tests failed)
+            if (
+                benchmark
+                and cython_func
+                and self._python_func
+                and self._test_cases
+                and test_result.passed == test_result.total
+                and test_result.total > 0
+            ):
+                b_args = self._benchmark_args or ()
+                bench_result = _run_benchmark(
+                    python_func=self._python_func,
+                    cython_func=cython_func,
+                    args=b_args,
+                    num_runs=3,
                 )
-            )
-
-        # Benchmark (skip if tests failed)
-        if (
-            benchmark
-            and cython_func
-            and self._python_func
-            and self._test_cases
-            and test_result.passed == test_result.total
-            and test_result.total > 0
-        ):
-            b_args = self._benchmark_args or ()
-            bench_result = _run_benchmark(
-                python_func=self._python_func,
-                cython_func=cython_func,
-                args=b_args,
-                num_runs=3,
-            )
-            sections.append(
-                "## Benchmark\n"
-                + format_feedback(
-                    "benchmark",
-                    {
-                        "success": bench_result.success,
-                        "speedup": round(bench_result.speedup, 2),
-                        "cython_time": round(bench_result.cython_time, 6),
-                        "python_time": round(bench_result.python_time, 6),
-                        "errors": bench_result.error,
-                    },
+                sections.append(
+                    "## Benchmark\n"
+                    + format_feedback(
+                        "benchmark",
+                        {
+                            "success": bench_result.success,
+                            "speedup": round(bench_result.speedup, 2),
+                            "cython_time": round(bench_result.cython_time, 6),
+                            "python_time": round(bench_result.python_time, 6),
+                            "errors": bench_result.error,
+                        },
+                    )
                 )
-            )
+        finally:
+            cleanup_build(comp)
 
-        cleanup_build(comp)
         return "\n\n".join(sections)
 
     def _weighted_score(self, scores: dict, weights: dict | None = None) -> float:

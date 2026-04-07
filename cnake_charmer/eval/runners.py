@@ -19,7 +19,7 @@ actionable diagnostic information.
 # ---------------------------------------------------------------------------
 
 COMBINED_RUNNER = """\
-import sys, json, os, importlib, importlib.util, time, types, signal, re
+import sys, json, os, importlib, importlib.util, time, types, signal, re, contextlib
 
 # --- Module loading ---
 
@@ -49,6 +49,16 @@ class _TimeoutError(Exception):
 def _timeout_handler(signum, frame):
     raise _TimeoutError("Timed out")
 
+@contextlib.contextmanager
+def _alarm(seconds):
+    old_handler = signal.signal(signal.SIGALRM, _timeout_handler)
+    signal.alarm(seconds)
+    try:
+        yield
+    finally:
+        signal.alarm(0)
+        signal.signal(signal.SIGALRM, old_handler)
+
 # --- Test runner ---
 
 def run_tests(py_mod, cy_mod, test_code):
@@ -62,26 +72,25 @@ def run_tests(py_mod, cy_mod, test_code):
         if not line or line.startswith("#"):
             continue
 
-        old_handler = signal.signal(signal.SIGALRM, _timeout_handler)
-        signal.alarm(ASSERTION_TIMEOUT)
         try:
-            if "==" in line:
-                total += 1
-                result = eval(line, namespace)
-                if result:
-                    passed += 1
+            with _alarm(ASSERTION_TIMEOUT):
+                if "==" in line:
+                    total += 1
+                    result = eval(line, namespace)
+                    if result:
+                        passed += 1
+                    else:
+                        parts = line.split("==", 1)
+                        try:
+                            left = eval(parts[0].strip(), namespace)
+                            right = eval(parts[1].strip(), namespace)
+                            failures.append(
+                                f"FAIL: {line}\\n  left:  {repr(left)[:200]}\\n  right: {repr(right)[:200]}"
+                            )
+                        except Exception:
+                            failures.append(f"FAIL: {line}")
                 else:
-                    parts = line.split("==", 1)
-                    try:
-                        left = eval(parts[0].strip(), namespace)
-                        right = eval(parts[1].strip(), namespace)
-                        failures.append(
-                            f"FAIL: {line}\\n  left:  {repr(left)[:200]}\\n  right: {repr(right)[:200]}"
-                        )
-                    except Exception:
-                        failures.append(f"FAIL: {line}")
-            else:
-                exec(line, namespace)
+                    exec(line, namespace)
         except _TimeoutError:
             if "==" in line:
                 total += 1
@@ -94,9 +103,6 @@ def run_tests(py_mod, cy_mod, test_code):
                 failures.append(f"ERROR: {line}\\n  {type(e).__name__}: {e}")
             else:
                 failures.append(f"ERROR (setup): {line}\\n  {type(e).__name__}: {e}")
-        finally:
-            signal.alarm(0)
-            signal.signal(signal.SIGALRM, old_handler)
 
     return {"passed": passed, "total": total, "failures": failures}
 

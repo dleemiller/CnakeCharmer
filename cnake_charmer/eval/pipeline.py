@@ -135,85 +135,86 @@ def validate(
 
     if not result.compilation.success:
         logger.debug(f"Compilation failed, stopping pipeline: {result.compilation.errors[:200]}")
+        cleanup_build(result.compilation)
         return result
 
-    # Step 2: Lint analysis (runs on source, independent of compilation)
-    result.lint = run_cython_lint(cython_code)
+    try:
+        # Step 2: Lint analysis (runs on source, independent of compilation)
+        result.lint = run_cython_lint(cython_code)
 
-    # Step 3: Parse annotations (from compilation HTML)
-    if result.compilation.html_path:
-        result.annotations = parse_annotations(html_path=result.compilation.html_path)
+        # Step 3: Parse annotations (from compilation HTML)
+        if result.compilation.html_path:
+            result.annotations = parse_annotations(html_path=result.compilation.html_path)
 
-    module_path = result.compilation.module_path
+        module_path = result.compilation.module_path
 
-    # Determine execution mode: sandboxed (preferred) or legacy in-process
-    use_sandbox = python_code and func_name and module_path
+        # Determine execution mode: sandboxed (preferred) or legacy in-process
+        use_sandbox = python_code and func_name and module_path
 
-    # Legacy path: load the compiled function in-process (backward compat)
-    cython_func = None
-    if not use_sandbox and func_name and module_path:
-        try:
-            module = _load_module_from_path(module_path, module_name)
-            cython_func = getattr(module, func_name)
-        except Exception as e:
-            logger.warning(f"Could not load function '{func_name}' from compiled module: {e}")
+        # Legacy path: load the compiled function in-process (backward compat)
+        cython_func = None
+        if not use_sandbox and func_name and module_path:
+            try:
+                module = _load_module_from_path(module_path, module_name)
+                cython_func = getattr(module, func_name)
+            except Exception as e:
+                logger.warning(f"Could not load function '{func_name}' from compiled module: {e}")
 
-    # Step 4: Correctness check
-    if not skip_correctness and test_cases:
-        if use_sandbox:
-            result.correctness = check_correctness(
-                python_code=python_code,
-                func_name=func_name,
-                cython_module_path=module_path,
-                test_cases=test_cases,
-            )
-        elif python_func and cython_func:
-            result.correctness = check_correctness(
-                python_func=python_func,
-                cython_func=cython_func,
-                test_cases=test_cases,
-            )
+        # Step 4: Correctness check
+        if not skip_correctness and test_cases:
+            if use_sandbox:
+                result.correctness = check_correctness(
+                    python_code=python_code,
+                    func_name=func_name,
+                    cython_module_path=module_path,
+                    test_cases=test_cases,
+                )
+            elif python_func and cython_func:
+                result.correctness = check_correctness(
+                    python_func=python_func,
+                    cython_func=cython_func,
+                    test_cases=test_cases,
+                )
 
-    # Step 5: Benchmark
-    b_args = benchmark_args
-    if b_args is None and test_cases:
-        b_args = _extract_benchmark_args(test_cases)
+        # Step 5: Benchmark
+        b_args = benchmark_args
+        if b_args is None and test_cases:
+            b_args = _extract_benchmark_args(test_cases)
 
-    if not skip_benchmark and b_args is not None:
-        if use_sandbox:
-            result.benchmark = run_benchmark(
-                python_code=python_code,
-                func_name=func_name,
-                cython_module_path=module_path,
-                args=b_args,
-                kwargs=benchmark_kwargs,
-                num_runs=benchmark_runs,
-            )
-        elif python_func and cython_func:
-            result.benchmark = run_benchmark(
-                python_func=python_func,
-                cython_func=cython_func,
-                args=b_args,
-                kwargs=benchmark_kwargs,
-                num_runs=benchmark_runs,
-            )
+        if not skip_benchmark and b_args is not None:
+            if use_sandbox:
+                result.benchmark = run_benchmark(
+                    python_code=python_code,
+                    func_name=func_name,
+                    cython_module_path=module_path,
+                    args=b_args,
+                    kwargs=benchmark_kwargs,
+                    num_runs=benchmark_runs,
+                )
+            elif python_func and cython_func:
+                result.benchmark = run_benchmark(
+                    python_func=python_func,
+                    cython_func=cython_func,
+                    args=b_args,
+                    kwargs=benchmark_kwargs,
+                    num_runs=benchmark_runs,
+                )
 
-    # Step 6: Memory safety (ASan) — uses small test args
-    if not skip_memory_safety and func_name:
-        asan_args = benchmark_args
-        if asan_args is None and test_cases:
-            asan_args = _extract_benchmark_args(test_cases)
+        # Step 6: Memory safety (ASan) — uses small test args
+        if not skip_memory_safety and func_name:
+            asan_args = benchmark_args
+            if asan_args is None and test_cases:
+                asan_args = _extract_benchmark_args(test_cases)
 
-        if asan_args is not None:
-            small_args = _shrink_args(asan_args)
-            result.memory_safety = check_memory_safety(
-                cython_code=cython_code,
-                func_name=func_name,
-                test_args=small_args,
-            )
-
-    # Clean up build directory
-    cleanup_build(result.compilation)
+            if asan_args is not None:
+                small_args = _shrink_args(asan_args)
+                result.memory_safety = check_memory_safety(
+                    cython_code=cython_code,
+                    func_name=func_name,
+                    test_args=small_args,
+                )
+    finally:
+        cleanup_build(result.compilation)
 
     return result
 

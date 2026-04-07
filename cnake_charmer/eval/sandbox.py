@@ -15,6 +15,7 @@ configuration for each use case.
 Falls back to prlimit-only if bwrap is unavailable.
 """
 
+import contextlib
 import json
 import logging
 import os
@@ -310,6 +311,16 @@ def _log_event(event: str, profile: str = "", **extra):
 _DEFAULT_CONFIG = SandboxConfig()
 
 
+def _kill_proc_tree(proc: subprocess.Popen) -> None:
+    """Kill a process and its entire process group. Best-effort, never raises."""
+    try:
+        os.killpg(os.getpgid(proc.pid), signal.SIGKILL)
+    except OSError:
+        # Process already dead, wrong pgid, or no permission — fall back
+        with contextlib.suppress(OSError):
+            proc.kill()
+
+
 def run_sandboxed(
     command: list[str],
     *,
@@ -348,12 +359,14 @@ def run_sandboxed(
             stdout_bytes, stderr_bytes = proc.communicate(timeout=config.wall_time_limit_s)
         except subprocess.TimeoutExpired:
             timed_out = True
-            # Kill the entire process group (uncatchable)
+            _kill_proc_tree(proc)
             try:
-                os.killpg(os.getpgid(proc.pid), signal.SIGKILL)
-            except (ProcessLookupError, PermissionError):
+                stdout_bytes, stderr_bytes = proc.communicate(timeout=5)
+            except subprocess.TimeoutExpired:
+                # Process is truly stuck — reap it to avoid zombie
                 proc.kill()
-            stdout_bytes, stderr_bytes = proc.communicate(timeout=5)
+                proc.wait()
+                stdout_bytes, stderr_bytes = b"", b""
 
         wall_time = time.monotonic() - start
         returncode = proc.returncode
@@ -430,11 +443,13 @@ def _run_prlimit_only(
             stdout_bytes, stderr_bytes = proc.communicate(timeout=config.wall_time_limit_s)
         except subprocess.TimeoutExpired:
             timed_out = True
+            _kill_proc_tree(proc)
             try:
-                os.killpg(os.getpgid(proc.pid), signal.SIGKILL)
-            except (ProcessLookupError, PermissionError):
+                stdout_bytes, stderr_bytes = proc.communicate(timeout=5)
+            except subprocess.TimeoutExpired:
                 proc.kill()
-            stdout_bytes, stderr_bytes = proc.communicate(timeout=5)
+                proc.wait()
+                stdout_bytes, stderr_bytes = b"", b""
 
         wall_time = time.monotonic() - start
         return SandboxResult(
