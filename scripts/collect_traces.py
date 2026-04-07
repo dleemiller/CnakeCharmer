@@ -342,9 +342,9 @@ def main():
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
     # Resume: count existing traces per problem for this model
-    # Normalize model names: strip :free suffix so paid/free variants match
+    # Normalize model names: strip :free suffix and -preview so variants match
     def normalize_model(m: str) -> str:
-        return m.removesuffix(":free")
+        return m.removesuffix(":free").removesuffix("-preview")
 
     existing_counts = Counter()
     model_norm = normalize_model(args.model)

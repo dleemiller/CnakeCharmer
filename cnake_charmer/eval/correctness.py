@@ -2,14 +2,15 @@
 Check correctness of a compiled Cython module against a Python reference.
 
 Runs both implementations with the same test inputs and compares outputs.
+Execution happens in a sandboxed subprocess for safety.
 """
 
 import importlib
 import importlib.util
+import json
 import logging
 import os
 import sys
-from collections.abc import Callable
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -34,48 +35,154 @@ def _load_module_from_path(module_path: str, module_name: str = "loaded_module")
     module = importlib.util.module_from_spec(spec)
     # Add the module's directory to sys.path temporarily for deps
     module_dir = os.path.dirname(os.path.abspath(module_path))
-    if module_dir not in sys.path:
+    added = module_dir not in sys.path
+    if added:
         sys.path.insert(0, module_dir)
-    spec.loader.exec_module(module)
+    try:
+        spec.loader.exec_module(module)
+    except Exception:
+        if added:
+            sys.path.remove(module_dir)
+        raise
     return module
 
 
+# ---------------------------------------------------------------------------
+# Public API
+# ---------------------------------------------------------------------------
+
+
 def check_correctness(
-    python_func: Callable | None = None,
+    python_func=None,
     cython_module_path: str | None = None,
-    cython_func: Callable | None = None,
+    cython_func=None,
     func_name: str | None = None,
     test_cases: list | None = None,
     timeout_per_case: float = 10.0,
+    # New parameters for sandboxed execution
+    python_code: str | None = None,
 ) -> CorrectnessResult:
     """
     Check that a Cython implementation produces the same outputs as Python.
 
-    Provide either:
-    - python_func + cython_func: two callables to compare directly
-    - python_func + cython_module_path + func_name: load func from compiled module
+    For sandboxed execution (preferred), provide:
+    - python_code + func_name + cython_module_path + test_cases
+
+    For legacy in-process execution (backward compat), provide:
+    - python_func + cython_func (or cython_module_path + func_name)
 
     Args:
-        python_func: The reference Python callable.
+        python_func: The reference Python callable (legacy, in-process).
+        python_code: Python source code string (sandboxed).
         cython_module_path: Path to compiled .so/.pyd file.
-        cython_func: Direct callable (alternative to module_path).
+        cython_func: Direct callable (legacy, in-process).
         func_name: Function name to extract from the cython module.
-        test_cases: List of (args, kwargs) tuples or just (args,) tuples.
-            Each entry is either:
-            - (args_tuple,) — positional args only
-            - (args_tuple, kwargs_dict) — positional + keyword args
+        test_cases: List of test cases.
         timeout_per_case: Max seconds per test case.
 
     Returns:
         CorrectnessResult with pass/fail counts and details.
     """
-    if python_func is None:
-        return CorrectnessResult(success=False, error="No Python reference function provided")
-
     if test_cases is None or len(test_cases) == 0:
         return CorrectnessResult(success=False, error="No test cases provided")
 
-    # Load Cython function if needed
+    # Sandboxed path: when we have source code + module path
+    if python_code and cython_module_path and func_name:
+        return _check_correctness_sandboxed(
+            python_code=python_code,
+            func_name=func_name,
+            cython_module_path=cython_module_path,
+            test_cases=test_cases,
+            timeout_per_case=timeout_per_case,
+        )
+
+    # Legacy in-process path (backward compat)
+    if python_func is None:
+        return CorrectnessResult(success=False, error="No Python reference function provided")
+
+    return _check_correctness_inprocess(
+        python_func=python_func,
+        cython_module_path=cython_module_path,
+        cython_func=cython_func,
+        func_name=func_name,
+        test_cases=test_cases,
+    )
+
+
+def _check_correctness_sandboxed(
+    python_code: str,
+    func_name: str,
+    cython_module_path: str,
+    test_cases: list,
+    timeout_per_case: float = 10.0,
+) -> CorrectnessResult:
+    """Run correctness checks in a sandboxed subprocess."""
+    from cnake_charmer.eval.sandbox import execute_config, run_runner_sandboxed
+
+    module_dir = os.path.dirname(os.path.abspath(cython_module_path))
+
+    # Serialize test cases — handle numpy arrays by converting to lists
+    serializable_cases = _make_serializable(test_cases)
+
+    total_timeout = max(30, int(timeout_per_case * len(test_cases)) + 10)
+    sandbox_cfg = execute_config(
+        wall_time_limit_s=total_timeout,
+        cpu_time_limit_s=total_timeout - 5,
+        extra_ro_binds=(module_dir,),
+    )
+
+    result = run_runner_sandboxed(
+        "correctness_runner",
+        {
+            "python_code": python_code,
+            "func_name": func_name,
+            "cython_module_path": cython_module_path,
+            "test_cases": serializable_cases,
+        },
+        config=sandbox_cfg,
+    )
+
+    if result.timed_out:
+        return CorrectnessResult(
+            success=False,
+            error=f"Correctness check timed out after {total_timeout}s",
+        )
+
+    if result.returncode != 0:
+        return CorrectnessResult(
+            success=False,
+            error=f"Correctness runner failed (rc={result.returncode}): {result.stderr[:500]}",
+        )
+
+    # Parse JSON output
+    try:
+        data = json.loads(result.stdout.strip())
+    except (json.JSONDecodeError, ValueError):
+        return CorrectnessResult(
+            success=False,
+            error=f"Failed to parse correctness output: {result.stdout[:500]}",
+        )
+
+    if "error" in data:
+        return CorrectnessResult(success=False, error=data["error"])
+
+    return CorrectnessResult(
+        success=True,
+        passed=data["passed"],
+        total=data["total"],
+        score=data["score"],
+        failures=data.get("failures", []),
+    )
+
+
+def _check_correctness_inprocess(
+    python_func,
+    cython_module_path=None,
+    cython_func=None,
+    func_name=None,
+    test_cases=None,
+) -> CorrectnessResult:
+    """Legacy in-process correctness checking (no sandboxing)."""
     if cython_func is None:
         if cython_module_path is None:
             return CorrectnessResult(
@@ -119,6 +226,32 @@ def check_correctness(
     if result.failures:
         result.success = True  # Partial success is still "ran successfully"
     return result
+
+
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+
+def _make_serializable(test_cases: list) -> list:
+    """Convert test cases to JSON-serializable format (numpy arrays → lists)."""
+    try:
+        import numpy as np
+
+        has_numpy = True
+    except ImportError:
+        has_numpy = False
+
+    def _convert(obj):
+        if has_numpy and isinstance(obj, np.ndarray):
+            return {"__ndarray__": True, "data": obj.tolist(), "dtype": str(obj.dtype)}
+        if isinstance(obj, (list, tuple)):
+            return [_convert(x) for x in obj]
+        if isinstance(obj, dict):
+            return {k: _convert(v) for k, v in obj.items()}
+        return obj
+
+    return _convert(test_cases)
 
 
 def _unpack_test_case(test_case):

@@ -2,9 +2,12 @@
 Benchmark a Cython implementation against a Python reference.
 
 Measures execution time of both and computes the speedup ratio.
+Supports both in-process (legacy) and sandboxed out-of-process execution.
 """
 
+import json
 import logging
+import os
 import statistics
 import time
 from collections.abc import Callable
@@ -26,20 +29,33 @@ class BenchmarkResult:
 
 
 def run_benchmark(
-    python_func: Callable,
-    cython_func: Callable,
+    python_func: Callable | None = None,
+    cython_func: Callable | None = None,
     args: tuple = (),
     kwargs: dict | None = None,
     num_runs: int = 10,
     warmup_runs: int = 2,
     max_total_seconds: float = 5.0,
+    # New parameters for sandboxed execution
+    python_code: str | None = None,
+    func_name: str | None = None,
+    cython_module_path: str | None = None,
 ) -> BenchmarkResult:
     """
     Benchmark Python vs Cython implementations.
 
+    For sandboxed execution (preferred), provide:
+    - python_code + func_name + cython_module_path + args
+
+    For legacy in-process execution (backward compat), provide:
+    - python_func + cython_func + args
+
     Args:
-        python_func: Python reference callable.
-        cython_func: Cython callable to benchmark.
+        python_func: Python reference callable (legacy, in-process).
+        cython_func: Cython callable to benchmark (legacy, in-process).
+        python_code: Python source code string (sandboxed).
+        func_name: Function name to benchmark (sandboxed).
+        cython_module_path: Path to compiled .so file (sandboxed).
         args: Positional arguments to pass to both functions.
         kwargs: Keyword arguments to pass to both functions.
         num_runs: Number of timed runs.
@@ -51,6 +67,19 @@ def run_benchmark(
     """
     if kwargs is None:
         kwargs = {}
+
+    # Sandboxed path
+    if python_code and func_name and cython_module_path:
+        return _run_benchmark_sandboxed(
+            python_code=python_code,
+            func_name=func_name,
+            cython_module_path=cython_module_path,
+            args=args,
+            kwargs=kwargs,
+            num_runs=num_runs,
+            warmup_runs=warmup_runs,
+            max_total_seconds=max_total_seconds,
+        )
 
     result = BenchmarkResult(success=False, num_runs=num_runs)
 
@@ -121,3 +150,80 @@ def _time_function(
             logger.debug(f"Benchmark cutoff after {len(times)} runs ({cumulative:.2f}s)")
             break
     return times
+
+
+# ---------------------------------------------------------------------------
+# Sandboxed benchmark
+# ---------------------------------------------------------------------------
+
+
+def _run_benchmark_sandboxed(
+    python_code: str,
+    func_name: str,
+    cython_module_path: str,
+    args: tuple = (),
+    kwargs: dict | None = None,
+    num_runs: int = 10,
+    warmup_runs: int = 2,
+    max_total_seconds: float = 5.0,
+) -> BenchmarkResult:
+    """Run benchmark in a sandboxed subprocess."""
+    from cnake_charmer.eval.sandbox import execute_config, run_runner_sandboxed
+
+    module_dir = os.path.dirname(os.path.abspath(cython_module_path))
+
+    # Wall clock: enough for warmup + timing of both functions
+    total_timeout = max(30, int(max_total_seconds * 3) + 15)
+    sandbox_cfg = execute_config(
+        wall_time_limit_s=total_timeout,
+        cpu_time_limit_s=total_timeout - 5,
+        extra_ro_binds=(module_dir,),
+    )
+
+    result = run_runner_sandboxed(
+        "benchmark_runner",
+        {
+            "python_code": python_code,
+            "func_name": func_name,
+            "cython_module_path": cython_module_path,
+            "args": list(args),
+            "kwargs": kwargs or {},
+            "num_runs": num_runs,
+            "warmup_runs": warmup_runs,
+            "max_total_seconds": max_total_seconds,
+        },
+        config=sandbox_cfg,
+    )
+
+    if result.timed_out:
+        return BenchmarkResult(
+            success=False,
+            error=f"Benchmark timed out after {total_timeout}s",
+        )
+
+    if result.returncode != 0:
+        return BenchmarkResult(
+            success=False,
+            error=f"Benchmark runner failed (rc={result.returncode}): {result.stderr[:500]}",
+        )
+
+    try:
+        data = json.loads(result.stdout.strip())
+    except (json.JSONDecodeError, ValueError):
+        return BenchmarkResult(
+            success=False,
+            error=f"Failed to parse benchmark output: {result.stdout[:500]}",
+        )
+
+    if "error" in data:
+        return BenchmarkResult(success=False, error=data["error"])
+
+    return BenchmarkResult(
+        success=data.get("success", True),
+        speedup=data.get("speedup", 0.0),
+        python_time=data.get("python_time", 0.0),
+        cython_time=data.get("cython_time", 0.0),
+        python_std=data.get("python_std", 0.0),
+        cython_std=data.get("cython_std", 0.0),
+        num_runs=data.get("num_runs", 0),
+    )

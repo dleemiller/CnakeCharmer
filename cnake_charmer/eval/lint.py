@@ -41,11 +41,22 @@ def run_cython_lint(cython_code: str) -> LintResult:
         tmp_path = Path(f.name)
 
     try:
-        proc = subprocess.run(
+        from cnake_charmer.eval.sandbox import execute_config, run_sandboxed
+
+        sandbox_cfg = execute_config(
+            wall_time_limit_s=30,
+            cpu_time_limit_s=20,
+            extra_ro_binds=(str(tmp_path),),
+        )
+        sandbox_result = run_sandboxed(
             ["cython-lint", "--no-pycodestyle", str(tmp_path)],
-            capture_output=True,
-            text=True,
-            timeout=30,
+            config=sandbox_cfg,
+        )
+        proc = subprocess.CompletedProcess(
+            args=[],
+            returncode=sandbox_result.returncode,
+            stdout=sandbox_result.stdout,
+            stderr=sandbox_result.stderr,
         )
 
         if proc.returncode == 0 and not proc.stdout.strip():
