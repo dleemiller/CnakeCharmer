@@ -691,7 +691,38 @@
     "stack2_kmer_profile": "7f7208b0b223a17c",
     "stack2_stream_moments": "60abae3fd1c71a7e",
     "stack2_rng_weighted_walk": "c1a29400b8279928",
-    "stack2_threshold_exp_scan": "adedce157696f974"
+    "stack2_threshold_exp_scan": "adedce157696f974",
+    "gaussian_psf_aperture": "1a4f156745849e14",
+    "lotka_volterra_rk4": "3b269a789c605a13",
+    "flat_field_correction": "c88b96d5286c2929",
+    "homography_warp": "5d4e5427f4f2581e",
+    "lut_trilinear": "e8da98099be500b5",
+    "mesh_warp": "b2e6f4d829fd1f4f",
+    "bicubic_interp": "ff6dd016432c4cc3",
+    "radial_distortion": "495fa567cc0691d8",
+    "rbf_warp": "41c7f358e0d55728",
+    "sigma_filter_2d": "167f5fdafbaf28a0",
+    "thin_plate_spline": "90815bf69dd6ac30",
+    "temporal_iir": "ce2c9d71e1a9eeac",
+    "uv_texture_sample": "aa048414f1eab03a",
+    "camera_projection": "d8af11a46832ba1f",
+    "dlt_homography": "14df02504cea581a",
+    "kalman_filter_1d": "ac00ec1564aabd09",
+    "level_set_delta": "9793a3f3f69e79d1",
+    "newton_sqrt_sum": "9334b5006cf2e15c",
+    "param_grid_eval": "6951090a56e512bd",
+    "ransac_homography": "5344fba626b79892",
+    "row_l2_normalize": "d1bb2806bf4a8edf",
+    "vec3_cross_normalize": "dcd2489d935733fb",
+    "flow_shop_makespan": "ca76208633757b27",
+    "lambertian_shading": "40d17414f6988324",
+    "camera_response": "36effe5abf075747",
+    "monin_obukhov_stability": "7ce4cd559b344980",
+    "phong_shading": "92dd8fc959531120",
+    "ray_trace_sequential": "b35c2f5f29d22604",
+    "snell_refraction": "1e3c72bf230abdd2",
+    "vignetting_model": "683fe8f45b4fdd54",
+    "logistic_bifurcation": "5e885fb67d26e9a5"
   },
   "results": {
     "a_star_grid": [
@@ -8996,6 +9027,378 @@
         "cy_avg": 0.052623024629428986,
         "cy_std": 0.0008431554028741485,
         "speedup": 6.246009826946699
+      }
+    ],
+    "gaussian_psf_aperture": [
+      {
+        "benchmark": "gaussian_psf_aperture",
+        "category": "image_processing",
+        "syntax": "cython",
+        "py_avg": 0.0017975233029574155,
+        "py_std": 1.381986901170644e-05,
+        "cy_avg": 9.97666735202074e-05,
+        "cy_std": 1.6831580156188197e-06,
+        "speedup": 18.01727209631113
+      }
+    ],
+    "lotka_volterra_rk4": [
+      {
+        "benchmark": "lotka_volterra_rk4",
+        "category": "diff_equations",
+        "syntax": "cython",
+        "py_avg": 0.0021826846059411764,
+        "py_std": 1.637561282038372e-05,
+        "cy_avg": 5.1166443154215815e-05,
+        "cy_std": 1.7646583781356068e-06,
+        "speedup": 42.65851740685899
+      }
+    ],
+    "flat_field_correction": [
+      {
+        "benchmark": "flat_field_correction",
+        "category": "image_processing",
+        "syntax": "cython",
+        "py_avg": 0.010162724554538727,
+        "py_std": 0.0008186444293990027,
+        "cy_avg": 0.0007981352508068084,
+        "cy_std": 9.887331889303975e-06,
+        "speedup": 12.733085707297812
+      }
+    ],
+    "homography_warp": [
+      {
+        "benchmark": "homography_warp",
+        "category": "image_processing",
+        "syntax": "cython",
+        "py_avg": 0.0020087089855223895,
+        "py_std": 5.852799265944005e-05,
+        "cy_avg": 2.913614735007286e-05,
+        "cy_std": 9.904200507899916e-07,
+        "speedup": 68.94216182351117
+      }
+    ],
+    "lut_trilinear": [
+      {
+        "benchmark": "lut_trilinear",
+        "category": "image_processing",
+        "syntax": "cython",
+        "py_avg": 0.008698096685111522,
+        "py_std": 2.5254651140202923e-05,
+        "cy_avg": 0.00017738854512572289,
+        "cy_std": 2.0328569825110574e-06,
+        "speedup": 49.03415087454947
+      }
+    ],
+    "mesh_warp": [
+      {
+        "benchmark": "mesh_warp",
+        "category": "image_processing",
+        "syntax": "cython",
+        "py_avg": 0.004181365203112364,
+        "py_std": 8.049843890795152e-05,
+        "cy_avg": 0.00021587377414107324,
+        "cy_std": 3.299691501711922e-06,
+        "speedup": 19.36949136016794
+      }
+    ],
+    "bicubic_interp": [
+      {
+        "benchmark": "bicubic_interp",
+        "category": "image_processing",
+        "syntax": "cython",
+        "py_avg": 0.09146437598392368,
+        "py_std": 0.0001540084809298624,
+        "cy_avg": 0.004424961330369115,
+        "cy_std": 1.0525732422409866e-05,
+        "speedup": 20.67009611048828
+      }
+    ],
+    "radial_distortion": [
+      {
+        "benchmark": "radial_distortion",
+        "category": "image_processing",
+        "syntax": "cython",
+        "py_avg": 0.005431733839213848,
+        "py_std": 0.00011619184136847017,
+        "cy_avg": 0.0001309949904680252,
+        "cy_std": 2.934126587453481e-06,
+        "speedup": 41.465202751701334
+      }
+    ],
+    "rbf_warp": [
+      {
+        "benchmark": "rbf_warp",
+        "category": "image_processing",
+        "syntax": "cython",
+        "py_avg": 0.0030681757256388665,
+        "py_std": 0.00018378341492028625,
+        "cy_avg": 0.00014895829372107983,
+        "cy_std": 3.3202356959318345e-06,
+        "speedup": 20.597548810433732
+      }
+    ],
+    "sigma_filter_2d": [
+      {
+        "benchmark": "sigma_filter_2d",
+        "category": "image_processing",
+        "syntax": "cython",
+        "py_avg": 0.018446085741743445,
+        "py_std": 0.0013462902484528956,
+        "cy_avg": 0.00023067044094204903,
+        "cy_std": 6.560702054989101e-06,
+        "speedup": 79.96727134352523
+      }
+    ],
+    "thin_plate_spline": [
+      {
+        "benchmark": "thin_plate_spline",
+        "category": "image_processing",
+        "syntax": "cython",
+        "py_avg": 0.003491713618859649,
+        "py_std": 0.00015587945213034048,
+        "cy_avg": 0.00014108289033174515,
+        "cy_std": 2.3361641856497663e-06,
+        "speedup": 24.749376842572214
+      }
+    ],
+    "temporal_iir": [
+      {
+        "benchmark": "temporal_iir",
+        "category": "image_processing",
+        "syntax": "cython",
+        "py_avg": 0.021629861323162913,
+        "py_std": 0.00037540518144230843,
+        "cy_avg": 0.001136682089418173,
+        "cy_std": 2.8120143072970717e-06,
+        "speedup": 19.028945317713653
+      }
+    ],
+    "uv_texture_sample": [
+      {
+        "benchmark": "uv_texture_sample",
+        "category": "image_processing",
+        "syntax": "cython",
+        "py_avg": 0.00413249428384006,
+        "py_std": 4.88190428426236e-05,
+        "cy_avg": 0.00015940945595502854,
+        "cy_std": 2.2985243216488303e-06,
+        "speedup": 25.923771328884595
+      }
+    ],
+    "camera_projection": [
+      {
+        "benchmark": "camera_projection",
+        "category": "numerical",
+        "syntax": "cython",
+        "py_avg": 0.00042544142343103886,
+        "py_std": 0.00010561406263611897,
+        "cy_avg": 2.217767760157585e-05,
+        "cy_std": 4.842388717494994e-07,
+        "speedup": 19.183317165761704
+      }
+    ],
+    "dlt_homography": [
+      {
+        "benchmark": "dlt_homography",
+        "category": "numerical",
+        "syntax": "cython",
+        "py_avg": 0.000396903557702899,
+        "py_std": 8.92552608068499e-05,
+        "cy_avg": 2.9101455584168435e-05,
+        "cy_std": 3.133188248005627e-06,
+        "speedup": 13.638615311009378
+      }
+    ],
+    "kalman_filter_1d": [
+      {
+        "benchmark": "kalman_filter_1d",
+        "category": "numerical",
+        "syntax": "cython",
+        "py_avg": 0.0014680104795843363,
+        "py_std": 4.648546202197202e-05,
+        "cy_avg": 4.640305414795876e-05,
+        "cy_std": 3.153308872267118e-06,
+        "speedup": 31.636074533014618
+      }
+    ],
+    "level_set_delta": [
+      {
+        "benchmark": "level_set_delta",
+        "category": "numerical",
+        "syntax": "cython",
+        "py_avg": 0.006052574189379811,
+        "py_std": 0.0005188519053367249,
+        "cy_avg": 7.760319858789444e-05,
+        "cy_std": 2.360390966272415e-06,
+        "speedup": 77.99387524632226
+      }
+    ],
+    "newton_sqrt_sum": [
+      {
+        "benchmark": "newton_sqrt_sum",
+        "category": "numerical",
+        "syntax": "cython",
+        "py_avg": 0.002436642115935683,
+        "py_std": 0.00020392607788086788,
+        "cy_avg": 9.428160265088082e-05,
+        "cy_std": 1.7433477831285958e-06,
+        "speedup": 25.84430098158624
+      }
+    ],
+    "param_grid_eval": [
+      {
+        "benchmark": "param_grid_eval",
+        "category": "numerical",
+        "syntax": "cython",
+        "py_avg": 0.0016034305095672607,
+        "py_std": 0.00016278490093980105,
+        "cy_avg": 0.00011665951460599899,
+        "cy_std": 4.49161070163981e-06,
+        "speedup": 13.744532668275026
+      }
+    ],
+    "ransac_homography": [
+      {
+        "benchmark": "ransac_homography",
+        "category": "numerical",
+        "syntax": "cython",
+        "py_avg": 0.006605867529287934,
+        "py_std": 0.0001728299579521984,
+        "cy_avg": 0.00030529960058629514,
+        "cy_std": 1.0846649131487724e-05,
+        "speedup": 21.637327780979977
+      }
+    ],
+    "row_l2_normalize": [
+      {
+        "benchmark": "row_l2_normalize",
+        "category": "numerical",
+        "syntax": "cython",
+        "py_avg": 0.0071026803459972145,
+        "py_std": 0.00020857717694213737,
+        "cy_avg": 0.000465410714969039,
+        "cy_std": 2.549804514334994e-06,
+        "speedup": 15.261101898931814
+      }
+    ],
+    "vec3_cross_normalize": [
+      {
+        "benchmark": "vec3_cross_normalize",
+        "category": "numerical",
+        "syntax": "cython",
+        "py_avg": 0.0025843357667326926,
+        "py_std": 2.7828029084712515e-05,
+        "cy_avg": 0.0003098998684436083,
+        "cy_std": 3.579277545340249e-06,
+        "speedup": 8.339260612506383
+      }
+    ],
+    "flow_shop_makespan": [
+      {
+        "benchmark": "flow_shop_makespan",
+        "category": "optimization",
+        "syntax": "cython",
+        "py_avg": 4.310910589993e-05,
+        "py_std": 1.7407293753082108e-06,
+        "cy_avg": 2.6424415409564974e-06,
+        "cy_std": 1.5823810353445597e-07,
+        "speedup": 16.314119056849822
+      }
+    ],
+    "lambertian_shading": [
+      {
+        "benchmark": "lambertian_shading",
+        "category": "physics",
+        "syntax": "cython",
+        "py_avg": 0.0034176336601376535,
+        "py_std": 0.00043002526020906133,
+        "cy_avg": 0.00022423374466598033,
+        "cy_std": 4.617898335642636e-06,
+        "speedup": 15.24138869120068
+      }
+    ],
+    "camera_response": [
+      {
+        "benchmark": "camera_response",
+        "category": "physics",
+        "syntax": "cython",
+        "py_avg": 0.013676668656989932,
+        "py_std": 0.000747528042760043,
+        "cy_avg": 0.0006371937226504088,
+        "cy_std": 2.1285009295065498e-05,
+        "speedup": 21.46390990812307
+      }
+    ],
+    "monin_obukhov_stability": [
+      {
+        "benchmark": "monin_obukhov_stability",
+        "category": "physics",
+        "syntax": "cython",
+        "py_avg": 0.0063738733995705845,
+        "py_std": 3.1080922098697014e-05,
+        "cy_avg": 0.00046942229382693765,
+        "cy_std": 2.550884598465311e-06,
+        "speedup": 13.57812247818048
+      }
+    ],
+    "phong_shading": [
+      {
+        "benchmark": "phong_shading",
+        "category": "physics",
+        "syntax": "cython",
+        "py_avg": 0.0040515126194804905,
+        "py_std": 2.8339687306574614e-05,
+        "cy_avg": 0.0002492493484169245,
+        "cy_std": 1.8941070938726385e-06,
+        "speedup": 16.2548574157291
+      }
+    ],
+    "ray_trace_sequential": [
+      {
+        "benchmark": "ray_trace_sequential",
+        "category": "physics",
+        "syntax": "cython",
+        "py_avg": 0.0022328589111566544,
+        "py_std": 0.00019448619955428402,
+        "cy_avg": 3.341441042721271e-05,
+        "cy_std": 3.6933122183617423e-06,
+        "speedup": 66.82323233027068
+      }
+    ],
+    "snell_refraction": [
+      {
+        "benchmark": "snell_refraction",
+        "category": "physics",
+        "syntax": "cython",
+        "py_avg": 0.0029843708965927363,
+        "py_std": 0.00018242749950385333,
+        "cy_avg": 0.0001001968514174223,
+        "cy_std": 1.629702749688904e-06,
+        "speedup": 29.78507662041975
+      }
+    ],
+    "vignetting_model": [
+      {
+        "benchmark": "vignetting_model",
+        "category": "physics",
+        "syntax": "cython",
+        "py_avg": 0.0048533768858760595,
+        "py_std": 4.295445060117012e-05,
+        "cy_avg": 0.00012979870662093161,
+        "cy_std": 2.1411507169683042e-06,
+        "speedup": 37.391565850112976
+      }
+    ],
+    "logistic_bifurcation": [
+      {
+        "benchmark": "logistic_bifurcation",
+        "category": "simulation",
+        "syntax": "cython",
+        "py_avg": 0.01184608000330627,
+        "py_std": 2.5275483329904268e-05,
+        "cy_avg": 0.0010491442866623403,
+        "cy_std": 1.3995156584798287e-06,
+        "speedup": 11.29118287532442
       }
     ]
   }
