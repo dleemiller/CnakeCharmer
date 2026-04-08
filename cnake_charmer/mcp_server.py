@@ -25,9 +25,9 @@ from cnake_charmer.eval.annotations import parse_annotations
 from cnake_charmer.eval.compiler import cleanup_build, compile_cython
 from cnake_charmer.eval.memory_safety import check_memory_safety
 from cnake_charmer.eval.pipeline import composite_reward as _composite_reward
+from cnake_charmer.wiki.limits import check_wiki_page_length
 from cnake_charmer.wiki.merge import atomic_wiki_write
 from cnake_charmer.wiki.search import wiki_read as _wiki_read
-from cnake_charmer.wiki.search import wiki_search as _wiki_search
 from cnake_data.loader import discover_pairs
 
 logger = logging.getLogger(__name__)
@@ -314,23 +314,6 @@ def _wiki_page_path(page: str) -> Path:
 
 
 @mcp.tool()
-def wiki_search(query: str, max_results: int = 5) -> str:
-    """Search wiki pages for relevant content.
-
-    Searches page titles and content for query terms. Returns matching
-    excerpts sorted by relevance.
-
-    Args:
-        query: Search terms (space-separated).
-        max_results: Maximum number of results to return.
-
-    Returns:
-        JSON array of {page, title, excerpt, score} sorted by relevance.
-    """
-    return _wiki_search(query, max_results=max_results, wiki_dir=WIKI_DIR)
-
-
-@mcp.tool()
 def wiki_read(page: str) -> str:
     """Read a wiki page in full.
 
@@ -363,6 +346,21 @@ if not WIKI_READONLY:
         Returns:
             Confirmation with page path.
         """
+        length_check = check_wiki_page_length(content)
+        if not length_check.ok:
+            return json.dumps(
+                {
+                    "success": False,
+                    "error": "wiki_page_too_long",
+                    "page": page.removesuffix(".md"),
+                    "tokens": length_check.tokens,
+                    "max_tokens": length_check.max_tokens,
+                    "method": length_check.method,
+                    "message": length_check.message,
+                },
+                indent=2,
+            )
+
         path = _wiki_page_path(page)
         stem = page.removesuffix(".md")
         is_new = not path.exists()
@@ -398,6 +396,9 @@ if not WIKI_READONLY:
                 "page": stem,
                 "path": str(path),
                 "action": "created" if is_new else "updated",
+                "tokens": length_check.tokens,
+                "max_tokens": length_check.max_tokens,
+                "token_method": length_check.method,
             },
             indent=2,
         )

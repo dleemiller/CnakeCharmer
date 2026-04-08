@@ -8,7 +8,7 @@ collection:
   parallel: 2
 
 prompt:
-  program: null
+  program: __seed__
   id: gepa_glm51
 
 optimization:

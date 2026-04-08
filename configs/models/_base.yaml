@@ -9,16 +9,21 @@ model:
 
 collection:
   attempts: 2
-  max_iters: 5
+  max_iters: 4
   shuffle: true
   parallel: null
+  display: live
+  sandbox_events: false
+  error_log: data/traces/trace_errors.log
+  error_log_max_mb: 10
+  error_log_backups: 5
   output: data/traces/master_traces.jsonl
 
 prompt:
   program: null
 
 wiki:
-  enable: false
+  enable: true
 
 optimization:
   reflection_model: null

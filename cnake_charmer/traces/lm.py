@@ -9,6 +9,7 @@ import json
 import logging
 import os
 from pathlib import Path
+from typing import Literal
 
 import dspy
 
@@ -89,6 +90,12 @@ def load_optimized_prompt(
         (program, prompt_id) tuple. program is None if using seed/base prompt.
     """
     if program_path:
+        if program_path in {"seed", "seed_v1", "__seed__", "__default__"}:
+            if SEED_PROMPT.exists():
+                logger.info("Using seed prompt (forced)")
+                return None, "seed_v1"
+            logger.info("Using base signature (seed prompt forced but not found)")
+            return None, "base"
         path = Path(program_path)
         if not path.exists():
             logger.warning(f"Program not found: {path}")
@@ -125,7 +132,7 @@ class CythonReActAgent(dspy.Module):
     _load_program() to deserialize saved GEPA programs.
 
     Args:
-        max_iters: Maximum tool-call iterations per problem.
+        max_iters: Maximum evaluate_cython calls per problem.
         use_thinking: If True, use ThinkingReAct (native LM thinking mode)
             instead of dspy.ReAct (explicit next_thought field).
     """
@@ -143,7 +150,9 @@ class CythonReActAgent(dspy.Module):
             from cnake_charmer.traces.thinking_react import ThinkingReAct
 
             return ThinkingReAct
-        return dspy.ReAct
+        from cnake_charmer.traces.budgeted_react import BudgetedReAct
+
+        return BudgetedReAct
 
     def _init_react(self):
         from cnake_charmer.training.dspy_agent import CythonOptimization
@@ -155,21 +164,32 @@ class CythonReActAgent(dspy.Module):
         placeholder_tools = [evaluate_cython]
 
         if self.include_wiki:
+            from cnake_charmer.wiki.search import wiki_page_catalog, wiki_page_catalog_text
+
+            catalog_items = wiki_page_catalog()
+            wiki_pages = [it["page"] for it in catalog_items]
+            wiki_page_literal = Literal.__getitem__(tuple(wiki_pages)) if wiki_pages else str
+            wiki_catalog = wiki_page_catalog_text()
+            wiki_read_doc = (
+                "Read a full Cython wiki page with concrete fix patterns and examples.\n\n"
+                "Prefer wiki_read directly using a page from this startup catalog:\n"
+                f"{wiki_catalog}\n\n"
+                "Important: `page` must be an exact slug from this list.\n"
+                "Usage limit: at most 2 wiki_read calls per attempt."
+            )
 
             def wiki_read(page: str) -> str:
-                """Read a full Cython wiki page."""
                 return "placeholder"
 
-            def wiki_search(query: str) -> str:
-                """Search the Cython wiki."""
-                return "placeholder"
-
-            placeholder_tools.extend([wiki_read, wiki_search])
+            wiki_read.__annotations__["page"] = wiki_page_literal
+            wiki_read.__doc__ = wiki_read_doc
+            placeholder_tools.append(wiki_read)
 
         self.react = self._react_cls(
             CythonOptimization,
             tools=placeholder_tools,
-            max_iters=self.max_iters,
+            max_iters=self._effective_max_iters(),
+            max_evaluations=self.max_iters,
         )
 
         seed_text = get_seed_text()
@@ -183,6 +203,7 @@ class CythonReActAgent(dspy.Module):
         python_code: str,
         func_name: str,
         description: str = "",
+        workflow_mode: str = "HC",
         test_cases: str = "[]",
         benchmark_args: str = "null",
     ):
@@ -191,8 +212,19 @@ class CythonReActAgent(dspy.Module):
         tc = json.loads(test_cases) if isinstance(test_cases, str) else test_cases
         ba = json.loads(benchmark_args) if isinstance(benchmark_args, str) else benchmark_args
 
-        tools, _env = make_tools(python_code, func_name, tc, ba, include_wiki=self.include_wiki)
-        real_react = self._react_cls(CythonOptimization, tools=tools, max_iters=self.max_iters)
+        tools, _env = make_tools(
+            python_code,
+            func_name,
+            tc,
+            ba,
+            include_wiki=self.include_wiki,
+        )
+        real_react = self._react_cls(
+            CythonOptimization,
+            tools=tools,
+            max_iters=self._effective_max_iters(),
+            max_evaluations=self.max_iters,
+        )
 
         for name, param in self.react.named_parameters():
             for real_name, real_param in real_react.named_parameters():
@@ -203,7 +235,16 @@ class CythonReActAgent(dspy.Module):
                 ):
                     real_param.signature = param.signature
 
-        return real_react(python_code=python_code, func_name=func_name, description=description)
+        return real_react(
+            python_code=python_code,
+            func_name=func_name,
+            description=description,
+            workflow_mode=workflow_mode,
+        )
+
+    def _effective_max_iters(self) -> int:
+        # Budget max_iters as evaluate_cython calls; reserve wiki + finish slots.
+        return self.max_iters + (2 if self.include_wiki else 0) + 1
 
 
 def apply_optimized_signatures(react_module, optimized_program, seed_text=None):

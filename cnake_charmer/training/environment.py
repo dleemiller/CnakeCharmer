@@ -495,15 +495,6 @@ class CythonToolEnvironment:
 
         return _read(page)
 
-    def wiki_search(self, query: str) -> str:
-        """Search the Cython wiki to find relevant pages."""
-        self._wiki_calls += 1
-        if self._wiki_calls > self._WIKI_LIMIT:
-            return "Wiki limit reached. Use evaluate_cython to iterate on your code."
-        from cnake_charmer.wiki.search import wiki_search as _search
-
-        return _search(query, max_results=3)
-
     def _weighted_score(self, scores: dict, weights: dict | None = None) -> float:
         """Compute weighted composite score from a step's scores dict."""
         w = weights or DEFAULT_WEIGHTS

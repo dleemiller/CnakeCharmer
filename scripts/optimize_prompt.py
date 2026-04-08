@@ -32,6 +32,7 @@ import dspy
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+from cnake_charmer.logging_config import setup_logging
 from cnake_charmer.traces.lm import CythonReActAgent, model_slug
 from cnake_charmer.training.dspy_agent import (
     cython_metric,
@@ -39,7 +40,7 @@ from cnake_charmer.training.dspy_agent import (
 )
 from cnake_data.loader import discover_pairs
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname)s %(message)s")
+setup_logging(logging.INFO)
 logger = logging.getLogger(__name__)
 
 PROMPTS_DIR = Path(__file__).parent.parent / "data" / "optimized_prompts"

@@ -33,6 +33,7 @@ from functools import lru_cache
 from cnake_charmer.eval.bwrap import build_command as _build_bwrap_cmd
 
 logger = logging.getLogger(__name__)
+_SANDBOX_EVENT_LOGS_ENABLED = os.environ.get("CNAKE_SANDBOX_LOG_EVENTS", "0") == "1"
 
 # ---------------------------------------------------------------------------
 # Configuration
@@ -406,5 +407,7 @@ def _run_fallback(
 
 def _log_event(event: str, profile: str = "", **extra):
     """Emit structured log event."""
+    if not _SANDBOX_EVENT_LOGS_ENABLED:
+        return
     data = {"event": event, "profile": profile, **extra}
     logger.info(json.dumps(data, default=str))

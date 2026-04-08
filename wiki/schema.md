@@ -55,6 +55,7 @@ Cross-references to related pages: [[page-name]]
 - **Source attribution**: Note where content came from (`Source: cy/numerical/great_circle.pyx` or `Source: traces, 47 occurrences`)
 - **No duplication**: If content belongs on another page, link to it instead
 - **Examples over prose**: Show the code, explain briefly why it works
+- **Keep pages small**: Target <= 1200 tokens per page (approx). Split broad topics into focused pages and link from a short hub page.
 
 ## Operations
 

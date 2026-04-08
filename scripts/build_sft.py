@@ -12,6 +12,7 @@ Usage:
 import argparse
 import json
 import logging
+import statistics
 import sys
 from collections import Counter, defaultdict
 from dataclasses import dataclass
@@ -292,12 +293,32 @@ def main():
     # Per-model breakdown
     raw_counts = Counter(t.model for t in traces)
     sel_counts = Counter(c.trace.model for c in selected)
-    logger.info(f"  {'Model':<35} {'Traces':>6} {'Accept':>6} {'Rate':>5}")
+    logger.info(
+        f"  {'Model':<35} {'Traces':>6} {'Accept':>6} {'Rate':>5} "
+        f"{'MedItr':>6} {'AvgEval':>7} {'AvgWiki':>7} {'MedTok':>7}"
+    )
+    selected_by_model: dict[str, list[Candidate]] = defaultdict(list)
+    for c in selected:
+        selected_by_model[c.trace.model].append(c)
+
     for model in sorted(sel_counts, key=lambda m: raw_counts[m], reverse=True):
         s, r = sel_counts[model], raw_counts[model]
         rate = f"{s / r * 100:.0f}%" if r else "-"
+        model_selected = selected_by_model.get(model, [])
+        med_iters = int(statistics.median(c.trace.num_iterations for c in model_selected))
+        avg_eval = sum(
+            sum(1 for st in c.trace.steps if st.tool_name == "evaluate_cython")
+            for c in model_selected
+        ) / max(1, len(model_selected))
+        avg_wiki = sum(
+            sum(1 for st in c.trace.steps if st.tool_name == "wiki_read") for c in model_selected
+        ) / max(1, len(model_selected))
+        med_tok = int(statistics.median(count_tokens(c.text) for c in model_selected))
         name = model.replace("openrouter/", "").replace("openai/", "")
-        logger.info(f"  {name:<35} {r:>6} {s:>6} {rate:>5}")
+        logger.info(
+            f"  {name:<35} {r:>6} {s:>6} {rate:>5} "
+            f"{med_iters:>6} {avg_eval:>7.2f} {avg_wiki:>7.2f} {med_tok:>7}"
+        )
 
     # --- Build records & assign effort ---
     records = []

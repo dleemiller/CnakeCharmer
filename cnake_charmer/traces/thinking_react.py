@@ -88,10 +88,12 @@ class ThinkingReAct(dspy.Module):
         signature: type[dspy.Signature] | str,
         tools: list[Callable],
         max_iters: int = 5,
+        max_evaluations: int | None = None,
     ):
         super().__init__()
         self.signature = signature = ensure_signature(signature)
         self.max_iters = max_iters
+        self.max_evaluations = max_evaluations
 
         tools = [t if isinstance(t, Tool) else Tool(t) for t in tools]
         tools = {tool.name: tool for tool in tools}
@@ -156,6 +158,7 @@ class ThinkingReAct(dspy.Module):
     def forward(self, **input_args):
         trajectory = {}
         max_iters = input_args.pop("max_iters", self.max_iters)
+        eval_calls = 0
 
         for idx in range(max_iters):
             # Scope ThinkingAdapter to the react predict call only
@@ -165,6 +168,13 @@ class ThinkingReAct(dspy.Module):
                 except ValueError as err:
                     logger.warning(f"Agent failed to select a valid tool: {err}")
                     break
+
+            if (
+                self.max_evaluations is not None
+                and eval_calls >= self.max_evaluations
+                and pred.next_tool_name != "finish"
+            ):
+                break
 
             thinking = ThinkingAdapter.get_last_thinking()
             trajectory[f"thought_{idx}"] = thinking
@@ -179,6 +189,9 @@ class ThinkingReAct(dspy.Module):
                 trajectory[f"observation_{idx}"] = (
                     f"Execution error in {pred.next_tool_name}: {err}"
                 )
+
+            if pred.next_tool_name == "evaluate_cython":
+                eval_calls += 1
 
             if pred.next_tool_name == "finish":
                 break

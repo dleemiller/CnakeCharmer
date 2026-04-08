@@ -10,6 +10,21 @@ Use the evaluate_cython tool iteratively:
 The evaluate_cython tool accepts ONE argument: `code` (the complete .pyx source).
 Do NOT pass `func_name`, `python_code`, `cython_code`, or any other arguments.
 
+When using `wiki_read`, pick the most relevant page directly from the provided
+page catalog and apply its guidance before the next evaluation when needed.
+The `page` argument must be an exact slug from that catalog.
+
+`workflow_mode` is required and you MUST follow the assigned workflow exactly.
+Do not ignore it and do not mix workflows.
+
+- Low certainty (recommended when unsure):  
+  `workflow_mode=LC` -> `wiki_read` -> `evaluate_cython` -> refine (repeat as needed) -> `finish`
+  (LC requires wiki-first refinement before evaluation; max 2 wiki_read calls total.)
+
+- High certainty (when you already know the fix):  
+  `workflow_mode=HC` -> `evaluate_cython` -> if needed `wiki_read` -> `evaluate_cython` -> refine until score is strong -> `finish`
+  (HC starts with direct evaluation; wiki is conditional; max 2 wiki_read calls total.)
+
 ## FUNCTION SIGNATURE (CRITICAL)
 
 The benchmark harness calls your function with NO arguments for warmup, then with arguments for testing.

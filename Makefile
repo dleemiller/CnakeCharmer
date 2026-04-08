@@ -22,6 +22,11 @@ traces:  ## Collect traces using a model profile
 	$(eval _ATT := $(shell $(call PROFILE_GET,collection.attempts)))
 	$(eval _MIT := $(shell $(call PROFILE_GET,collection.max_iters)))
 	$(eval _PAR := $(shell $(call PROFILE_GET,collection.parallel)))
+	$(eval _DSP := $(shell $(call PROFILE_GET,collection.display)))
+	$(eval _SBX := $(shell $(call PROFILE_GET,collection.sandbox_events)))
+	$(eval _ELOG := $(shell $(call PROFILE_GET,collection.error_log)))
+	$(eval _EMB := $(shell $(call PROFILE_GET,collection.error_log_max_mb)))
+	$(eval _EBK := $(shell $(call PROFILE_GET,collection.error_log_backups)))
 	$(eval _PRG := $(shell $(call PROFILE_GET,prompt.program)))
 	$(eval _WIK := $(shell $(call PROFILE_GET,wiki.enable)))
 	$(eval _EB := $(shell $(PROFILE_EB)))
@@ -36,6 +41,11 @@ traces:  ## Collect traces using a model profile
 		$(if $(filter-out None,$(_ATT)),--attempts $(_ATT)) \
 		$(if $(filter-out None,$(_MIT)),--max-iters $(_MIT)) \
 		$(if $(filter-out None,$(_PAR)),--parallel $(_PAR)) \
+		$(if $(filter-out None,$(_DSP)),--display $(_DSP)) \
+		$(if $(filter True,$(_SBX)),--sandbox-events) \
+		$(if $(filter-out None,$(_ELOG)),--error-log $(_ELOG)) \
+		$(if $(filter-out None,$(_EMB)),--error-log-max-mb $(_EMB)) \
+		$(if $(filter-out None,$(_EBK)),--error-log-backups $(_EBK)) \
 		$(if $(filter-out None,$(_TMP)),--temperature $(_TMP)) \
 		$(if $(filter-out None,$(_TOP)),--top-p $(_TOP)) \
 		--all --shuffle
@@ -47,6 +57,11 @@ traces-best:  ## Collect best-of-N traces (5 attempts, keep best)
 	$(eval _TOP := $(shell $(call PROFILE_GET,model.top_p)))
 	$(eval _MIT := $(shell $(call PROFILE_GET,collection.max_iters)))
 	$(eval _PAR := $(shell $(call PROFILE_GET,collection.parallel)))
+	$(eval _DSP := $(shell $(call PROFILE_GET,collection.display)))
+	$(eval _SBX := $(shell $(call PROFILE_GET,collection.sandbox_events)))
+	$(eval _ELOG := $(shell $(call PROFILE_GET,collection.error_log)))
+	$(eval _EMB := $(shell $(call PROFILE_GET,collection.error_log_max_mb)))
+	$(eval _EBK := $(shell $(call PROFILE_GET,collection.error_log_backups)))
 	$(eval _PRG := $(shell $(call PROFILE_GET,prompt.program)))
 	$(eval _WIK := $(shell $(call PROFILE_GET,wiki.enable)))
 	$(eval _EB := $(shell $(PROFILE_EB)))
@@ -60,6 +75,11 @@ traces-best:  ## Collect best-of-N traces (5 attempts, keep best)
 		$(if $(filter True,$(_WIK)),--enable-wiki) \
 		$(if $(filter-out None,$(_MIT)),--max-iters $(_MIT)) \
 		$(if $(filter-out None,$(_PAR)),--parallel $(_PAR)) \
+		$(if $(filter-out None,$(_DSP)),--display $(_DSP)) \
+		$(if $(filter True,$(_SBX)),--sandbox-events) \
+		$(if $(filter-out None,$(_ELOG)),--error-log $(_ELOG)) \
+		$(if $(filter-out None,$(_EMB)),--error-log-max-mb $(_EMB)) \
+		$(if $(filter-out None,$(_EBK)),--error-log-backups $(_EBK)) \
 		$(if $(filter-out None,$(_TMP)),--temperature $(_TMP)) \
 		$(if $(filter-out None,$(_TOP)),--top-p $(_TOP)) \
 		--all --shuffle --attempts 5
@@ -93,6 +113,11 @@ sample:  ## Sample 3 random problems with a model
 	$(eval _URL := $(shell $(call PROFILE_GET,model.base_url)))
 	$(eval _TMP := $(shell $(call PROFILE_GET,model.temperature)))
 	$(eval _TOP := $(shell $(call PROFILE_GET,model.top_p)))
+	$(eval _DSP := $(shell $(call PROFILE_GET,collection.display)))
+	$(eval _SBX := $(shell $(call PROFILE_GET,collection.sandbox_events)))
+	$(eval _ELOG := $(shell $(call PROFILE_GET,collection.error_log)))
+	$(eval _EMB := $(shell $(call PROFILE_GET,collection.error_log_max_mb)))
+	$(eval _EBK := $(shell $(call PROFILE_GET,collection.error_log_backups)))
 	$(eval _PRG := $(shell $(call PROFILE_GET,prompt.program)))
 	$(eval _WIK := $(shell $(call PROFILE_GET,wiki.enable)))
 	$(eval _EB := $(shell $(PROFILE_EB)))
@@ -103,6 +128,11 @@ sample:  ## Sample 3 random problems with a model
 		$(if $(filter-out None,$(_PRG)),--program $(_PRG)) \
 		$(if $(filter True,$(_TR)),--thinking-react) \
 		$(if $(filter True,$(_WIK)),--enable-wiki) \
+		$(if $(filter-out None,$(_DSP)),--display $(_DSP)) \
+		$(if $(filter True,$(_SBX)),--sandbox-events) \
+		$(if $(filter-out None,$(_ELOG)),--error-log $(_ELOG)) \
+		$(if $(filter-out None,$(_EMB)),--error-log-max-mb $(_EMB)) \
+		$(if $(filter-out None,$(_EBK)),--error-log-backups $(_EBK)) \
 		$(if $(filter-out None,$(_TMP)),--temperature $(_TMP)) \
 		$(if $(filter-out None,$(_TOP)),--top-p $(_TOP)) \
 		--n-random 3 --attempts 1

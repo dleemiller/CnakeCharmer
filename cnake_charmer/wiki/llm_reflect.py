@@ -18,6 +18,7 @@ from pathlib import Path
 
 import dspy
 
+from cnake_charmer.wiki.limits import check_wiki_page_length
 from cnake_charmer.wiki.merge import atomic_wiki_write
 from cnake_charmer.wiki.reflect import reflect_on_traces
 from cnake_charmer.wiki.search import wiki_read as _wiki_read
@@ -84,6 +85,20 @@ def _make_reflection_tools(dry_run: bool = False):
             page: Page name (e.g. 'pitfalls').
             content: Full markdown content for the page.
         """
+        length_check = check_wiki_page_length(content)
+        if not length_check.ok:
+            return json.dumps(
+                {
+                    "success": False,
+                    "error": "wiki_page_too_long",
+                    "page": page,
+                    "tokens": length_check.tokens,
+                    "max_tokens": length_check.max_tokens,
+                    "method": length_check.method,
+                    "message": length_check.message,
+                }
+            )
+
         path = _WIKI_PAGES / f"{page.removesuffix('.md')}.md"
         if dry_run:
             preview = content[:500] + "..." if len(content) > 500 else content
@@ -92,6 +107,9 @@ def _make_reflection_tools(dry_run: bool = False):
                     "dry_run": True,
                     "page": page,
                     "content_length": len(content),
+                    "tokens": length_check.tokens,
+                    "max_tokens": length_check.max_tokens,
+                    "token_method": length_check.method,
                     "preview": preview,
                 }
             )
@@ -108,7 +126,16 @@ def _make_reflection_tools(dry_run: bool = False):
             with open(log_path, "a") as f:
                 f.write(entry)
 
-        return json.dumps({"success": True, "page": page, "content_length": len(content)})
+        return json.dumps(
+            {
+                "success": True,
+                "page": page,
+                "content_length": len(content),
+                "tokens": length_check.tokens,
+                "max_tokens": length_check.max_tokens,
+                "token_method": length_check.method,
+            }
+        )
 
     def read_reference(category: str) -> str:
         """Load reference Cython implementations from cy/ for a category.

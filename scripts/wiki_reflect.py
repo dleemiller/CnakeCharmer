@@ -30,6 +30,7 @@ import json
 import logging
 import sys
 
+from cnake_charmer.logging_config import setup_logging
 from cnake_charmer.wiki.reflect import reflect_on_traces
 
 
@@ -63,10 +64,7 @@ def main():
 
     args = parser.parse_args()
 
-    logging.basicConfig(
-        level=logging.DEBUG if args.verbose else logging.INFO,
-        format="%(levelname)s: %(message)s",
-    )
+    setup_logging(logging.DEBUG if args.verbose else logging.INFO)
 
     if args.llm:
         _run_llm_reflection(args)

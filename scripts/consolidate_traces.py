@@ -20,10 +20,11 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+from cnake_charmer.logging_config import setup_logging
 from cnake_charmer.traces.io import load_traces, save_traces
 from cnake_charmer.traces.models import Trace
 
-logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
+setup_logging(logging.INFO)
 logger = logging.getLogger(__name__)
 
 TRACES_DIR = Path("data/traces")

@@ -10,6 +10,7 @@ import json
 import logging
 import multiprocessing
 import re
+from typing import Literal
 
 import dspy
 from dspy.teleprompt.gepa.gepa import ScoreWithFeedback
@@ -65,11 +66,27 @@ class CythonOptimization(dspy.Signature):
     2. Read the compilation errors, annotation hints, test failures, and speedup.
     3. Fix issues and evaluate again.
     4. Repeat until: all tests pass, annotation score > 0.9, and speedup is maximized.
-    Each call to evaluate_cython compiles, annotates, tests, and benchmarks in one step."""
+    Each call to evaluate_cython compiles, annotates, tests, and benchmarks in one step.
+
+    workflow_mode is REQUIRED and MUST be followed exactly. Do not mix workflows.
+    It controls tool order when wiki tools are available:
+    - workflow_mode='LC' (low certainty): wiki_read -> evaluate_cython -> refine -> finish
+      (use wiki_read first; max 2 wiki_read calls total per attempt)
+    - workflow_mode='HC' (high confidence): evaluate_cython first, then wiki_read if needed,
+      then continue refining until the score is strong and finish.
+      (max 2 wiki_read calls total per attempt)
+    Use wiki tools for unfamiliar
+    Cython errors (typing, memoryviews, nogil/prange, C++ interop, compiler directives):
+    - Call wiki_read on the most relevant page.
+    - Apply that guidance and re-run evaluate_cython.
+    """
 
     python_code: str = dspy.InputField(desc="The Python source code to optimize")
     func_name: str = dspy.InputField(desc="Name of the main function to optimize")
     description: str = dspy.InputField(desc="Description of what the code does", default="")
+    workflow_mode: Literal["LC", "HC"] = dspy.InputField(
+        desc="REQUIRED workflow mode: 'LC' (low certainty) or 'HC' (high confidence)",
+    )
 
     cython_code: str = dspy.OutputField(desc="Complete .pyx Cython source code")
 
@@ -142,7 +159,7 @@ def make_tools(
 ):
     """Create DSPy-compatible tools for a problem.
 
-    Always includes evaluate_cython. Optionally adds wiki_read and wiki_search
+    Always includes evaluate_cython. Optionally adds wiki_read
     (capped at 2 total wiki calls per episode) when include_wiki=True.
     """
     env_args = {
@@ -206,43 +223,46 @@ def make_tools(
     tools = [evaluate_cython]
 
     if include_wiki:
+        from cnake_charmer.wiki.search import wiki_page_catalog as _wiki_catalog_fn
+        from cnake_charmer.wiki.search import wiki_page_catalog_text as _wiki_catalog_text_fn
         from cnake_charmer.wiki.search import wiki_read as _wiki_read_fn
-        from cnake_charmer.wiki.search import wiki_search as _wiki_search_fn
 
         _wiki_calls = 0
         _WIKI_LIMIT = 2
+        _CATALOG_ITEMS = _wiki_catalog_fn()
+        _WIKI_PAGES = [it["page"] for it in _CATALOG_ITEMS]
+        _WIKI_PAGE_SET = set(_WIKI_PAGES)
+        _WIKI_CATALOG = _wiki_catalog_text_fn()
+        _WIKI_PAGE_LITERAL = Literal.__getitem__(tuple(_WIKI_PAGES)) if _WIKI_PAGES else str
+        _wiki_read_doc = (
+            "Read one full Cython wiki page for concrete fix patterns.\n\n"
+            "Prefer this tool directly. Pick a page from the catalog below and read\n"
+            "it before making the next code revision.\n\n"
+            "Important: `page` must be an exact slug from this list.\n\n"
+            "Usage limit: at most 2 wiki_read calls per attempt.\n\n"
+            "Available pages at startup:\n"
+            f"{_WIKI_CATALOG}\n\n"
+            "Args:\n"
+            "    page: Exact page name from the catalog (e.g. 'memoryviews')."
+        )
 
         def wiki_read(page: str) -> str:
-            """Read a full Cython wiki page. Returns the complete page content with
-            patterns, code examples, gotchas, and trace statistics.
-
-            Available pages: typing, memoryviews, numpy-interop, parallelism,
-            optimization, compiler-directives, pitfalls, error-handling,
-            memory-management, c-interop, cpp-interop, extension-types, enums-tuples
-
-            Args:
-                page: Page name (e.g. 'memoryviews', 'pitfalls', 'parallelism').
-            """
+            normalized = str(page).strip().lower().removesuffix(".md")
+            if normalized not in _WIKI_PAGE_SET:
+                return (
+                    "Invalid wiki page name. Use an exact slug from the startup catalog.\n"
+                    f"Provided: {page!r}\n"
+                    f"Valid pages: {', '.join(_WIKI_PAGES)}"
+                )
             nonlocal _wiki_calls
             _wiki_calls += 1
             if _wiki_calls > _WIKI_LIMIT:
                 return "Wiki read limit reached. Use evaluate_cython to iterate on your code."
-            return _wiki_read_fn(page)
+            return _wiki_read_fn(normalized)
 
-        def wiki_search(query: str) -> str:
-            """Search the Cython wiki to find which pages are relevant to your query.
-            Returns page names and short excerpts. Use wiki_read to get full content.
-
-            Args:
-                query: Search terms (e.g. 'memoryview contiguous', 'nogil prange').
-            """
-            nonlocal _wiki_calls
-            _wiki_calls += 1
-            if _wiki_calls > _WIKI_LIMIT:
-                return "Wiki search limit reached. Use evaluate_cython to iterate on your code."
-            return _wiki_search_fn(query, max_results=3)
-
-        tools.extend([wiki_read, wiki_search])
+        wiki_read.__annotations__["page"] = _WIKI_PAGE_LITERAL
+        wiki_read.__doc__ = _wiki_read_doc
+        tools.append(wiki_read)
 
     return tools, env
 
@@ -486,13 +506,13 @@ def cython_metric(
 # Process reward: credit tool usage patterns (Context-1 insight)
 # ---------------------------------------------------------------------------
 
-ALL_TOOLS = {"evaluate_cython", "wiki_read", "wiki_search"}
+ALL_TOOLS = {"evaluate_cython", "wiki_read"}
 
 # Required tools — trace must call evaluate_cython at least once or reward is zeroed
 REQUIRED_TOOLS = {"evaluate_cython"}
 
 # Wiki tools don't count toward diversity/iteration bonuses
-_WIKI_TOOLS = {"wiki_read", "wiki_search"}
+_WIKI_TOOLS = {"wiki_read"}
 
 # Per-tool bonus for using each distinct non-wiki tool
 TOOL_DIVERSITY_BONUS = 0.025
@@ -646,7 +666,8 @@ def problem_to_example(problem) -> dspy.Example:
         python_code=problem.python_code,
         func_name=problem.func_name,
         description=problem.description,
+        workflow_mode="HC",
         test_cases=json.dumps(problem.test_cases),
         benchmark_args=json.dumps(problem.benchmark_args),
         cython_code=problem.cython_code,  # ground truth for reference
-    ).with_inputs("python_code", "func_name", "description")
+    ).with_inputs("python_code", "func_name", "description", "workflow_mode")
