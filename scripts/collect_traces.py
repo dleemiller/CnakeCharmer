@@ -74,6 +74,12 @@ def _parse_tool_args_raw(args) -> dict:
     return {}
 
 
+def _tool_call_counts(trace: Trace) -> str:
+    """Format per-tool call counts for logging, e.g. 'evaluate_cython=3 wiki_read=1'."""
+    counts = Counter(s.tool_name for s in trace.steps)
+    return " ".join(f"{name}={n}" for name, n in counts.most_common())
+
+
 def make_trace(
     problem,
     result,
@@ -161,7 +167,10 @@ def make_trace(
 
 
 def score_trace(trace: Trace, problem) -> float:
-    """Score the generated cython code using composite reward."""
+    """Score the generated cython code using composite reward.
+
+    Also populates trace.metrics with detailed scoring breakdown.
+    """
     from cnake_charmer.training.dspy_agent import _safe_composite_reward
 
     code = trace.final_code or ""
@@ -175,7 +184,30 @@ def score_trace(trace: Trace, problem) -> float:
         test_cases=problem.test_cases,
         benchmark_args=problem.benchmark_args,
     )
+    trace.metrics = {
+        "compiled": scores.get("compiled", False),
+        "correctness": round(scores.get("correctness", 0.0), 3),
+        "speedup": round(scores.get("speedup", 0.0), 2),
+        "annotations": round(scores.get("annotations", 0.0), 3),
+    }
     return scores["total"]
+
+
+def _format_trace_log(trace: Trace) -> str:
+    """Format a single trace result for logging."""
+    m = trace.metrics
+    parts = [f"reward={trace.reward:.3f}"]
+
+    if m.get("compiled"):
+        parts.append(f"correct={m.get('correctness', 0):.0%}")
+        parts.append(f"speedup={m.get('speedup', 0):.1f}x")
+        parts.append(f"ann={m.get('annotations', 0):.3f}")
+    else:
+        parts.append("COMPILE_FAIL")
+
+    parts.append(f"iters={trace.num_iterations}")
+    parts.append(f"tools=[{_tool_call_counts(trace)}]")
+    return " ".join(parts)
 
 
 def run_problem(
@@ -497,8 +529,8 @@ def main():
                     append_trace(trace, output_path)
                     done += 1
                     logger.info(
-                        f"  [{done}/{total}] {res.problem.problem_id} attempt {res.attempt + 1}: "
-                        f"reward={trace.reward:.3f} iters={trace.num_iterations}"
+                        f"  [{done}/{total}] {res.problem.problem_id} "
+                        f"attempt {res.attempt + 1}: {_format_trace_log(trace)}"
                     )
                 except Exception as e:
                     logger.error(f"  Record failed: {e}")
@@ -523,10 +555,7 @@ def main():
                 trace.reward = score_trace(trace, problem)
                 append_trace(trace, output_path)
 
-                logger.info(
-                    f"  reward={trace.reward:.3f} iters={trace.num_iterations} "
-                    f"tools={trace.tools_used}"
-                )
+                logger.info(f"  {_format_trace_log(trace)}")
             except Exception as e:
                 logger.error(f"  Failed: {e}")
 
