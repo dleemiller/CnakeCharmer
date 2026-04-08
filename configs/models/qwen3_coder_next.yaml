@@ -1,0 +1,23 @@
+# Qwen3-Coder-Next-FP8 — local vLLM server
+# 80B MoE (3B active), no thinking mode
+# Sampling: https://huggingface.co/Qwen/Qwen3-Coder-Next-FP8
+model:
+  id: openai/qwen3-coder-next
+  base_url: http://localhost:8005/v1
+  api_key_env: APIKEY
+  top_p: 0.95
+  extra_body:
+    top_k: 40
+
+collection:
+  attempts: 4
+  parallel: 4
+
+prompt:
+  program: null
+  id: gepa_qwen3coder
+
+optimization:
+  reflection_model: openrouter/z-ai/glm-5
+  val_size: 10
+  threads: 8

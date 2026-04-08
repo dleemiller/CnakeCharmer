@@ -178,7 +178,15 @@ def score_trace(trace: Trace, problem) -> float:
     return scores["total"]
 
 
-def run_problem(problem, model_id, max_iters, optimized_program, seed_text, use_thinking=False):
+def run_problem(
+    problem,
+    model_id,
+    max_iters,
+    optimized_program,
+    seed_text,
+    use_thinking=False,
+    include_wiki=False,
+):
     """Run a single problem and return (result, lm_history)."""
     from copy import deepcopy
 
@@ -187,6 +195,7 @@ def run_problem(problem, model_id, max_iters, optimized_program, seed_text, use_
         problem.func_name,
         problem.test_cases,
         problem.benchmark_args,
+        include_wiki=include_wiki,
     )
     if use_thinking:
         from cnake_charmer.traces.thinking_react import ThinkingReAct
@@ -271,6 +280,12 @@ def main():
         action="store_true",
         default=False,
         help="Use ThinkingReAct (native LM thinking) instead of standard ReAct",
+    )
+    parser.add_argument(
+        "--enable-wiki",
+        action="store_true",
+        default=False,
+        help="Add wiki_read and wiki_search tools (capped at 2 calls per problem)",
     )
     parser.add_argument(
         "--extra-body",
@@ -416,6 +431,7 @@ def main():
                     optimized_program=optimized_program,
                     seed_text=seed_text,
                     use_thinking=args.thinking_react,
+                    include_wiki=args.enable_wiki,
                 ).with_inputs(
                     "problem",
                     "attempt",
@@ -424,6 +440,7 @@ def main():
                     "optimized_program",
                     "seed_text",
                     "use_thinking",
+                    "include_wiki",
                 )
                 exec_pairs.append((module, example))
 
@@ -438,6 +455,7 @@ def main():
                     optimized_program,
                     seed_text,
                     use_thinking=False,
+                    include_wiki=False,
                     **kwargs,
                 ):
                     result, lm_history = run_problem(
@@ -447,6 +465,7 @@ def main():
                         optimized_program,
                         seed_text,
                         use_thinking=use_thinking,
+                        include_wiki=include_wiki,
                     )
                     return dspy.Example(
                         result=result, lm_history=lm_history, problem=problem, attempt=attempt
@@ -498,6 +517,7 @@ def main():
                     optimized_program,
                     seed_text,
                     use_thinking=args.thinking_react,
+                    include_wiki=args.enable_wiki,
                 )
                 trace = make_trace(problem, result, args.model, prompt_id, attempt, lm_history)
                 trace.reward = score_trace(trace, problem)

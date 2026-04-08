@@ -1,0 +1,17 @@
+# GLM-5.1 — OpenRouter
+model:
+  id: openrouter/z-ai/glm-5.1
+  api_key_env: OPENROUTER_API_KEY
+
+collection:
+  attempts: 2
+  parallel: 2
+
+prompt:
+  program: null
+  id: gepa_glm51
+
+optimization:
+  reflection_model: openrouter/google/gemini-3.1-pro-preview
+  val_size: 10
+  threads: 8

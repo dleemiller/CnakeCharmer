@@ -17,6 +17,9 @@ collection:
 prompt:
   program: null
 
+wiki:
+  enable: false
+
 optimization:
   reflection_model: null
   val_size: 50

@@ -1,0 +1,20 @@
+# Qwen 3.6 Plus — OpenRouter (free tier)
+# 1M context, 65K max output, hybrid linear attention + sparse MoE
+model:
+  id: openrouter/qwen/qwen3.6-plus:free
+  api_key_env: OPENROUTER_API_KEY
+  max_tokens: 16384
+  thinking_react: true
+
+collection:
+  attempts: 2
+#  parallel: 1
+
+prompt:
+  program: null
+  id: gepa_qwen36plus
+
+optimization:
+  reflection_model: openrouter/google/gemini-3.1-pro-preview
+  val_size: 10
+  threads: 8

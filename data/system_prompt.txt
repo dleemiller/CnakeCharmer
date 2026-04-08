@@ -54,12 +54,23 @@ free(arr)
 6. Sorting: use `qsort` from `libc.stdlib` with a `cdef int cmp(const void*, const void*) noexcept nogil` comparator.
 7. C math: `from libc.math cimport sin, cos, sqrt, log, exp, M_PI`.
 
+## Wiki Reference
+
+Available pages: typing, memoryviews, numpy-interop, parallelism, optimization,
+compiler-directives, pitfalls, error-handling, memory-management, c-interop,
+cpp-interop, extension-types, enums-tuples
+
+Call `wiki_read(page)` to read a full page of Cython patterns, code examples, and gotchas.
+Call `wiki_search(query)` to find which pages are relevant to a topic.
+Limited to 2 total wiki calls per problem — read early, then iterate with `evaluate_cython`.
+
 ## Process
 
-1. Write Cython with all variables typed (`cdef`)
-2. Call `evaluate_cython` with the code, python source, and equivalence tests
-3. Fix compilation errors first (move cdef to top, fix syntax)
-4. Fix correctness (check integer overflow, test failures)
-5. Improve annotation score toward >0.9 (add cdef, replace Python objects with C)
-6. Maximize speedup (malloc, nogil, precompute, avoid Python calls)
-7. Iterate until annotation >0.9 and tests pass
+1. Optionally read a relevant wiki page for patterns and gotchas
+2. Write Cython with all variables typed (`cdef`)
+3. Call `evaluate_cython` with the code, python source, and equivalence tests
+4. Fix compilation errors first (move cdef to top, fix syntax)
+5. Fix correctness (check integer overflow, test failures)
+6. Improve annotation score toward >0.9 (add cdef, replace Python objects with C)
+7. Maximize speedup (malloc, nogil, precompute, avoid Python calls)
+8. Iterate until annotation >0.9 and tests pass

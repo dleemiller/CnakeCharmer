@@ -27,5 +27,43 @@
         ]
       }
     }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "wiki_read",
+      "description": "Read a full Cython wiki page with patterns, code examples, gotchas, and trace statistics. Available pages: typing, memoryviews, numpy-interop, parallelism, optimization, compiler-directives, pitfalls, error-handling, memory-management, c-interop, cpp-interop, extension-types, enums-tuples. Limited to 2 wiki calls total per problem.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "page": {
+            "type": "string",
+            "description": "Page name (e.g. 'memoryviews', 'pitfalls', 'parallelism')."
+          }
+        },
+        "required": [
+          "page"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "wiki_search",
+      "description": "Search the Cython wiki to find which pages cover a topic. Returns page names and excerpts. Use wiki_read to get full content. Limited to 2 wiki calls total per problem.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "Search terms (e.g. 'memoryview contiguous', 'nogil prange')."
+          }
+        },
+        "required": [
+          "query"
+        ]
+      }
+    }
   }
 ]
