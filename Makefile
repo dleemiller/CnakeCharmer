@@ -23,6 +23,7 @@ traces:  ## Collect traces using a model profile
 	$(eval _MIT := $(shell $(call PROFILE_GET,collection.max_iters)))
 	$(eval _PAR := $(shell $(call PROFILE_GET,collection.parallel)))
 	$(eval _PRG := $(shell $(call PROFILE_GET,prompt.program)))
+	$(eval _WIK := $(shell $(call PROFILE_GET,wiki.enable)))
 	$(eval _EB := $(shell $(PROFILE_EB)))
 	$(UV_RUN) python scripts/collect_traces.py \
 		--model $$($(call PROFILE_GET,model.id)) \
@@ -31,6 +32,7 @@ traces:  ## Collect traces using a model profile
 		$(if $(filter-out None,$(_EB)),--extra-body '$(_EB)') \
 		$(if $(filter-out None,$(_PRG)),--program $(_PRG)) \
 		$(if $(filter True,$(_TR)),--thinking-react) \
+		$(if $(filter True,$(_WIK)),--enable-wiki) \
 		$(if $(filter-out None,$(_ATT)),--attempts $(_ATT)) \
 		$(if $(filter-out None,$(_MIT)),--max-iters $(_MIT)) \
 		$(if $(filter-out None,$(_PAR)),--parallel $(_PAR)) \
@@ -46,6 +48,7 @@ traces-best:  ## Collect best-of-N traces (5 attempts, keep best)
 	$(eval _MIT := $(shell $(call PROFILE_GET,collection.max_iters)))
 	$(eval _PAR := $(shell $(call PROFILE_GET,collection.parallel)))
 	$(eval _PRG := $(shell $(call PROFILE_GET,prompt.program)))
+	$(eval _WIK := $(shell $(call PROFILE_GET,wiki.enable)))
 	$(eval _EB := $(shell $(PROFILE_EB)))
 	$(UV_RUN) python scripts/collect_traces.py \
 		--model $$($(call PROFILE_GET,model.id)) \
@@ -54,6 +57,7 @@ traces-best:  ## Collect best-of-N traces (5 attempts, keep best)
 		$(if $(filter-out None,$(_EB)),--extra-body '$(_EB)') \
 		$(if $(filter-out None,$(_PRG)),--program $(_PRG)) \
 		$(if $(filter True,$(_TR)),--thinking-react) \
+		$(if $(filter True,$(_WIK)),--enable-wiki) \
 		$(if $(filter-out None,$(_MIT)),--max-iters $(_MIT)) \
 		$(if $(filter-out None,$(_PAR)),--parallel $(_PAR)) \
 		$(if $(filter-out None,$(_TMP)),--temperature $(_TMP)) \
@@ -90,6 +94,7 @@ sample:  ## Sample 3 random problems with a model
 	$(eval _TMP := $(shell $(call PROFILE_GET,model.temperature)))
 	$(eval _TOP := $(shell $(call PROFILE_GET,model.top_p)))
 	$(eval _PRG := $(shell $(call PROFILE_GET,prompt.program)))
+	$(eval _WIK := $(shell $(call PROFILE_GET,wiki.enable)))
 	$(eval _EB := $(shell $(PROFILE_EB)))
 	$(UV_RUN) python scripts/collect_traces.py \
 		--model $$($(call PROFILE_GET,model.id)) \
@@ -97,6 +102,7 @@ sample:  ## Sample 3 random problems with a model
 		$(if $(filter-out None,$(_EB)),--extra-body '$(_EB)') \
 		$(if $(filter-out None,$(_PRG)),--program $(_PRG)) \
 		$(if $(filter True,$(_TR)),--thinking-react) \
+		$(if $(filter True,$(_WIK)),--enable-wiki) \
 		$(if $(filter-out None,$(_TMP)),--temperature $(_TMP)) \
 		$(if $(filter-out None,$(_TOP)),--top-p $(_TOP)) \
 		--n-random 3 --attempts 1
@@ -146,6 +152,42 @@ optimize-prompt:  ## Optimize prompt for a model profile
 		$(if $(filter-out None,$(_TMP)),--temperature $(_TMP)) \
 		$(if $(filter-out None,$(_TOP)),--top-p $(_TOP)) \
 		$(if $(filter True,$(_TR)),--thinking-react)
+
+# --- Wiki ---
+.PHONY: wiki-setup wiki-reflect wiki-reflect-recent wiki-reflect-llm wiki-update-llm
+
+wiki-setup:  ## Clone Cython docs as wiki raw source
+	@mkdir -p .sources
+	@if [ ! -d .sources/cython-docs ]; then \
+		git clone --depth 1 --filter=blob:none --sparse \
+			https://github.com/cython/cython.git .sources/cython-docs && \
+		cd .sources/cython-docs && git sparse-checkout set docs; \
+	else echo "Cython docs already cloned"; fi
+
+wiki-reflect:  ## Extract patterns from traces into wiki findings
+	$(UV_RUN) python -m scripts.wiki_reflect \
+		--traces data/traces/master_traces.jsonl
+
+wiki-reflect-recent:  ## Reflect on traces from last 7 days
+	$(UV_RUN) python -m scripts.wiki_reflect \
+		--traces data/traces/master_traces.jsonl \
+		--since "$$(date -d '7 days ago' +%Y-%m-%d)"
+
+wiki-reflect-llm:  ## LLM reflection dry run (shows proposals)
+	$(eval _URL := $(shell $(call PROFILE_GET,model.base_url)))
+	$(UV_RUN) python -m scripts.wiki_reflect \
+		--traces data/traces/master_traces.jsonl \
+		--llm --dry-run \
+		--model $$($(call PROFILE_GET,model.id)) \
+		$(if $(filter-out None,$(_URL)),--base-url $(_URL))
+
+wiki-update-llm:  ## LLM reflection with apply (writes pages)
+	$(eval _URL := $(shell $(call PROFILE_GET,model.base_url)))
+	$(UV_RUN) python -m scripts.wiki_reflect \
+		--traces data/traces/master_traces.jsonl \
+		--llm --apply \
+		--model $$($(call PROFILE_GET,model.id)) \
+		$(if $(filter-out None,$(_URL)),--base-url $(_URL))
 
 # --- Utilities ---
 .PHONY: list-problems

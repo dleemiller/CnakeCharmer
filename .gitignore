@@ -67,6 +67,13 @@ unsloth_compiled_cache/
 .claude/worktrees/
 .codex/
 
+# Wiki raw sources (cloned locally, not committed)
+.sources/
+
+# Wiki merge artifacts
+wiki/pages/*.lock
+wiki/pages/*.tmp
+
 # mypy / pytype
 .mypy_cache/
 .pytype/

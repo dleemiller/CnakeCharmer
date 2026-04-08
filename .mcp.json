@@ -1,15 +1,3 @@
 {
-  "mcpServers": {
-    "cnake-charmer": {
-      "type": "stdio",
-      "command": "uv",
-      "args": [
-        "run",
-        "python",
-        "-m",
-        "cnake_charmer.mcp_server"
-      ],
-      "env": {}
-    }
-  }
+  "mcpServers": {}
 }

@@ -15,6 +15,8 @@ Usage:
 import ast
 import json
 import logging
+import os
+from datetime import datetime
 from pathlib import Path
 
 from mcp.server.fastmcp import FastMCP
@@ -23,6 +25,9 @@ from cnake_charmer.eval.annotations import parse_annotations
 from cnake_charmer.eval.compiler import cleanup_build, compile_cython
 from cnake_charmer.eval.memory_safety import check_memory_safety
 from cnake_charmer.eval.pipeline import composite_reward as _composite_reward
+from cnake_charmer.wiki.merge import atomic_wiki_write
+from cnake_charmer.wiki.search import wiki_read as _wiki_read
+from cnake_charmer.wiki.search import wiki_search as _wiki_search
 from cnake_data.loader import discover_pairs
 
 logger = logging.getLogger(__name__)
@@ -30,8 +35,12 @@ logger = logging.getLogger(__name__)
 mcp = FastMCP("cnake-charmer")
 
 CNAKE_DATA_ROOT = Path(__file__).resolve().parent.parent / "cnake_data"
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+WIKI_DIR = PROJECT_ROOT / "wiki"
+WIKI_PAGES = WIKI_DIR / "pages"
 PY_DIR = CNAKE_DATA_ROOT / "py"
 CY_DIR = CNAKE_DATA_ROOT / "cy"
+WIKI_READONLY = os.environ.get("WIKI_READONLY", "0") == "1"
 
 
 # ---------------------------------------------------------------------------
@@ -291,6 +300,143 @@ def check_memory(pyx_path: str, func_name: str, test_args: str = "(100,)") -> st
         },
         indent=2,
     )
+
+
+# ---------------------------------------------------------------------------
+# Wiki tools (read-only, always available)
+# ---------------------------------------------------------------------------
+
+
+def _wiki_page_path(page: str) -> Path:
+    """Resolve a page name to its file path."""
+    stem = page.removesuffix(".md")
+    return WIKI_PAGES / f"{stem}.md"
+
+
+@mcp.tool()
+def wiki_search(query: str, max_results: int = 5) -> str:
+    """Search wiki pages for relevant content.
+
+    Searches page titles and content for query terms. Returns matching
+    excerpts sorted by relevance.
+
+    Args:
+        query: Search terms (space-separated).
+        max_results: Maximum number of results to return.
+
+    Returns:
+        JSON array of {page, title, excerpt, score} sorted by relevance.
+    """
+    return _wiki_search(query, max_results=max_results, wiki_dir=WIKI_DIR)
+
+
+@mcp.tool()
+def wiki_read(page: str) -> str:
+    """Read a wiki page in full.
+
+    Args:
+        page: Page name (e.g. 'memoryviews' or 'memoryviews.md').
+
+    Returns:
+        Full markdown content of the page, or error with available pages.
+    """
+    return _wiki_read(page, wiki_dir=WIKI_DIR)
+
+
+# ---------------------------------------------------------------------------
+# Wiki tools (dev-only, gated by WIKI_READONLY)
+# ---------------------------------------------------------------------------
+
+if not WIKI_READONLY:
+
+    @mcp.tool()
+    def wiki_update(page: str, content: str) -> str:
+        """Create or update a wiki page.
+
+        Writes content to wiki/pages/{page}.md, appends to log.md,
+        and updates index.md if the page is new.
+
+        Args:
+            page: Page name (e.g. 'pitfalls' or 'new-topic').
+            content: Full markdown content for the page.
+
+        Returns:
+            Confirmation with page path.
+        """
+        path = _wiki_page_path(page)
+        stem = page.removesuffix(".md")
+        is_new = not path.exists()
+
+        WIKI_PAGES.mkdir(parents=True, exist_ok=True)
+        atomic_wiki_write(path, content)
+
+        # Append to log
+        log_path = WIKI_DIR / "log.md"
+        if log_path.exists():
+            ts = datetime.now().strftime("%Y-%m-%d")
+            op = "create" if is_new else "update"
+            entry = f"| {ts} | {op} | {stem} | mcp wiki_update |\n"
+            with open(log_path, "a") as f:
+                f.write(entry)
+
+        # Add to index if new
+        if is_new:
+            index_path = WIKI_DIR / "index.md"
+            if index_path.exists():
+                # Extract title from content
+                title = stem.replace("-", " ").title()
+                for line in content.splitlines():
+                    if line.startswith("# "):
+                        title = line[2:].strip()
+                        break
+                with open(index_path, "a") as f:
+                    f.write(f"\n- [{title}](pages/{stem}.md) — {stem}\n")
+
+        return json.dumps(
+            {
+                "success": True,
+                "page": stem,
+                "path": str(path),
+                "action": "created" if is_new else "updated",
+            },
+            indent=2,
+        )
+
+    @mcp.tool()
+    def wiki_reflect(
+        category: str | None = None,
+        problem_id: str | None = None,
+        min_reward: float = 0.0,
+        max_traces: int = 500,
+    ) -> str:
+        """Analyze traces and extract patterns for wiki improvement.
+
+        Loads traces matching the filter, extracts error types, fix patterns,
+        and optimization strategies, grouped by relevant wiki page.
+
+        Args:
+            category: Filter by problem category (e.g. 'numerical').
+            problem_id: Filter by specific problem (e.g. 'algorithms/a_star_grid').
+            min_reward: Minimum reward threshold (0.0-1.0).
+            max_traces: Maximum traces to analyze.
+
+        Returns:
+            JSON report of findings grouped by wiki page.
+        """
+        from cnake_charmer.wiki.reflect import reflect_on_traces
+
+        traces_path = PROJECT_ROOT / "data" / "traces" / "master_traces.jsonl"
+        if not traces_path.exists():
+            return json.dumps({"error": f"Traces not found at {traces_path}"})
+
+        findings = reflect_on_traces(
+            traces_path=traces_path,
+            category=category,
+            problem_id=problem_id,
+            min_reward=min_reward,
+            max_traces=max_traces,
+        )
+        return json.dumps(findings, indent=2)
 
 
 if __name__ == "__main__":

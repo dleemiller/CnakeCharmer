@@ -130,10 +130,11 @@ class CythonReActAgent(dspy.Module):
             instead of dspy.ReAct (explicit next_thought field).
     """
 
-    def __init__(self, max_iters: int = 5, use_thinking: bool = False):
+    def __init__(self, max_iters: int = 5, use_thinking: bool = False, include_wiki: bool = False):
         super().__init__()
         self.max_iters = max_iters
         self.use_thinking = use_thinking
+        self.include_wiki = include_wiki
         self._init_react()
 
     @property
@@ -151,9 +152,23 @@ class CythonReActAgent(dspy.Module):
             """Compile, analyze, test, and benchmark Cython code in one step."""
             return "placeholder"
 
+        placeholder_tools = [evaluate_cython]
+
+        if self.include_wiki:
+
+            def wiki_read(page: str) -> str:
+                """Read a full Cython wiki page."""
+                return "placeholder"
+
+            def wiki_search(query: str) -> str:
+                """Search the Cython wiki."""
+                return "placeholder"
+
+            placeholder_tools.extend([wiki_read, wiki_search])
+
         self.react = self._react_cls(
             CythonOptimization,
-            tools=[evaluate_cython],
+            tools=placeholder_tools,
             max_iters=self.max_iters,
         )
 
@@ -176,7 +191,7 @@ class CythonReActAgent(dspy.Module):
         tc = json.loads(test_cases) if isinstance(test_cases, str) else test_cases
         ba = json.loads(benchmark_args) if isinstance(benchmark_args, str) else benchmark_args
 
-        tools, _env = make_tools(python_code, func_name, tc, ba)
+        tools, _env = make_tools(python_code, func_name, tc, ba, include_wiki=self.include_wiki)
         real_react = self._react_cls(CythonOptimization, tools=tools, max_iters=self.max_iters)
 
         for name, param in self.react.named_parameters():

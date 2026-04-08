@@ -207,6 +207,7 @@ class CythonToolEnvironment:
 
         self.step_scores = []
         self.num_tool_calls = 0
+        self._wiki_calls = 0
         self.last_code = None
         self._original_python = python_code
 
@@ -480,6 +481,28 @@ class CythonToolEnvironment:
             cleanup_build(comp)
 
         return "\n\n".join(sections)
+
+    # -- Wiki tools (read-only, do NOT affect step_scores or num_tool_calls) --
+
+    _WIKI_LIMIT = 2
+
+    def wiki_read(self, page: str) -> str:
+        """Read a full Cython wiki page with patterns, code examples, and gotchas."""
+        self._wiki_calls += 1
+        if self._wiki_calls > self._WIKI_LIMIT:
+            return "Wiki limit reached. Use evaluate_cython to iterate on your code."
+        from cnake_charmer.wiki.search import wiki_read as _read
+
+        return _read(page)
+
+    def wiki_search(self, query: str) -> str:
+        """Search the Cython wiki to find relevant pages."""
+        self._wiki_calls += 1
+        if self._wiki_calls > self._WIKI_LIMIT:
+            return "Wiki limit reached. Use evaluate_cython to iterate on your code."
+        from cnake_charmer.wiki.search import wiki_search as _search
+
+        return _search(query, max_results=3)
 
     def _weighted_score(self, scores: dict, weights: dict | None = None) -> float:
         """Compute weighted composite score from a step's scores dict."""

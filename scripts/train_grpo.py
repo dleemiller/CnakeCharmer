@@ -102,7 +102,7 @@ def _harmony_parse_tool_calls(text: str) -> dict:
         reasoning = m.group(1).strip()
 
     # Only recognize tools that the environment actually exposes
-    _KNOWN_TOOLS = {"evaluate_cython"}
+    _KNOWN_TOOLS = {"evaluate_cython", "wiki_read", "wiki_search"}
 
     tool_calls = []
     for m in _re.finditer(

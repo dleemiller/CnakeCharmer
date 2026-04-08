@@ -134,13 +134,16 @@ def _evaluate_worker(queue, env_args, code, annotate=True, test=True, benchmark=
 
 
 def make_tools(
-    python_code: str, func_name: str, test_cases: list, benchmark_args: tuple | None = None
+    python_code: str,
+    func_name: str,
+    test_cases: list,
+    benchmark_args: tuple | None = None,
+    include_wiki: bool = False,
 ):
-    """Create a single DSPy-compatible evaluation tool for a problem.
+    """Create DSPy-compatible tools for a problem.
 
-    One tool does everything: compile + annotate + test + benchmark.
-    Single compilation, single subprocess, all feedback at once.
-    The model calls evaluate_cython, reads the results, fixes issues, repeats.
+    Always includes evaluate_cython. Optionally adds wiki_read and wiki_search
+    (capped at 2 total wiki calls per episode) when include_wiki=True.
     """
     env_args = {
         "python_code": python_code,
@@ -199,7 +202,49 @@ def make_tools(
 
     env = CythonToolEnvironment()
     env.reset(**env_args)
-    return [evaluate_cython], env
+
+    tools = [evaluate_cython]
+
+    if include_wiki:
+        from cnake_charmer.wiki.search import wiki_read as _wiki_read_fn
+        from cnake_charmer.wiki.search import wiki_search as _wiki_search_fn
+
+        _wiki_calls = 0
+        _WIKI_LIMIT = 2
+
+        def wiki_read(page: str) -> str:
+            """Read a full Cython wiki page. Returns the complete page content with
+            patterns, code examples, gotchas, and trace statistics.
+
+            Available pages: typing, memoryviews, numpy-interop, parallelism,
+            optimization, compiler-directives, pitfalls, error-handling,
+            memory-management, c-interop, cpp-interop, extension-types, enums-tuples
+
+            Args:
+                page: Page name (e.g. 'memoryviews', 'pitfalls', 'parallelism').
+            """
+            nonlocal _wiki_calls
+            _wiki_calls += 1
+            if _wiki_calls > _WIKI_LIMIT:
+                return "Wiki read limit reached. Use evaluate_cython to iterate on your code."
+            return _wiki_read_fn(page)
+
+        def wiki_search(query: str) -> str:
+            """Search the Cython wiki to find which pages are relevant to your query.
+            Returns page names and short excerpts. Use wiki_read to get full content.
+
+            Args:
+                query: Search terms (e.g. 'memoryview contiguous', 'nogil prange').
+            """
+            nonlocal _wiki_calls
+            _wiki_calls += 1
+            if _wiki_calls > _WIKI_LIMIT:
+                return "Wiki search limit reached. Use evaluate_cython to iterate on your code."
+            return _wiki_search_fn(query, max_results=3)
+
+        tools.extend([wiki_read, wiki_search])
+
+    return tools, env
 
 
 # ---------------------------------------------------------------------------
@@ -441,13 +486,16 @@ def cython_metric(
 # Process reward: credit tool usage patterns (Context-1 insight)
 # ---------------------------------------------------------------------------
 
-ALL_TOOLS = {"evaluate_cython"}
+ALL_TOOLS = {"evaluate_cython", "wiki_read", "wiki_search"}
 
 # Required tools — trace must call evaluate_cython at least once or reward is zeroed
 REQUIRED_TOOLS = {"evaluate_cython"}
 
-# Per-tool bonus for using each distinct tool
-TOOL_DIVERSITY_BONUS = 0.025  # +0.025 per tool used, max +0.10 for all 4
+# Wiki tools don't count toward diversity/iteration bonuses
+_WIKI_TOOLS = {"wiki_read", "wiki_search"}
+
+# Per-tool bonus for using each distinct non-wiki tool
+TOOL_DIVERSITY_BONUS = 0.025
 
 # Bonus for iterative improvement (compile → fail → fix → compile again)
 ITERATION_BONUS = 0.02  # +0.02 per additional compile call beyond the first
@@ -491,13 +539,14 @@ def extract_tool_usage(entry: dict) -> dict:
                         tool_calls.append(tool_name)
                         tools_used.add(tool_name)
 
-    compile_count = sum(1 for t in tool_calls if t == "compile_cython")
+    compile_count = sum(1 for t in tool_calls if t == "evaluate_cython")
+    non_wiki_tools = tools_used - _WIKI_TOOLS
     return {
         "tool_calls": tool_calls,
         "tools_used": tools_used,
         "total_calls": len(tool_calls),
         "compile_count": compile_count,
-        "unique_tools": len(tools_used),
+        "unique_tools": len(non_wiki_tools),
     }
 
 
@@ -513,7 +562,7 @@ def process_reward(entry: dict, require_all_tools: bool = True) -> float:
     """
     usage = extract_tool_usage(entry)
 
-    # Gate: must use all 4 tools at least once
+    # Gate: must use evaluate_cython at least once
     if require_all_tools:
         missing = REQUIRED_TOOLS - usage["tools_used"]
         if missing:
@@ -521,7 +570,7 @@ def process_reward(entry: dict, require_all_tools: bool = True) -> float:
 
     bonus = 0.0
 
-    # Tool diversity: +0.025 per unique tool used (max +0.10 for all 4)
+    # Tool diversity: +0.025 per unique non-wiki tool used
     bonus += usage["unique_tools"] * TOOL_DIVERSITY_BONUS
 
     # Iterative improvement: bonus for re-compiling (implies fix-and-retry)
