@@ -24,6 +24,9 @@ from concurrent.futures import ProcessPoolExecutor, as_completed
 from pathlib import Path
 from typing import Any
 
+# Ensure repo root is importable when executed as `python scripts/run_benchmarks.py`.
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
 from rich.console import Console
 from rich.logging import RichHandler
 from rich.table import Table
