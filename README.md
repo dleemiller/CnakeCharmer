@@ -63,6 +63,7 @@ CnakeCharmer/
 │   │   ├── models.py              # Pydantic trace format (v2)
 │   │   ├── io.py                  # Load/save with auto-detect
 │   │   └── lm.py                  # Shared LM configuration
+│   ├── sources/                   # Data source adapters/loaders
 │   ├── config.py                  # OmegaConf config loader
 │   └── mcp_server.py              # MCP server for Claude Code
 │
@@ -75,6 +76,9 @@ CnakeCharmer/
 │   └── tooling/                   # Tooling unit tests
 │
 ├── scripts/                       # CLI entry points + utilities
+│   ├── collect_traces.py          # DSPy trace collection
+│   ├── build_sft.py               # SFT dataset builder
+│   ├── export_parallel_pairs.py   # Parallel Python/Cython export
 │   ├── run_benchmarks.py          # Benchmark runner
 │   └── utils/stack_data/          # Stack data tooling/artifacts
 │
@@ -85,7 +89,9 @@ CnakeCharmer/
 │   ├── TOOL_DESIGN.md
 │   └── SFT_SELECTION_CRITERIA.md
 │
-├── data/                          # Traces, prompts, tool schemas
+├── data/                          # Traces, prompts, HF dataset assets
+│   ├── traces/                    # Master trace logs + error logs
+│   └── hf/                        # raw/sft/grpo/parallel exports
 └── Makefile                       # Primary workflow interface
 ```
 
