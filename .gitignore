@@ -70,3 +70,6 @@ unsloth_compiled_cache/
 # mypy / pytype
 .mypy_cache/
 .pytype/
+
+# Local Claude workspace data
+.claude/
