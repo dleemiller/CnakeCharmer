@@ -1,50 +1,51 @@
 # SFT Data Selection Criteria
 
-## Hard Filters (must pass all)
+This document reflects the **current** `scripts/build_sft.py` + `cnake_charmer/training/sft_scoring.py` behavior.
 
-1. **Correctness**: All tests must pass (tests_passed == tests_total)
-2. **Compiles**: Code must compile successfully
-3. **No None tool calls**: All tool calls must be valid (`evaluate_cython` or `finish`), no parse failures
-4. **Uses evaluate_cython**: Must have called `evaluate_cython` at least once (not just finish)
-5. **No unsafe imports**: No `os`, `subprocess`, `shutil`, etc.
-6. **Valid Cython output**: Final code must be non-empty and extractable
+## Hard Filters (current behavior)
 
-## Ranking Criteria (for selecting best per model per problem)
+1. **Known problem only**: `trace.problem_id` must exist in discovered pairs.
+2. **Valid tool calls**: no `None` tool names in `tools_used`.
+3. **Must use `evaluate_cython`** at least once.
+4. **Must produce code**: final `cython_code` is non-empty.
+5. **Nonzero trace reward**: `trace.reward != 0`.
+6. **Perfect correctness for SFT score**: parsed correctness must be `1.0`, otherwise score is forced to `0.0`.
 
-Priority order:
+Optional CLI filters applied by `build_sft.py`:
 
-1. **Speedup** (higher is better) — primary differentiator since reward function caps at 10x
-2. **Annotation score** (higher is better, target >0.9) — indicates well-typed C code
-3. **Fewer iterations** (lower is better) — efficient problem-solving is better training signal
-4. **Calls finish explicitly** — indicates the model knew it was done vs running out of iterations
-5. **Shorter thought tokens** (lower is better) — concise reasoning, less training cost
-6. **Shorter code** (lower is better, given same correctness+speedup) — Gemini's compact solutions preferred over verbose equivalent ones
-7. **Higher reward** — tiebreaker after the above
+- `--require-finish`: keep only traces that called `finish`.
+- `--min-iters N`: minimum number of `evaluate_cython` calls.
+- `--min-score S`: minimum SFT score threshold (default `0.8` in project workflows).
+
+## SFT Scoring (current formula)
+
+Primary quality:
+
+- `correctness`: 0.25
+- `performance`: 0.40, where performance uses `log2(speedup) / log2(100)` (capped at 1.0)
+- `annotation`: 0.15
+- `lint`: 0.05
+- `memory_safety`: 0.05
+
+Tiebreakers:
+
+- `efficiency` (fewer `evaluate_cython` calls): 0.05
+- `conciseness` (shorter thought text): 0.025
+- `compactness` (shorter code): 0.025
+
+Total score is quality + tiebreakers.
 
 ## Selection Strategy
 
-- **One best trace per model per problem** — diverse approaches from different models
-- **Minimum speedup threshold**: >5x (exclude traces that barely beat Python)
-- **Minimum annotation score**: >0.7 (exclude poorly typed code)
-- **Prefer traces that finish in ≤3 iterations** over 5-iteration grinds, given comparable quality
+After filtering:
 
-## What NOT to include
+1. Keep the best trace per `(problem_id, model)` by SFT score.
+2. For each problem, keep top-`k` models by score (`--top-k`, default `2` in project workflows).
+3. Validate trace structure for rendering.
+4. Render with Harmony template and token-screen using `--max-tokens`.
 
-- Traces with `None` tool calls (model failed to follow format)
-- Traces from the old 4-tool format (compile_cython, annotate_cython, test_cython, benchmark_cython)
-- Traces where reward = 0 (failed completely)
-- Traces that fail any test case
-- Traces with extremely high iteration count but low improvement (grinding without learning)
+## Important Notes
 
-## SFT Training Weighting (optional)
-
-Consider weighting examples by quality during training:
-- High speedup (>50x) traces could have higher weight
-- Low iteration (≤2 calls) traces could have higher weight
-- These weights push the student toward efficient, high-performance solutions
-
-## Diversity Requirements
-
-- Include traces from multiple models per problem where available
-- Different models teach different optimization strategies (typing vs algorithmic)
-- At least one trace per problem in the final dataset (even if below ideal thresholds)
+- There is **no explicit hard minimum** for speedup or annotation in `build_sft.py`.
+- `finish` is only required when `--require-finish` is set.
+- Token length and render validity can still remove traces after score filtering.

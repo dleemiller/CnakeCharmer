@@ -2,9 +2,9 @@
 
 Tracks which Cython user-guide features are represented in py/cy/test problem triplets.
 
-**Last updated:** 2026-03-27
-**Total problems:** 523 matched pairs
-**Categories complete:** 18 of 18
+**Last updated:** 2026-04-09
+**Total problems:** 723 matched pairs
+**Categories complete:** 19 of 19
 **Remaining gaps:** 0
 
 ---
@@ -235,10 +235,10 @@ Uses old buffer syntax (`cnp.ndarray[...]`) as required by Pythran. Build suppor
 | R. NumPy + Pythran | **Complete** | 0 |
 | **Total remaining** | | **0** |
 
-## Build Changes Required
+## Build Notes
 
-- **C++ interop (N):** Add `language='c++'` to Extension() or create `cy_cpp/` directory
-- **Pythran (R):** Requires `pythran` package installed
+- **C++ interop (N):** `setup.py` auto-detects C++ usage and sets `language='c++'`.
+- **Pythran (R):** `setup.py` auto-detects `np_pythran=True`; `pythran` must be installed to compile those files.
 
 ---
 
