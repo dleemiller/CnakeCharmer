@@ -38,61 +38,14 @@ This repo is both the **dataset** and the **training infrastructure**:
 
 ```
 CnakeCharmer/
-├── cnake_data/                    # Living dataset
-│   ├── py/{category}/{name}.py    # Pure Python (training prompts)
-│   ├── cy/{category}/{name}.pyx   # Cython implementations (ground truth)
-│   ├── unpaired/*.py              # GRPO unpaired Python problems
-│   ├── benchmarks/                # Benchmark decorator registry
-│   ├── loader.py                  # Problem pair discovery
-│   └── difficulty.py              # Difficulty classification
-│
-├── cnake_charmer/                 # Tooling
-│   ├── eval/                      # Unified evaluation pipeline
-│   │   ├── compiler.py            # Cython compilation
-│   │   ├── annotations.py         # HTML annotation parsing
-│   │   ├── correctness.py         # Test execution
-│   │   ├── benchmark.py           # Performance timing
-│   │   ├── memory_safety.py       # ASan integration
-│   │   ├── lint.py                # cython-lint
-│   │   └── pipeline.py            # Orchestration + composite scoring
-│   ├── training/                  # SFT + GRPO
-│   │   ├── environment.py         # CythonToolEnvironment
-│   │   ├── grpo.py                # GRPO reward + dataset
-│   │   └── dspy_agent.py          # DSPy ReAct agent
-│   ├── traces/                    # Trace collection + models
-│   │   ├── models.py              # Pydantic trace format (v2)
-│   │   ├── io.py                  # Load/save with auto-detect
-│   │   └── lm.py                  # Shared LM configuration
-│   ├── sources/                   # Data source adapters/loaders
-│   ├── config.py                  # OmegaConf config loader
-│   └── mcp_server.py              # MCP server for Claude Code
-│
-├── configs/
-│   ├── models/                    # Model profiles (YAML)
-│   └── training/                  # Training hyperparameters (YAML)
-│
-├── tests/
-│   ├── data/{category}/           # Dataset equivalence tests
-│   └── tooling/                   # Tooling unit tests
-│
-├── scripts/                       # CLI entry points + utilities
-│   ├── collect_traces.py          # DSPy trace collection
-│   ├── build_sft.py               # SFT dataset builder
-│   ├── export_parallel_pairs.py   # Parallel Python/Cython export
-│   ├── run_benchmarks.py          # Benchmark runner
-│   └── utils/stack_data/          # Stack data tooling/artifacts
-│
-├── docs/
-│   ├── BENCHMARKS.md
-│   ├── FEATURE_COVERAGE.md
-│   ├── CONTRIBUTING.md
-│   ├── TOOL_DESIGN.md
-│   └── SFT_SELECTION_CRITERIA.md
-│
-├── data/                          # Traces, prompts, HF dataset assets
-│   ├── traces/                    # Master trace logs + error logs
-│   └── hf/                        # raw/sft/grpo/parallel exports
-└── Makefile                       # Primary workflow interface
+├── cnake_data/        # Dataset: Python/Cython pairs + unpaired GRPO problems
+├── cnake_charmer/     # Core tooling: eval, training, traces, MCP server
+├── configs/           # Model and training YAML profiles
+├── scripts/           # Collection/training/benchmark/export entry points
+├── tests/             # Dataset and tooling tests
+├── docs/              # Project documentation
+├── data/              # Traces, prompts, and HF export artifacts
+└── Makefile           # Primary workflow interface
 ```
 
 ### Categories
@@ -101,21 +54,7 @@ CnakeCharmer/
 
 ### Cython Feature Coverage
 
-The problem set covers a broad range of Cython features beyond basic typed functions:
-
-| Feature | Examples |
-|---------|---------|
-| `cdef class` (extension types) | `__cinit__`/`__dealloc__`, typed C attributes, `cdef`/`cpdef` methods |
-| Special methods | `__getitem__`, `__setitem__`, `__len__`, `__contains__`, `__iter__`/`__next__`, `__richcmp__`, `__call__`, `__hash__` |
-| Inheritance | `cdef class Child(Parent)` with `cpdef` method dispatch |
-| Typed memoryviews | 1D/2D, C-contiguous `[::1]`, Fortran `[::1, :]`, `const`, `.T`, `.copy()` |
-| `cdef struct` / `cdef union` | Nested structs, packed structs, tagged unions, struct return |
-| Fused types | `ctypedef fused` with type dispatch, memoryview params |
-| C++ interop | `libcpp.vector`/`map`/`set`/`unordered_map`, `cdef cppclass`, `except +` |
-| `prange` / `nogil` | OpenMP parallel loops, GIL release for C computation |
-| NumPy interop | `cimport numpy`, typed memoryviews from arrays, prange+NumPy |
-
-See [FEATURE_COVERAGE.md](docs/FEATURE_COVERAGE.md) for the full checklist.
+See [FEATURE_COVERAGE.md](docs/FEATURE_COVERAGE.md) for the full checklist and examples.
 
 ### Benchmarks
 
@@ -138,6 +77,19 @@ uv run --no-sync python -c "
 from cnake_charmer.config import load_model_profile
 cfg = load_model_profile('gpt_oss_120b', overrides=['model.temperature=0.8'])
 "
+```
+
+## Hugging Face Dataset
+
+Dataset: https://huggingface.co/datasets/CnakeCharmer/CnakeCharmer
+
+```python
+from datasets import load_dataset
+
+raw = load_dataset("CnakeCharmer/CnakeCharmer", split="raw")
+sft = load_dataset("CnakeCharmer/CnakeCharmer", split="sft")
+grpo = load_dataset("CnakeCharmer/CnakeCharmer", split="grpo")
+parallel = load_dataset("CnakeCharmer/CnakeCharmer", split="parallel")
 ```
 
 ## Contributing
