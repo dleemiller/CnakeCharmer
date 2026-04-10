@@ -30,7 +30,7 @@ LLMs can write decent Python but struggle with efficient Cython. This is a train
 
 This repo is both the **dataset** and the **training infrastructure**:
 
-- **Dataset**: 665 matched Python/Cython pairs across 19 categories, version-controlled and CI-testable
+- **Dataset**: 723 matched Python/Cython pairs across 19 categories, version-controlled and CI-testable
 - **Training**: Multi-turn GRPO with TRL GRPOTrainer — the model iteratively compiles, reviews HTML annotations, and optimizes its Cython output
 - **Tools**: MCP server for AI-assisted development (compile, annotate, benchmark, score, memory safety via ASan)
 

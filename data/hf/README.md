@@ -27,8 +27,9 @@ This dataset is for training an agent to translate python code to cython code, u
 ### Parallel
 
 Parallel python / cython implementations sourced from our [github repo](https://github.com/dleemiller/CnakeCharmer).
-We have implemented, compiled, linted, benchmarked and tested over 700 examples.
-We use this dataset for collecting agent raw agent traces and GEPA optimizing prompt instructions.
+Current export contains 723 pairs.
+`speedup` values are sourced from `.benchmark_cache.json` (fast cache-based export).
+This split is used as supervised parallel code data (Python -> Cython).
 
 ### Raw
 

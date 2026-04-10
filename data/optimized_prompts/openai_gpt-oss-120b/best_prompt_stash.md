@@ -1,4 +1,7 @@
 # Best GEPA-Optimized Prompt for gpt-oss-120b
+# Historical note: this stash references an older 4-tool setup
+# (`compile_cython`, `annotate_cython`, `test_cython`, `benchmark_cython`).
+# Current training/tooling uses unified `evaluate_cython` instead.
 # Score: 78.0% on 35 val problems (baseline: 73.7%)
 # Optimized by: mimo-v2-pro reflection, GEPA iteration 3
 # Date: 2026-03-27
