@@ -12,7 +12,7 @@ PROFILE_GET = $(UV_RUN) python -c "from cnake_charmer.config import load_model_p
 PROFILE_EB = $(UV_RUN) python -c "from cnake_charmer.config import load_model_profile; import json; from omegaconf import OmegaConf; c=load_model_profile('$(PROFILE)'); eb=c.get('model',{}).get('extra_body'); print(json.dumps(OmegaConf.to_container(eb)) if eb else 'None')"
 
 # --- Data Collection ---
-.PHONY: traces traces-best consolidate build-sft
+.PHONY: traces traces-best consolidate build-sft parallel
 
 traces:  ## Collect traces using a model profile
 	$(eval _TR := $(shell $(call PROFILE_GET,model.thinking_react)))
@@ -65,6 +65,9 @@ consolidate:  ## Consolidate trace files into master JSONL
 
 build-sft:  ## Build SFT dataset from consolidated traces
 	$(UV_RUN) python scripts/build_sft.py --min-score 0.8 --top-k 2 --require-finish
+
+parallel:  ## Export paired Python/Cython implementations with benchmark metadata
+	PYTHONPATH=. $(UV_RUN) python scripts/export_parallel_pairs.py -o $(if $(OUTPUT),$(OUTPUT),data/hf/parallel/parallel_examples.jsonl)
 
 # --- Training ---
 .PHONY: train-sft train-grpo
