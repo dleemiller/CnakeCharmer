@@ -30,7 +30,7 @@ LLMs can write decent Python but struggle with efficient Cython. This is a train
 
 This repo is both the **dataset** and the **training infrastructure**:
 
-- **Dataset**: 723 matched Python/Cython pairs across 19 categories, version-controlled and CI-testable
+- **Dataset**: 665 matched Python/Cython pairs across 19 categories, version-controlled and CI-testable
 - **Training**: Multi-turn GRPO with TRL GRPOTrainer — the model iteratively compiles, reviews HTML annotations, and optimizes its Cython output
 - **Tools**: MCP server for AI-assisted development (compile, annotate, benchmark, score, memory safety via ASan)
 
@@ -76,7 +76,7 @@ CnakeCharmer/
 ├── scripts/                       # CLI entry points
 ├── data/                          # Traces, prompts, tool schemas
 ├── Makefile                       # Primary workflow interface
-└── run_benchmarks.py              # Benchmark runner
+└── scripts/run_benchmarks.py      # Benchmark runner
 ```
 
 ### Categories
@@ -105,8 +105,8 @@ See [FEATURE_COVERAGE.md](FEATURE_COVERAGE.md) for the full checklist.
 
 ```bash
 make benchmark              # 4 parallel workers, hash caching
-uv run run_benchmarks.py --all   # force re-run everything
-uv run run_benchmarks.py -j 8    # 8 workers
+uv run scripts/run_benchmarks.py --all   # force re-run everything
+uv run scripts/run_benchmarks.py -j 8    # 8 workers
 ```
 
 ## Configuration

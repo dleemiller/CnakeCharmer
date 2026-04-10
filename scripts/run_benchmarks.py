@@ -6,9 +6,9 @@ Uses source file hashing to skip unchanged benchmarks.
 Saves cache incrementally. Runs up to 4 benchmarks in parallel.
 
 Usage:
-    uv run --no-sync run_benchmarks.py          # only changed, 4 workers
-    uv run --no-sync run_benchmarks.py --all    # force re-run everything
-    uv run --no-sync run_benchmarks.py -j 1     # single-threaded
+    uv run --no-sync scripts/run_benchmarks.py          # only changed, 4 workers
+    uv run --no-sync scripts/run_benchmarks.py --all    # force re-run everything
+    uv run --no-sync scripts/run_benchmarks.py -j 1     # single-threaded
 """
 
 import contextlib

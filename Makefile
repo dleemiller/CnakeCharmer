@@ -85,7 +85,7 @@ test-model:  ## Test trained model on unseen problems
 	$(UV_RUN) python scripts/test_sft_model.py
 
 benchmark:  ## Run benchmarks (hash-cached, only changed files)
-	$(UV_RUN) python run_benchmarks.py
+	$(UV_RUN) python scripts/run_benchmarks.py
 
 sample:  ## Sample 3 random problems with a model
 	$(eval _TR := $(shell $(call PROFILE_GET,model.thinking_react)))
