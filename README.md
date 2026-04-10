@@ -41,6 +41,7 @@ CnakeCharmer/
 ├── cnake_data/                    # Living dataset
 │   ├── py/{category}/{name}.py    # Pure Python (training prompts)
 │   ├── cy/{category}/{name}.pyx   # Cython implementations (ground truth)
+│   ├── unpaired/*.py              # GRPO unpaired Python problems
 │   ├── benchmarks/                # Benchmark decorator registry
 │   ├── loader.py                  # Problem pair discovery
 │   └── difficulty.py              # Difficulty classification
@@ -73,10 +74,19 @@ CnakeCharmer/
 │   ├── data/{category}/           # Dataset equivalence tests
 │   └── tooling/                   # Tooling unit tests
 │
-├── scripts/                       # CLI entry points
+├── scripts/                       # CLI entry points + utilities
+│   ├── run_benchmarks.py          # Benchmark runner
+│   └── utils/stack_data/          # Stack data tooling/artifacts
+│
+├── docs/
+│   ├── BENCHMARKS.md
+│   ├── FEATURE_COVERAGE.md
+│   ├── CONTRIBUTING.md
+│   ├── TOOL_DESIGN.md
+│   └── SFT_SELECTION_CRITERIA.md
+│
 ├── data/                          # Traces, prompts, tool schemas
-├── Makefile                       # Primary workflow interface
-└── scripts/run_benchmarks.py      # Benchmark runner
+└── Makefile                       # Primary workflow interface
 ```
 
 ### Categories
@@ -99,7 +109,7 @@ The problem set covers a broad range of Cython features beyond basic typed funct
 | `prange` / `nogil` | OpenMP parallel loops, GIL release for C computation |
 | NumPy interop | `cimport numpy`, typed memoryviews from arrays, prange+NumPy |
 
-See [FEATURE_COVERAGE.md](FEATURE_COVERAGE.md) for the full checklist.
+See [FEATURE_COVERAGE.md](docs/FEATURE_COVERAGE.md) for the full checklist.
 
 ### Benchmarks
 
@@ -126,7 +136,7 @@ cfg = load_model_profile('gpt_oss_120b', overrides=['model.temperature=0.8'])
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for the full guide to adding new problem pairs.
+See [CONTRIBUTING.md](docs/CONTRIBUTING.md) for the full guide to adding new problem pairs.
 
 ## Training
 

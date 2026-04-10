@@ -1,5 +1,5 @@
 """
-Validate all GRPO problem files in data/grpo_problems/.
+Validate all GRPO problem files in cnake_data/unpaired/.
 
 Each file must:
 - Import without errors
@@ -14,11 +14,11 @@ from pathlib import Path
 
 import pytest
 
-PROBLEMS_DIR = Path("data/grpo_problems")
+PROBLEMS_DIR = Path("cnake_data/unpaired")
 
 pytestmark = pytest.mark.skipif(
     not PROBLEMS_DIR.exists(),
-    reason="data/grpo_problems/ not found",
+    reason="cnake_data/unpaired/ not found",
 )
 
 

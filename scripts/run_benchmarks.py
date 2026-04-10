@@ -255,9 +255,11 @@ def run_all_benchmarks(force_all: bool = False, num_workers: int = 4) -> list[di
 
 
 def generate_markdown_report(
-    results: list[dict[str, Any]], filename: str = "benchmarks.md"
+    results: list[dict[str, Any]], filename: str = "docs/BENCHMARKS.md"
 ) -> None:
-    with open(filename, "w") as f:
+    report_path = Path(filename)
+    report_path.parent.mkdir(parents=True, exist_ok=True)
+    with report_path.open("w") as f:
         f.write("# Benchmark Report\n\n")
         f.write("| Category | Benchmark | Variant | Python (ms) | Cython (ms) | Speedup |\n")
         f.write("|----------|-----------|---------|-------------|-------------|----------|\n")
@@ -293,10 +295,10 @@ def generate_markdown_report(
         table.add_row("", "...", "", "", "", f"({len(results) - 20} more)")
 
     console.print(table)
-    log.info(f"Report saved to {filename}")
+    log.info(f"Report saved to {report_path}")
 
 
-def append_kernel_report(filename: str = "benchmarks.md") -> None:
+def append_kernel_report(filename: str = "docs/BENCHMARKS.md") -> None:
     """Append kernel-only benchmark table to the report.
 
     Uses engine kernels (pre-allocated tensors, no allocation in timing).
@@ -315,7 +317,9 @@ def append_kernel_report(filename: str = "benchmarks.md") -> None:
     if not kernel_results:
         return
 
-    with open(filename, "a") as f:
+    report_path = Path(filename)
+    report_path.parent.mkdir(parents=True, exist_ok=True)
+    with report_path.open("a") as f:
         f.write("\n\n## Kernel-Only Benchmark (Inference Mode)\n\n")
         f.write("Pre-allocated tensors, timing only the compute kernel.\n")
         f.write("Compares portable Cython (scalar) vs platform-optimized SIMD.\n\n")
@@ -366,7 +370,7 @@ def append_kernel_report(filename: str = "benchmarks.md") -> None:
         )
 
     console.print(ktable)
-    log.info("Kernel-only results appended to benchmarks.md")
+    log.info("Kernel-only results appended to docs/BENCHMARKS.md")
 
 
 if __name__ == "__main__":

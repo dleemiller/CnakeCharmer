@@ -122,7 +122,7 @@ If speedup is low, check whether the Python baseline uses C-level builtins (`lis
 
 ```bash
 make benchmark
-git add cnake_data/py/ cnake_data/cy/ tests/data/ benchmarks.md .benchmark_cache.json
+git add cnake_data/py/ cnake_data/cy/ tests/data/ docs/BENCHMARKS.md .benchmark_cache.json
 ```
 
 ## No Templates / No Clones
@@ -167,7 +167,7 @@ claude mcp add cnake-charmer -- uv run python -m cnake_charmer.mcp_server
 
 ## Finding New Problems
 
-Primary source: **The Stack v2 (dedup, Cython subset)** in `utils/stack_data/stack_cython_full.duckdb`.
+Primary source: **The Stack v2 (dedup, Cython subset)** in `scripts/utils/stack_data/stack_cython_full.duckdb`.
 
 The `split` column tracks conversion status: `sft` (done), `sft_candidate` (selected, not yet processed), `grpo_candidate` (for GRPO training), `NULL` (unpartitioned).
 

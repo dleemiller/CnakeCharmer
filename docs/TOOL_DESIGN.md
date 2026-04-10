@@ -71,4 +71,4 @@ During training, the environment stores the original Python code from the datase
 | `cnake_charmer/training/environment.py` | Tool implementation (training + production) |
 | `cnake_charmer/mcp_server.py` | MCP server exposing the tool |
 | `cnake_charmer/training/grpo.py` | GRPO reward function with anti-hacking verifier |
-| `data/grpo_problems/` | Plain Python files for GRPO training (no tests, no Cython) |
+| `cnake_data/unpaired/` | Plain Python files for GRPO training (no tests, no Cython) |
