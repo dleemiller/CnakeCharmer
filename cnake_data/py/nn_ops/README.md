@@ -1,54 +1,50 @@
 # nn_ops — Neural Network Operations
 
-Hardware-optimized implementations of common NN primitives.
-These go beyond basic `cdef`/`malloc` to use SIMD intrinsics,
-OpenMP `prange`, cache blocking, and memory alignment.
+Neural-network-oriented problem pairs used for Python -> Cython training.
 
-## Planned implementations
+## Implemented Operations
 
-### Core ops
-- [ ] conv1d — 1D convolution with `prange` and optional AVX FMA
-- [ ] conv2d — 2D convolution with cache-tiled loops
-- [ ] gemm — General matrix multiply with tiling + `prange`
-- [ ] relu — Vectorized ReLU using SIMD `_mm256_max_pd`
-- [ ] sigmoid — Vectorized sigmoid with fast exp approximation
-- [ ] softmax_stable — Numerically stable softmax with `prange`
-- [ ] batch_norm — Fused mean/var/normalize in single pass
+### Core
+- `conv1d`
+- `conv2d`
+- `gemm`
+- `relu`
+- `sigmoid`
+- `gelu`
+- `softmax_stable`
+- `batch_norm`
+- `cross_entropy`
 
 ### Pooling
-- [ ] max_pool_1d — Max pooling with stride
-- [ ] avg_pool_1d — Average pooling with stride
-- [ ] max_pool_2d — 2D max pooling
+- `max_pool_1d`
+- `avg_pool_1d`
+- `global_avg_pool`
 
-### Element-wise
-- [ ] fused_multiply_add — a*x + b vectorized
-- [ ] elementwise_add — Vector addition with SIMD
-- [ ] elementwise_exp — Vectorized exp
+### Normalization
+- `layer_norm`
+- `instance_norm`
+- `numpy_l2_normalize`
+- `numpy_batch_norm`
 
-### Advanced
-- [ ] depthwise_conv — Depthwise separable convolution
-- [ ] im2col — Image to column transform for GEMM-based conv
-- [ ] attention_scores — Scaled dot-product attention Q*K^T/sqrt(d)
-- [ ] layer_norm — Layer normalization
-- [ ] gelu — GELU activation function
+### Elementwise / Composition
+- `elementwise_add`
+- `elementwise_mul`
+- `residual_add`
+- `dropout_mask`
+- `silu`
 
-## Cython techniques used
+### Attention / Embedding
+- `attention_scores`
+- `embedding_lookup`
 
-```cython
-# OpenMP parallelism
-from cython.parallel cimport prange
+### Specialized / Interop Variants
+- `depthwise_conv`
+- `numpy_softmax`
+- `numpy_cross_entropy`
+- `ufunc_fused_sigmoid`
 
-# AVX intrinsics (x86)
-cdef extern from "immintrin.h":
-    ctypedef double __m256d
-    __m256d _mm256_loadu_pd(double *)
-    __m256d _mm256_mul_pd(__m256d, __m256d)
-    __m256d _mm256_add_pd(__m256d, __m256d)
-    __m256d _mm256_fmadd_pd(__m256d, __m256d, __m256d)
-    __m256d _mm256_max_pd(__m256d, __m256d)
-    __m256d _mm256_setzero_pd()
-    void _mm256_storeu_pd(double *, __m256d)
+## Notes
 
-# Aligned memory allocation
-from libc.stdlib cimport aligned_alloc, free
-```
+- These files are benchmark-decorated problem definitions in `cnake_data/py/nn_ops`.
+- Corresponding Cython implementations live in `cnake_data/cy/nn_ops`.
+- Benchmarks are generated via `run_benchmarks.py` / `make benchmark`.
