@@ -26,11 +26,11 @@ from cnake_data.loader import ProblemSpec
 
 logger = logging.getLogger(__name__)
 
-GRPO_PROBLEMS_DIR = Path("data/grpo_problems")
+GRPO_PROBLEMS_DIR = Path("cnake_data/unpaired")
 
 
 def load_grpo_problems(problems_dir: str | Path | None = None) -> list[dict]:
-    """Load plain Python files from data/grpo_problems/ for GRPO training.
+    """Load plain Python files from cnake_data/unpaired/ for GRPO training.
 
     Each file is a standalone Python script with one public function.
     No test files, no decorators, no Cython ground truth — just code
@@ -70,7 +70,7 @@ def build_grpo_dataset(
 ) -> Dataset:
     """Build a HuggingFace Dataset from plain Python files for GRPO training.
 
-    Loads from data/grpo_problems/ if problems not provided.
+    Loads from cnake_data/unpaired/ if problems not provided.
     No test_cases or benchmark_args — the agent figures those out.
     """
     if problems is None:

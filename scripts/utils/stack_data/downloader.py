@@ -1,12 +1,9 @@
-import os
-import time
 import asyncio
-import aiohttp
 import gzip
-import pyarrow.parquet as pq
-import duckdb
-import pandas as pd
 from pathlib import Path
+
+import aiohttp
+import duckdb
 from tqdm import tqdm
 
 # Configuration
@@ -40,7 +37,7 @@ if table_exists:
     try:
         # Try to alter the column type if needed
         conn.execute("ALTER TABLE stack_cython ALTER COLUMN content TYPE TEXT")
-    except:
+    except Exception:
         print(
             "Note: Could not alter content column. If you encounter type errors, you may need to recreate the database."
         )
@@ -80,11 +77,7 @@ async def download_content(session, blob_id, src_encoding, semaphore):
 
                     # Check content size before downloading fully
                     content_length = response.headers.get("Content-Length")
-                    if (
-                        content_length
-                        and SKIP_LARGE_FILES
-                        and int(content_length) > MAX_FILE_SIZE
-                    ):
+                    if content_length and SKIP_LARGE_FILES and int(content_length) > MAX_FILE_SIZE:
                         return (
                             f"SKIPPED_LARGE_FILE:{int(content_length) // 1024}KB",
                             blob_id,
@@ -109,7 +102,7 @@ async def download_content(session, blob_id, src_encoding, semaphore):
                             # If we can't decode it after decompression, we'll skip it
                             return "SKIPPED_BINARY_CONTENT", blob_id
 
-            except (aiohttp.ClientError, asyncio.TimeoutError) as e:
+            except (TimeoutError, aiohttp.ClientError) as e:
                 if attempt < MAX_RETRIES - 1:
                     await asyncio.sleep(RETRY_DELAY)
                 else:
@@ -119,9 +112,7 @@ async def download_content(session, blob_id, src_encoding, semaphore):
 
 
 # Get count of rows that need processing
-result = conn.execute(
-    "SELECT COUNT(*) FROM stack_cython WHERE content IS NULL"
-).fetchone()
+result = conn.execute("SELECT COUNT(*) FROM stack_cython WHERE content IS NULL").fetchone()
 total_rows = result[0]
 print(f"Found {total_rows} rows that need content downloaded")
 
@@ -181,9 +172,7 @@ async def process_batch(batch_data):
 
         # Process downloads with progress bar
         results = []
-        for future in tqdm(
-            asyncio.as_completed(tasks), total=len(tasks), desc="Downloading"
-        ):
+        for future in tqdm(asyncio.as_completed(tasks), total=len(tasks), desc="Downloading"):
             result = await future
             results.append(result)
 
