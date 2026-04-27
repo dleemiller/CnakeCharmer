@@ -4,7 +4,7 @@ set -euo pipefail
 # Start an OpenAI-compatible vLLM server for the trained CnakeCharmer model.
 #
 # Defaults target the Hugging Face model repo directly:
-#   CnakeCharmer/CnakeC-sft-v0.1
+#   CnakeCharmer/CnakeAgent-sft-v0.1
 #
 # Usage:
 #   scripts/start_vllm_server.sh
@@ -15,7 +15,7 @@ set -euo pipefail
 #   VLLM_API_KEY=...          # Require API key auth on the server
 #   VLLM_EXTRA_ARGS="..."     # Extra args appended to vLLM launch command
 
-MODEL_PATH="${MODEL_PATH:-CnakeCharmer/CnakeC-sft-v0.1}"
+MODEL_PATH="${MODEL_PATH:-CnakeCharmer/CnakeAgent-sft-v0.1}"
 SERVED_MODEL_NAME="${SERVED_MODEL_NAME:-gpt-oss-20b-cython}"
 HOST="0.0.0.0"
 PORT="8003"
