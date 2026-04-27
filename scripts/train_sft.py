@@ -275,6 +275,7 @@ def train(args):
 
     training_args = SFTConfig(
         output_dir=args.output,
+        logging_dir=str(Path(args.output) / "runs"),
         num_train_epochs=args.epochs,
         per_device_train_batch_size=args.batch_size,
         gradient_accumulation_steps=args.grad_accum,
@@ -289,7 +290,7 @@ def train(args):
         logging_steps=1,
         save_steps=25,
         save_total_limit=3,
-        report_to=["trackio"],
+        report_to=["tensorboard"],
         log_level="info",
         max_steps=args.max_steps,
         packing=args.packing,

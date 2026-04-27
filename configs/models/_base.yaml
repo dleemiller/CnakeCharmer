@@ -18,7 +18,7 @@ prompt:
   program: null
 
 optimization:
-  reflection_model: null
-  val_size: 50
+  reflection_model: openrouter/z-ai/glm-5
+  val_size: 15
   subset: 150
-  threads: 2
+  threads: 1

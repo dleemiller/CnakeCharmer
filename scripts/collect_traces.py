@@ -34,7 +34,7 @@ import json
 import logging
 import random
 import sys
-from collections import Counter
+from collections import Counter, defaultdict
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -53,6 +53,7 @@ from cnake_charmer.traces.lm import (
 from cnake_charmer.traces.models import ToolStep, Trace
 from cnake_charmer.training.dspy_agent import CythonOptimization, make_tools
 from cnake_charmer.training.rollout import extract_code_from_content
+from cnake_charmer.training.sft_scoring import parse_trace_metrics
 from cnake_data.loader import discover_pairs
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
@@ -265,6 +266,18 @@ def main():
         default=None,
         help="Run N attempts concurrently via dspy.Parallel (use with vLLM prefix caching)",
     )
+    parser.add_argument(
+        "--resume-min-reward",
+        type=float,
+        default=0.001,
+        help="Only count existing traces with reward >= this threshold for resume logic",
+    )
+    parser.add_argument(
+        "--stop-on-reward",
+        type=float,
+        default=None,
+        help="Skip remaining attempts for a problem once best reward reaches this threshold",
+    )
 
     parser.add_argument(
         "--thinking-react",
@@ -347,6 +360,7 @@ def main():
         return m.removesuffix(":free").removesuffix("-preview")
 
     existing_counts = Counter()
+    existing_best_reward = {}
     model_norm = normalize_model(args.model)
     if output_path.exists():
         with open(output_path) as f:
@@ -355,18 +369,32 @@ def main():
                     try:
                         r = json.loads(line)
                         if normalize_model(r.get("model", "")) == model_norm:
-                            existing_counts[r.get("problem_id", "")] += 1
+                            pid = r.get("problem_id", "")
+                            reward = float(r.get("reward", 0.0) or 0.0)
+                            existing_best_reward[pid] = max(
+                                reward, existing_best_reward.get(pid, float("-inf"))
+                            )
+                            if reward >= args.resume_min_reward:
+                                existing_counts[pid] += 1
                     except json.JSONDecodeError:
                         pass
         if existing_counts:
             logger.info(
-                f"Resuming: {sum(existing_counts.values())} existing traces for {args.model} across {len(existing_counts)} problems"
+                f"Resuming: {sum(existing_counts.values())} qualifying traces "
+                f"(reward >= {args.resume_min_reward:g}) for {args.model} "
+                f"across {len(existing_counts)} problems"
             )
 
     # Build work list, skipping completed problems
     work = []
     skipped = 0
     for problem in problems:
+        if (
+            args.stop_on_reward is not None
+            and existing_best_reward.get(problem.problem_id, float("-inf")) >= args.stop_on_reward
+        ):
+            skipped += 1
+            continue
         existing = existing_counts.get(problem.problem_id, 0)
         remaining = args.attempts - existing
         if remaining <= 0:
@@ -384,6 +412,10 @@ def main():
     # Run
     total = len(work)
     done = 0
+
+    run_best_reward = defaultdict(float)
+    for pid, best in existing_best_reward.items():
+        run_best_reward[pid] = max(run_best_reward[pid], best)
 
     if args.parallel:
         # Parallel execution using dspy.Parallel — ideal for vLLM prefix caching.
@@ -403,6 +435,15 @@ def main():
         for pid in pid_order:
             group_items = work_by_pid[pid]
             problem = group_items[0][0]
+            if (
+                args.stop_on_reward is not None
+                and run_best_reward.get(pid, 0.0) >= args.stop_on_reward
+            ):
+                logger.info(
+                    f"  [skip] {pid}: existing best reward {run_best_reward[pid]:.3f} "
+                    f">= stop threshold {args.stop_on_reward:.3f}"
+                )
+                continue
 
             # Build exec pairs: each attempt gets its own module + example
             exec_pairs = []
@@ -475,7 +516,11 @@ def main():
                         res.problem, res.result, args.model, prompt_id, res.attempt, res.lm_history
                     )
                     trace.reward = score_trace(trace, res.problem)
+                    trace.metrics = parse_trace_metrics(trace)
                     append_trace(trace, output_path)
+                    run_best_reward[res.problem.problem_id] = max(
+                        run_best_reward.get(res.problem.problem_id, 0.0), trace.reward
+                    )
                     done += 1
                     logger.info(
                         f"  [{done}/{total}] {res.problem.problem_id} attempt {res.attempt + 1}: "
@@ -486,6 +531,16 @@ def main():
     else:
         # Sequential execution
         for problem, attempt in work:
+            if (
+                args.stop_on_reward is not None
+                and run_best_reward.get(problem.problem_id, 0.0) >= args.stop_on_reward
+            ):
+                logger.info(
+                    f"[skip] {problem.problem_id} attempt {attempt + 1}/{args.attempts}: "
+                    f"best reward {run_best_reward[problem.problem_id]:.3f} "
+                    f">= stop threshold {args.stop_on_reward:.3f}"
+                )
+                continue
             done += 1
             logger.info(
                 f"[{done}/{total}] {problem.problem_id} attempt {attempt + 1}/{args.attempts}"
@@ -501,7 +556,11 @@ def main():
                 )
                 trace = make_trace(problem, result, args.model, prompt_id, attempt, lm_history)
                 trace.reward = score_trace(trace, problem)
+                trace.metrics = parse_trace_metrics(trace)
                 append_trace(trace, output_path)
+                run_best_reward[problem.problem_id] = max(
+                    run_best_reward.get(problem.problem_id, 0.0), trace.reward
+                )
 
                 logger.info(
                     f"  reward={trace.reward:.3f} iters={trace.num_iterations} "

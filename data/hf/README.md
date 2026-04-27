@@ -6,12 +6,16 @@ language:
 task_categories:
 - text-generation
 size_categories:
-- 100K<n<1M
+- 10K<n<100K
 configs:
 - config_name: raw
   data_files:
   - split: train
     path: raw/raw_traces.jsonl
+- config_name: sft
+  data_files:
+  - split: train
+    path: sft/sft_dataset.jsonl
 - config_name: parallel
   data_files:
   - split: train
@@ -40,9 +44,8 @@ The wiki pages are meant to address real challenges LLMs exhibited while transla
 
 ### SFT
 
-(planned)
-
 Filtered and formatted data using harmony format for training `gpt-oss`.
+Current export contains 1,019 examples.
 
 ### GRPO
 

@@ -46,10 +46,26 @@ models/
 # Large data files
 utils/stack_data/*.duckdb
 utils/stack_data/*.parquet
+scripts/utils/stack_data/*.duckdb
+scripts/utils/stack_data/*.parquet
 data/trajectories/
 data/traces/
 data/samples/
 data/sft_dataset.jsonl
+data/sft_dataset_v2.jsonl
+data/sft_prompt_example.txt
+data/sft_test_results.jsonl
+data/traces_old.zip
+data/traces_v1_archive.zip
+
+# HF export artifacts (keep dataset card, ignore large generated JSONL payloads)
+data/hf/raw/raw_traces.jsonl
+data/hf/sft/sft_dataset.jsonl
+data/hf/parallel/parallel_examples.jsonl
+data/hf/*/.gitkeep
+
+# Local optimization stop files
+data/optimized_prompts/*/gepa.stop
 .benchmark_cache.json.bak
 
 # Launch scripts (local config, replaced by Makefile + YAML profiles)
