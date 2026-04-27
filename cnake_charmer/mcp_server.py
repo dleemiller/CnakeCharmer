@@ -15,8 +15,11 @@ Usage:
 import ast
 import json
 import logging
+import os
+import re
 from pathlib import Path
 
+import httpx
 from mcp.server.fastmcp import FastMCP
 
 from cnake_charmer.eval.annotations import parse_annotations
@@ -32,6 +35,45 @@ mcp = FastMCP("cnake-charmer")
 CNAKE_DATA_ROOT = Path(__file__).resolve().parent.parent / "cnake_data"
 PY_DIR = CNAKE_DATA_ROOT / "py"
 CY_DIR = CNAKE_DATA_ROOT / "cy"
+SYSTEM_PROMPT_FILE = Path(__file__).resolve().parent.parent / "data" / "system_prompt.txt"
+
+DEFAULT_AGENT_BASE_URL = os.environ.get("CNAKE_AGENT_BASE_URL", "http://localhost:8003/v1")
+DEFAULT_AGENT_MODEL = os.environ.get("CNAKE_AGENT_MODEL", "gpt-oss-20b-cython")
+DEFAULT_AGENT_INSTRUCTIONS = os.environ.get("CNAKE_AGENT_INSTRUCTIONS", "")
+DEFAULT_AGENT_INSTRUCTIONS_FILE = os.environ.get("CNAKE_AGENT_INSTRUCTIONS_FILE", "")
+DEFAULT_AGENT_HF_MODEL_REPO = os.environ.get(
+    "CNAKE_AGENT_HF_MODEL_REPO", "CnakeCharmer/CnakeC-sft-v0.1"
+)
+DEFAULT_AGENT_HF_MODEL_REVISION = os.environ.get("CNAKE_AGENT_HF_MODEL_REVISION", "")
+DEFAULT_AGENT_HF_ALLOW_NETWORK = os.environ.get("CNAKE_AGENT_HF_ALLOW_NETWORK", "0")
+
+# Responses API tool schema used by test harness and agent loop.
+RESPONSE_TOOLS = [
+    {
+        "type": "function",
+        "name": "evaluate_cython",
+        "description": (
+            "Compile Cython code, test equivalence against Python reference, and benchmark. "
+            "The test_code runs in a namespace where `py` is the Python module and `cy` is "
+            "the compiled Cython module. Each test assertion has a 5-second timeout."
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "code": {"type": "string", "description": "Complete .pyx Cython source code."},
+                "python_code": {
+                    "type": "string",
+                    "description": "Original Python source code (reference implementation).",
+                },
+                "test_code": {
+                    "type": "string",
+                    "description": "Equivalence test assertions comparing py.<name>(...) == cy.<name>(...).",
+                },
+            },
+            "required": ["code", "python_code", "test_code"],
+        },
+    }
+]
 
 
 # ---------------------------------------------------------------------------
@@ -288,6 +330,237 @@ def check_memory(pyx_path: str, func_name: str, test_args: str = "(100,)") -> st
             "leak_bytes": result.leak_bytes,
             "error_types": result.error_types,
             "errors": result.errors,
+        },
+        indent=2,
+    )
+
+
+def _parse_metrics(result: str) -> dict:
+    """Extract compile/test/annotation/speedup metrics from evaluate_cython output text."""
+    metrics = {
+        "compiled": "Compilation successful" in result,
+        "tests_passed": 0,
+        "tests_total": 0,
+        "annotation": 0.0,
+        "speedup": 0.0,
+    }
+    for line in result.split("\n"):
+        m = re.search(r"Tests: (\d+)/(\d+) passed", line)
+        if m:
+            metrics["tests_passed"] = int(m.group(1))
+            metrics["tests_total"] = int(m.group(2))
+        m = re.search(r"Annotation score: ([\d.]+)", line)
+        if m:
+            metrics["annotation"] = float(m.group(1))
+        m = re.search(r"Speedup: ([\d.]+)x", line)
+        if m:
+            metrics["speedup"] = float(m.group(1))
+    return metrics
+
+
+def _resolve_agent_instructions(instructions_override: str = "") -> tuple[str, str]:
+    """Resolve MCP agent instructions with explicit precedence.
+
+    Precedence:
+      1) tool arg override (`instructions_override`)
+      2) env literal (`CNAKE_AGENT_INSTRUCTIONS`)
+      3) env file path (`CNAKE_AGENT_INSTRUCTIONS_FILE`)
+      4) HF model cache (`CNAKE_AGENT_HF_MODEL_REPO` + system_prompt.txt)
+      5) repo default (`data/system_prompt.txt`)
+      6) empty string
+    """
+    if instructions_override and instructions_override.strip():
+        return instructions_override.strip(), "tool_override"
+
+    if DEFAULT_AGENT_INSTRUCTIONS and DEFAULT_AGENT_INSTRUCTIONS.strip():
+        return DEFAULT_AGENT_INSTRUCTIONS.strip(), "env:CNAKE_AGENT_INSTRUCTIONS"
+
+    if DEFAULT_AGENT_INSTRUCTIONS_FILE and Path(DEFAULT_AGENT_INSTRUCTIONS_FILE).exists():
+        return (
+            Path(DEFAULT_AGENT_INSTRUCTIONS_FILE).read_text().strip(),
+            f"env_file:{DEFAULT_AGENT_INSTRUCTIONS_FILE}",
+        )
+
+    # Prefer model-adjacent prompt in Hugging Face cache by explicit repo id.
+    if DEFAULT_AGENT_HF_MODEL_REPO:
+        try:
+            from huggingface_hub import hf_hub_download
+
+            local_only = str(DEFAULT_AGENT_HF_ALLOW_NETWORK).strip() not in {"1", "true", "TRUE"}
+            kwargs = {
+                "repo_id": DEFAULT_AGENT_HF_MODEL_REPO,
+                "repo_type": "model",
+                "filename": "system_prompt.txt",
+                "local_files_only": local_only,
+            }
+            if DEFAULT_AGENT_HF_MODEL_REVISION:
+                kwargs["revision"] = DEFAULT_AGENT_HF_MODEL_REVISION
+            prompt_path = Path(hf_hub_download(**kwargs))
+            if prompt_path.exists():
+                return prompt_path.read_text().strip(), f"hf_cache:{prompt_path}"
+        except Exception:
+            # Silent fallback to repo-local prompt if HF cache isn't available.
+            pass
+
+    if SYSTEM_PROMPT_FILE.exists():
+        return SYSTEM_PROMPT_FILE.read_text().strip(), f"repo_file:{SYSTEM_PROMPT_FILE}"
+
+    return "", "empty"
+
+
+@mcp.tool()
+def run_cython_agent(
+    python_code: str,
+    func_name: str,
+    description: str = "",
+    model: str = DEFAULT_AGENT_MODEL,
+    base_url: str = DEFAULT_AGENT_BASE_URL,
+    max_iters: int = 5,
+    reasoning_effort: str = "medium",
+    instructions_override: str = "",
+) -> str:
+    """Run the full Cython agent (model + tool loop) via Responses API.
+
+    This puts both the LLM agent and the evaluate_cython tooling behind MCP,
+    so MCP clients can submit Python snippets and receive agent outputs.
+
+    Args:
+        python_code: Source Python code to translate/optimize.
+        func_name: Name of the target function in python_code.
+        description: Optional task description/keywords.
+        model: OpenAI-compatible model id served at base_url.
+        base_url: OpenAI-compatible API base URL (expects /v1/responses).
+        max_iters: Maximum tool-call iterations to run.
+        reasoning_effort: low | medium | high.
+        instructions_override: Optional explicit instructions text. If empty,
+            MCP resolves from env/file defaults.
+
+    Returns:
+        JSON object with final response text, tool-call history, and best eval metrics.
+    """
+    from cnake_charmer.training.environment import CythonToolEnvironment
+
+    if max_iters < 1:
+        return json.dumps({"error": "max_iters must be >= 1"}, indent=2)
+
+    system_prompt, prompt_source = _resolve_agent_instructions(instructions_override)
+    user_content = (
+        f"python_code: {python_code}\n\nfunc_name: {func_name}\ndescription: {description}"
+    )
+
+    env = CythonToolEnvironment()
+    env.reset()
+
+    request = {
+        "model": model,
+        "instructions": system_prompt,
+        "input": user_content,
+        "tools": RESPONSE_TOOLS,
+        "max_output_tokens": 8192,
+        "temperature": 1.0,
+        "top_p": 1.0,
+    }
+    if reasoning_effort:
+        request["reasoning"] = {"effort": reasoning_effort}
+
+    conversation = []
+    history = []
+    best_metrics = None
+    final_text = ""
+    final_status = "unknown"
+
+    try:
+        client = httpx.Client(base_url=base_url, timeout=180)
+    except Exception as e:
+        return json.dumps({"error": f"Failed to create HTTP client: {e}"}, indent=2)
+
+    try:
+        for iteration in range(max_iters):
+            try:
+                resp = client.post("/responses", json=request)
+                resp.raise_for_status()
+                result = resp.json()
+            except Exception as e:
+                return json.dumps(
+                    {
+                        "error": f"API error at iteration {iteration}: {e}",
+                        "base_url": base_url,
+                        "model": model,
+                    },
+                    indent=2,
+                )
+
+            final_status = result.get("status", "unknown")
+            if result.get("output_text"):
+                final_text = result["output_text"]
+
+            tool_call = None
+            for item in result.get("output", []):
+                if item.get("type") == "function_call" and item.get("name") == "evaluate_cython":
+                    tool_call = item
+                    break
+
+            # No tool call => assistant likely produced final answer.
+            if not tool_call:
+                break
+
+            try:
+                args = json.loads(tool_call.get("arguments", "{}"))
+            except json.JSONDecodeError:
+                args = {}
+
+            code = args.get("code", "")
+            py = args.get("python_code", python_code)
+            test_code = args.get("test_code", "")
+            eval_result = env.evaluate_cython(code=code, python_code=py, test_code=test_code)
+            metrics = _parse_metrics(eval_result)
+
+            if best_metrics is None or (
+                metrics["tests_passed"] > best_metrics["tests_passed"]
+                or (
+                    metrics["tests_passed"] == best_metrics["tests_passed"]
+                    and metrics["speedup"] > best_metrics["speedup"]
+                )
+            ):
+                best_metrics = metrics
+
+            history.append(
+                {
+                    "iteration": iteration,
+                    "tool_name": "evaluate_cython",
+                    "metrics": metrics,
+                }
+            )
+
+            for item in result.get("output", []):
+                conversation.append(item)
+            conversation.append(
+                {
+                    "type": "function_call_output",
+                    "call_id": tool_call.get("call_id", ""),
+                    "output": eval_result,
+                }
+            )
+
+            request["input"] = [
+                {"type": "message", "role": "user", "content": user_content},
+                *conversation,
+            ]
+
+    finally:
+        client.close()
+
+    return json.dumps(
+        {
+            "base_url": base_url,
+            "model": model,
+            "instructions_source": prompt_source,
+            "instructions_chars": len(system_prompt),
+            "status": final_status,
+            "iterations_run": len(history),
+            "best_metrics": best_metrics or {},
+            "history": history,
+            "final_text": final_text,
         },
         indent=2,
     )

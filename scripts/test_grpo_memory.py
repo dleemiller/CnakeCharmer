@@ -209,11 +209,11 @@ def main():
     logger.info(f"Tools: {not args.no_tools}")
     print_gpu_memory("start")
 
-    if args.test in ("load", "all"):
+    if args.test in ("load", "generate", "all"):
         model, tokenizer = test_model_loading(args.model)
         if args.test in ("generate", "all"):
             test_generation(model, tokenizer)
-        # Free model memory before trainer test
+        # Free model memory before trainer test (or before exit for one-shot tests)
         del model, tokenizer
         gc.collect()
         torch.cuda.empty_cache()

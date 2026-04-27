@@ -1,0 +1,15 @@
+# Elephant Alpha — OpenRouter
+model:
+  id: openrouter/moonshotai/Kimi-K2.6
+  api_key_env: OPENROUTER_API_KEY
+  thinking_react: false
+  temperature: 0.6
+  extra_body:
+    top_p: 0.95
+    temperature: 0.6
+    chat_template_kwargs:
+      enable_thinking: false
+
+prompt:
+  # Intentionally unset to use seed prompt by default for SFT trace collection.
+  program: null

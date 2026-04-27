@@ -1,0 +1,9 @@
+# Elephant Alpha — OpenRouter
+model:
+  id: openrouter/openrouter/elephant-alpha
+  api_key_env: OPENROUTER_API_KEY
+  thinking_react: true
+
+prompt:
+  # Intentionally unset to use seed prompt by default for SFT trace collection.
+  program: null

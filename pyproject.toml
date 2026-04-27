@@ -61,6 +61,7 @@ dev = [
     "ruff>=0.11",
     "pre-commit>=4",
     "cython-lint>=0.19.0",
+    "vllm>=0.19.1",
 ]
 
 [project.urls]

@@ -59,6 +59,38 @@ def _exec_as_module(code: str, name: str = "dynamic_module") -> types.ModuleType
     return mod
 
 
+def _approx_equal(left, right, rel_tol: float = 1e-9, abs_tol: float = 1e-12) -> bool:
+    """Compare values with float tolerance, including nested containers."""
+    if isinstance(left, bool) or isinstance(right, bool):
+        return left == right
+
+    if isinstance(left, (int, float)) and isinstance(right, (int, float)):
+        return math.isclose(float(left), float(right), rel_tol=rel_tol, abs_tol=abs_tol)
+
+    if isinstance(left, (list, tuple)) and isinstance(right, (list, tuple)):
+        if len(left) != len(right):
+            return False
+        return all(
+            _approx_equal(a, b, rel_tol=rel_tol, abs_tol=abs_tol)
+            for a, b in zip(left, right, strict=False)
+        )
+
+    if isinstance(left, dict) and isinstance(right, dict):
+        if left.keys() != right.keys():
+            return False
+        return all(_approx_equal(left[k], right[k], rel_tol=rel_tol, abs_tol=abs_tol) for k in left)
+
+    if hasattr(left, "shape") and hasattr(right, "shape"):
+        try:
+            import numpy as np
+
+            return bool(np.allclose(left, right, rtol=rel_tol, atol=abs_tol, equal_nan=True))
+        except Exception:
+            return False
+
+    return left == right
+
+
 def _run_test_code(py_mod, cy_mod, test_code: str) -> dict:
     """Run model's test assertions with py and cy modules in namespace.
 
@@ -78,39 +110,33 @@ def _run_test_code(py_mod, cy_mod, test_code: str) -> dict:
         if not line or line.startswith("#"):
             continue
 
+        is_assert = "==" in line
         # Set timeout
         old_handler = signal.signal(signal.SIGALRM, _timeout_handler)
         signal.alarm(ASSERTION_TIMEOUT)
         try:
-            if "==" in line:
+            if is_assert:
                 # Assertion line: evaluate and compare
                 total += 1
-                result = eval(line, namespace)  # noqa: S307
-                if result:
+                parts = line.split("==", 1)
+                left = eval(parts[0].strip(), namespace)  # noqa: S307
+                right = eval(parts[1].strip(), namespace)  # noqa: S307
+                if _approx_equal(left, right):
                     passed += 1
                 else:
-                    # Try to get both sides for the error message
-                    parts = line.split("==", 1)
-                    try:
-                        left = eval(parts[0].strip(), namespace)  # noqa: S307
-                        right = eval(parts[1].strip(), namespace)  # noqa: S307
-                        failures.append(
-                            f"FAIL: {line}\n  left:  {repr(left)[:200]}\n  right: {repr(right)[:200]}"
-                        )
-                    except Exception:
-                        failures.append(f"FAIL: {line}")
+                    failures.append(
+                        f"FAIL: {line}\n  left:  {repr(left)[:200]}\n  right: {repr(right)[:200]}"
+                    )
             else:
                 # Setup line (variable assignment, import, etc.)
                 exec(line, namespace)  # noqa: S102
         except _TimeoutError:
-            if "==" in line:
-                total += 1
+            if is_assert:
                 failures.append(f"TIMEOUT: {line} (>{ASSERTION_TIMEOUT}s)")
             else:
                 failures.append(f"TIMEOUT (setup): {line}")
         except Exception as e:
-            if "==" in line:
-                total += 1
+            if is_assert:
                 failures.append(f"ERROR: {line}\n  {type(e).__name__}: {e}")
             else:
                 failures.append(f"ERROR (setup): {line}\n  {type(e).__name__}: {e}")

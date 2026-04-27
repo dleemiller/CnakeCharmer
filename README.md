@@ -24,6 +24,46 @@ make help
 > `uv sync` only installs Python dependencies — it does **not** compile Cython.
 > Run `make compile` when you add or change `.pyx` files.
 
+## Local Inference + MCP Onboarding
+
+This path is optimized for a smooth first run with sensible defaults.
+
+```bash
+# 1) Install dependencies (required)
+uv sync
+
+# 2) Start vLLM using the default public HF model repo
+#    Default model: CnakeCharmer/CnakeC-sft-v0.1
+#    Default endpoint: http://0.0.0.0:8003/v1
+bash scripts/start_vllm_server.sh
+
+# 3) Start MCP server (defaults already match local vLLM)
+#    Default base URL: http://localhost:8003/v1
+#    Default model name: gpt-oss-20b-cython
+uv run python -m cnake_charmer.mcp_server
+```
+
+Notes:
+- The default model is public, so authentication is typically not required for pull.
+- MCP resolves agent instructions automatically with safe fallbacks.
+
+## Add MCP To Your Client
+
+### Claude Code
+
+```bash
+claude mcp add cnake-charmer -- uv run python -m cnake_charmer.mcp_server
+```
+
+### Codex
+
+```bash
+codex mcp add cnake-charmer -- uv run python -m cnake_charmer.mcp_server
+```
+
+After adding, verify the server appears in your MCP server list, then call
+`list_problems` or `run_cython_agent` as a smoke test.
+
 ## Project Goals
 
 LLMs can write decent Python but struggle with efficient Cython. This is a training data gap.
