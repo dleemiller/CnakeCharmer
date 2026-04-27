@@ -20,8 +20,8 @@ SERVED_MODEL_NAME="${SERVED_MODEL_NAME:-gpt-oss-20b-cython}"
 HOST="0.0.0.0"
 PORT="8003"
 GPU_MEM_UTIL="0.90"
-MAX_MODEL_LEN="16384"
-DTYPE="bfloat16"
+MAX_MODEL_LEN="32768"
+DTYPE="auto"
 
 print_help() {
   cat <<EOF
