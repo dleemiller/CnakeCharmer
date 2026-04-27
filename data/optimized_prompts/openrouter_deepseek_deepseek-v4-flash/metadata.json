@@ -1,0 +1,12 @@
+{
+  "model": "openrouter/deepseek/deepseek-v4-flash",
+  "reflection_model": "openrouter/z-ai/glm-5.1",
+  "budget": "light",
+  "subset": 150,
+  "difficulty": null,
+  "max_iters": 5,
+  "reflection_minibatch_size": 3,
+  "num_problems_train": 135,
+  "num_problems_val": 15,
+  "val_size": 15
+}
