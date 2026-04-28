@@ -1,0 +1,61 @@
+{
+  "batch": "batch_0011",
+  "accepted": [
+    {
+      "blob_id": "7b23e2c1451ccad938ba21caaf4093fe51b3f024",
+      "path": "/pdfminer/plane.pyx",
+      "output": "spatial_grid_plane.py",
+      "reason": "Grid-indexed bbox insertion/query loops are strong standalone spatial-kernel examples."
+    },
+    {
+      "blob_id": "aa0dff705a291a454b37a829c2048ee3f972b299",
+      "path": "/sw/huemask/huemask.pyx",
+      "output": "hue_bandpass_mask.py",
+      "reason": "Hue lookup-table generation and per-pixel masking provide deterministic image-kernel workloads."
+    },
+    {
+      "blob_id": "0599b463f7a27d53e33febd41d7f5f09b35616c9",
+      "path": "/demos/integrate/integrate_any.pyx",
+      "output": "polymorphic_integrator.py",
+      "reason": "Polymorphic integrand evaluation inside numeric integration loop is a clean optimization target."
+    },
+    {
+      "blob_id": "4c889e0b2c561359ef1b85c5c682f041e472f9d0",
+      "path": "/expose/utils/interpolation.pyx",
+      "output": "damped_sinc_interpolation.py",
+      "reason": "Damped-sinc interpolation uses multiple nested loops and kernel normalization with strong Cython relevance."
+    }
+  ],
+  "skipped": [
+    {
+      "blob_id": "1e8652751701e74a8033bd068e0b64f125662d40",
+      "path": "/optdict/optdict.pyx",
+      "reason": "Pointer/refcount dictionary internals are low-level container plumbing, not ideal GRPO conversion content."
+    },
+    {
+      "blob_id": "a66b030bdaa3c7d290eac64d4afdb21185ce7c8f",
+      "path": "/optimize/src/districts.pyx",
+      "reason": "Domain-specific districting/state-object logic is tightly coupled to external project structures."
+    },
+    {
+      "blob_id": "3cb5ceb32e17a6bdfc79275d9b47c556c6ffba5a",
+      "path": "/lr-script/Model-Selection/Update_Beta.pyx",
+      "reason": "Model-specific optimization routine with broad matrix/weight assumptions, lower generality for current set."
+    },
+    {
+      "blob_id": "fa3745392c84c049c73561f9e0d35a53172a3c2f",
+      "path": "/ex2_t.pyx",
+      "reason": "Micro-benchmark function-call demo is too minimal compared with preferred kernel complexity."
+    },
+    {
+      "blob_id": "4480c51ff9e4b31cfd87c2bbf32ebf6856b1f7e8",
+      "path": "/clpy/backend/opencl/random.pyx",
+      "reason": "GPU/OpenCL backend code is framework-specific and depends on specialized runtime kernels."
+    },
+    {
+      "blob_id": "ef09e27387514c2b3113551699443f66d605d9e1",
+      "path": "/python/p62.pyx",
+      "reason": "Permutation-search Euler implementation is niche and less representative than selected kernels."
+    }
+  ]
+}

@@ -1,0 +1,62 @@
+{
+  "batch": "batch_0007",
+  "accepted": [
+    {
+      "blob_id": "8d6870c6ad55e1a4bec1fbc8e22e5ee7366acf47",
+      "path": "/recommenders/cython_recommenders/FunkSVD_fast.pyx",
+      "output": "matrix_factorization_sgd.py",
+      "reason": "Sampled SGD matrix-factorization kernel with dense inner updates and clear optimization signal."
+    },
+    {
+      "blob_id": "bd11464353c6a2641b0779ca090cc2869384babf",
+      "path": "/Practica01/2daParte/algoritmos00.pyx",
+      "output": "fibonacci_variants.py",
+      "reason": "Contains recursive, iterative, and memoized Fibonacci variants useful for algorithmic optimization traces."
+    },
+    {
+      "blob_id": "5b18f5e3cae323b82f6b08352fec6b582a6264a8",
+      "path": "/src/software_retina/utils.pyx",
+      "output": "retina_kernel_ops.py",
+      "reason": "Padding, convolution-like products, and Gaussian-kernel generation are strong standalone numeric kernels."
+    },
+    {
+      "blob_id": "437e752be81bba84c7117f04af4d0ad6a6a9c4a6",
+      "path": "/work_in_progress/_old/ContrastMaps_analysis/min_avg_difference.pyx",
+      "output": "min_average_difference.py",
+      "reason": "Nested-loop frame-distance matching kernel with early-break pruning and full distance matrix variant."
+    },
+    {
+      "blob_id": "f3a6189c2a502ba8216d740e4ec6af5a3cd87274",
+      "path": "/Python/Cython/Exceptions/average.pyx",
+      "output": "segment_average.py",
+      "reason": "Compact reduction kernel demonstrating typed-loop averaging semantics."
+    }
+  ],
+  "skipped": [
+    {
+      "blob_id": "bdb87a1fd5665131cabe9e1246f9b54994c835ef",
+      "path": "/tests/run/closure_decorators_T478.pyx",
+      "reason": "Cython language behavior test (decorators/closures), not performance-kernel oriented."
+    },
+    {
+      "blob_id": "168fe6da82d982f8d4bd4a2280b8b85a713a6b79",
+      "path": "/mc_lib/observable.pyx",
+      "reason": "Primarily wrapper and object interface around external C++ observable classes."
+    },
+    {
+      "blob_id": "5312050bc0098ebe65c75fa31b49cb183a0722e7",
+      "path": "/fontstash.pyx",
+      "reason": "OpenGL/font binding wrapper code with external API coupling over standalone compute kernels."
+    },
+    {
+      "blob_id": "33d55b686113b6c762cfb9c97f7adce8e5a09d40",
+      "path": "/distarray/core/maps_fast.pyx",
+      "reason": "Distributed-map class abstractions and ownership logic are framework-coupled control code."
+    },
+    {
+      "blob_id": "ee28249e518dfd5de0228b7266a52deaa2295e57",
+      "path": "/tests/run/listcomp.pyx",
+      "reason": "Comprehension semantics test file, not an optimization-target numeric kernel."
+    }
+  ]
+}

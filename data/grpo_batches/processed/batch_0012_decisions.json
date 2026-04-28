@@ -1,0 +1,61 @@
+{
+  "batch": "batch_0012",
+  "accepted": [
+    {
+      "blob_id": "fc8c51fcbc25aa2897878898422a6a32679d5143",
+      "path": "/server/yylib/yy/cutils.pyx",
+      "output": "cookie_compare_utils.py",
+      "reason": "Cookie parsing and constant-time comparison loops are compact, reusable utility kernels."
+    },
+    {
+      "blob_id": "91bafaf2d098d62b464521b2de71ce33dcb47d9c",
+      "path": "/src/pystepx/geneticoperators/crossutil.pyx",
+      "output": "nested_tree_index_utils.py",
+      "reason": "Nested-list subtree indexing via deque traversal is a clear standalone algorithmic kernel."
+    },
+    {
+      "blob_id": "bc0575897fe7121ac09efd1d7c70352a7b5ec51b",
+      "path": "/day-02/part-2/bebert.pyx",
+      "output": "password_position_policy.py",
+      "reason": "Constraint-based string scanning over lines is deterministic and conversion-friendly."
+    },
+    {
+      "blob_id": "ba9054795b7930ae6b742232a01c1aac407fa112",
+      "path": "/qutip/core/data/trace.pyx",
+      "output": "matrix_trace_kernels.py",
+      "reason": "Sparse and dense trace accumulation loops are concise numerical primitives."
+    }
+  ],
+  "skipped": [
+    {
+      "blob_id": "18fda89e23b48235db6227952a6eb3b50a137d92",
+      "path": "/src/Game/Pieces/StarTrekChess/knight_s.pyx",
+      "reason": "Game-piece move generation is domain-specific object logic rather than general optimization kernel content."
+    },
+    {
+      "blob_id": "63b35f020f342b1ca34de57e71a1a90280eb44b4",
+      "path": "/landlab/grid/cfuncs.pyx",
+      "reason": "Array/broadcast-style helper functions depend on broader grid model assumptions and are less self-contained."
+    },
+    {
+      "blob_id": "f11ecd7300ae6fd30942111700b7673c60c2bc7c",
+      "path": "/tests/run/for_decrement.pyx",
+      "reason": "Cython semantics regression test; not a target compute kernel."
+    },
+    {
+      "blob_id": "9c4261b1a9b98fcfce9ace9283636a4f06bc1c17",
+      "path": "/pyx/cmath/integrate.pyx",
+      "reason": "Polymorphic integration kernel already represented in current unpaired set."
+    },
+    {
+      "blob_id": "e5672901a88f495dc67ab38ae8add55d89ab8238",
+      "path": "/package/Model/Path.pyx",
+      "reason": "Minimal data-container class with little optimization signal."
+    },
+    {
+      "blob_id": "84638fb99c5c0cdf546dd0faaa11953e380b4214",
+      "path": "/cantera2.4b/interfaces/cython/cantera/utils.pyx",
+      "reason": "Binding/helper layer for external C++ APIs, not suitable as standalone Cython kernel training data."
+    }
+  ]
+}

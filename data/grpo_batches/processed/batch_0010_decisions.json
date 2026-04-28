@@ -1,0 +1,61 @@
+{
+  "batch": "batch_0010",
+  "accepted": [
+    {
+      "blob_id": "2e3232bfa76f99d687814e2f6866b034ac0807bd",
+      "path": "/misc/Filter_optimize/Script.pyx",
+      "output": "bilateral_gauss_seidel.py",
+      "reason": "Bilateral Gauss-Seidel update loops and weight construction provide strong numeric optimization workloads."
+    },
+    {
+      "blob_id": "275da75ee22c3760fc60869b83ec6a1fdfbd6e90",
+      "path": "/adversarial_music_generator/evaluation_lib/harmony.pyx",
+      "output": "note_disharmony_score.py",
+      "reason": "Pairwise overlap and interval scoring is a compact, deterministic loop kernel."
+    },
+    {
+      "blob_id": "095351e0f88df31e3edd8ad1ba95370f4ff1e628",
+      "path": "/ForcePy/Util.pyx",
+      "output": "minimum_image_utils.py",
+      "reason": "Minimum-image vector arithmetic and distance kernels are reusable simulation primitives."
+    },
+    {
+      "blob_id": "ba85f307d78a0f3d1e01c762e6e9c62edab80e78",
+      "path": "/fastfsr/helper.pyx",
+      "output": "prefix_max_alpha_helper.py",
+      "reason": "Prefix-maximum and threshold-array construction loops are clean standalone kernels."
+    }
+  ],
+  "skipped": [
+    {
+      "blob_id": "20d7b3b6f926e307d0f0c5e60e0e04d773185442",
+      "path": "/sentimental/_sentence_normalizer.pyx",
+      "reason": "NLP text normalization pipeline with heavy external dependencies (nltk/trie/regex stack)."
+    },
+    {
+      "blob_id": "51e38cc4665a51fcfc296f4f0fd2d69369e10d16",
+      "path": "/jcvi/assembly/chic.pyx",
+      "reason": "Domain-specific scaffolding objective code with broader project coupling."
+    },
+    {
+      "blob_id": "c6a3a4fd90a1e089634c948690f74aac1446e8cd",
+      "path": "/Code/CyPrimes.pyx",
+      "reason": "Prime-sieve kernel style already well represented in current unpaired set."
+    },
+    {
+      "blob_id": "6875a3d1ecf697193cd19a1bcff6e133373a62ad",
+      "path": "/Src/PyQuante/contracted_gto.pyx",
+      "reason": "Quantum chemistry wrapper with heavy C-layer object integration and pointer ownership."
+    },
+    {
+      "blob_id": "ae304ccf3f6a8e3af95303cbfa51c027e3a1f3fb",
+      "path": "/cython/mmrview/mmrview.pyx",
+      "reason": "Memoryview sum example duplicates existing converted content from prior batches."
+    },
+    {
+      "blob_id": "0f4f647144a73a223df85c24bfef6006cebde7da",
+      "path": "/src/DracoPy.pyx",
+      "reason": "Encoding wrapper classes tightly coupled to external Draco C++ bindings and APIs."
+    }
+  ]
+}

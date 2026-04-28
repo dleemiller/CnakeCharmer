@@ -1,0 +1,61 @@
+{
+  "batch": "batch_0005",
+  "accepted": [
+    {
+      "blob_id": "5ed9e7cc0d88e511dfe1d1b0e3f1f40afa4a6169",
+      "path": "/Ex3_3.pyx",
+      "output": "inverse_square_series.py",
+      "reason": "Small, loop-dominated numeric kernel useful as a compact optimization target."
+    },
+    {
+      "blob_id": "d784bbd0189a9fee980590c8a0faa552a554fd8d",
+      "path": "/focusfusion/_cython/sparse_repr.pyx",
+      "output": "sparse_patch_dictionary.py",
+      "reason": "Sparse coding and dictionary operations with clear nested-loop compute structure."
+    },
+    {
+      "blob_id": "6ab8b7d9f86b4ad3dd4dbd9638ddf6769ca43a37",
+      "path": "/jgem/cy/as2.pyx",
+      "output": "max_low_coverage_gap.py",
+      "reason": "Contiguous segment scanning logic is self-contained and Cython-conversion friendly."
+    },
+    {
+      "blob_id": "33c66f4002e77604488b263ac245d7494c65d85a",
+      "path": "/sporf_transform/_project_sporf.pyx",
+      "output": "random_sparse_projection_matrix.py",
+      "reason": "Index mapping and sparse ternary projection construction are good standalone kernels."
+    }
+  ],
+  "skipped": [
+    {
+      "blob_id": "68a78fe698e06c8def65d3d8895c05bd601ae55a",
+      "path": "/nqueen.pyx",
+      "reason": "Interactive/input and visualization-heavy N-queen application code, not a focused compute kernel."
+    },
+    {
+      "blob_id": "0b862532b538450f618971fac9549a1c1c4f3bc4",
+      "path": "/src/cytohmm/markov_chain.pyx",
+      "reason": "Depends on project-specific likelihood modules and broader HMM stack coupling."
+    },
+    {
+      "blob_id": "3821119d28089e45cb67bc9d339b132403bd00b9",
+      "path": "/logan/p233/p233_cy.pyx",
+      "reason": "Problem-specific Euler pipeline with external analyze module and global state coupling."
+    },
+    {
+      "blob_id": "a7b890779fa2e712c78869fa652b34fc2d4fbe70",
+      "path": "/sage/src/sage/graphs/graph_generators_pyx.pyx",
+      "reason": "Sage graph-framework generator code with heavy ecosystem dependencies."
+    },
+    {
+      "blob_id": "f487053b0cbf83149378de7d93ed62ee62318d0c",
+      "path": "/src/sol/topology/provisioning.pyx",
+      "reason": "Topology/provisioning business logic coupled to networkx and custom project objects."
+    },
+    {
+      "blob_id": "e21ffdedad806203df2f76c860b91d36b0c7baed",
+      "path": "/CCEA/Cython_Code/neural_network.pyx",
+      "reason": "Domain-specific NN class implementation tied to external parameter module and RL environment."
+    }
+  ]
+}

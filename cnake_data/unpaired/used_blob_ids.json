@@ -225,6 +225,266 @@
       "blob_id": "96274d31a8326e2f0f939923b28e5620fed4fdda",
       "path": "/misc_methods.pyx",
       "output": "angle_wrap.py"
+    },
+    {
+      "blob_id": "60e07021ca95b460e201f31c00a6a39edfd717fe",
+      "path": "/EyeTracker/cythonUtils.pyx",
+      "output": "eye_center_score.py"
+    },
+    {
+      "blob_id": "5f6452cc4058dee993b02cf77c439fac33d7b687",
+      "path": "/lib/jaccard.pyx",
+      "output": "jaccard_similarity_matrix.py"
+    },
+    {
+      "blob_id": "6ed12b1ea64f61f4d8502ae76a1d2be5ecc888b5",
+      "path": "/PyHum/getxy.pyx",
+      "output": "rotated_trackline_points.py"
+    },
+    {
+      "blob_id": "bc8eba493f09c1da3be50ada201e2612ecbbb1f1",
+      "path": "/energybalance_pkg/src/pyx/DiffusionLimitedEvaporation.pyx",
+      "output": "diffusion_limited_evaporation.py"
+    },
+    {
+      "blob_id": "f768441dc569e62a0fb71191a4251faef1304b9e",
+      "path": "/pytraj/math/Grid.pyx",
+      "output": "grid3d_to_nested_list.py"
+    },
+    {
+      "blob_id": "324477fe51d615d3164468504bdd23e6a6fc1726",
+      "path": "/cython_evaluation/fast_evaluate.pyx",
+      "output": "volumetric_parametric_eval.py"
+    },
+    {
+      "blob_id": "0013ec5d83cf783187b8910e1bc0ab4d3ad4f066",
+      "path": "/Analyze_cython.pyx",
+      "output": "sphere_overlap_covariance.py"
+    },
+    {
+      "blob_id": "f546401ba454f121cb8b334ea686f9b2f3c17a51",
+      "path": "/_cython/_similarity.pyx",
+      "output": "sparse_column_similarity.py"
+    },
+    {
+      "blob_id": "0e4d2eb25823d9b5b03635f4c218dca965b01f4f",
+      "path": "/mandelbrot.pyx",
+      "output": "fractal_escape_grids.py"
+    },
+    {
+      "blob_id": "d338424be4af2cc4125e2a1717693cfe3390a916",
+      "path": "/monte-carlo/vegas-cython/cython_integrand.pyx",
+      "output": "vegas_batch_integrand.py"
+    },
+    {
+      "blob_id": "37a935e77c837b338b7a5ef57a0d8c527aa76c9a",
+      "path": "/sknetwork/linalg/diteration.pyx",
+      "output": "graph_fluid_diffusion.py"
+    },
+    {
+      "blob_id": "9b2a09dd96c320b47fb0268366a4232fd906c758",
+      "path": "/5.Cython/main_cython.pyx",
+      "output": "miller_reverse_sequence.py"
+    },
+    {
+      "blob_id": "6a93baae2da24847927c0e0e1881a297521d403b",
+      "path": "/alphacsc/cython_code/coordinate_descent.pyx",
+      "output": "sparse_coordinate_updates.py"
+    },
+    {
+      "blob_id": "87eaf5cda3da1fef1790726fbf7c7fe94f10463b",
+      "path": "/featurelowrank/kernel_fast.pyx",
+      "output": "anova_kernel_dp.py"
+    },
+    {
+      "blob_id": "d0e323d76f092fb8b623cbe5f8ed5e154e452bec",
+      "path": "/bonus/cython_mp_impl.pyx",
+      "output": "collatz_parallel_scan.py"
+    },
+    {
+      "blob_id": "c143200ba23a7104c64a04217841e5f7881d4ed9",
+      "path": "/cython_func.pyx",
+      "output": "peptide_ion_indexing.py"
+    },
+    {
+      "blob_id": "20bf45c68a0dbddfb3282afd99a8474e33d52cba",
+      "path": "/moments/LinearSystem_1D.pyx",
+      "output": "one_d_linear_system_matrices.py"
+    },
+    {
+      "blob_id": "681589edbd5c0b98e9a1f817e895b9e8f5f3916f",
+      "path": "/bdrmapit/lib/python3.6/site-packages/traceutils/utils/net.pyx",
+      "output": "ip_prefix_utils.py"
+    },
+    {
+      "blob_id": "da7fe52e243aa1e294f3ea936c0e51feb648666a",
+      "path": "/examples/cython/fib/fib-exercise/fib_solution.pyx",
+      "output": "fibonacci_loop.py"
+    },
+    {
+      "blob_id": "5ed9e7cc0d88e511dfe1d1b0e3f1f40afa4a6169",
+      "path": "/Ex3_3.pyx",
+      "output": "inverse_square_series.py"
+    },
+    {
+      "blob_id": "d784bbd0189a9fee980590c8a0faa552a554fd8d",
+      "path": "/focusfusion/_cython/sparse_repr.pyx",
+      "output": "sparse_patch_dictionary.py"
+    },
+    {
+      "blob_id": "6ab8b7d9f86b4ad3dd4dbd9638ddf6769ca43a37",
+      "path": "/jgem/cy/as2.pyx",
+      "output": "max_low_coverage_gap.py"
+    },
+    {
+      "blob_id": "33c66f4002e77604488b263ac245d7494c65d85a",
+      "path": "/sporf_transform/_project_sporf.pyx",
+      "output": "random_sparse_projection_matrix.py"
+    },
+    {
+      "blob_id": "59e67ca64083ece87ac726e91f34ab675f47b021",
+      "path": "/hw/src/cy.pyx",
+      "output": "trial_division_primes.py"
+    },
+    {
+      "blob_id": "a65eb3e4ea1678076cdba9c342235a60954221cc",
+      "path": "/utils/preprocessing_c.pyx",
+      "output": "five_point_derivative.py"
+    },
+    {
+      "blob_id": "14e2335c1870b6d975a78e1b930aa35245bddd98",
+      "path": "/src/utils/fields/fields.pyx",
+      "output": "grid_field_transforms.py"
+    },
+    {
+      "blob_id": "6ad9ad3f6e7b32d34ec419bd6d8f5836058ebe87",
+      "path": "/genomicfeatures/_GFeatures.pyx",
+      "output": "gff_gtf_attribute_parser.py"
+    },
+    {
+      "blob_id": "8d6870c6ad55e1a4bec1fbc8e22e5ee7366acf47",
+      "path": "/recommenders/cython_recommenders/FunkSVD_fast.pyx",
+      "output": "matrix_factorization_sgd.py"
+    },
+    {
+      "blob_id": "bd11464353c6a2641b0779ca090cc2869384babf",
+      "path": "/Practica01/2daParte/algoritmos00.pyx",
+      "output": "fibonacci_variants.py"
+    },
+    {
+      "blob_id": "5b18f5e3cae323b82f6b08352fec6b582a6264a8",
+      "path": "/src/software_retina/utils.pyx",
+      "output": "retina_kernel_ops.py"
+    },
+    {
+      "blob_id": "437e752be81bba84c7117f04af4d0ad6a6a9c4a6",
+      "path": "/work_in_progress/_old/ContrastMaps_analysis/min_avg_difference.pyx",
+      "output": "min_average_difference.py"
+    },
+    {
+      "blob_id": "f3a6189c2a502ba8216d740e4ec6af5a3cd87274",
+      "path": "/Python/Cython/Exceptions/average.pyx",
+      "output": "segment_average.py"
+    },
+    {
+      "blob_id": "4b8fe069ed5c7858d2690c595e5623a4b89a3e19",
+      "path": "/contests/abc175/e/e_AC_cy.pyx",
+      "output": "grid_item_pick_dp.py"
+    },
+    {
+      "blob_id": "f9e49ce8cfc7ff1846db3a3ecd1468e920ffde4d",
+      "path": "/WalshAnalysis.pyx",
+      "output": "walsh_coefficients.py"
+    },
+    {
+      "blob_id": "57c360b4f152eb4b4e693d47f14b1125b5cba46d",
+      "path": "/skl1/core.pyx",
+      "output": "online_moments_forces.py"
+    },
+    {
+      "blob_id": "76846202dbd279dde69c73b91053f2645bc8292a",
+      "path": "/soundfactory/cyutils/builder_utils.pyx",
+      "output": "fourier_component_builder.py"
+    },
+    {
+      "blob_id": "38f0d9823b37d1742a0724c6a44860630f72d293",
+      "path": "/docs/examples/userguide/memoryviews/quickstart.pyx",
+      "output": "sum_3d_array.py"
+    },
+    {
+      "blob_id": "29ff308757c0b67d2cc46d15a582a2eee24a1008",
+      "path": "/csv_event_rows_to_dict.pyx",
+      "output": "csv_group_pairs.py"
+    },
+    {
+      "blob_id": "e7f15ec3b735ce336d25e7233080dadc4ca14e6a",
+      "path": "/day-08/part-2/bebert.pyx",
+      "output": "layered_image_decode.py"
+    },
+    {
+      "blob_id": "b84689fff096cf8c429ca2d0675321c575fc77cd",
+      "path": "/c_parser.pyx",
+      "output": "variant_vlq_parser.py"
+    },
+    {
+      "blob_id": "2e3232bfa76f99d687814e2f6866b034ac0807bd",
+      "path": "/misc/Filter_optimize/Script.pyx",
+      "output": "bilateral_gauss_seidel.py"
+    },
+    {
+      "blob_id": "275da75ee22c3760fc60869b83ec6a1fdfbd6e90",
+      "path": "/adversarial_music_generator/evaluation_lib/harmony.pyx",
+      "output": "note_disharmony_score.py"
+    },
+    {
+      "blob_id": "095351e0f88df31e3edd8ad1ba95370f4ff1e628",
+      "path": "/ForcePy/Util.pyx",
+      "output": "minimum_image_utils.py"
+    },
+    {
+      "blob_id": "ba85f307d78a0f3d1e01c762e6e9c62edab80e78",
+      "path": "/fastfsr/helper.pyx",
+      "output": "prefix_max_alpha_helper.py"
+    },
+    {
+      "blob_id": "7b23e2c1451ccad938ba21caaf4093fe51b3f024",
+      "path": "/pdfminer/plane.pyx",
+      "output": "spatial_grid_plane.py"
+    },
+    {
+      "blob_id": "aa0dff705a291a454b37a829c2048ee3f972b299",
+      "path": "/sw/huemask/huemask.pyx",
+      "output": "hue_bandpass_mask.py"
+    },
+    {
+      "blob_id": "0599b463f7a27d53e33febd41d7f5f09b35616c9",
+      "path": "/demos/integrate/integrate_any.pyx",
+      "output": "polymorphic_integrator.py"
+    },
+    {
+      "blob_id": "4c889e0b2c561359ef1b85c5c682f041e472f9d0",
+      "path": "/expose/utils/interpolation.pyx",
+      "output": "damped_sinc_interpolation.py"
+    },
+    {
+      "blob_id": "fc8c51fcbc25aa2897878898422a6a32679d5143",
+      "path": "/server/yylib/yy/cutils.pyx",
+      "output": "cookie_compare_utils.py"
+    },
+    {
+      "blob_id": "91bafaf2d098d62b464521b2de71ce33dcb47d9c",
+      "path": "/src/pystepx/geneticoperators/crossutil.pyx",
+      "output": "nested_tree_index_utils.py"
+    },
+    {
+      "blob_id": "bc0575897fe7121ac09efd1d7c70352a7b5ec51b",
+      "path": "/day-02/part-2/bebert.pyx",
+      "output": "password_position_policy.py"
+    },
+    {
+      "blob_id": "ba9054795b7930ae6b742232a01c1aac407fa112",
+      "path": "/qutip/core/data/trace.pyx",
+      "output": "matrix_trace_kernels.py"
     }
   ]
 }
