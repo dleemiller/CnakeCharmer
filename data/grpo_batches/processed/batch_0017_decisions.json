@@ -1,0 +1,61 @@
+{
+  "batch": "batch_0017",
+  "accepted": [
+    {
+      "blob_id": "504f63a5b3925e4507189b7c75f8b6151d100b98",
+      "path": "/zipline/lib/rank.pyx",
+      "output": "row_ordinal_rank.py",
+      "reason": "Row-wise ordinal ranking is a compact sorting kernel with clear deterministic semantics and optimization value."
+    },
+    {
+      "blob_id": "b136cf9489e9c01abd63fd5aa43938ec36c99902",
+      "path": "/PlaneWave/MatMult.pyx",
+      "output": "hadamard_complex_matrix.py",
+      "reason": "Elementwise complex matrix multiplication is a simple numeric loop kernel and useful baseline for conversion traces."
+    },
+    {
+      "blob_id": "e27912a1fc44760d8f40babf08cb7620c17655f8",
+      "path": "/contrib/python/pandas/py2/pandas/_libs/skiplist.pyx",
+      "output": "indexable_skiplist.py",
+      "reason": "Indexable skiplist insert/remove/rank traversal provides strong algorithmic signal with nontrivial pointer-like control flow."
+    },
+    {
+      "blob_id": "019ac8811a65710b4c0bce5e912ba9fb2c773ee6",
+      "path": "/BLP-nevo/_BLP.pyx",
+      "output": "blp_contraction_market.py",
+      "reason": "BLP contraction mapping and market-share simulation loops are high-value numerical kernels for optimization-focused training."
+    }
+  ],
+  "skipped": [
+    {
+      "blob_id": "85b77417ac00ffc2a14244c4205985b3e56f4400",
+      "path": "/equilibrium/cython/util/interpolate.pyx",
+      "reason": "Depends directly on GSL spline objects and memory management wrappers; not a standalone Python conversion target."
+    },
+    {
+      "blob_id": "c37cc2e564a3d6864f059acbcacbfc7a2d59af22",
+      "path": "/sage/core/cython/crawler/crawler.pyx",
+      "reason": "Web scraping utility is IO-bound and framework-bound rather than a compute kernel for Cython speedup training."
+    },
+    {
+      "blob_id": "53db6d88a98bf34bb621c38d2a499397e9d82f4e",
+      "path": "/ringbuf/ringbufcy.pyx",
+      "reason": "Extensive low-level buffer protocol and concurrent queue wrapper code is too infrastructure-heavy for current unpaired kernels."
+    },
+    {
+      "blob_id": "f011ca9729d3420ed6d66033b7e4b74fb01794ef",
+      "path": "/mmstructlib/sas/alpha_shape_weighted_area.pyx",
+      "reason": "Tightly coupled to external alpha-shape C++ bindings and geometric internals, reducing portability as standalone training data."
+    },
+    {
+      "blob_id": "545a67e5c162b3d9d2a5f414a080fd4e1e6af3ce",
+      "path": "/sage/src/sage/structure/mutability.pyx",
+      "reason": "Object mutability/decorator helpers are control wrappers, not performance-kernel style examples."
+    },
+    {
+      "blob_id": "0d039c486e936a69c7f92c73aedc8547477e0be9",
+      "path": "/python/boomer/algorithm/_shrinkage.pyx",
+      "reason": "Very small strategy-wrapper fragment with limited standalone diversity and minimal algorithmic breadth."
+    }
+  ]
+}

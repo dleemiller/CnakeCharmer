@@ -1,0 +1,61 @@
+{
+  "batch": "batch_0006",
+  "accepted": [
+    {
+      "blob_id": "59e67ca64083ece87ac726e91f34ab675f47b021",
+      "path": "/hw/src/cy.pyx",
+      "output": "trial_division_primes.py",
+      "reason": "Self-contained loop-based primality kernel with clear Cython speedup characteristics."
+    },
+    {
+      "blob_id": "a65eb3e4ea1678076cdba9c342235a60954221cc",
+      "path": "/utils/preprocessing_c.pyx",
+      "output": "five_point_derivative.py",
+      "reason": "Compact finite-difference stencil over arrays; strong numeric kernel candidate."
+    },
+    {
+      "blob_id": "14e2335c1870b6d975a78e1b930aa35245bddd98",
+      "path": "/src/utils/fields/fields.pyx",
+      "output": "grid_field_transforms.py",
+      "reason": "Grid mirror/rotate primitives are deterministic nested-loop kernels suited to optimization tasks."
+    },
+    {
+      "blob_id": "6ad9ad3f6e7b32d34ec419bd6d8f5836058ebe87",
+      "path": "/genomicfeatures/_GFeatures.pyx",
+      "output": "gff_gtf_attribute_parser.py",
+      "reason": "Structured parsing and attribute tokenization logic is reusable and trace-compatible."
+    }
+  ],
+  "skipped": [
+    {
+      "blob_id": "6e6a42121b64fb465335101e85d377638635e88a",
+      "path": "/atomman/defect/slip_vector.pyx",
+      "reason": "Relies on atomman-specific system/neighbor abstractions and compiled vector utilities."
+    },
+    {
+      "blob_id": "b51ebedb890b032e0ad197841a299e517369b292",
+      "path": "/logbook/_speedups.pyx",
+      "reason": "CPython/threading internals and descriptor machinery are framework-specific, not kernel-focused."
+    },
+    {
+      "blob_id": "a5e93f2f8eb43ad3d293e3d77bc0dba2db89fff8",
+      "path": "/quadtree_algorithms.pyx",
+      "reason": "Image pipeline includes boundary-sensitive indexing and broader algorithm context; deferred for now."
+    },
+    {
+      "blob_id": "bca37f937263a9240da5c7ab9d01d8636dee8402",
+      "path": "/flow/src/cythonfiles/src/bulle/cubatureintegration.pyx",
+      "reason": "Highly specialized physics code with project-specific C structs/types and external dependencies."
+    },
+    {
+      "blob_id": "bd1827c2563990715d88031a5e68d18eefa0399d",
+      "path": "/tests/run/always_allow_keywords_T295.pyx",
+      "reason": "Cython behavior regression test, not a performance-oriented optimization kernel."
+    },
+    {
+      "blob_id": "2200fa9dc1cec478873d2d23e761c59ee68588e8",
+      "path": "/tests/run/function_as_method_T494.pyx",
+      "reason": "Language semantics test case rather than numerically meaningful kernel content."
+    }
+  ]
+}

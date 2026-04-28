@@ -1,0 +1,62 @@
+{
+  "batch": "batch_0001",
+  "accepted": [
+    {
+      "blob_id": "60e07021ca95b460e201f31c00a6a39edfd717fe",
+      "path": "/EyeTracker/cythonUtils.pyx",
+      "output": "eye_center_score.py",
+      "reason": "Self-contained numeric kernel; clear loop-heavy center-scoring logic."
+    },
+    {
+      "blob_id": "5f6452cc4058dee993b02cf77c439fac33d7b687",
+      "path": "/lib/jaccard.pyx",
+      "output": "jaccard_similarity_matrix.py",
+      "reason": "Pairwise binary similarity kernel with strong Cython speedup potential."
+    },
+    {
+      "blob_id": "6ed12b1ea64f61f4d8502ae76a1d2be5ecc888b5",
+      "path": "/PyHum/getxy.pyx",
+      "output": "rotated_trackline_points.py",
+      "reason": "Math-heavy transformation loops; deterministic and conversion-friendly."
+    },
+    {
+      "blob_id": "bc8eba493f09c1da3be50ada201e2612ecbbb1f1",
+      "path": "/energybalance_pkg/src/pyx/DiffusionLimitedEvaporation.pyx",
+      "output": "diffusion_limited_evaporation.py",
+      "reason": "Compact numeric branch kernel; useful low-level optimization target."
+    },
+    {
+      "blob_id": "f768441dc569e62a0fb71191a4251faef1304b9e",
+      "path": "/pytraj/math/Grid.pyx",
+      "output": "grid3d_to_nested_list.py",
+      "reason": "Nested-loop data-layout kernel with straightforward Cython mapping."
+    }
+  ],
+  "skipped": [
+    {
+      "blob_id": "ff61705d7fdefa6c1350f395897e519a7259ac5a",
+      "path": "/src/apu/gbapu.pyx",
+      "reason": "Heavily coupled to project-specific classes/events; not standalone."
+    },
+    {
+      "blob_id": "998318b757121cab5348de3a2f944066b0d2a937",
+      "path": "/pycalphad/core/composition_set.pyx",
+      "reason": "Large framework-specific class with tight dependency graph and C-level state."
+    },
+    {
+      "blob_id": "8db2a89b6f645c67c05d2bee10b648bd292d18ce",
+      "path": "/src/pypore/strategies/threshold_strategy.pyx",
+      "reason": "Abstract strategy class, little computational kernel value for GRPO."
+    },
+    {
+      "blob_id": "2468c9437ee12ca98b9e77b2127d5af0f763ab9c",
+      "path": "/python/cugraph/jaccard/jaccard_wrapper.pyx",
+      "reason": "GPU/cudf/cffi binding wrapper, not a pure Cython optimization target."
+    },
+    {
+      "blob_id": "9d7077731e13448872baea1dffe41d0838cc1b17",
+      "path": "/Website/env/Lib/site-packages/thinc/linear/linear.pyx",
+      "reason": "Vendored site-packages code; environment-dependent and not suitable for dataset ingestion."
+    }
+  ]
+}

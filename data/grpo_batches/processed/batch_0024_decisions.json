@@ -1,0 +1,62 @@
+{
+  "batch": "batch_0024",
+  "accepted": [
+    {
+      "blob_id": "b1a3091b5648a85a7e0c76bdbb3787ed17eec18d",
+      "path": "/source/pysph/parallel/fast_utils.pyx",
+      "output": "fast_utils_arrays.py",
+      "reason": "Array stacking and integer range construction are compact utility kernels with straightforward loop optimization patterns."
+    },
+    {
+      "blob_id": "8f6885d76e2b889296864ce13ae582fdffa3d5cc",
+      "path": "/mathx/aabb.pyx",
+      "output": "aabb_geometry.py",
+      "reason": "AABB intersection/containment predicates are geometric primitives with branch-heavy logic useful for conversion quality."
+    },
+    {
+      "blob_id": "2c148a304def9e0665d6def8ff303c70d5791f34",
+      "path": "/src/sim_anneal/src/sim_anneal/metric.pyx",
+      "output": "sim_anneal_metrics.py",
+      "reason": "Percent-error and weighted least-squares metrics are realistic numeric loss kernels with repeated element-wise loops."
+    },
+    {
+      "blob_id": "b0471d55822feb996cd0d8be917dd2820fb95b47",
+      "path": "/codes/code_optimization/cython_openmp/loops/fastloop.pyx",
+      "output": "rbf_network_loop.py",
+      "reason": "Nested-loop RBF evaluation is a clear O(N^2*D) hotspot and strong target for Cython speedup traces."
+    },
+    {
+      "blob_id": "edd4d4a6d65ee74a306dce4bdb5df1b4e343f94e",
+      "path": "/mimpy/mfd/mfd_cython.pyx",
+      "output": "mfd_update_matrix.py",
+      "reason": "Cell-block sparse update loop is simple, deterministic, and representative of low-level numerical data movement."
+    }
+  ],
+  "skipped": [
+    {
+      "blob_id": "ea4537e26c04c4c481c7297df7ba7e1820b3cce3",
+      "path": "/dodonaphy/cython/Cphylo.pyx",
+      "reason": "Large phylogenetics pipeline with project-specific dependencies and domain coupling; better curated separately."
+    },
+    {
+      "blob_id": "c7f3ee6c88524ce97d7a0451513da86bbdc7e01a",
+      "path": "/glearn/_correlation/_dense_cross_correlation.pyx",
+      "reason": "Heavy OpenMP/kernel integration and internal API coupling make this less suitable as a standalone GRPO example."
+    },
+    {
+      "blob_id": "3e38005f9a8db9b0fc596480b3b483616cef416a",
+      "path": "/Utils.pyx",
+      "reason": "Data-preprocessing class is largely application orchestration and object-state handling rather than focused compute kernels."
+    },
+    {
+      "blob_id": "5bfaa88b312112867951e5fba2455522a17899b5",
+      "path": "/quest/lib/math/linalg/vector.pyx",
+      "reason": "Broad vector utility module is extensive and mixed-purpose; deferred in favor of tighter standalone kernels in this batch."
+    },
+    {
+      "blob_id": "56c67646b4959bc390c825aaf61375c409a80276",
+      "path": "/alphacsc/cython_code/compute_ztz.pyx",
+      "reason": "Sparse-format specific ztz accumulation logic depends on complex CSR/LIL conventions and warrants dedicated curation pass."
+    }
+  ]
+}

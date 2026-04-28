@@ -1,0 +1,64 @@
+{
+  "batch": "batch_0029",
+  "accepted": [
+    {
+      "blob_id": "b2f612d160006cc7dc5d8c947830db1be01d0b23",
+      "path": "/skyline_query/core.pyx",
+      "output": "skyline_dominate.py",
+      "reason": "Dominance comparison logic is a compact multi-objective ranking kernel suitable for optimization tasks."
+    },
+    {
+      "blob_id": "c1adaeb0613da7cb6238beca9eb75b73ed348989",
+      "path": "/cube_analysis/spectral_fitting/discrete_sampler.pyx",
+      "output": "discrete_gaussian_sampler.py",
+      "reason": "Gaussian weighted averaging and channel resampling are clean numerical kernels with repeated vector operations."
+    },
+    {
+      "blob_id": "1d9f130d5df5e924231f3ab2f1b09c0ff3a5f478",
+      "path": "/src/SplitRoute.pyx",
+      "output": "split_route_vrp.py",
+      "reason": "Route splitting dynamic-programming logic with capacity/length constraints is a strong combinatorial optimization example."
+    },
+    {
+      "blob_id": "218eacffe50f81861cce080844dec3df8e88af06",
+      "path": "/check_email_cython.pyx",
+      "output": "check_email_fast.py",
+      "reason": "Character-level state-machine validation for email addresses is a practical parsing kernel."
+    },
+    {
+      "blob_id": "19634e885ceca52251ac8db04d66fc18c020a2da",
+      "path": "/mandelbrot_set/veriPoint.pyx",
+      "output": "mandelbrot_point.py",
+      "reason": "Escape-time Mandelbrot iteration is a classic iterative numeric benchmark with branch-heavy control flow."
+    },
+    {
+      "blob_id": "9015c48f619482640d8084ee37d66b68d3cf7caf",
+      "path": "/lib/sqlalchemy/cyextension/resultproxy.pyx",
+      "output": "row_proxy_utils.py",
+      "reason": "Row proxy key-resolution and accessor methods are high-value structured-data access patterns."
+    },
+    {
+      "blob_id": "d0c2318e9d1ce31c572c4f24b87b62a75ef13577",
+      "path": "/argus_shapes/fast_models.pyx",
+      "output": "argus_fast_models.py",
+      "reason": "Fast geometric/retinal model kernels and nearest-segment lookup provide useful math-heavy examples."
+    }
+  ],
+  "skipped": [
+    {
+      "blob_id": "8958bbb273e7e6114d471139f2c75702c21654b3",
+      "path": "/tests/run/fastcall.pyx",
+      "reason": "Cython runtime/fastcall behavior test rather than a standalone optimization kernel."
+    },
+    {
+      "blob_id": "f35e83b0ce97260deae7a7ac05bd87296fb4c11d",
+      "path": "/cptm/gibbs_inner.pyx",
+      "reason": "Tightly coupled to project-specific class state and external helpers, reducing standalone portability."
+    },
+    {
+      "blob_id": "9f4153eff2734d35f0c036df26960da5daf1d54c",
+      "path": "/tests/run/cpython_capi.pyx",
+      "reason": "CPython C-API regression tests are compiler/runtime checks, not reusable conversion targets."
+    }
+  ]
+}

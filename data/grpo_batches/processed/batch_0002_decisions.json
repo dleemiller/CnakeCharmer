@@ -1,0 +1,62 @@
+{
+  "batch": "batch_0002",
+  "accepted": [
+    {
+      "blob_id": "324477fe51d615d3164468504bdd23e6a6fc1726",
+      "path": "/cython_evaluation/fast_evaluate.pyx",
+      "output": "volumetric_parametric_eval.py",
+      "reason": "Dense nested-loop numeric kernel with transcendental math; strong Cython optimization target."
+    },
+    {
+      "blob_id": "0013ec5d83cf783187b8910e1bc0ab4d3ad4f066",
+      "path": "/Analyze_cython.pyx",
+      "output": "sphere_overlap_covariance.py",
+      "reason": "Pairwise geometric reduction over many points; loop-heavy and conversion-friendly."
+    },
+    {
+      "blob_id": "f546401ba454f121cb8b334ea686f9b2f3c17a51",
+      "path": "/_cython/_similarity.pyx",
+      "output": "sparse_column_similarity.py",
+      "reason": "Two-pointer sparse intersection kernel for pairwise similarities; high arithmetic intensity."
+    },
+    {
+      "blob_id": "0e4d2eb25823d9b5b03635f4c218dca965b01f4f",
+      "path": "/mandelbrot.pyx",
+      "output": "fractal_escape_grids.py",
+      "reason": "Classic escape-time iteration over 2D grid; predictable loops and good optimization signal."
+    },
+    {
+      "blob_id": "d338424be4af2cc4125e2a1717693cfe3390a916",
+      "path": "/monte-carlo/vegas-cython/cython_integrand.pyx",
+      "output": "vegas_batch_integrand.py",
+      "reason": "Compact Monte Carlo batch integrand with inner dimension loop; clean standalone kernel."
+    }
+  ],
+  "skipped": [
+    {
+      "blob_id": "9e3b9b03f582b1771fb5708777e1b4a4f2fd2afb",
+      "path": "/mcts-full/GridWorldOption.pyx",
+      "reason": "Behavioral class logic for RL environment options, not a focused numeric kernel."
+    },
+    {
+      "blob_id": "d25f18a778cd28f0f05b41d84f4f6e78f370dfb6",
+      "path": "/src/hangar/records/column_parsers.pyx",
+      "reason": "Record/key parsing utilities tightly coupled to project schemas and structs."
+    },
+    {
+      "blob_id": "67badc4f84b8cbff68a8fca0f3da74b744fe34ea",
+      "path": "/validx/cy/numbers.pyx",
+      "reason": "Validation framework class code (contracts/exceptions), limited kernel-style optimization value."
+    },
+    {
+      "blob_id": "e28faebe12f17189cbfdb903f82cb8f6eb7b13a2",
+      "path": "/filter.pyx",
+      "reason": "Candidate appears partially malformed/incomplete and domain-specific eye-tracking pipeline code."
+    },
+    {
+      "blob_id": "3962f896162bc4cb6be57bf4a0b703d4ec2bd165",
+      "path": "/renpy/gl2/gl2mesh.pyx",
+      "reason": "Engine-specific mesh/object code with external framework coupling over compute-kernel content."
+    }
+  ]
+}

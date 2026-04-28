@@ -1,0 +1,60 @@
+{
+  "batch": "batch_0014",
+  "accepted": [
+    {
+      "blob_id": "e3d4cb3363e1be1c0c9849962c1efaacfa7feffd",
+      "path": "/word2vec/cal_mat.pyx",
+      "output": "cooccurrence_weight_matrix.py",
+      "reason": "Nested pairwise weighting over user logs is a strong loop-based kernel with clear optimization potential."
+    },
+    {
+      "blob_id": "9ab462323fcfe7ef7a0a21f9d365719f7a353e5e",
+      "path": "/chapter_2_cython_fast/wave_propogation.pyx",
+      "output": "wave_pressure_sim.py",
+      "reason": "2D stencil-like pressure/velocity updates provide high-signal numeric loops for Cython conversion."
+    },
+    {
+      "blob_id": "ae59d29262d585eb6573c450b1ed47e7cbcca5a6",
+      "path": "/modis_gapfill_cython/gapfill_core_clamp.pyx",
+      "output": "flagged_clamp_grid.py",
+      "reason": "Flag-gated clamping over raster grids is a practical array kernel with branch and arithmetic structure."
+    }
+  ],
+  "skipped": [
+    {
+      "blob_id": "b855a22fa9aa267dc081d24eff5348997e036167",
+      "path": "/concurrent/bench/pi/pi_aprox.pyx",
+      "reason": "Pi approximation pattern already exists in current unpaired set."
+    },
+    {
+      "blob_id": "fe3e9967be2a7cebc0a59333e9d325ad50fc2bae",
+      "path": "/energybalance_pkg/src/pyx/PtSoil.pyx",
+      "reason": "Single closed-form formula with minimal loop/optimization signal."
+    },
+    {
+      "blob_id": "a3919335d801605783ea5978e604da7cec065da9",
+      "path": "/klib/src/kseq.pyx",
+      "reason": "Wrapper around external gzip/C parser internals; not a standalone Python->Cython kernel target."
+    },
+    {
+      "blob_id": "6e0c1eca878a406ebaed2212ad01f09eb4f42525",
+      "path": "/mandelbrot/mandelbrot.pyx",
+      "reason": "Fractal escape algorithm family is already represented by existing examples."
+    },
+    {
+      "blob_id": "4c91468cf47ef98071a77fd348ea5ee38447574f",
+      "path": "/pytsignal/pytsignal/pytsignal.pyx",
+      "reason": "Large pandas-heavy finance utility module, not a focused kernel for Cython optimization traces."
+    },
+    {
+      "blob_id": "a5876de658858007ad7899cfa97a0696439f7fb4",
+      "path": "/playhouse/_sqlite_udf.pyx",
+      "reason": "String-distance and DB UDF utility code overlaps existing edit-distance coverage and is less numeric-kernel oriented."
+    },
+    {
+      "blob_id": "b60fc278e24daccf9ab9878f0d945ab591313f35",
+      "path": "/cython_ex/integrate.pyx",
+      "reason": "Integral benchmark pattern is already covered by existing integration examples."
+    }
+  ]
+}

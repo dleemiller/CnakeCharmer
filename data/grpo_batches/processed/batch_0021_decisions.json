@@ -1,0 +1,62 @@
+{
+  "batch": "batch_0021",
+  "accepted": [
+    {
+      "blob_id": "a5723fccdeb06d8ae86f57a207444e0242809143",
+      "path": "/likelihood.pyx",
+      "output": "cosmo_event_likelihood.py",
+      "reason": "Host-marginalized event likelihood with log-domain accumulation and weak-lensing terms is a high-value numeric kernel."
+    },
+    {
+      "blob_id": "2843cbed9850e8d03f62c3c5325db15c0261ff6a",
+      "path": "/aile/dtw.pyx",
+      "output": "dtw_alignment.py",
+      "reason": "DTW table construction/backtracking and ambiguity resolution provide strong dynamic-programming optimization signal."
+    },
+    {
+      "blob_id": "dbf5eaf372dae857f1d24fe32589c81f17c23401",
+      "path": "/hop-ilp/src/solver/utils.pyx",
+      "output": "ilp_logic_constraints.py",
+      "reason": "AND/OR linearization constraints and signed-variable summation are compact algorithmic kernels used in optimization pipelines."
+    },
+    {
+      "blob_id": "80f5d6f705b631f051cd9d603314df4bd792a2c2",
+      "path": "/projects/pen2-cython/src/_pen2.pyx",
+      "output": "double_pendulum_rk4.py",
+      "reason": "RK4 integration of coupled pendulum dynamics is a rich numerical loop kernel with clear performance relevance."
+    },
+    {
+      "blob_id": "2e8f88af548c8c064f5341d8167465010b0e59f3",
+      "path": "/geoblend/vector.pyx",
+      "output": "poisson_blend_vector.py",
+      "reason": "Poisson blending RHS vector construction over masked neighborhoods is a practical stencil-style image kernel."
+    }
+  ],
+  "skipped": [
+    {
+      "blob_id": "a375fc7ecbf33756a0e4310494b6bd738ffe6f18",
+      "path": "/python/storyboard/query_cy.pyx",
+      "reason": "Large query framework tightly coupled to pandas/sketch backends with substantial application plumbing."
+    },
+    {
+      "blob_id": "82d0d06112ac0cd40fa2a76801aef4a3eb39e888",
+      "path": "/psage/modform/maass/poincare_series_alg.pyx",
+      "reason": "Specialized symbolic/number-theory stack with heavy external dependencies, reducing standalone portability."
+    },
+    {
+      "blob_id": "73544e1061d50f04b81c728f90bc96c9d727d444",
+      "path": "/SpireProject/SpireCy-master/SpireProjectOnlyOneFormat/SpireCy-master/cy_files/client.pyx",
+      "reason": "Domain-specific client/mirroring orchestration logic is framework-heavy and less suitable as a compact conversion kernel."
+    },
+    {
+      "blob_id": "128ef536cf87dfff4008e7dc3ad41d91b82e7175",
+      "path": "/cython_numpy.pyx",
+      "reason": "Fragment appears incomplete/truncated in source snapshot and is not reliable as standalone training data."
+    },
+    {
+      "blob_id": "4b606ff1ba32ae10e0f35a4ec405f42d06b92531",
+      "path": "/ism/_ism.pyx",
+      "reason": "Large acoustic simulation pipeline tied to project geometry classes and infrastructure, not a compact standalone kernel."
+    }
+  ]
+}

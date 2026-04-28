@@ -12,7 +12,7 @@ PROFILE_GET = $(UV_RUN) python -c "from cnake_charmer.config import load_model_p
 PROFILE_EB = $(UV_RUN) python -c "from cnake_charmer.config import load_model_profile; import json; from omegaconf import OmegaConf; c=load_model_profile('$(PROFILE)'); eb=c.get('model',{}).get('extra_body'); print(json.dumps(OmegaConf.to_container(eb)) if eb else 'None')"
 
 # --- Data Collection ---
-.PHONY: traces traces-best consolidate build-sft parallel
+.PHONY: traces make-traces traces-best consolidate build-sft parallel
 
 traces:  ## Collect traces using a model profile
 	$(eval _TR := $(shell $(call PROFILE_GET,model.thinking_react)))
@@ -36,7 +36,12 @@ traces:  ## Collect traces using a model profile
 		$(if $(filter-out None,$(_PAR)),--parallel $(_PAR)) \
 		$(if $(filter-out None,$(_TMP)),--temperature $(_TMP)) \
 		$(if $(filter-out None,$(_TOP)),--top-p $(_TOP)) \
+		$(if $(PRIORITY),--priority) \
+		$(if $(PRIORITY_TARGET),--priority-target $(PRIORITY_TARGET)) \
+		$(if $(PRIORITY_SFT_FILE),--priority-sft-file $(PRIORITY_SFT_FILE)) \
 		--all --shuffle
+
+make-traces: traces  ## Alias for traces (supports PRIORITY=1)
 
 traces-best:  ## Collect best-of-N traces (5 attempts, keep best)
 	$(eval _TR := $(shell $(call PROFILE_GET,model.thinking_react)))
@@ -58,6 +63,9 @@ traces-best:  ## Collect best-of-N traces (5 attempts, keep best)
 		$(if $(filter-out None,$(_PAR)),--parallel $(_PAR)) \
 		$(if $(filter-out None,$(_TMP)),--temperature $(_TMP)) \
 		$(if $(filter-out None,$(_TOP)),--top-p $(_TOP)) \
+		$(if $(PRIORITY),--priority) \
+		$(if $(PRIORITY_TARGET),--priority-target $(PRIORITY_TARGET)) \
+		$(if $(PRIORITY_SFT_FILE),--priority-sft-file $(PRIORITY_SFT_FILE)) \
 		--all --shuffle --attempts 5
 
 consolidate:  ## Consolidate trace files into master JSONL

@@ -1,0 +1,66 @@
+{
+  "batch": "batch_0028",
+  "accepted": [
+    {
+      "blob_id": "874201e386cf06f178701881b105370c8de4f62c",
+      "path": "/code/proposal/graphs_and_viz/threeDpsf_openAperture/cythonize/cythonize_un.pyx",
+      "output": "lommel_un.py",
+      "reason": "Lommel-function summation with Bessel evaluations is a strong scientific numerical kernel."
+    },
+    {
+      "blob_id": "01bd183cd92179ec62b4389a9749280c4ea8cbb4",
+      "path": "/cy_funcs.pyx",
+      "output": "invdesign_matrix_ops.py",
+      "reason": "Transfer-matrix construction and eigensystem-based propagator assembly are high-value linear-algebra routines."
+    },
+    {
+      "blob_id": "311e3f3585c0fba45e1fd538df678fedf972dcff",
+      "path": "/vcf/cparse.pyx",
+      "output": "vcf_sample_parser.py",
+      "reason": "Sample-field parsing and typed value coercion provide practical structured-data processing logic."
+    },
+    {
+      "blob_id": "50cb1109c2157293c1f18041e4800b44fe6ccc17",
+      "path": "/catstore/_querycat.pyx",
+      "output": "querycat_transform.py",
+      "reason": "Coordinate transforms with rotation/scaling and KD-tree neighborhood query form a useful geometric lookup kernel."
+    },
+    {
+      "blob_id": "ed370a7daf6ce831238631e5823b60be0a3f5b85",
+      "path": "/pyart/retrieve/_gecsx_functions_cython.pyx",
+      "output": "gecsx_visibility.py",
+      "reason": "Visibility weighting over angular grids with nearest-bin lookup is a concise radar-processing kernel."
+    },
+    {
+      "blob_id": "52a34e567523ba5f1c5b2fbf795c117f1bab9429",
+      "path": "/vreplearn/ga_algorithm/planpath.pyx",
+      "output": "ga_planpath.py",
+      "reason": "Path fitness evaluation over kinematic trajectories is a practical optimization objective loop."
+    },
+    {
+      "blob_id": "c36a0b6f8ef7be3bd9b1e21e319fb0c8c7438f18",
+      "path": "/shapely/_geos.pyx",
+      "output": "geos_context.py",
+      "reason": "Context-managed GEOS error/warning handling is a compact systems integration pattern."
+    },
+    {
+      "blob_id": "e1746e4f89da997839661e47365ebfbeaec4104a",
+      "path": "/wave_2d_fd_perf/vcython1.pyx",
+      "output": "wave_fd_step.py",
+      "reason": "Finite-difference wave propagation with source injection is a classic stencil-compute benchmark."
+    },
+    {
+      "blob_id": "9631d6b0f94f8921414f0a75f8883364d86e8119",
+      "path": "/src/speedups/activity.pyx",
+      "output": "activity_base.py",
+      "reason": "Timestamp conversion helper in activity model is a clean utility pattern used in high-frequency object code paths."
+    }
+  ],
+  "skipped": [
+    {
+      "blob_id": "6380946fab28064df647abb80ff48acd02dd1ff4",
+      "path": "/lib/ts/ts36211_lte_phy_channels_modulation.pyx",
+      "reason": "This snapshot is largely standards constants/commentary and incomplete module scaffolding, with limited standalone kernel content."
+    }
+  ]
+}

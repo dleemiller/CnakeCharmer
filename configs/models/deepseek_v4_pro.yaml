@@ -1,0 +1,11 @@
+# DeepSeek V4 flash — OpenRouter
+model:
+  id: openrouter/deepseek/deepseek-v4-pro
+  api_key_env: OPENROUTER_API_KEY
+
+optimization:
+  reflection_model: openrouter/z-ai/glm-5.1
+  threads: 4
+
+prompt:
+  program: data/optimized_prompts/openrouter_deepseek_deepseek-v4-flash/program.json

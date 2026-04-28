@@ -1,0 +1,66 @@
+{
+  "batch": "batch_0027",
+  "accepted": [
+    {
+      "blob_id": "ba619688acbf623e0cf80ba40757a524916079cf",
+      "path": "/src/becke/becke.pyx",
+      "output": "becke_weights.py",
+      "reason": "Becke weighting with pairwise distances and smooth partition functions is a strong numerical kernel."
+    },
+    {
+      "blob_id": "45843b25c24141436d51b8d63bdb23d19f4534ea",
+      "path": "/chiapet/points_in_regions.pyx",
+      "output": "disjoint_points_regions.py",
+      "reason": "Linear two-pointer scan over sorted points/regions is a compact and practical interval matching kernel."
+    },
+    {
+      "blob_id": "69f07a2156adb736bd11d2fdc2df04240c807b63",
+      "path": "/4_channelomics/model/ChannelOmniCython_comp.pyx",
+      "output": "channel_omni_euler.py",
+      "reason": "Gating dynamics with exponential Euler updates provide realistic scientific simulation loops."
+    },
+    {
+      "blob_id": "b7b5d03f8530353b717ab1ef6e5d1c6696c1aec4",
+      "path": "/cy_laplacian.pyx",
+      "output": "laplacian_kernels.py",
+      "reason": "Stencil-based Laplacian and thresholding are canonical image-processing kernels for optimization."
+    },
+    {
+      "blob_id": "8784e7d537ccf3bb61026c3ab8629297728a126b",
+      "path": "/DECSKS-18 -- 1D1V_two_species_boundary_problems_--_part_2/v2.2_broken/DECSKS/lib/remap.pyx",
+      "output": "remap_assignment.py",
+      "reason": "Index remapping accumulation and CFL-based partitioning are clear array-kernel transformations."
+    },
+    {
+      "blob_id": "5bd16b9c953a147cb043cd2e905148ef0165b444",
+      "path": "/kmeansmethods/kmeanscython/kmeansloop_cython.pyx",
+      "output": "kmeans_loop.py",
+      "reason": "K-means assignment/update loops with weighted centers are robust clustering optimization examples."
+    },
+    {
+      "blob_id": "4408b0a98c466ef88c39aa242d34418803e06723",
+      "path": "/beretta.pyx",
+      "output": "beretta_codec.py",
+      "reason": "Recursive BERT term encode/decode logic with datetime/regex handling is a high-signal data-serialization example."
+    },
+    {
+      "blob_id": "80fbc43fe60a7731817d10cb4d6896b96d82cd90",
+      "path": "/tests/run/if_else_expr.pyx",
+      "output": "if_else_expr_cast.py",
+      "reason": "Small control-flow casting edge case is useful as a concise language-semantics example."
+    },
+    {
+      "blob_id": "affc9616bc88143480f20aaf176377515b471afd",
+      "path": "/pyne/bins.pyx",
+      "output": "pyne_bins.py",
+      "reason": "Group collapsing and interpolation over monotonic grids provide valuable numerical pre-processing kernels."
+    }
+  ],
+  "skipped": [
+    {
+      "blob_id": "391b18be406e2ba35bf2e9ebcea88e3a13471df2",
+      "path": "/sslap/feasibility_.pyx",
+      "reason": "Large pointer-heavy Hopcroft-Karp implementation with extensive low-level memory management is deferred for dedicated curation."
+    }
+  ]
+}

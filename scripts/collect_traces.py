@@ -254,6 +254,25 @@ def main():
         default=None,
         help="Filter by difficulty",
     )
+    parser.add_argument(
+        "--priority",
+        action="store_true",
+        help=(
+            "Prioritize problem order by SFT coverage gaps first "
+            "(missing or low-count problems run before fully covered ones)."
+        ),
+    )
+    parser.add_argument(
+        "--priority-sft-file",
+        default="data/sft_dataset.jsonl",
+        help="SFT JSONL file used to estimate per-problem coverage for --priority",
+    )
+    parser.add_argument(
+        "--priority-target",
+        type=int,
+        default=2,
+        help="Desired SFT examples per problem for priority gap calculation (default: 2)",
+    )
 
     # Execution
     parser.add_argument("--attempts", type=int, default=1, help="Attempts per problem (default: 1)")
@@ -402,6 +421,47 @@ def main():
             continue
         for attempt in range(existing, existing + remaining):
             work.append((problem, attempt))
+
+    # Optional priority ordering: focus data collection on problems with
+    # the lowest SFT coverage first, then on lower existing per-model traces.
+    if args.priority:
+        sft_counts: Counter[str] = Counter()
+        sft_path = Path(args.priority_sft_file)
+        if sft_path.exists():
+            with open(sft_path) as f:
+                for line in f:
+                    if not line.strip():
+                        continue
+                    try:
+                        rec = json.loads(line)
+                    except json.JSONDecodeError:
+                        continue
+                    pid = rec.get("problem_id")
+                    if pid:
+                        sft_counts[pid] += 1
+        else:
+            logger.warning(
+                f"--priority enabled but SFT file not found: {sft_path} "
+                "(falling back to model trace coverage only)"
+            )
+
+        target = max(1, int(args.priority_target))
+
+        def _priority_key(item):
+            problem, attempt = item
+            pid = problem.problem_id
+            sft_n = sft_counts.get(pid, 0)
+            model_n = existing_counts.get(pid, 0)
+            # Sort by largest SFT gap first, then largest model-attempt gap first.
+            sft_gap = max(0, target - sft_n)
+            model_gap = max(0, args.attempts - model_n)
+            return (-sft_gap, -model_gap, sft_n, model_n, pid, attempt)
+
+        work.sort(key=_priority_key)
+        logger.info(
+            f"Priority ordering enabled (target={target}, sft_file={sft_path}, "
+            f"known_sft_problems={len(sft_counts)})"
+        )
 
     if skipped:
         logger.info(f"Skipping {skipped} complete problems, {len(work)} traces remaining")

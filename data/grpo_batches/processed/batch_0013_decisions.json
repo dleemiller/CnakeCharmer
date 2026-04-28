@@ -1,0 +1,60 @@
+{
+  "batch": "batch_0013",
+  "accepted": [
+    {
+      "blob_id": "f87f9ed2cf81869e483daeb25f0f9b2a92a71f4e",
+      "path": "/library/redshift_space_library/redshift_space_library.pyx",
+      "output": "redshift_space_positions.py",
+      "reason": "In-place position update with periodic wrapping is a compact numerical loop that maps cleanly to Python->Cython optimization." 
+    },
+    {
+      "blob_id": "d89d0fe3f6d89f73cd4e14c1434ff0dae834b0ff",
+      "path": "/ipynbs/python性能优化/使用Cython优化python程序的性能/使用cython编写python模块/testomp.pyx",
+      "output": "threshold_exp_transform.py",
+      "reason": "Thresholded elementwise exponential transform is a simple vector kernel useful for loop-optimization traces." 
+    },
+    {
+      "blob_id": "aa4e843075e70c4b3197285149f1e02fff4c4393",
+      "path": "/net_cython.pyx",
+      "output": "net_bbox_span.py",
+      "reason": "Bounding-box accumulation over pin coordinates is a small deterministic loop kernel with clear performance semantics." 
+    }
+  ],
+  "skipped": [
+    {
+      "blob_id": "896615acebd46070c2a6f1df7a4fc12bd0f93929",
+      "path": "/ksmith/ch05/cython_particle.pyx",
+      "reason": "Very small data container class; too little computational content for GRPO optimization training." 
+    },
+    {
+      "blob_id": "94cc11598ec820eca0d897bbc0964c5e1f4b1faf",
+      "path": "/cyhll/hyperloglog.pyx",
+      "reason": "Depends on project-specific hash and calibration tables, so it is not a clean standalone kernel example." 
+    },
+    {
+      "blob_id": "c5abee0169d2d59d3cfee0a3ccc56d2fa0517624",
+      "path": "/scripts/substring_cython.pyx",
+      "reason": "Algorithm family is already represented by existing string subsequence kernel examples in the unpaired set." 
+    },
+    {
+      "blob_id": "a1abd887c26371148bdcd52cac3ae69fb6aef105",
+      "path": "/baal/structures/tree.pyx",
+      "reason": "Large parser/tree framework with implicit constants and object graph behavior; not a focused numeric optimization kernel." 
+    },
+    {
+      "blob_id": "fedcc505e1e2af5fccc4d7382d29b4db9d4ee8ba",
+      "path": "/squidnet/squidnetlib/squidnet/scexp.pyx",
+      "reason": "Python 2-era C-extension binding around external S-expression parser internals, not suitable as standalone conversion target." 
+    },
+    {
+      "blob_id": "9a1e4cdab04aceb8c1fc24c91537335d639ada4e",
+      "path": "/pytraj/datasets/DataSet_Coords.pyx",
+      "reason": "Wrapper class for external C++ trajectory objects, dominated by binding logic instead of portable compute kernels." 
+    },
+    {
+      "blob_id": "0a52de056e2138fb93f60c0100c5fd9dc1ecc179",
+      "path": "/ch07/ex7-6.pyx",
+      "reason": "Fractal iteration pattern already exists in current unpaired examples, so adding it would be low-diversity duplication." 
+    }
+  ]
+}

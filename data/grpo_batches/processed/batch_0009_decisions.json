@@ -1,0 +1,61 @@
+{
+  "batch": "batch_0009",
+  "accepted": [
+    {
+      "blob_id": "38f0d9823b37d1742a0724c6a44860630f72d293",
+      "path": "/docs/examples/userguide/memoryviews/quickstart.pyx",
+      "output": "sum_3d_array.py",
+      "reason": "Core 3D traversal/summation loop is a clean standalone memory-access optimization kernel."
+    },
+    {
+      "blob_id": "29ff308757c0b67d2cc46d15a582a2eee24a1008",
+      "path": "/csv_event_rows_to_dict.pyx",
+      "output": "csv_group_pairs.py",
+      "reason": "Chunked CSV grouping and key aggregation loop is reusable and conversion-friendly."
+    },
+    {
+      "blob_id": "e7f15ec3b735ce336d25e7233080dadc4ca14e6a",
+      "path": "/day-08/part-2/bebert.pyx",
+      "output": "layered_image_decode.py",
+      "reason": "Layer compositing over fixed-size image buffers is a compact loop-based kernel."
+    },
+    {
+      "blob_id": "b84689fff096cf8c429ca2d0675321c575fc77cd",
+      "path": "/c_parser.pyx",
+      "output": "variant_vlq_parser.py",
+      "reason": "Binary tagged-variant and VLQ parsing logic is deterministic and suitable for trace tasks."
+    }
+  ],
+  "skipped": [
+    {
+      "blob_id": "e603925d102cf88f943dd8a01f3ce7d76881ab60",
+      "path": "/tests/run/closure_self.pyx",
+      "reason": "Closure/attribute behavior test code, not an optimization-target kernel."
+    },
+    {
+      "blob_id": "abdf385dd8fd2acf0c752a2822bf795a5fbf83dd",
+      "path": "/src/learntocut/libs/cwrapping/gurobicpy/gurobilpsolver.pyx",
+      "reason": "Heavy solver-wrapper bindings and external library coupling."
+    },
+    {
+      "blob_id": "ba6064c40adc541db22fdf247aa20aed149bee57",
+      "path": "/bolfi.pyx",
+      "reason": "Include-based framework integration and dependency graph too broad for standalone kernel extraction."
+    },
+    {
+      "blob_id": "41b8b67cc3fa6459aa8bb5584f99539184a9fe1b",
+      "path": "/threaded/_asynciotask.pyx",
+      "reason": "Async decorator framework logic, not focused on numeric/algorithmic optimization kernels."
+    },
+    {
+      "blob_id": "be287f1ac0a5770e3a9914f517c8cd27d39b3fe4",
+      "path": "/index.pyx",
+      "reason": "Index builder depends on external FASTA APIs and IO pipeline coupling."
+    },
+    {
+      "blob_id": "3c01c7839e6f3a5c6f2bd46934886a151e2676d6",
+      "path": "/mcts-options/Node.pyx",
+      "reason": "Tree-search node/object orchestration is framework-coupled control logic."
+    }
+  ]
+}

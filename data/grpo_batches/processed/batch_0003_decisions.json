@@ -1,0 +1,62 @@
+{
+  "batch": "batch_0003",
+  "accepted": [
+    {
+      "blob_id": "37a935e77c837b338b7a5ef57a0d8c527aa76c9a",
+      "path": "/sknetwork/linalg/diteration.pyx",
+      "output": "graph_fluid_diffusion.py",
+      "reason": "Sparse graph diffusion kernel with iterative propagation loops and clear optimization signal."
+    },
+    {
+      "blob_id": "9b2a09dd96c320b47fb0268366a4232fd906c758",
+      "path": "/5.Cython/main_cython.pyx",
+      "output": "miller_reverse_sequence.py",
+      "reason": "Compact reverse recurrence with numeric stability motivation and tight loop structure."
+    },
+    {
+      "blob_id": "6a93baae2da24847927c0e0e1881a297521d403b",
+      "path": "/alphacsc/cython_code/coordinate_descent.pyx",
+      "output": "sparse_coordinate_updates.py",
+      "reason": "Sparse coordinate-update logic over segmented indices; good Cython conversion pattern."
+    },
+    {
+      "blob_id": "87eaf5cda3da1fef1790726fbf7c7fe94f10463b",
+      "path": "/featurelowrank/kernel_fast.pyx",
+      "output": "anova_kernel_dp.py",
+      "reason": "DP-style ANOVA kernels with nested loops and coordinate-wise gradient recurrences."
+    },
+    {
+      "blob_id": "d0e323d76f092fb8b623cbe5f8ed5e154e452bec",
+      "path": "/bonus/cython_mp_impl.pyx",
+      "output": "collatz_parallel_scan.py",
+      "reason": "Integer-heavy iterative kernel with strided search decomposition; standalone and optimization-friendly."
+    }
+  ],
+  "skipped": [
+    {
+      "blob_id": "4e55ccc209a4b2a421412fe533476f8dca4e4eca",
+      "path": "/pytpc/trigger/multiplicity.pyx",
+      "reason": "Large domain-specific trigger simulation class; too coupled and broad for current GRPO kernel set."
+    },
+    {
+      "blob_id": "6fe2b9088cf8493555579ea2dd85a019af8b2091",
+      "path": "/TEST_PROJET-1.0-pc/renpy/gl2/gl2shader.pyx",
+      "reason": "Rendering engine shader bindings and GL object plumbing, not a pure compute kernel target."
+    },
+    {
+      "blob_id": "870ab03b45759cd236f0a4d1b9b30d68cf0c81c8",
+      "path": "/py_artm/quantities/perplexity_cython.pyx",
+      "reason": "Legacy CPython/BLAS pointer coupling and external library internals reduce portability for dataset use."
+    },
+    {
+      "blob_id": "f1b0fa00aee6780d9e22ca9c0978daefc7441a39",
+      "path": "/search.pyx",
+      "reason": "Chess engine search tightly coupled to custom classes and movegen APIs."
+    },
+    {
+      "blob_id": "6549c5eb9b81dd2c6352c6c65f8157d775146ab1",
+      "path": "/host_python_scripts/fast_host/fast_host.pyx",
+      "reason": "USB/screenshot I/O tooling and device interaction code; not suitable as Cython optimization training kernel."
+    }
+  ]
+}

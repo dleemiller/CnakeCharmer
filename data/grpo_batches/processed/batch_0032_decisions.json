@@ -1,0 +1,63 @@
+{
+  "batch": "batch_0032",
+  "accepted": [
+    {
+      "blob_id": "c6bea19261bb11e85d3f3f28db6c77a3b351707a",
+      "path": "/dependencies/fluxRelated_lib/fluxRelated.pyx",
+      "output": "euler_flux_2d.py",
+      "reason": "Compressible Euler flux and Jacobian-eigenvalue calculations are high-value scientific kernels for optimization." 
+    },
+    {
+      "blob_id": "8774eefd4287b8dc196041f434c30054db87d62f",
+      "path": "/utils/PyRandomUtils.pyx",
+      "output": "random_utils_prng.py",
+      "reason": "PRNGs plus Halton/Van-der-Corput generation provide diverse loop-heavy numeric patterns with clear acceleration potential."
+    },
+    {
+      "blob_id": "4cb3f593e6f4c1d5b0f13545bbac8a94fefc7833",
+      "path": "/hdstats/dtw.pyx",
+      "output": "dtw_distance.py",
+      "reason": "Dynamic time warping DP matrix updates are classic performance-sensitive sequence kernels."
+    },
+    {
+      "blob_id": "fd76a60f10f2dcf4a89a0ed40e2d684d2485ff44",
+      "path": "/energybalance_pkg/src/pyx/Conductance.pyx",
+      "output": "canopy_conductance.py",
+      "reason": "Compact biophysical conductance formula is a useful numeric function for regression and stability testing."
+    },
+    {
+      "blob_id": "b9c902b1c8e681526c873ee31f8d6b1226780a2e",
+      "path": "/threadingtest.pyx",
+      "output": "monte_carlo_pi_parallel.py",
+      "reason": "Monte Carlo Pi estimation with parallel workers is a practical stochastic-compute benchmark."
+    },
+    {
+      "blob_id": "f939aae83d0ba8c62a622930b08d0a110462043f",
+      "path": "/sequencing_tools/bam_tools/unique_bam.pyx",
+      "output": "softclip_filtering.py",
+      "reason": "CIGAR soft-clip parsing and threshold logic are portable branch-heavy data-processing routines."
+    }
+  ],
+  "skipped": [
+    {
+      "blob_id": "487fbd9488bc164bfb69d560267c065954d987ac",
+      "path": "/rachel/cython/testCython.pyx",
+      "reason": "Contains obvious typos and minimal toy logic; low quality as a reusable GRPO example."
+    },
+    {
+      "blob_id": "d928860515ce2d5bbcf800f76208bc10bd3be9d3",
+      "path": "/Koshi.pyx",
+      "reason": "Broken/incomplete variable references and environment-specific file I/O reduce reliability and portability."
+    },
+    {
+      "blob_id": "e4c23174c29f34807e59ed34a33bbecf85917f3d",
+      "path": "/othello/alpha_search.pyx",
+      "reason": "Tightly coupled to project-specific game state and Torch model APIs, making standalone use impractical."
+    },
+    {
+      "blob_id": "8134d941b9a9f62c821a1a2fdc1f36bf8f938630",
+      "path": "/vice/src/singlezone/tests/cases/_quiescence.pyx",
+      "reason": "Test harness code for domain-specific simulation internals rather than an independent optimization kernel."
+    }
+  ]
+}

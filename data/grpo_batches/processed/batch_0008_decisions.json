@@ -1,0 +1,61 @@
+{
+  "batch": "batch_0008",
+  "accepted": [
+    {
+      "blob_id": "4b8fe069ed5c7858d2690c595e5623a4b89a3e19",
+      "path": "/contests/abc175/e/e_AC_cy.pyx",
+      "output": "grid_item_pick_dp.py",
+      "reason": "3-state per-row DP over grid paths is a strong standalone optimization kernel."
+    },
+    {
+      "blob_id": "f9e49ce8cfc7ff1846db3a3ecd1468e920ffde4d",
+      "path": "/WalshAnalysis.pyx",
+      "output": "walsh_coefficients.py",
+      "reason": "Bitwise parity-based Walsh transform loops are compact and conversion-friendly."
+    },
+    {
+      "blob_id": "57c360b4f152eb4b4e693d47f14b1125b5cba46d",
+      "path": "/skl1/core.pyx",
+      "output": "online_moments_forces.py",
+      "reason": "Streaming moments updates and linear force evaluators are useful numeric primitives."
+    },
+    {
+      "blob_id": "76846202dbd279dde69c73b91053f2645bc8292a",
+      "path": "/soundfactory/cyutils/builder_utils.pyx",
+      "output": "fourier_component_builder.py",
+      "reason": "Fourier partial sums and sampling-index kernels provide clear loop-based workloads."
+    }
+  ],
+  "skipped": [
+    {
+      "blob_id": "622880ddcbeb26d5be2479b3da5f38603bb19438",
+      "path": "/tests/run/dict_getitem.pyx",
+      "reason": "Cython language/exception semantics test, not a performance-target kernel."
+    },
+    {
+      "blob_id": "d06b526aad64bb19e71ce98861e32b314d6e496c",
+      "path": "/xwp_cython/prop2d_2loop.pyx",
+      "reason": "OpenMP-heavy propagation pipeline with complex threading/state handling; deferred for now."
+    },
+    {
+      "blob_id": "a806474d714d58e56e06e47146f30f9c24ee4706",
+      "path": "/tests/run/ext_instance_type_T232.pyx",
+      "reason": "Small attribute-access behavior test, not relevant for optimization-focused GRPO data."
+    },
+    {
+      "blob_id": "a4950fb4885d3cf66b918bfb0c2bbb8f7794e806",
+      "path": "/include/streamhtmlparser/src/py-streamhtmlparser/py-streamhtmlparser.pyx",
+      "reason": "Parser wrapper around external C library state machine; framework/binding heavy."
+    },
+    {
+      "blob_id": "2872970cb3d264c523e5d8d58c3293f79bbe94c7",
+      "path": "/volpy/_native.pyx",
+      "reason": "Ray marching implementation tightly coupled to scene API and rendering pipeline internals."
+    },
+    {
+      "blob_id": "7dac671d5b47a5c4c16bb0853d5086b5227580c7",
+      "path": "/xpsi/cellmesh/global_mesh.pyx",
+      "reason": "Domain-specific astrophysical mesh builder with heavy external cimports/dependencies."
+    }
+  ]
+}

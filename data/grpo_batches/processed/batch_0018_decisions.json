@@ -1,0 +1,62 @@
+{
+  "batch": "batch_0018",
+  "accepted": [
+    {
+      "blob_id": "c73f5730d7eb7cdda7ec33d4b1c643b491f6e554",
+      "path": "/nnetcopy/nnet/convnet/pool.pyx",
+      "output": "maxpool_bc01.py",
+      "reason": "Forward and backward max-pooling loops over 4D tensors are high-signal optimization kernels."
+    },
+    {
+      "blob_id": "a02fad397abddfa8c1e12ceab04cc9b2fc7471c4",
+      "path": "/Tests/ODE solver speedtests/cython_a_n.pyx",
+      "output": "central_binomial_ratio.py",
+      "reason": "Factorial-based recurrence and ratio computation provide compact arithmetic kernels useful for conversion traces."
+    },
+    {
+      "blob_id": "74b701fd807d805b7c95b8fe92e74f56f75cf716",
+      "path": "/wordle/cython_wordle/spirals.pyx",
+      "output": "spiral_generators.py",
+      "reason": "Spiral coordinate generators include iterative state updates and branching suitable for loop optimization training."
+    },
+    {
+      "blob_id": "420d44aa49659350b8aff132ac4f1635346c47de",
+      "path": "/Pipeline/_PAk.pyx",
+      "output": "pak_density_estimator.py",
+      "reason": "PAk ratio-test and density estimation loops are numerically rich and algorithmically meaningful standalone kernels."
+    },
+    {
+      "blob_id": "baea3f8c894089d6930be2f871e053469c534510",
+      "path": "/pcg32_cy.pyx",
+      "output": "pcg32_rng.py",
+      "reason": "PCG32 RNG state transitions and bounded sampling provide strong bitwise/arithmetic optimization examples."
+    }
+  ],
+  "skipped": [
+    {
+      "blob_id": "0db28dbb1b0233cee087b6233af17c08f9c1136d",
+      "path": "/spacy/pipeline/multitask.pyx",
+      "reason": "Large framework-integrated NLP pipeline code with heavy external dependencies, not a standalone kernel target."
+    },
+    {
+      "blob_id": "4ef03b52229ab66e17b925d1d3ae31f716bb5695",
+      "path": "/tests/run/cpdef_optargs.pyx",
+      "reason": "Cython language behavior test fixture, not optimization training content."
+    },
+    {
+      "blob_id": "6579980b8f35df28b5a15ddaf7db70c559738786",
+      "path": "/pytraj/core/ActionList.pyx",
+      "reason": "Wrapper around cpptraj action APIs and object plumbing rather than portable computational kernels."
+    },
+    {
+      "blob_id": "2d260c59e3a710fca0cef73c48e21371d1ba72ee",
+      "path": "/tests/run/r_typecast.pyx",
+      "reason": "Tiny type-cast semantics test with negligible kernel value."
+    },
+    {
+      "blob_id": "2e5136203feddae8cb6b937d125efde82c53e40b",
+      "path": "/energybalance_pkg/src/pyx/SoilEvaporation.pyx",
+      "reason": "Single min() expression with very limited computational depth compared with other candidates in this batch."
+    }
+  ]
+}

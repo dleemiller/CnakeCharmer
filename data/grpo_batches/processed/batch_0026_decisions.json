@@ -1,0 +1,66 @@
+{
+  "batch": "batch_0026",
+  "accepted": [
+    {
+      "blob_id": "a3580cdd64d3f9919f0ab38314c720f64db1015e",
+      "path": "/pasta/forstr.pyx",
+      "output": "forstr_pair_distribution.py",
+      "reason": "Pairwise distance histogram accumulation with periodic images is a strong nested-loop numerical kernel."
+    },
+    {
+      "blob_id": "6ad092aaa341bbbfde72f1048011815ef4874a7c",
+      "path": "/primitiv/config.pyx",
+      "output": "primitiv_config_encoding.py",
+      "reason": "Encoding configuration and string conversion helpers are compact utility patterns used in bindings layers."
+    },
+    {
+      "blob_id": "b3ae41d7b5e4fda0f0090a890a376907796f4d2f",
+      "path": "/libsnek/minimax.pyx",
+      "output": "snake_minimax.py",
+      "reason": "Minimax search with board evaluation, branching control, and depth pruning provides high-value algorithmic structure."
+    },
+    {
+      "blob_id": "8ad63c12e66f2d0849f96251e382f85187a2f1ac",
+      "path": "/integrators.pyx",
+      "output": "vlasov_integrators.py",
+      "reason": "Oscillatory integral evaluation over mode index is a practical scientific-computing kernel with repeated numerical integration."
+    },
+    {
+      "blob_id": "cc74cc662dab1be352783312d1d88f01b9bec0bc",
+      "path": "/metalearning/preshed/preshed/bloom.pyx",
+      "output": "preshed_bloom_filter.py",
+      "reason": "Bloom filter parameterization, hashing schedule, and bitfield operations are strong low-level data-structure examples."
+    },
+    {
+      "blob_id": "49cd16f31c13a95f3da4f02274aa61384b38830f",
+      "path": "/geometry/pointlist.pyx",
+      "output": "geometry_point_list.py",
+      "reason": "Point-list storage/transforms with vectorized array layout and iteration semantics are reusable geometry kernels."
+    },
+    {
+      "blob_id": "7efb085046714ad07f9c19cfc825e67519ba7e3d",
+      "path": "/Homeworks/HW6/superfast.pyx",
+      "output": "svm_superfast.py",
+      "reason": "SMO-style optimization loop with kernel matrix precomputation is a meaningful ML optimization workload."
+    },
+    {
+      "blob_id": "58ceb8ebf78e7389d8fba7c84ccc094d613ee981",
+      "path": "/bkp_cython.pyx",
+      "output": "bounded_knapsack_dp.py",
+      "reason": "Bounded knapsack dynamic programming with penalties and multiplicity counting is a high-value DP benchmark."
+    },
+    {
+      "blob_id": "d4ea5dbe01ceb192c87973da9e8f39677d6d4a87",
+      "path": "/python/helpers/third_party/thriftpy/_shaded_thriftpy/transport/memory/cymemory.pyx",
+      "output": "thrift_memory_buffer.py",
+      "reason": "In-memory transport read/write cursor semantics are practical systems-level buffer management patterns."
+    }
+  ],
+  "skipped": [
+    {
+      "blob_id": "90f8f973a21a1db21f36885c40f56e5157373c39",
+      "path": "/grasp/scoring/stateless.pyx",
+      "reason": "Feature extractor implementation is tightly coupled to project-specific grammar/scoring abstractions and not standalone."
+    }
+  ]
+}

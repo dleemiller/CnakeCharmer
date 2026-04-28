@@ -1,0 +1,64 @@
+{
+  "batch": "batch_0031",
+  "accepted": [
+    {
+      "blob_id": "3d7f878bb2bc8cb06d30f818c9fd0cebfe71260c",
+      "path": "/hazma/_decay/decay_long_kaon.pyx",
+      "output": "hazma_long_kaon_spectrum.py",
+      "reason": "Mode-gated interpolation and boosted-spectrum integration provide rich numerical loops and control flow for conversion tasks."
+    },
+    {
+      "blob_id": "c95cc7bd183735238b1fa47efefa7f779e259a88",
+      "path": "/hazma/_decay/decay_muon.pyx",
+      "output": "hazma_muon_decay_spectrum.py",
+      "reason": "Photon spectrum equations with domain checks and piecewise integration are high-quality scientific kernels."
+    },
+    {
+      "blob_id": "8771168b0ee69e59bc6bb960c461ab3699c3f981",
+      "path": "/sage/misc/c3.pyx",
+      "output": "c3_linearization.py",
+      "reason": "C3 merge/linearization logic is a strong algorithmic example with list/set-heavy conflict resolution."
+    },
+    {
+      "blob_id": "4f6349bccfa2d24b4a214f815d2ba2d2931525d9",
+      "path": "/falcon/cyutil/misc.pyx",
+      "output": "falcon_misc_utils.py",
+      "reason": "ASCII scan and latin1 key/value encoding are compact practical text-processing kernels."
+    },
+    {
+      "blob_id": "bc20d7c06ac36db3a034f116948be3c4fd3ca4b3",
+      "path": "/gb/collections/fptree.pyx",
+      "output": "fenwick_probability_tree.py",
+      "reason": "Fenwick probability tree update/sample operations are classic performance-sensitive data-structure kernels."
+    },
+    {
+      "blob_id": "7e50c92c4b92e0319f35f7f1b6d2e333bc07c864",
+      "path": "/src/skrough/chaos_measures/gini_impurity_cython.pyx",
+      "output": "gini_impurity_parallel.py",
+      "reason": "Row-wise impurity accumulation over integer distributions is a clean tabular numeric reduction pattern."
+    },
+    {
+      "blob_id": "d3f62b8662aab9931d9c1bf9d7c20479ffbd5bae",
+      "path": "/demos/gaussian_volume.pyx",
+      "output": "gaussian_volume_function.py",
+      "reason": "3D Gaussian evaluation with value caching is a useful compute kernel with simple branch behavior."
+    }
+  ],
+  "skipped": [
+    {
+      "blob_id": "68bad81d8457d50fb5a718a72d872d974ade06aa",
+      "path": "/acsylla/_cython/statement/batch.pyx",
+      "reason": "Thin Cassandra-driver wrapper around external C APIs; primarily binding glue rather than standalone optimization logic."
+    },
+    {
+      "blob_id": "a123e786559eaf9415b26d3f106093b513bebc45",
+      "path": "/tests/run/exttype_gc.pyx",
+      "reason": "GC behavior regression test for Cython extension types, not a reusable algorithmic kernel."
+    },
+    {
+      "blob_id": "26c0fe9b5f39b7d0390a7cae832cef47e233cc62",
+      "path": "/plasticnet/neurons/linear_neuron.pyx",
+      "reason": "Strongly tied to project-specific neuron/connection classes and memory layout, reducing standalone portability."
+    }
+  ]
+}

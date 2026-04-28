@@ -1,0 +1,61 @@
+{
+  "batch": "batch_0004",
+  "accepted": [
+    {
+      "blob_id": "c143200ba23a7104c64a04217841e5f7881d4ed9",
+      "path": "/cython_func.pyx",
+      "output": "peptide_ion_indexing.py",
+      "reason": "Mass-spectrometry ion-index and spectrum binning kernels with clear array-loop optimization opportunities."
+    },
+    {
+      "blob_id": "20bf45c68a0dbddfb3282afd99a8474e33d52cba",
+      "path": "/moments/LinearSystem_1D.pyx",
+      "output": "one_d_linear_system_matrices.py",
+      "reason": "Structured matrix-construction loops for 1D linear systems; good standalone numerical kernel material."
+    },
+    {
+      "blob_id": "681589edbd5c0b98e9a1f817e895b9e8f5f3916f",
+      "path": "/bdrmapit/lib/python3.6/site-packages/traceutils/utils/net.pyx",
+      "output": "ip_prefix_utils.py",
+      "reason": "Low-level IP prefix/address manipulation routines with deterministic branch-heavy logic."
+    },
+    {
+      "blob_id": "da7fe52e243aa1e294f3ea936c0e51feb648666a",
+      "path": "/examples/cython/fib/fib-exercise/fib_solution.pyx",
+      "output": "fibonacci_loop.py",
+      "reason": "Classic tight integer loop benchmark useful as a lightweight optimization task."
+    }
+  ],
+  "skipped": [
+    {
+      "blob_id": "49ac870746620f24b4f6cc6c6b7ffd32258a01a2",
+      "path": "/src/poke.pyx",
+      "reason": "Application/domain object model code rather than focused compute-kernel logic."
+    },
+    {
+      "blob_id": "986c34b98646e455bb09dd41751e5d9a48b55212",
+      "path": "/microstructure/emmpm.pyx",
+      "reason": "Large algorithm class with heavy external image-processing dependencies; too broad for current batch."
+    },
+    {
+      "blob_id": "b7456da8cc6429e448fea0e762336bc55781cf0f",
+      "path": "/flow/src/cythonfiles/src/calculbulles.pyx",
+      "reason": "Highly specialized physics code with custom C structs/types not portable to standalone GRPO example."
+    },
+    {
+      "blob_id": "48d3f11425856e6fe49c3dd3e3f2c459cce77f13",
+      "path": "/tests/run/ptrdiff_t.pyx",
+      "reason": "Type-system regression test code, not an optimization-target kernel."
+    },
+    {
+      "blob_id": "cc0706b1247d6a58b350ec516d3b9904b19b7374",
+      "path": "/turret/logger.pyx",
+      "reason": "C++/TensorRT binding wrapper and logging API, not suitable for standalone Cython speedup training."
+    },
+    {
+      "blob_id": "57a55f117b9d6a8e48e467028697615cf8c634ee",
+      "path": "/tests/run/exectest.pyx",
+      "reason": "Interpreter exec-scope behavior tests, not relevant to compute-kernel optimization."
+    }
+  ]
+}
