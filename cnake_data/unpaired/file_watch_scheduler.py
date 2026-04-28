@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+from contextlib import suppress
 from enum import Enum
 from multiprocessing import Pipe, Process
 from os import scandir
@@ -47,10 +48,8 @@ class AllWatcher:
     def check(self) -> set:
         changes = set()
         new_files: dict[str, float] = {}
-        try:
+        with suppress(OSError):
             self._walk(self.root_path, changes, new_files)
-        except OSError:
-            pass
         deleted = self.files.keys() - new_files.keys()
         for entry in deleted:
             changes.add((Change.deleted, entry))
@@ -95,24 +94,18 @@ class MPScheduler:
 
     def _kill_procs(self) -> None:
         for p in self._pipe_snd:
-            try:
+            with suppress(Exception):
                 p.send("<stop>")
-            except Exception:
-                pass
         for p in self._procs:
-            try:
+            with suppress(Exception):
                 p.join()
-            except Exception:
-                pass
         self._procs = []
 
     def close(self) -> None:
         self._kill_procs()
         for p in self._pipe_rcv + self._pipe_snd:
-            try:
+            with suppress(Exception):
                 p.close()
-            except Exception:
-                pass
 
     def __enter__(self):
         self._spawn_procs()

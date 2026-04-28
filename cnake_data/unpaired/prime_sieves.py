@@ -27,10 +27,7 @@ def primesfrom3to(n: int):
 
 def nth_prime(n: int):
     def _is_prime(num: int):
-        for i in range(3, int(sqrt(num)) + 1, 2):
-            if num % i == 0:
-                return False
-        return True
+        return all(num % i != 0 for i in range(3, int(sqrt(num)) + 1, 2))
 
     if n <= 0:
         raise ValueError("n must be > 0")

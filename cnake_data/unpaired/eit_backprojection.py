@@ -17,10 +17,7 @@ class BackProjection:
             self.H = weight_m * self.B
 
     def solve(self, v1, v0, normalize=True):
-        if normalize:
-            vn = -(v1 - v0) / np.sign(v0)
-        else:
-            vn = v1 - v0
+        vn = -(v1 - v0) / np.sign(v0) if normalize else v1 - v0
         hasil = np.dot(self.H.transpose(), vn)
         return np.real(hasil)
 

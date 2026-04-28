@@ -4,7 +4,7 @@ import datetime
 def int_to_boolean(value):
     if value is None:
         return None
-    return True if value else False
+    return bool(value)
 
 
 def to_str(value):

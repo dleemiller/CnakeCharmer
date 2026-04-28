@@ -24,10 +24,7 @@ def bbox_overlaps(boxes: np.ndarray, query_boxes: np.ndarray, method: int = 0) -
             if ih <= 0:
                 continue
             boxes_area = (boxes[i, 2] - boxes[i, 0] + 1) * (boxes[i, 3] - boxes[i, 1] + 1)
-            if method == 0:
-                ua = boxes_area + box_area - iw * ih
-            else:
-                ua = min(boxes_area, box_area)
+            ua = boxes_area + box_area - iw * ih if method == 0 else min(boxes_area, box_area)
             overlaps[i, j] = iw * ih / float(ua)
 
     return overlaps

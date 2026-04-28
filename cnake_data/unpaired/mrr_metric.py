@@ -3,14 +3,14 @@
 from __future__ import annotations
 
 
-def mrr(l, p, g, n_groups: int):
+def mrr(labels, p, g, n_groups: int):
     index = 0
     score = 0.0
     for gr in range(n_groups):
         ggr = g[gr]
         idx_one = index
         for i in range(ggr):
-            if l[index + i] == 1:
+            if labels[index + i] == 1:
                 idx_one = i + index
         our_guess = p[idx_one]
         times_worse = 0

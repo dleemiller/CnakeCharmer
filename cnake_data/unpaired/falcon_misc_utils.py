@@ -4,10 +4,7 @@ from __future__ import annotations
 
 
 def is_ascii(string: str) -> bool:
-    for ch in string:
-        if ord(ch) > 0x7F:
-            return False
-    return True
+    return all(ord(ch) <= 0x7F for ch in string)
 
 
 def encode_items_to_latin1(data: dict[str, str]) -> list[tuple[bytes, bytes]]:

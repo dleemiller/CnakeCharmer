@@ -66,11 +66,11 @@ class MinHeap:
         return root
 
     def min_heapify(self, i: int, scores) -> None:
-        l = _left(i)
+        left_idx = _left(i)
         r = _right(i)
         smallest = i
-        if l < self.size and scores[self.val[l]] < scores[self.val[i]]:
-            smallest = l
+        if left_idx < self.size and scores[self.val[left_idx]] < scores[self.val[i]]:
+            smallest = left_idx
         if r < self.size and scores[self.val[r]] < scores[self.val[smallest]]:
             smallest = r
         if smallest != i:

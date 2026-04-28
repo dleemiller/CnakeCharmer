@@ -52,8 +52,8 @@ class FloatDecoder:
 
     def _decode_normal(self, stream):
         s = stream.read_numeric_bits(1)
-        l = stream.read_numeric_bits(11)
-        b = bytearray([0, 0, (l & 0x0000FF00) >> 8, l & 0x000000FF])
+        low_bits = stream.read_numeric_bits(11)
+        b = bytearray([0, 0, (low_bits & 0x0000FF00) >> 8, low_bits & 0x000000FF])
         v = struct.unpack("f", b)[0]
         v *= 4.885197850512946e-4
         return -v if s else v

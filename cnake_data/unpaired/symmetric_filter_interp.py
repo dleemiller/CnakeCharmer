@@ -59,22 +59,18 @@ def bs5_int(IA, n_rows: int, n_cols: int, new_x, new_y):
             )
 
             bf_a = 0.0
-            cy = 0
-            for ii in range(rad3 - 1, rad4):
+            for cy, ii in enumerate(range(rad3 - 1, rad4)):
                 ri = ii
                 if ri < 0:
                     ri = -ri
                 if ri > n_rows - 1:
                     ri = 2 * (n_rows - 1) - ri
-                cx = 0
-                for jj in range(rad1 - 1, rad2):
+                for cx, jj in enumerate(range(rad1 - 1, rad2)):
                     rj = jj
                     if rj < 0:
                         rj = -rj
                     if rj > n_cols - 1:
                         rj = 2 * (n_cols - 1) - rj
                     bf_a += wx[cx] * wy[cy] * IA[ri, rj]
-                    cx += 1
-                cy += 1
             IB[i, j] = bf_a
     return IB
