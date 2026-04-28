@@ -1,0 +1,65 @@
+{
+  "batch": "batch_0033",
+  "accepted": [
+    {
+      "blob_id": "3b082d019c0749f654da371e94ffbaffee05c233",
+      "path": "/python/storyboard/dyadic_cy.pyx",
+      "output": "dyadic_breakdown.py",
+      "reason": "Recursive dyadic segmentation is a compact algorithmic decomposition kernel with clean integer arithmetic and recursion."
+    },
+    {
+      "blob_id": "1fdc5c90945a899e7204db6b67965b85dc50f79a",
+      "path": "/Laura/Cython/dep/funs_economy.pyx",
+      "output": "risk_economy_costs.py",
+      "reason": "Flood-risk cost, discounting, and evacuation functions provide practical scalar numeric routines."
+    },
+    {
+      "blob_id": "167a43092b25dd7ded6a6dcbf75ba6e1450103a9",
+      "path": "/zipline/lib/rank.pyx",
+      "output": "masked_ranking.py",
+      "reason": "Masked ranking over heterogeneous arrays is a high-value data-processing pattern with sorting and NaN handling logic."
+    },
+    {
+      "blob_id": "543dcdcffebe2ac9f8fd2bfb3a461782cb703512",
+      "path": "/model/topic_model/LDA/VB/_VB_lda.pyx",
+      "output": "lda_vb_kernels.py",
+      "reason": "LDA variational-Bayes kernels (sufficient stats, digamma approximation, Dirichlet expectation) are strong numeric optimization targets."
+    },
+    {
+      "blob_id": "b2980ea87721f3677db5a9a81ec0bcf3f8487c5f",
+      "path": "/src/c4_zero/env/board.pyx",
+      "output": "connect4_bitboard.py",
+      "reason": "Bitboard operations for board-state mutation and legal-move generation are portable, performance-relevant game kernels."
+    },
+    {
+      "blob_id": "5c2912a48f90b5883a6fa8514a4597e15d1f2dd9",
+      "path": "/src/meltpack/_smooth.pyx",
+      "output": "smooth5_kernel.py",
+      "reason": "Five-point raster smoothing with nodata/NaN semantics is a clean grid-based stencil kernel."
+    },
+    {
+      "blob_id": "1df5986a76a50a9bc82d780bfd84b3690da37e21",
+      "path": "/ghostwriter/utils/cwatch.pyx",
+      "output": "file_watch_scheduler.py",
+      "reason": "Filesystem walk/change detection and round-robin multiprocess dispatch add strong systems-style control-flow examples."
+    },
+    {
+      "blob_id": "721dc10f3aeafa8d9c443212dd927967d08b29a7",
+      "path": "/sknetwork/topology/minheap.pyx",
+      "output": "minheap_structure.py",
+      "reason": "Decrease-key min-heap maintenance is a classic algorithmic data-structure kernel with mutable indexing state."
+    }
+  ],
+  "skipped": [
+    {
+      "blob_id": "8862ed98743d870d072348e1f6b336710f9154d4",
+      "path": "/nettools/htmldocparse.pyx",
+      "reason": "Primarily parser/plumbing glue with little standalone algorithmic core in the shown implementation."
+    },
+    {
+      "blob_id": "df594e6533c287b40691976ce39faac2db2b4ac7",
+      "path": "/app/Selection/ROI_Cluster.pyx",
+      "reason": "Legacy project-specific clustering/rebasing code with Python2-era style and heavy external coupling reduces portability."
+    }
+  ]
+}

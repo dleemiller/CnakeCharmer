@@ -62,9 +62,19 @@
       "output": "grid_field_transforms.py"
     },
     {
+      "blob_id": "19634e885ceca52251ac8db04d66fc18c020a2da",
+      "path": "/mandelbrot_set/veriPoint.pyx",
+      "output": "mandelbrot_point.py"
+    },
+    {
       "blob_id": "196fc505b3ee04966d1db13fc8bc52cff3d50c35",
       "path": "/python/eratosthene/eratosthene.pyx",
       "output": "eratosthene_primes.py"
+    },
+    {
+      "blob_id": "1d9f130d5df5e924231f3ab2f1b09c0ff3a5f478",
+      "path": "/src/SplitRoute.pyx",
+      "output": "split_route_vrp.py"
     },
     {
       "blob_id": "1f6d1cf1180ea6849c144a7a961daca17487c613",
@@ -80,6 +90,11 @@
       "blob_id": "213bdfbf1e84fbe71e48b9723b80b1c2302eb422",
       "path": "/share.pyx",
       "output": "shared_foo_struct.py"
+    },
+    {
+      "blob_id": "218eacffe50f81861cce080844dec3df8e88af06",
+      "path": "/check_email_cython.pyx",
+      "output": "check_email_fast.py"
     },
     {
       "blob_id": "275da75ee22c3760fc60869b83ec6a1fdfbd6e90",
@@ -477,6 +492,11 @@
       "output": "aabb_geometry.py"
     },
     {
+      "blob_id": "9015c48f619482640d8084ee37d66b68d3cf7caf",
+      "path": "/lib/sqlalchemy/cyextension/resultproxy.pyx",
+      "output": "row_proxy_utils.py"
+    },
+    {
       "blob_id": "91bafaf2d098d62b464521b2de71ce33dcb47d9c",
       "path": "/src/pystepx/geneticoperators/crossutil.pyx",
       "output": "nested_tree_index_utils.py"
@@ -607,6 +627,11 @@
       "output": "fast_utils_arrays.py"
     },
     {
+      "blob_id": "b2f612d160006cc7dc5d8c947830db1be01d0b23",
+      "path": "/skyline_query/core.pyx",
+      "output": "skyline_dominate.py"
+    },
+    {
       "blob_id": "b3ae41d7b5e4fda0f0090a890a376907796f4d2f",
       "path": "/libsnek/minimax.pyx",
       "output": "snake_minimax.py"
@@ -687,6 +712,11 @@
       "output": "peptide_ion_indexing.py"
     },
     {
+      "blob_id": "c1adaeb0613da7cb6238beca9eb75b73ed348989",
+      "path": "/cube_analysis/spectral_fitting/discrete_sampler.pyx",
+      "output": "discrete_gaussian_sampler.py"
+    },
+    {
       "blob_id": "c2abd086ea7d52c7",
       "path": "src/wsgi_benchmark/native.pyx",
       "output": "triangular_number.py"
@@ -715,6 +745,11 @@
       "blob_id": "cc74cc662dab1be352783312d1d88f01b9bec0bc",
       "path": "/metalearning/preshed/preshed/bloom.pyx",
       "output": "preshed_bloom_filter.py"
+    },
+    {
+      "blob_id": "d0c2318e9d1ce31c572c4f24b87b62a75ef13577",
+      "path": "/argus_shapes/fast_models.pyx",
+      "output": "argus_fast_models.py"
     },
     {
       "blob_id": "d0e323d76f092fb8b623cbe5f8ed5e154e452bec",
@@ -900,6 +935,281 @@
       "blob_id": "fe6b0fe9b98047c617e37aeec6a0997e14acdc9c",
       "path": "/cython_primes/primes1.pyx",
       "output": "sqrt_trial_prime.py"
+    },
+    {
+      "blob_id": "9f5feb982daeb390726c1150ce4b1094a8868a39",
+      "path": "/EIT/InverseCython/BackProjection.pyx",
+      "output": "eit_backprojection.py"
+    },
+    {
+      "blob_id": "803e56703356790d00b7107c6ce8efe87350e5da",
+      "path": "/lib/sqlalchemy/cyextension/processors.pyx",
+      "output": "sqlalchemy_processors.py"
+    },
+    {
+      "blob_id": "1c7b224381227f84152e46e0a5f3d0cce3e92672",
+      "path": "/Homeworks/HW7/speedy.pyx",
+      "output": "knn_speedy.py"
+    },
+    {
+      "blob_id": "1f18c5c7f4cd9a4386980ea6de0bb5a798881cef",
+      "path": "/socr/line/codecs/baseline_encoder.pyx",
+      "output": "baseline_encoder.py"
+    },
+    {
+      "blob_id": "6c1914cacefcbbd285315e5a52320ab04a764131",
+      "path": "/pytune/freqset.pyx",
+      "output": "pytune_freqset.py"
+    },
+    {
+      "blob_id": "f0ee67ea45076897dc49d4fc597af099ac60b760",
+      "path": "/mc.pyx",
+      "output": "ljmc_montecarlo.py"
+    },
+    {
+      "blob_id": "3d7f878bb2bc8cb06d30f818c9fd0cebfe71260c",
+      "path": "/hazma/_decay/decay_long_kaon.pyx",
+      "output": "hazma_long_kaon_spectrum.py"
+    },
+    {
+      "blob_id": "c95cc7bd183735238b1fa47efefa7f779e259a88",
+      "path": "/hazma/_decay/decay_muon.pyx",
+      "output": "hazma_muon_decay_spectrum.py"
+    },
+    {
+      "blob_id": "8771168b0ee69e59bc6bb960c461ab3699c3f981",
+      "path": "/sage/misc/c3.pyx",
+      "output": "c3_linearization.py"
+    },
+    {
+      "blob_id": "4f6349bccfa2d24b4a214f815d2ba2d2931525d9",
+      "path": "/falcon/cyutil/misc.pyx",
+      "output": "falcon_misc_utils.py"
+    },
+    {
+      "blob_id": "bc20d7c06ac36db3a034f116948be3c4fd3ca4b3",
+      "path": "/gb/collections/fptree.pyx",
+      "output": "fenwick_probability_tree.py"
+    },
+    {
+      "blob_id": "7e50c92c4b92e0319f35f7f1b6d2e333bc07c864",
+      "path": "/src/skrough/chaos_measures/gini_impurity_cython.pyx",
+      "output": "gini_impurity_parallel.py"
+    },
+    {
+      "blob_id": "d3f62b8662aab9931d9c1bf9d7c20479ffbd5bae",
+      "path": "/demos/gaussian_volume.pyx",
+      "output": "gaussian_volume_function.py"
+    },
+    {
+      "blob_id": "c6bea19261bb11e85d3f3f28db6c77a3b351707a",
+      "path": "/dependencies/fluxRelated_lib/fluxRelated.pyx",
+      "output": "euler_flux_2d.py"
+    },
+    {
+      "blob_id": "8774eefd4287b8dc196041f434c30054db87d62f",
+      "path": "/utils/PyRandomUtils.pyx",
+      "output": "random_utils_prng.py"
+    },
+    {
+      "blob_id": "4cb3f593e6f4c1d5b0f13545bbac8a94fefc7833",
+      "path": "/hdstats/dtw.pyx",
+      "output": "dtw_distance.py"
+    },
+    {
+      "blob_id": "fd76a60f10f2dcf4a89a0ed40e2d684d2485ff44",
+      "path": "/energybalance_pkg/src/pyx/Conductance.pyx",
+      "output": "canopy_conductance.py"
+    },
+    {
+      "blob_id": "b9c902b1c8e681526c873ee31f8d6b1226780a2e",
+      "path": "/threadingtest.pyx",
+      "output": "monte_carlo_pi_parallel.py"
+    },
+    {
+      "blob_id": "f939aae83d0ba8c62a622930b08d0a110462043f",
+      "path": "/sequencing_tools/bam_tools/unique_bam.pyx",
+      "output": "softclip_filtering.py"
+    },
+    {
+      "blob_id": "3b082d019c0749f654da371e94ffbaffee05c233",
+      "path": "/python/storyboard/dyadic_cy.pyx",
+      "output": "dyadic_breakdown.py"
+    },
+    {
+      "blob_id": "1fdc5c90945a899e7204db6b67965b85dc50f79a",
+      "path": "/Laura/Cython/dep/funs_economy.pyx",
+      "output": "risk_economy_costs.py"
+    },
+    {
+      "blob_id": "167a43092b25dd7ded6a6dcbf75ba6e1450103a9",
+      "path": "/zipline/lib/rank.pyx",
+      "output": "masked_ranking.py"
+    },
+    {
+      "blob_id": "543dcdcffebe2ac9f8fd2bfb3a461782cb703512",
+      "path": "/model/topic_model/LDA/VB/_VB_lda.pyx",
+      "output": "lda_vb_kernels.py"
+    },
+    {
+      "blob_id": "b2980ea87721f3677db5a9a81ec0bcf3f8487c5f",
+      "path": "/src/c4_zero/env/board.pyx",
+      "output": "connect4_bitboard.py"
+    },
+    {
+      "blob_id": "5c2912a48f90b5883a6fa8514a4597e15d1f2dd9",
+      "path": "/src/meltpack/_smooth.pyx",
+      "output": "smooth5_kernel.py"
+    },
+    {
+      "blob_id": "1df5986a76a50a9bc82d780bfd84b3690da37e21",
+      "path": "/ghostwriter/utils/cwatch.pyx",
+      "output": "file_watch_scheduler.py"
+    },
+    {
+      "blob_id": "721dc10f3aeafa8d9c443212dd927967d08b29a7",
+      "path": "/sknetwork/topology/minheap.pyx",
+      "output": "minheap_structure.py"
+    },
+    {
+      "blob_id": "19b0bab8340d1dd45ad459fd12789c18b5911b87",
+      "path": "/CCubik.pyx",
+      "output": "rubik_cube_permutations.py"
+    },
+    {
+      "blob_id": "739deb8ed7a7b8ba9f7704e982d33d8b44028578",
+      "path": "/Python/cython/Elimination/GaussElimination.pyx",
+      "output": "gaussian_elimination_basic.py"
+    },
+    {
+      "blob_id": "faa61b6f4b9a2be7dbb639d1508ba7c5629707c7",
+      "path": "/src/_tree.pyx",
+      "output": "tree_item_structure.py"
+    },
+    {
+      "blob_id": "6dd3ed9cd6b0575d763857b3c8e81e3d190a5b67",
+      "path": "/smoke/replay/decoder/recv_prop/dfloat.pyx",
+      "output": "float_decoder_modes.py"
+    },
+    {
+      "blob_id": "0d3279ad35dc5462db5eeb5c8bc7eef9968200e1",
+      "path": "/pyapprox/cython/manipulate_polynomials.pyx",
+      "output": "multivariate_poly_multiply.py"
+    },
+    {
+      "blob_id": "fe6fe8e4934ff4b04eb47b364b7aa2fa453990cf",
+      "path": "/lib/utils/paral_bbox.pyx",
+      "output": "bbox_overlap_metrics.py"
+    },
+    {
+      "blob_id": "06ec54c7ec5fa0e5dfee402a4e1630d43fc043b6",
+      "path": "/src/transpose.pyx",
+      "output": "matrix_transpose_parallel.py"
+    },
+    {
+      "blob_id": "2ec45e3471687e185eeb02dfaaa74628b45ae40c",
+      "path": "/cyprimes.pyx",
+      "output": "prime_sieves.py"
+    },
+    {
+      "blob_id": "bd08d4bb9bd026927afb088d4e18a6d9be77ba07",
+      "path": "/blacksheep/cookies.pyx",
+      "output": "cookie_codec.py"
+    },
+    {
+      "blob_id": "bca614fedc478bb598e7887f3f29aad6a33b978b",
+      "path": "/cstruct/io/bytes_writer.pyx",
+      "output": "bytes_writer.py"
+    },
+    {
+      "blob_id": "ed201d07a4b1f3a15cf3487511868d50d6561742",
+      "path": "/lesson4/program1/solver_cython3.pyx",
+      "output": "nbody_solver.py"
+    },
+    {
+      "blob_id": "b76b377c4bd5dd9b169b88729e54dd55b7270852",
+      "path": "/lzhw/lz20c.pyx",
+      "output": "lz20_compress.py"
+    },
+    {
+      "blob_id": "496cc4a9655b09ab4764cd460e73fca2105ba50c",
+      "path": "/src/gm/comparison_based_sorting.pyx",
+      "output": "insertion_sort_impacts.py"
+    },
+    {
+      "blob_id": "f3676e35f14d8ad57881921affcf67ab73ef72ca",
+      "path": "/cython/parallel/parallel_reader.pyx",
+      "output": "parallel_reader.py"
+    },
+    {
+      "blob_id": "f1413d13a2ae1a126c41dc0f0660467a59fe480f",
+      "path": "/PIV/sym_filt.pyx",
+      "output": "symmetric_filter_interp.py"
+    },
+    {
+      "blob_id": "bcf49f76f91e1b27dd2da3d8bd385b06343160ce",
+      "path": "/kivy/graphics/buffer.pyx",
+      "output": "fixed_block_buffer.py"
+    },
+    {
+      "blob_id": "3084f9a8e8f40bce42380ff7de865b60ba302b82",
+      "path": "/sklearn/utils/arrayfuncs.pyx",
+      "output": "arrayfuncs_small.py"
+    },
+    {
+      "blob_id": "2b9c7a4d43dc9b07534068430c5a4c398e0e6d60",
+      "path": "/hello.pyx",
+      "output": "crop_area_scan.py"
+    },
+    {
+      "blob_id": "22fdf789986defb8276d6c5d6069cb805e6f2be9",
+      "path": "/paper/analysis/scan_p_1000/with_water/rdf/_rdf.pyx",
+      "output": "radial_distribution.py"
+    },
+    {
+      "blob_id": "d998fb6b2ab4f3164bd008836fdaecaa3e895fa9",
+      "path": "/src/utils.pyx",
+      "output": "crypto_utils_bytes.py"
+    },
+    {
+      "blob_id": "226c2762dc1d18c6800902dc2b2bc3837cf7ab10",
+      "path": "/src/node.pyx",
+      "output": "branching_node_growth.py"
+    },
+    {
+      "blob_id": "275ea6934920bc483ffe04561336e1912feb3673",
+      "path": "/cython_functions.pyx",
+      "output": "income_tax_rates.py"
+    },
+    {
+      "blob_id": "59948f2e9aae2b35d8d4e09aa8b37a554863f280",
+      "path": "/swirly/_swirlop.pyx",
+      "output": "swirly_ops.py"
+    },
+    {
+      "blob_id": "71786d34cf7cc5a8ffdf60d52c4e37436c407518",
+      "path": "/mrr.pyx",
+      "output": "mrr_metric.py"
+    },
+    {
+      "blob_id": "d06bc67359e7c968856e63466416256d905fca12",
+      "path": "/cutadapt/_qualtrim.pyx",
+      "output": "quality_trim.py"
+    },
+    {
+      "blob_id": "68009273390675f927d190a427a3470019ceda2a",
+      "path": "/toppra/_CythonUtils.pyx",
+      "output": "velocity_constraints.py"
+    },
+    {
+      "blob_id": "10277746bdbadce00402bcd55bcdcbb0216975e0",
+      "path": "/ForcePy/Basis.pyx",
+      "output": "force_basis_kernels.py"
+    },
+    {
+      "blob_id": "8c10eca3f564e03403e27da78ccbfa7953253e58",
+      "path": "/misc/advent/2017/16/c.pyx",
+      "output": "dance_permutations.py"
     }
   ]
 }

@@ -1,0 +1,65 @@
+{
+  "batch": "batch_0035",
+  "accepted": [
+    {
+      "blob_id": "06ec54c7ec5fa0e5dfee402a4e1630d43fc043b6",
+      "path": "/src/transpose.pyx",
+      "output": "matrix_transpose_parallel.py",
+      "reason": "Matrix transpose loop kernel is a straightforward memory-access optimization target."
+    },
+    {
+      "blob_id": "2ec45e3471687e185eeb02dfaaa74628b45ae40c",
+      "path": "/cyprimes.pyx",
+      "output": "prime_sieves.py",
+      "reason": "Prime-sieve and nth-prime routines provide strong integer-loop and indexing-heavy numeric examples."
+    },
+    {
+      "blob_id": "bd08d4bb9bd026927afb088d4e18a6d9be77ba07",
+      "path": "/blacksheep/cookies.pyx",
+      "output": "cookie_codec.py",
+      "reason": "Cookie parse/format logic is practical protocol-processing code with robust branching and string handling."
+    },
+    {
+      "blob_id": "bca614fedc478bb598e7887f3f29aad6a33b978b",
+      "path": "/cstruct/io/bytes_writer.pyx",
+      "output": "bytes_writer.py",
+      "reason": "Byte-level serialization primitives are portable low-level routines useful for systems-oriented optimization tasks."
+    },
+    {
+      "blob_id": "ed201d07a4b1f3a15cf3487511868d50d6561742",
+      "path": "/lesson4/program1/solver_cython3.pyx",
+      "output": "nbody_solver.py",
+      "reason": "N-body integration loops are classic compute-heavy kernels with clear speedup potential."
+    },
+    {
+      "blob_id": "b76b377c4bd5dd9b169b88729e54dd55b7270852",
+      "path": "/lzhw/lz20c.pyx",
+      "output": "lz20_compress.py",
+      "reason": "Sequence dictionary-building compression logic provides nontrivial string/list state transitions."
+    },
+    {
+      "blob_id": "496cc4a9655b09ab4764cd460e73fca2105ba50c",
+      "path": "/src/gm/comparison_based_sorting.pyx",
+      "output": "insertion_sort_impacts.py",
+      "reason": "In-place insertion sort is a compact baseline algorithmic kernel for correctness/performance tasks."
+    },
+    {
+      "blob_id": "f3676e35f14d8ad57881921affcf67ab73ef72ca",
+      "path": "/cython/parallel/parallel_reader.pyx",
+      "output": "parallel_reader.py",
+      "reason": "Chunked multi-file reader control flow demonstrates practical I/O pipeline structure."
+    }
+  ],
+  "skipped": [
+    {
+      "blob_id": "b3329e0d0071065b3e120faab9bd912e75769726",
+      "path": "/python/nvtx/_lib/lib.pyx",
+      "reason": "Strongly coupled to NVTX native APIs and domain handles, limiting standalone portability."
+    },
+    {
+      "blob_id": "80f51b38b95756ad1251467c737371462a39de7a",
+      "path": "/tests/run/builtin_memory_view.pyx",
+      "reason": "Cython compiler/runtime test coverage file rather than a reusable optimization target."
+    }
+  ]
+}

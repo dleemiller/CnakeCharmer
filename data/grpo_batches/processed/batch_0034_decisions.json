@@ -1,0 +1,63 @@
+{
+  "batch": "batch_0034",
+  "accepted": [
+    {
+      "blob_id": "19b0bab8340d1dd45ad459fd12789c18b5911b87",
+      "path": "/CCubik.pyx",
+      "output": "rubik_cube_permutations.py",
+      "reason": "Permutation-based cube state transitions and move parsing provide compact combinatorial state-manipulation kernels."
+    },
+    {
+      "blob_id": "739deb8ed7a7b8ba9f7704e982d33d8b44028578",
+      "path": "/Python/cython/Elimination/GaussElimination.pyx",
+      "output": "gaussian_elimination_basic.py",
+      "reason": "Forward-phase Gaussian elimination loop nest is a foundational numerical kernel for optimization tasks."
+    },
+    {
+      "blob_id": "faa61b6f4b9a2be7dbb639d1508ba7c5629707c7",
+      "path": "/src/_tree.pyx",
+      "output": "tree_item_structure.py",
+      "reason": "Tree navigation/manipulation operations are portable data-structure routines with clear control flow."
+    },
+    {
+      "blob_id": "6dd3ed9cd6b0575d763857b3c8e81e3d190a5b67",
+      "path": "/smoke/replay/decoder/recv_prop/dfloat.pyx",
+      "output": "float_decoder_modes.py",
+      "reason": "Multiple bitstream float-decoding branches provide practical low-level parsing logic and numeric transforms."
+    },
+    {
+      "blob_id": "0d3279ad35dc5462db5eeb5c8bc7eef9968200e1",
+      "path": "/pyapprox/cython/manipulate_polynomials.pyx",
+      "output": "multivariate_poly_multiply.py",
+      "reason": "Multivariate polynomial term multiplication is a clean tensor-index arithmetic kernel."
+    },
+    {
+      "blob_id": "fe6fe8e4934ff4b04eb47b364b7aa2fa453990cf",
+      "path": "/lib/utils/paral_bbox.pyx",
+      "output": "bbox_overlap_metrics.py",
+      "reason": "Bounding-box overlap computation is a high-value vision kernel with nested loops and branch-heavy geometry logic."
+    }
+  ],
+  "skipped": [
+    {
+      "blob_id": "56320e0888d28319a6dc99077e3a33a12bfce44d",
+      "path": "/sage/src/sage/symbolic/getitem.pyx",
+      "reason": "Deeply coupled to Sage symbolic internals and extension types, reducing standalone portability."
+    },
+    {
+      "blob_id": "4fd38dd70b102cd6a8e57784e7c798f8c50bbb9e",
+      "path": "/dataProc/dataProc.pyx",
+      "reason": "Large project-specific preprocessing pipeline with external dependencies and domain assumptions; lower reuse as standalone GRPO target."
+    },
+    {
+      "blob_id": "453a50ca7b6d4d9a82c572419685d29f7ddd1772",
+      "path": "/pippi/oscs/drunk.pyx",
+      "reason": "Audio-engine integration depends on project-specific wavetable/buffer internals rather than portable independent kernels."
+    },
+    {
+      "blob_id": "291b3c3ac53f0ff4ea907310b270a1049d7b340f",
+      "path": "/tests/run/dict_pop.pyx",
+      "reason": "Cython compiler/runtime behavior test file, not a reusable optimization example."
+    }
+  ]
+}

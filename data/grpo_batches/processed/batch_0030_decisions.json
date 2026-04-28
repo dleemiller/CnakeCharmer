@@ -1,0 +1,63 @@
+{
+  "batch": "batch_0030",
+  "accepted": [
+    {
+      "blob_id": "9f5feb982daeb390726c1150ce4b1094a8868a39",
+      "path": "/EIT/InverseCython/BackProjection.pyx",
+      "output": "eit_backprojection.py",
+      "reason": "Linear-algebra reconstruction pipeline with normalization and weighted projection is a strong numerical optimization target."
+    },
+    {
+      "blob_id": "803e56703356790d00b7107c6ce8efe87350e5da",
+      "path": "/lib/sqlalchemy/cyextension/processors.pyx",
+      "output": "sqlalchemy_processors.py",
+      "reason": "Datetime/date/time parsing and conversion helpers are practical data-processing kernels with clear performance pathways."
+    },
+    {
+      "blob_id": "1c7b224381227f84152e46e0a5f3d0cce3e92672",
+      "path": "/Homeworks/HW7/speedy.pyx",
+      "output": "knn_speedy.py",
+      "reason": "KNN distance-matrix construction and neighbor classification loops are directly relevant numeric kernels for Cython speedups."
+    },
+    {
+      "blob_id": "1f18c5c7f4cd9a4386980ea6de0bb5a798881cef",
+      "path": "/socr/line/codecs/baseline_encoder.pyx",
+      "output": "baseline_encoder.py",
+      "reason": "Pixel plotting and line rasterization loops provide compact geometry kernels with predictable optimization opportunities."
+    },
+    {
+      "blob_id": "6c1914cacefcbbd285315e5a52320ab04a764131",
+      "path": "/pytune/freqset.pyx",
+      "output": "pytune_freqset.py",
+      "reason": "FFT post-processing and duplicate-frequency aggregation combine vectorized and loop logic suitable for conversion tasks."
+    },
+    {
+      "blob_id": "f0ee67ea45076897dc49d4fc597af099ac60b760",
+      "path": "/mc.pyx",
+      "output": "ljmc_montecarlo.py",
+      "reason": "Monte Carlo accept/reject and adaptive-step simulation loops are high-value iterative kernels."
+    }
+  ],
+  "skipped": [
+    {
+      "blob_id": "49b36c730babf59ff456b95ef0d4324bc881b510",
+      "path": "/kivy/graphics/gl_instructions.pyx",
+      "reason": "Framework-bound OpenGL instruction wrappers are API glue, not portable compute kernels."
+    },
+    {
+      "blob_id": "f81c58284d014f8fbe34ce3a036ff89f08b61628",
+      "path": "/pre-test/test.pyx",
+      "reason": "Brute-force string/print exploration script is pedagogical and not a clean optimization target for GRPO conversion tasks."
+    },
+    {
+      "blob_id": "838ff571d38b24ab606256a9af95839895a11047",
+      "path": "/dpnp/dpnp_algo/dpnp_algo_trigonometric.pyx",
+      "reason": "Mostly thin backend dispatch wrappers with limited standalone algorithmic content."
+    },
+    {
+      "blob_id": "34807503b5868179819e035543249d229bc080cd",
+      "path": "/train/bot.pyx",
+      "reason": "Highly project-specific integration with external game/NN interfaces; low portability as a standalone Python optimization example."
+    }
+  ]
+}

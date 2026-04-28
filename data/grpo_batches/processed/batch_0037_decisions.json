@@ -1,0 +1,64 @@
+{
+  "batch": "batch_0037",
+  "accepted": [
+    {
+      "blob_id": "275ea6934920bc483ffe04561336e1912feb3673",
+      "path": "/cython_functions.pyx",
+      "output": "income_tax_rates.py",
+      "reason": "Compact tax-bracket kernel plus repeated vector fill offers clean control-flow examples."
+    },
+    {
+      "blob_id": "59948f2e9aae2b35d8d4e09aa8b37a554863f280",
+      "path": "/swirly/_swirlop.pyx",
+      "output": "swirly_ops.py",
+      "reason": "Chunk extraction, row/column statistics, and cyclic tensor shifts are strong array-processing kernels."
+    },
+    {
+      "blob_id": "71786d34cf7cc5a8ffdf60d52c4e37436c407518",
+      "path": "/mrr.pyx",
+      "output": "mrr_metric.py",
+      "reason": "Grouped ranking metric computation is a useful evaluation-loop kernel for ML workflows."
+    },
+    {
+      "blob_id": "d06bc67359e7c968856e63466416256d905fca12",
+      "path": "/cutadapt/_qualtrim.pyx",
+      "output": "quality_trim.py",
+      "reason": "Bidirectional quality trimming algorithm is a practical sequence-processing routine."
+    },
+    {
+      "blob_id": "68009273390675f927d190a427a3470019ceda2a",
+      "path": "/toppra/_CythonUtils.pyx",
+      "output": "velocity_constraints.py",
+      "reason": "Velocity-constraint matrix construction is a numerically meaningful robotics/trajectory kernel."
+    },
+    {
+      "blob_id": "10277746bdbadce00402bcd55bcdcbb0216975e0",
+      "path": "/ForcePy/Basis.pyx",
+      "output": "force_basis_kernels.py",
+      "reason": "Quartic/Gaussian basis and integrated basis functions are reusable mesh-based force kernels."
+    },
+    {
+      "blob_id": "8c10eca3f564e03403e27da78ccbfa7953253e58",
+      "path": "/misc/advent/2017/16/c.pyx",
+      "output": "dance_permutations.py",
+      "reason": "Instruction parsing and repeated permutation transforms provide compact discrete-state update logic."
+    }
+  ],
+  "skipped": [
+    {
+      "blob_id": "e24d79d6938a064e49bdface61f1d53e59ddcf7f",
+      "path": "/tests/run/cdefoptargs.pyx",
+      "reason": "Cython language feature regression tests, not standalone algorithmic kernels."
+    },
+    {
+      "blob_id": "ef2ece5482948d428e6dc9869399030116d62baa",
+      "path": "/cython/smith/06_organizing_cython_code/simulator.pyx",
+      "reason": "Mostly placeholder stubs with pass statements and no substantive kernel logic."
+    },
+    {
+      "blob_id": "7acc02c33ef6677ec235fb83677b13736110f25f",
+      "path": "/util.pyx",
+      "reason": "Heavily domain-specific parsing/grid generation tied to project data format and assumptions."
+    }
+  ]
+}

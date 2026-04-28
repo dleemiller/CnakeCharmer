@@ -1,0 +1,64 @@
+{
+  "batch": "batch_0036",
+  "accepted": [
+    {
+      "blob_id": "f1413d13a2ae1a126c41dc0f0660467a59fe480f",
+      "path": "/PIV/sym_filt.pyx",
+      "output": "symmetric_filter_interp.py",
+      "reason": "Symmetric recursive filter plus high-order interpolation stencil gives strong numeric loop kernels."
+    },
+    {
+      "blob_id": "bcf49f76f91e1b27dd2da3d8bd385b06343160ce",
+      "path": "/kivy/graphics/buffer.pyx",
+      "output": "fixed_block_buffer.py",
+      "reason": "Fixed-size block allocator/free-list logic is a portable systems-style memory-management pattern."
+    },
+    {
+      "blob_id": "3084f9a8e8f40bce42380ff7de865b60ba302b82",
+      "path": "/sklearn/utils/arrayfuncs.pyx",
+      "output": "arrayfuncs_small.py",
+      "reason": "Positive-min scan and Cholesky update/delete behavior are useful linear-algebra utility kernels."
+    },
+    {
+      "blob_id": "2b9c7a4d43dc9b07534068430c5a4c398e0e6d60",
+      "path": "/hello.pyx",
+      "output": "crop_area_scan.py",
+      "reason": "Image crop-bound detection via directional scans is a compact branch-heavy array-processing example."
+    },
+    {
+      "blob_id": "22fdf789986defb8276d6c5d6069cb805e6f2be9",
+      "path": "/paper/analysis/scan_p_1000/with_water/rdf/_rdf.pyx",
+      "output": "radial_distribution.py",
+      "reason": "Radial distribution function computation with periodic boundary adjustments is a high-value simulation kernel."
+    },
+    {
+      "blob_id": "d998fb6b2ab4f3164bd008836fdaecaa3e895fa9",
+      "path": "/src/utils.pyx",
+      "output": "crypto_utils_bytes.py",
+      "reason": "PEM encode/decode and constant-time byte operations are practical security-oriented utility routines."
+    },
+    {
+      "blob_id": "226c2762dc1d18c6800902dc2b2bc3837cf7ab10",
+      "path": "/src/node.pyx",
+      "output": "branching_node_growth.py",
+      "reason": "Geometric branching-growth node model has rich stochastic and geometric control flow."
+    }
+  ],
+  "skipped": [
+    {
+      "blob_id": "5e42c15049bfb35113c3bd48433500c6e0c070bf",
+      "path": "/pykcp/ckcp.pyx",
+      "reason": "Thin wrapper around external KCP C API and callback plumbing; limited standalone portability."
+    },
+    {
+      "blob_id": "1d06b02f9f07f182688f143a135f69496ddf86e7",
+      "path": "/algorithms/sm/extract_paths_par.pyx",
+      "reason": "Multiprocessing orchestration tightly coupled to project graph/path dependencies."
+    },
+    {
+      "blob_id": "82d2cb73670af295a7b37354b0b8250a3bf48a12",
+      "path": "/pytraj/datasets/DatasetInteger.pyx",
+      "reason": "C++ backing-type wrapper with extension-specific pointer semantics; not a standalone conversion target."
+    }
+  ]
+}
