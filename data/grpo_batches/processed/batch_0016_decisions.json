@@ -1,0 +1,60 @@
+{
+  "batch": "batch_0016",
+  "accepted": [
+    {
+      "blob_id": "75d220171ebe3b2ad97ba8cc2b16effee32c3409",
+      "path": "/lowest_values.pyx",
+      "output": "low_value_candidate_search.py",
+      "reason": "Candidate filtering over sampled points is a practical iterative search kernel with branching and threshold updates."
+    },
+    {
+      "blob_id": "41288c4bd35bbb724e08d0aa205aa261d4781e12",
+      "path": "/revcomp_c2.pyx",
+      "output": "reverse_complement_map.py",
+      "reason": "Reverse-complement mapping is a compact sequence-processing kernel with straightforward loop optimization potential."
+    },
+    {
+      "blob_id": "44b1ec44b6b80f186065de8478f0efd1eabe17c2",
+      "path": "/stonemason/pyramid/hilbert.pyx",
+      "output": "hilbert_curve_bits.py",
+      "reason": "Bitwise Hilbert curve transforms are deterministic low-level kernels useful for algorithmic optimization traces."
+    }
+  ],
+  "skipped": [
+    {
+      "blob_id": "6f1875559c47fd4191653e3f7c463a1713bb5a3f",
+      "path": "/coro/zstack_lzo.pyx",
+      "reason": "Compression wrapper around external LZO library memory APIs, not a standalone Python kernel target."
+    },
+    {
+      "blob_id": "e3de7f4d094a105c3698b4f21a488ea0e85af29d",
+      "path": "/helperMethods1.pyx",
+      "reason": "Mixed utility module with IO/UI helpers and missing imports; low cohesion for focused optimization training."
+    },
+    {
+      "blob_id": "9c18184a13cc9cb219171aab419b398d0b43fb3b",
+      "path": "/nmsg_input.pyx",
+      "reason": "Large binding layer around external nmsg runtime and sockets, not suitable for standalone conversion examples."
+    },
+    {
+      "blob_id": "e3c10581020619b83f8954362913c3742886c514",
+      "path": "/FastABP/fastABP.pyx",
+      "reason": "Application-specific chess/MPI engine integration with heavy external state and dependencies."
+    },
+    {
+      "blob_id": "824bb979c0ed003aed6167117a6b6bc4cba66b2c",
+      "path": "/galpynamics/src/pot_halo/pot_c_ext/triaxial_exponential_halo.pyx",
+      "reason": "Complex scientific integration code tied to scipy callbacks and project-specific modules; too framework-bound."
+    },
+    {
+      "blob_id": "294dfde05b42743331423cf4e840192b43f6c90f",
+      "path": "/python/cython/buffers/c_pointers.pyx",
+      "reason": "Memory-allocation tutorial code emphasizing pointer ownership semantics rather than reusable optimization kernel tasks."
+    },
+    {
+      "blob_id": "75405ee92664835b35b5c92229fc5a7cf6f5de2e",
+      "path": "/pyharfbuzz/harfbuzz.pyx",
+      "reason": "FFI wrapper for Harfbuzz/Freetype shaping APIs, dominated by bindings and external object lifecycle logic."
+    }
+  ]
+}

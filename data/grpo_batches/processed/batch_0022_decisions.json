@@ -1,0 +1,62 @@
+{
+  "batch": "batch_0022",
+  "accepted": [
+    {
+      "blob_id": "fb16db77c9275fedd5ac3ac09a13f21bcd7bd24d",
+      "path": "/decision_tree_criterion.pyx",
+      "output": "decision_tree_metrics.py",
+      "reason": "Gini impurity, information gain, and split logic are compact tree-learning kernels with clear arithmetic/branching structure."
+    },
+    {
+      "blob_id": "c0b8d68b9d181c5039e6e627d60e20593340900a",
+      "path": "/day-05/part-2/bebert.pyx",
+      "output": "intcode_vm.py",
+      "reason": "Opcode interpreter loop with parameter modes and control-flow jumps is a useful state-machine optimization target."
+    },
+    {
+      "blob_id": "c75cce6f979add2c1b8b49a5e7889e4192864bdf",
+      "path": "/src/pycrop2ml_ui/packages/Simplace_SoilTemperature/crop2ml/algo/pyx/STMPsimCalculator.pyx",
+      "output": "soil_temperature_sim.py",
+      "reason": "Soil temperature damping-depth update is a compact environmental simulation kernel with repeated nonlinear transforms."
+    },
+    {
+      "blob_id": "ded312ba11841cb41df7e00df5f14a3818ae97a2",
+      "path": "/bootstrap/utils_ricker.pyx",
+      "output": "ricker_utils.py",
+      "reason": "Gamma-parameter transforms and vectorized parameter updates are compact math kernels with repeated exponent/log operations."
+    },
+    {
+      "blob_id": "ad0e5f9aa61a92c0455a60bb6187e0395667090c",
+      "path": "/sdks/python/apache_beam/transforms/cy_dataflow_distribution_counter.pyx",
+      "output": "distribution_counter.py",
+      "reason": "Histogram bucket index computation and streaming aggregate updates are practical low-level counting kernels."
+    }
+  ],
+  "skipped": [
+    {
+      "blob_id": "cc9ad8964c93b2d5f1fbdc12082cc66700a4623b",
+      "path": "/train_bot.pyx",
+      "reason": "Tightly coupled to project-specific C interfaces and assets; not a standalone kernel."
+    },
+    {
+      "blob_id": "6a3add8decc848cdf900efdb029ed15e51e28f0d",
+      "path": "/phi_cy.pyx",
+      "reason": "Depends on external breakage operator implementation and scientific stack specifics, limiting portability."
+    },
+    {
+      "blob_id": "6bdce481b9c95222491b13eb7cd2742bc5c74fdc",
+      "path": "/primo/linking/components.pyx",
+      "reason": "Application/linking object graph code is framework-heavy and not representative numeric optimization data."
+    },
+    {
+      "blob_id": "d56645c843678425c50b20ade6edda1452258ff9",
+      "path": "/cobjects.pyx",
+      "reason": "Low-level extension glue and object model handling are not ideal for reusable standalone GRPO examples."
+    },
+    {
+      "blob_id": "c3253f93d85d9fa78e94275b3b099489a4b60131",
+      "path": "/test7/test.pyx",
+      "reason": "Large geometry/prototyping code appears experimental and partially inconsistent for clean training extraction."
+    }
+  ]
+}

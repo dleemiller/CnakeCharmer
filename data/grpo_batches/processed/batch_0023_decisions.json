@@ -1,0 +1,62 @@
+{
+  "batch": "batch_0023",
+  "accepted": [
+    {
+      "blob_id": "4892f6b2269d8b66e0e87ad0ac93ae0deef34a20",
+      "path": "/ray_tracing/camera.pyx",
+      "output": "ray_camera_dof.py",
+      "reason": "Camera-ray construction with vector math and depth-of-field sampling gives a concise geometry kernel."
+    },
+    {
+      "blob_id": "312c0e884e89ad4cfb65d16c705f04ca88f0229a",
+      "path": "/traffic/algorithms/bresenham.pyx",
+      "output": "bresenham_grid_trace.py",
+      "reason": "Bresenham grid traversal is a classic branch-heavy integer kernel with clear optimization potential."
+    },
+    {
+      "blob_id": "b516fb724101fcb464760dcdf228706545cf7854",
+      "path": "/src/nanopyx/core/generate/noise_add_squares.pyx",
+      "output": "noise_add_squares.py",
+      "reason": "Region fill loops over random square windows are practical image-array update kernels."
+    },
+    {
+      "blob_id": "781afcb1e53a0810183822654e830e0a1998b937",
+      "path": "/assignments/hw-08/thomas2.pyx",
+      "output": "thomas_tridiag_solver.py",
+      "reason": "Thomas algorithm forward/back substitution is a strong linear-algebra baseline for Cython speedups."
+    },
+    {
+      "blob_id": "bcc12dd2f30e009f3e3bfb216ee78333169494f8",
+      "path": "/odyssey_setup/teleporting_mcmc/rejection_sample.pyx",
+      "output": "normal_sampling_mh.py",
+      "reason": "Rejection sampling and MH chain updates provide valuable probabilistic-loop optimization examples."
+    }
+  ],
+  "skipped": [
+    {
+      "blob_id": "dc0a0f48358f4cd54998787d8d5f3990a63e2b10",
+      "path": "/src/PETSc/Sys.pyx",
+      "reason": "Primarily wrapper/introspection API around PETSc runtime rather than standalone computational kernels."
+    },
+    {
+      "blob_id": "a0d0135f0700c2d1e1170027ebbebe8203eb1515",
+      "path": "/socnet/opt.pyx",
+      "reason": "Large file-IO and simulation orchestration workflow is too application-specific for focused kernel data."
+    },
+    {
+      "blob_id": "c67f82bdf255fbb85cc3836a190dec7935d65414",
+      "path": "/src/dilap/BROKEN/mesh/tetrahedralize.pyx",
+      "reason": "Marked broken/experimental and structurally inconsistent, reducing reliability as training data."
+    },
+    {
+      "blob_id": "f4593c2da11224d8bee4ea6cf11ec5976bafab7a",
+      "path": "/astrid/circle.pyx",
+      "reason": "Redis/audio buffering integration is infrastructure glue, not a reusable numeric optimization core."
+    },
+    {
+      "blob_id": "ab6c7ca2baecea5c99efe7d7f3fde33ff60d7297",
+      "path": "/lib_gutzwiller_simulated_annealing.pyx",
+      "reason": "Large specialized physics simulation with legacy constructs and domain coupling; deferred for later curation."
+    }
+  ]
+}

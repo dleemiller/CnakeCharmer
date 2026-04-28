@@ -1,0 +1,62 @@
+{
+  "batch": "batch_0025",
+  "accepted": [
+    {
+      "blob_id": "9d6d25265af8a1d73dda18208aef957d5638d693",
+      "path": "/Chapter04/cevolve.pyx",
+      "output": "orbital_particle_evolve.py",
+      "reason": "Particle position evolution with per-step normalization and tangential velocity updates is a compact numeric loop kernel."
+    },
+    {
+      "blob_id": "b7747fdb88bc7d3301e7417645b0c844b5e26e22",
+      "path": "/2_states/code_two_states/.ipynb_checkpoints/mutual_info-checkpoint.pyx",
+      "output": "mutual_info_partner.py",
+      "reason": "PMI tensor construction and assignment-based pairing provide rich nested-loop and indexing patterns relevant for optimization."
+    },
+    {
+      "blob_id": "196fc505b3ee04966d1db13fc8bc52cff3d50c35",
+      "path": "/python/eratosthene/eratosthene.pyx",
+      "output": "eratosthene_primes.py",
+      "reason": "Eratosthenes-style iterative filtering is a simple arithmetic/control-flow kernel useful as a baseline example."
+    },
+    {
+      "blob_id": "1f6d1cf1180ea6849c144a7a961daca17487c613",
+      "path": "/feemodel/stranding.pyx",
+      "output": "stranding_feerate.py",
+      "reason": "Stranding-feerate core and bootstrap resampling include practical ranking and sampling loops with clear algorithmic structure."
+    },
+    {
+      "blob_id": "213bdfbf1e84fbe71e48b9723b80b1c2302eb422",
+      "path": "/share.pyx",
+      "output": "shared_foo_struct.py",
+      "reason": "Struct packing/unpacking and mapped IO helpers are compact systems-level data handling kernels."
+    }
+  ],
+  "skipped": [
+    {
+      "blob_id": "50c955795386f40b9053cd3032b4b861caa21071",
+      "path": "/tests/run/control_flow_stack_allocation.pyx",
+      "reason": "Cython compiler regression test with stack-allocation semantics is not representative training data for conversion tasks."
+    },
+    {
+      "blob_id": "fa1dee0224052089f05f24b8c378ecd4cbe279f7",
+      "path": "/kivy/core/image/_img_sdl2.pyx",
+      "reason": "SDL image backend integration is heavily framework-specific and not a standalone computational kernel."
+    },
+    {
+      "blob_id": "d2fcbb54fbbdd541eafd8c4e0591c515131c818e",
+      "path": "/src/c_unstable.pyx",
+      "reason": "Large unstable scientific pipeline with manual memory management and external dependencies; unsuitable for lightweight curation."
+    },
+    {
+      "blob_id": "01835865c44d9d579d1847b2ae64180990f24d6f",
+      "path": "/tests/run/closure_inside_cdef_T554.pyx",
+      "reason": "Closure behavior test case is compiler-focused rather than a reusable optimization target."
+    },
+    {
+      "blob_id": "ddc8d05a4958b9e16d78c87c96b13daba2f8b795",
+      "path": "/wrapper/maxwell.pyx",
+      "reason": "Primarily C++ wrapper bindings around workspace objects; limited standalone algorithmic content for GRPO examples."
+    }
+  ]
+}

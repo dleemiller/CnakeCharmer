@@ -46,6 +46,22 @@ python -m vllm.entrypoints.openai.api_server \
 > [!IMPORTANT]
 > This model is designed primarily as a local agent backend for code tools such as Claude Code and Codex.
 
+> [!NOTE]
+> The CnakeCharmer tool-execution path uses Bubblewrap (`bwrap`) for sandboxing.
+> Install it before running MCP agent loops that call `evaluate_cython`.
+>
+> Linux install:
+> ```bash
+> # Debian / Ubuntu
+> sudo apt-get update && sudo apt-get install -y bubblewrap
+>
+> # Fedora
+> sudo dnf install -y bubblewrap
+>
+> # Arch
+> sudo pacman -S --noconfirm bubblewrap
+> ```
+
 ```bash
 # one-time setup
 git clone https://github.com/dleemiller/CnakeCharmer.git
@@ -60,6 +76,20 @@ uv run python -m cnake_charmer.mcp_server
 ```
 
 Then call `run_cython_agent` from your MCP client.
+
+## Add MCP To Your Client
+
+### Claude Code
+
+```bash
+claude mcp add cnake-charmer -- uv run python -m cnake_charmer.mcp_server
+```
+
+### Codex
+
+```bash
+codex mcp add cnake-charmer -- uv run python -m cnake_charmer.mcp_server
+```
 
 ## Typical Workflow
 

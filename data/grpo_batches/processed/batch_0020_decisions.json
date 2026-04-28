@@ -1,0 +1,62 @@
+{
+  "batch": "batch_0020",
+  "accepted": [
+    {
+      "blob_id": "75917a1e9b4495397ec06e37338b2db72f776ba9",
+      "path": "/charactertrigramfuzzyset/ccharactertrigramfuzzyset.pyx",
+      "output": "trigram_fuzzy_set.py",
+      "reason": "Character trigram indexing and normalized similarity scoring provide strong standalone string-kernel optimization signal."
+    },
+    {
+      "blob_id": "d76f7ffd50a9f734c50350ed0c4e78b8dd1cfc46",
+      "path": "/scripts/cygibbs.pyx",
+      "output": "gibbs_motif_core.py",
+      "reason": "Core Gibbs motif routines (frequency counting, propensity, entropy, posterior sampling) are high-value iterative kernels."
+    },
+    {
+      "blob_id": "069645606d1454ebfa54d1bce83e61dafbc0641a",
+      "path": "/aug/ctoolkits.pyx",
+      "output": "image_aug_kernels.py",
+      "reason": "Image augmentation loops (noise and bilinear resize) are practical pixel-wise kernels with clear performance characteristics."
+    },
+    {
+      "blob_id": "395ce7ddb23d90b2a974e6964d14f7839feed1be",
+      "path": "/tight_loop_3.pyx",
+      "output": "iterative_rank_loop.py",
+      "reason": "Iterative convergence loop over matrix/vector inputs is a classic numeric kernel useful for optimization traces."
+    },
+    {
+      "blob_id": "03aa6dda7a50bc7eb0fb211d952b3ded8bd2fb26",
+      "path": "/src/cpinyin/_cpinyin.pyx",
+      "output": "pinyin_tone_utils.py",
+      "reason": "Tone-mark decoding and pinyin conversion logic provide nontrivial Unicode/string transformation kernels."
+    }
+  ],
+  "skipped": [
+    {
+      "blob_id": "5a2fef2522469e7971681f02e477703eeef0d46f",
+      "path": "/Coercion.pyx",
+      "reason": "Language feature/coercion demonstration script rather than a coherent standalone optimization kernel."
+    },
+    {
+      "blob_id": "043d9e28830f4ea26bb7360150fd11203cab95fc",
+      "path": "/src_test/cython/test/return_list.pyx",
+      "reason": "Operator-overload test utility for custom list class; lower-value as general compute-kernel training data."
+    },
+    {
+      "blob_id": "24d2f84cd2e9b37d1f59af2bdf139fedd831465f",
+      "path": "/mandelbrot/cymandelbrot.pyx",
+      "reason": "Mandelbrot/fractal pattern is already represented in the existing unpaired set."
+    },
+    {
+      "blob_id": "9346645fd0667f910c59bf90a36be38089becff9",
+      "path": "/src/request.pyx",
+      "reason": "Request/channel lifecycle wrapper code is infrastructure-oriented rather than standalone computational kernel content."
+    },
+    {
+      "blob_id": "ba9ce2822f784bf0aa8397cf767c8351c5d1dc21",
+      "path": "/source/pysph/sph/funcs/xsph_funcs.pyx",
+      "reason": "Tightly coupled to pysph internals and external particle-array abstractions, limiting standalone portability."
+    }
+  ]
+}

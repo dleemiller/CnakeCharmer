@@ -1,0 +1,60 @@
+{
+  "batch": "batch_0015",
+  "accepted": [
+    {
+      "blob_id": "7caf2525dd9a6dad6b2d0aceb99f1a703007823b",
+      "path": "/imate/sample_matrices/_kernels.pyx",
+      "output": "spatial_kernel_functions.py",
+      "reason": "Kernel and distance functions are compact numerical primitives with strong loop/arithmetic optimization signal."
+    },
+    {
+      "blob_id": "2c06c2ceeec5de637c5ea4683edd4820d15e3e21",
+      "path": "/src_cython/tagger_utils.pyx",
+      "output": "compound_ngram_merge.py",
+      "reason": "N-gram merge scanning over token streams provides deterministic control-flow kernels useful for optimization traces."
+    },
+    {
+      "blob_id": "95d4b9235a2042cfc41a326f3cd37d9643ae5178",
+      "path": "/security/fastedit.pyx",
+      "output": "password_edit_variants.py",
+      "reason": "Combinatorial edit generation over strings creates high-iteration loops and dedup logic with clear speedup potential."
+    }
+  ],
+  "skipped": [
+    {
+      "blob_id": "14423d6797ca555dcd9a562b19200b1bd2812b0d",
+      "path": "/python-eyesight/eyesight/eyesight.pyx",
+      "reason": "UI/FFI wrapper around external EFL eyesight objects, not a standalone compute kernel."
+    },
+    {
+      "blob_id": "db8aa5c3bb38ef412ad1bb14ebb59d7d7f4e8e30",
+      "path": "/book_opt.pyx",
+      "reason": "Large application-specific orderbook framework with heavy external dependencies and stateful IO context."
+    },
+    {
+      "blob_id": "578ebe6ff24f79cbbe3fcdf32ff63b20071d81ba",
+      "path": "/dist_lda/main.pyx",
+      "reason": "Distributed LDA training loop depends on Redis model cache and project infrastructure, reducing standalone suitability."
+    },
+    {
+      "blob_id": "2b67bd25b67b24e4ff8d6c64296e797b1145f6f2",
+      "path": "/phd/gravity/gravity_pool.pyx",
+      "reason": "Manual memory-pool management is low-level systems code and not aligned with Python-to-Cython kernel conversion tasks."
+    },
+    {
+      "blob_id": "60afc631e1297ddf7f08412d2443cfedb4708349",
+      "path": "/tests/errors/cpdef_vars.pyx",
+      "reason": "Cython compiler warning test fixture, not training kernel content."
+    },
+    {
+      "blob_id": "44b6d8ebeefea07242d1097cfd2401a985d48661",
+      "path": "/load/improving_performance/cython_nth_prime/primes.pyx",
+      "reason": "Prime-checking loop pattern is already covered by existing prime kernels in the unpaired set."
+    },
+    {
+      "blob_id": "4a81c1e9ac30538460ac6bd370ac65f783bc0f32",
+      "path": "/angelos-common/src/angelos/common/cutil.pyx",
+      "reason": "Mostly thin utility wrappers and memory buffer class with limited standalone algorithmic signal."
+    }
+  ]
+}

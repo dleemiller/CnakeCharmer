@@ -128,9 +128,10 @@ from datasets import load_dataset
 
 raw = load_dataset("CnakeCharmer/CnakeCharmer", split="raw")
 sft = load_dataset("CnakeCharmer/CnakeCharmer", split="sft")
-grpo = load_dataset("CnakeCharmer/CnakeCharmer", split="grpo")
 parallel = load_dataset("CnakeCharmer/CnakeCharmer", split="parallel")
 ```
+
+`grpo` is planned and not currently published as a dataset split.
 
 ## Contributing
 

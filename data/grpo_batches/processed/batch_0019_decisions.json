@@ -1,0 +1,62 @@
+{
+  "batch": "batch_0019",
+  "accepted": [
+    {
+      "blob_id": "85161aae0a2d93f7288e5a51f4d6c7cf1cf85deb",
+      "path": "/karta/vector/vectorgeo.pyx",
+      "output": "vector_geometry_utils.py",
+      "reason": "Vector geometry primitives (orientation, nearest-point, bbox/hash utilities) are strong standalone computational kernels."
+    },
+    {
+      "blob_id": "3e27941d988fee0bfea7869ac82368c6df05d1cd",
+      "path": "/hisser/pack.pyx",
+      "output": "rle_pack_doubles.py",
+      "reason": "Run-length style packing/unpacking of numeric arrays is a practical performance-oriented data transformation kernel."
+    },
+    {
+      "blob_id": "acb74fff163ffdf75579fceca41f926c09a5bfa3",
+      "path": "/solgragen/human_solver/unique.pyx",
+      "output": "sudoku_unique_candidate.py",
+      "reason": "Sudoku unique-candidate scan across row/col/block areas is deterministic grid logic with clear optimization structure."
+    },
+    {
+      "blob_id": "ed2fb8e55f13c702740fbc6713f86fffe328610e",
+      "path": "/v_value.pyx",
+      "output": "shapley_v_values.py",
+      "reason": "Subsequence enumeration and cumulative valuation are useful combinatorial kernels for algorithmic trace diversity."
+    },
+    {
+      "blob_id": "48733729ebc2406e4690c84b580fa39a6f498240",
+      "path": "/cython_utils/aliassampler.pyx",
+      "output": "alias_sampler.py",
+      "reason": "Alias-table initialization and O(1) categorical sampling are high-value probabilistic algorithm kernels."
+    }
+  ],
+  "skipped": [
+    {
+      "blob_id": "fffbee2f1c959d37e63bfbf05b34eac423ba39cf",
+      "path": "/tests/run/defnode_err_val.pyx",
+      "reason": "Cython type error behavior test, not kernel training content."
+    },
+    {
+      "blob_id": "13a54112826f65abc56bebea8213276481f725f3",
+      "path": "/tests/run/r_docstrings.pyx",
+      "reason": "Docstring semantics test module with no performance-kernel signal."
+    },
+    {
+      "blob_id": "d1f33693669c251972cecf7a4f93490e4da9a60e",
+      "path": "/pb_bss_eval/extraction/cythonized/get_gev_vector.pyx",
+      "reason": "Heavily tied to SciPy LAPACK bindings and external numeric stack; not a clean standalone conversion example."
+    },
+    {
+      "blob_id": "d031fb9528bedfbafa549b7a530d786588d9d490",
+      "path": "/PFI_Morph/pfimorph/binvox2vdb.pyx",
+      "reason": "Mostly wrapper/interop code around external C++ conversion classes rather than reusable compute kernels."
+    },
+    {
+      "blob_id": "89728a55685ef49db05e3d7567d657f1e857b499",
+      "path": "/primes.pyx",
+      "reason": "Prime/factorization patterns are already represented in the current unpaired set, so this would be low-diversity duplication."
+    }
+  ]
+}
