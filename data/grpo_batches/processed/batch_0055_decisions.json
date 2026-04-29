@@ -1,0 +1,64 @@
+{
+  "batch": 55,
+  "accepted": [
+    {
+      "blob_id": "fcd07e8dbeba0b6f184b4b5d619249e7b06d03e6",
+      "path": "/pytreebank/labeled_tree.pyx",
+      "output": "tree_depth_groups.py",
+      "reason": "Depth-bucket grouping with max-depth tracking is compact structural loop logic useful for conversion tasks."
+    },
+    {
+      "blob_id": "4ce994c8dc68dca7e032ebe74236a2c159fbfc03",
+      "path": "/ICython/Sierpe/BLR.pyx",
+      "output": "blr_deconvolution.py",
+      "reason": "Accumulator-based baseline restoration is a strong streaming signal-processing kernel with stateful updates."
+    },
+    {
+      "blob_id": "889a53ddedb4384ca4df0e7a85f26ca6f9760917",
+      "path": "/svae/hmm/cython_hmm_inference.pyx",
+      "output": "hmm_inference_core.py",
+      "reason": "HMM forward recursion and log-sum-exp normalization are high-value probabilistic DP kernels."
+    },
+    {
+      "blob_id": "26c1aaeb096dfa0d075e45a0eaa66689feea4a78",
+      "path": "/complex_generators.pyx",
+      "output": "lfsr_geffe_generators.py",
+      "reason": "LFSR state-transition logic and Geffe combiner add concise bit-level sequence generation patterns."
+    },
+    {
+      "blob_id": "a13a30006efa62505135e21cf7ff5cf541a61bff",
+      "path": "/mandelbrot/mandel2c_cy.pyx",
+      "output": "mandelbrot_point.py",
+      "reason": "Mandelbrot escape iteration is a classic arithmetic loop benchmark with clear optimization behavior."
+    },
+    {
+      "blob_id": "74e2a2913f0965187c79281a9b71c6d143b2e6ba",
+      "path": "/code/cython/stochastic_gradient_descent.pyx",
+      "output": "sgd_linear_regression.py",
+      "reason": "Mini-batch SGD update loops provide practical ML optimization kernels for conversion training."
+    },
+    {
+      "blob_id": "7f5256c0406ae793c30d272e394f3c77ab3381c3",
+      "path": "/src/gm/dynamic_programming.pyx",
+      "output": "floyd_warshall_path.py",
+      "reason": "Floyd-Warshall with footprint reconstruction is a canonical dynamic-programming shortest-path kernel."
+    }
+  ],
+  "skipped": [
+    {
+      "blob_id": "d505304a06ec206b5fc5bd6bffee9995c37bbe59",
+      "path": "/cftw.pyx",
+      "reason": "Primarily a system wrapper around ftw/nftw callbacks and stat structs rather than standalone compute logic."
+    },
+    {
+      "blob_id": "235d57d9066ea6796ad6bb86eb470e958fb3b46f",
+      "path": "/guided.pyx",
+      "reason": "Heavily tied to external OpenCV/scientific image pipeline; not ideal as portable standalone GRPO conversion sample."
+    },
+    {
+      "blob_id": "b95e48a5166c1b35ce43a52e772205e630f92c0b",
+      "path": "/cyexpdecay.pyx",
+      "reason": "Very small micro-benchmark wrapper with limited algorithmic depth relative to other candidates in this batch."
+    }
+  ]
+}

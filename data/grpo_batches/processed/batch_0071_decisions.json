@@ -1,0 +1,63 @@
+{
+  "batch": 71,
+  "accepted": [
+    {
+      "blob_id": "af51bbea0664a68d9b49383e43a593036fee1fe3",
+      "path": "/DelaunayDream/triangulation/get_points.pyx",
+      "output": "triangulation_point_sampler.py",
+      "reason": "Structured point generation with deterministic jitter provides reusable geometry/data-generation loops."
+    },
+    {
+      "blob_id": "f479b9791898a9bfe92d7a5c6c0dae237d1a6dbc",
+      "path": "/old/linreg_squared_test.pyx",
+      "output": "linreg_squared_objective.py",
+      "reason": "Linear-regression error and gradient accumulation is a clean numeric optimization kernel."
+    },
+    {
+      "blob_id": "b834ccf19febbdf72a3a549d9e9679990f549299",
+      "path": "/ga-sensor-node-optimization/cython/GAeval.pyx",
+      "output": "ga_sensor_fitness.py",
+      "reason": "GA fitness evaluation with coverage checks is a strong nested-loop combinatorial workload."
+    },
+    {
+      "blob_id": "3d0585704ace4506e4ad6d1a526defe717a6d0a8",
+      "path": "/pydefect/corrections/_calc_ewald_sum.pyx",
+      "output": "ewald_pair_accumulator.py",
+      "reason": "Pairwise electrostatic-style accumulation is a classic high-value numerical kernel."
+    },
+    {
+      "blob_id": "e3195496bb2c568098ac5359e5e6f12d63afe894",
+      "path": "/src/ratvec/similarity_fast.pyx",
+      "output": "vector_similarity_fast.py",
+      "reason": "Cosine similarity and all-pairs matrix construction are common dense-vector optimization workloads."
+    },
+    {
+      "blob_id": "7d60720e7df6c7d7804849675b3ce6c8b5e74ef9",
+      "path": "/Cython/GoLPara.pyx",
+      "output": "game_of_life_step.py",
+      "reason": "Game-of-Life update step is a compact stencil-like cellular automata kernel."
+    }
+  ],
+  "skipped": [
+    {
+      "blob_id": "10f830dd6b575594f4feeebd408f73e8d9b7d08b",
+      "path": "/src/nfci2c.pyx",
+      "reason": "Hardware protocol binding/integration code is less suitable as general Cython optimization supervision."
+    },
+    {
+      "blob_id": "47c1d02be8f50a02328d5fcd87a528090aedd177",
+      "path": "/pytraj/datasets/DatasetDouble.pyx",
+      "reason": "Dataset container internals are framework-specific glue rather than reusable compute kernels."
+    },
+    {
+      "blob_id": "926559bbf2c0b1c36163b8a678f395f2241c44dc",
+      "path": "/trex_client/external_libs/pyzmq-14.5.0/python2/cel59/64bit/zmq/backend/cython/utils.pyx",
+      "reason": "Vendored pyzmq utility code is dependency/runtime glue, not ideal for conversion training."
+    },
+    {
+      "blob_id": "86d07ce0cacada624d12662b56c1d515e34a0c0c",
+      "path": "/pv056_2019/outlier_detection/RFOEX.pyx",
+      "reason": "Project-specific outlier routine appears tightly coupled and less transferable for generic optimization traces."
+    }
+  ]
+}

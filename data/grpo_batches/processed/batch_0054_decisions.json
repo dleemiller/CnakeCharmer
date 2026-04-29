@@ -1,0 +1,66 @@
+{
+  "batch": 54,
+  "accepted": [
+    {
+      "blob_id": "b405f3f1d8fb9525e37ed9f5e0b816d2824fe148",
+      "path": "/confounded_glm/fitting/_fit.pyx",
+      "output": "lava_logistic_utils.py",
+      "reason": "Logistic loss/gradient with LAVA-style threshold recovery is a strong optimization kernel."
+    },
+    {
+      "blob_id": "0c2396125dbb2fad04368ecab74ad7596ca9a7a6",
+      "path": "/pyansys/cython/_relaxmidside.pyx",
+      "output": "midside_relaxation.py",
+      "reason": "Midside-node relaxation over element edges is a concise geometry update kernel with dense arithmetic loops."
+    },
+    {
+      "blob_id": "25b3b452e56c19cb71e4b5b248e4cdede5ad4b8a",
+      "path": "/ForcePy/NeighborList.pyx",
+      "output": "neighborlist_core.py",
+      "reason": "Periodic minimum-image and cell-binning logic are classic simulation acceleration patterns."
+    },
+    {
+      "blob_id": "346e19a12484e62821a4023b82165757e19bf416",
+      "path": "/synaptor/seg_utils/_seg_utils.pyx",
+      "output": "seg_centers_of_mass.py",
+      "reason": "3D centroid accumulation over labeled voxels is a high-value nested-loop data-reduction kernel."
+    },
+    {
+      "blob_id": "a257b8fdbc0190c15bb2d2614b2dae737b70df1c",
+      "path": "/convolution/cython/kernels.pyx",
+      "output": "convolution_kernels.py",
+      "reason": "Stencil-like convolution loops are direct, high-signal targets for numerical optimization."
+    },
+    {
+      "blob_id": "fffaf847289220309e25db832114c04e1e82d979",
+      "path": "/socr/text/codecs/language/word_beam_search.pyx",
+      "output": "word_beam_search_core.py",
+      "reason": "Beam-search decoding with blank/non-blank transitions captures useful dynamic-programming style structure."
+    },
+    {
+      "blob_id": "6ec9ae29a81c68d53d407920619a97f9fe51bdea",
+      "path": "/pandas/_libs/groupby.pyx",
+      "output": "groupby_object_ops.py",
+      "reason": "Nth/last object aggregation per group is a practical table-processing kernel with branch-heavy loops."
+    },
+    {
+      "blob_id": "7e8671551898c8b561b79e65d15f2530ac1b0c49",
+      "path": "/pyvisual/node/value.pyx",
+      "output": "connected_value_state.py",
+      "reason": "Connected/manual state propagation and change-tracking logic is useful agentic runtime control flow data."
+    },
+    {
+      "blob_id": "353b55fa4b7380deea63e166fb9f4efe2145572f",
+      "path": "/TimeTablePython/dna.pyx",
+      "output": "dna_schedule_ga.py",
+      "reason": "Genetic schedule representation with selection/mutation fitness loops adds combinatorial optimization variety."
+    }
+  ],
+  "skipped": [
+    {
+      "blob_id": "183d995fc28e14810905b9c9cda63038e0a8ab1c",
+      "path": "/src/iscool_e/pynba/reporter.pyx",
+      "reason": "Primarily message/reporting and socket/protobuf integration, not a standalone computational kernel."
+    }
+  ]
+}

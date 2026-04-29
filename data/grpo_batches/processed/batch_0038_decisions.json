@@ -1,0 +1,65 @@
+{
+  "batch": 38,
+  "accepted": [
+    {
+      "blob_id": "0d96cae7b9130295cad88fcdc11a04457d3d4be7",
+      "path": "/src/utils/bsonHelp/bsonHelp.pyx",
+      "output": "bson_numpy_codec.py",
+      "reason": "BSON decode and encode helpers over NumPy-friendly structures provide practical serialization kernels."
+    },
+    {
+      "blob_id": "a9b3f669ed9e7c151ffe4e1d3ce3bd82239618e2",
+      "path": "/nitrogen/cython/test.pyx",
+      "output": "nitrogen_matrix_ops.py",
+      "reason": "Matrix inversion, determinant, and rank routines form a solid numeric linear algebra example set."
+    },
+    {
+      "blob_id": "904aeff14e29ea7b2ad9c93b7c370ee0288816fc",
+      "path": "/src/distance/pstmatching.pyx",
+      "output": "pst_matching_distance.py",
+      "reason": "Histogram and profile matching distance code gives a compact feature-engineering style numeric kernel."
+    },
+    {
+      "blob_id": "8671b313f638177bab5c6fab87d602bf05d41753",
+      "path": "/pytune/functions.pyx",
+      "output": "pytune_weights.py",
+      "reason": "Weighted means, aggregate errors, and helper statistics are reusable vectorized optimization primitives."
+    },
+    {
+      "blob_id": "fd41f303dd5ad8616eb4a7c5862641c95362a349",
+      "path": "/DistanceMetrics/euclidean.pyx",
+      "output": "euclidean_distance_metric.py",
+      "reason": "Straightforward Euclidean distance loops are clear baseline kernels for speedup-oriented training."
+    },
+    {
+      "blob_id": "f9a24deabbec6860557dd19d0ac5819777660e4d",
+      "path": "/src/cLut_performance.pyx",
+      "output": "lut_performance.py",
+      "reason": "Lookup-table accumulation and benchmark-style loops map well to classic Cython optimization tasks."
+    },
+    {
+      "blob_id": "4cee746f160ab9270eb53e6ec9b01df0a1fcf159",
+      "path": "/player/cvec2.pyx",
+      "output": "cvec2_ops.py",
+      "reason": "2D vector arithmetic and geometry operations are compact and broadly useful math kernels."
+    },
+    {
+      "blob_id": "eec09fbb83ef3d8ea33432e3f0728a90c08b4b14",
+      "path": "/cupy/util.pyx",
+      "output": "device_memoize.py",
+      "reason": "Device-aware memoization and utility caching logic provides practical performance-pattern examples."
+    }
+  ],
+  "skipped": [
+    {
+      "blob_id": "cbb6bc6418af79718efdeb9b4c8da5f8d00d4db2",
+      "path": "/challenge/python/queries_IBE_cython.pyx",
+      "reason": "Large project-specific query wrappers with weak standalone kernel value for GRPO unpaired set."
+    },
+    {
+      "blob_id": "d3ec6377c063708e156c0c3d69683374b26e33fb",
+      "path": "/old/super_fast_bot.pyx",
+      "reason": "Legacy bot/game logic is highly domain-specific and not a good fit for general Cython speedup training."
+    }
+  ]
+}

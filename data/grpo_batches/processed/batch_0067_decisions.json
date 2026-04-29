@@ -1,0 +1,69 @@
+{
+  "batch": 67,
+  "accepted": [
+    {
+      "blob_id": "6638bd3700b392e755bc968f1eab76dfbfb9c2de",
+      "path": "/wit_tooling/polygon_drill.pyx",
+      "output": "polygon_area_metrics.py",
+      "reason": "Polygon-mask coverage and validity aggregation loops are strong geospatial array-processing kernels."
+    },
+    {
+      "blob_id": "aabc954d9e2b1b68593249aee65c99886b8b0095",
+      "path": "/imate/sample_matrices/_generate_points.pyx",
+      "output": "generate_points_hypercube.py",
+      "reason": "Structured-grid and random point generation in hypercubes is useful geometry sampling logic."
+    },
+    {
+      "blob_id": "93faeea6c273e8bc6c03ca90aba6496958483fc8",
+      "path": "/learnC/C_bisect.pyx",
+      "output": "bisect_root_solver.py",
+      "reason": "Bisection root finding over parameterized quartics is a compact numerical solver kernel."
+    },
+    {
+      "blob_id": "36859327b469a4c3218134da9cc05f900e55787f",
+      "path": "/levenshtein/levenshtein.pyx",
+      "output": "weighted_levenshtein.py",
+      "reason": "Recursive memoized weighted edit distance provides high-signal dynamic-programming structure."
+    },
+    {
+      "blob_id": "bc8e9c882213f4eb447daac797c41fd1b50dd369",
+      "path": "/Chapter07/cevolve.pyx",
+      "output": "particle_orbit_evolution.py",
+      "reason": "Iterative particle coordinate updates with per-particle angular dynamics are strong simulation loops."
+    },
+    {
+      "blob_id": "bdc816d29d3cd4024ecb1f213ca805c1e20409bd",
+      "path": "/timeseries/filtering.pyx",
+      "output": "kalman_filter_loglik.py",
+      "reason": "Kalman filtering and log-likelihood accumulation are practical time-series inference kernels."
+    },
+    {
+      "blob_id": "6f683b792fbcbc447550aa911c1be3fd3e29cda3",
+      "path": "/epistasis/decomposition.pyx",
+      "output": "epistasis_dv_matrix.py",
+      "reason": "Dummy-variable interaction matrix construction is a compact combinatorial encoding kernel."
+    }
+  ],
+  "skipped": [
+    {
+      "blob_id": "4f6193803ec4cc2f74ded254553d84f8d0df7ca7",
+      "path": "/tests/run/cypclass_pyobject_conversion.pyx",
+      "reason": "Cython language/runtime conversion tests are not standalone optimization targets."
+    },
+    {
+      "blob_id": "d0d72bef06596db001bca6ad85d8ef98bea52d29",
+      "path": "/fast_weights_opt.pyx",
+      "reason": "Mostly thin SciPy minimize wiring around project-specific economic objective and external parameters."
+    },
+    {
+      "blob_id": "acc2e03ebf6bdcbcb605800abf302f6df0ac054a",
+      "path": "/biclass/_model.pyx",
+      "reason": "scikit-learn internal tree wrapper glue is integration-heavy and not broadly reusable as conversion data."
+    },
+    {
+      "blob_id": "0a5d8ae0a05f9ed4ce04362b263c3d1aea62b412",
+      "path": "/thriftworker/transports/framed/connection.pyx",
+      "reason": "Evented network transport state machine is framework/protocol glue rather than numerical optimization logic."
+    }
+  ]
+}

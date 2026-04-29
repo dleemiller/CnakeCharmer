@@ -1,0 +1,63 @@
+{
+  "batch": 53,
+  "accepted": [
+    {
+      "blob_id": "8167dd77fa3f63fdf8aca4c0de4bd24c49ff11ed",
+      "path": "/cythonTest/moduleExer/gcd/calcpi.pyx",
+      "output": "coprime_pi_estimator.py",
+      "reason": "Coprime-pair counting with double nested loops is a straightforward arithmetic kernel for optimization tasks."
+    },
+    {
+      "blob_id": "76f63d964011dc34db583b270309f071d5abb74c",
+      "path": "/gaussians.pyx",
+      "output": "gaussian_kernels.py",
+      "reason": "Gaussian and mixture accumulation loops are high-value numeric kernels with clear vectorization opportunities."
+    },
+    {
+      "blob_id": "a372732299c4aa6b85814227a9e0d0b0a25e830d",
+      "path": "/mem_alloc/mem_alloc.pyx",
+      "output": "random_noise_alloc.py",
+      "reason": "Tight random-sample generation loops provide simple performance-critical baseline kernels."
+    },
+    {
+      "blob_id": "1ced0f6d38d05f283ace6d95f39a10203d517760",
+      "path": "/TM/Models/vanilla_LDA/LDAGibbs.pyx",
+      "output": "lda_gibbs_core.py",
+      "reason": "Collapsed Gibbs topic resampling is a strong probabilistic nested-loop kernel family for Cython conversion."
+    },
+    {
+      "blob_id": "4fb1c901ea2cba3d88e696c302947ee526010847",
+      "path": "/mlda.pyx",
+      "output": "mlda_core.py",
+      "reason": "Multimodal topic-model sampling and likelihood evaluation add diverse probabilistic matrix/count-update patterns."
+    },
+    {
+      "blob_id": "f01108f1cb462ed5cded8ed79c2d3adff762f3f4",
+      "path": "/ctc_pyx/ctc.pyx",
+      "output": "ctc_beam_search_core.py",
+      "reason": "Beam-search decoding with blank/non-blank bookkeeping is a high-signal dynamic-programming style kernel."
+    }
+  ],
+  "skipped": [
+    {
+      "blob_id": "3b4eb1adee6fa916a4a5ec35c48415f1cdfb20a7",
+      "path": "/kerl/kerl.pyx",
+      "reason": "Depends on project-specific trit/byte conversion and hash-state plumbing; less portable as standalone GRPO example."
+    },
+    {
+      "blob_id": "47b10d23703259077df87d7588a5abe7814ad1f2",
+      "path": "/bench/point.pyx",
+      "reason": "Benchmark harness around external point classes rather than self-contained compute logic."
+    },
+    {
+      "blob_id": "166f7dec545da063efa48a4f03afb20940c95ba8",
+      "path": "/deepgmap/post_train_tools/cython_util.pyx",
+      "reason": "Large IO/scipy-heavy motif pipeline with external coupling; lower standalone conversion value for this dataset."
+    },
+    {
+      "blob_id": "df61cc9bf077eca5c8db8328209816f0cf1a04f8",
+      "path": "/dartsclone/_dartsclone.pyx",
+      "reason": "Primarily a C++ wrapper/binding layer with manual memory management, not a direct Python kernel target."
+    }
+  ]
+}

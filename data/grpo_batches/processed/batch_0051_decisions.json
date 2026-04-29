@@ -1,0 +1,66 @@
+{
+  "batch": 51,
+  "accepted": [
+    {
+      "blob_id": "9b91df003ad3672f2c581c7730c79548f6854743",
+      "path": "/trioasm/whatshap/whatshap/align.pyx",
+      "output": "edit_distance_banded.py",
+      "reason": "Banded and unbanded edit-distance dynamic programming is a strong string DP optimization kernel."
+    },
+    {
+      "blob_id": "518e338021501c21a7d6f5e9f1e91b23ba283015",
+      "path": "/pysam/cutils.pyx",
+      "output": "quality_string_utils.py",
+      "reason": "Quality-score encoding and conversion loops are practical sequence-processing kernels with clean numeric/string transforms."
+    },
+    {
+      "blob_id": "b2dc103f199f69b291767ef4ba552fd902df532c",
+      "path": "/pmaf/internal/_extensions/_cython/_source/cython_functions.pyx",
+      "output": "taxa_lineage_utils.py",
+      "reason": "Taxonomy lineage assembly over tabular input has dictionary/list-heavy hot paths suitable for optimization profiling."
+    },
+    {
+      "blob_id": "59ce513d6d55fcf393dc336de06b3f5208fe1991",
+      "path": "/Cassiopeia/ProcessingPipeline/process/sequencing/sw_cython.pyx",
+      "output": "smith_waterman_utils.py",
+      "reason": "Local-alignment matrix fill and backtracking are high-value bioinformatics DP kernels."
+    },
+    {
+      "blob_id": "cf1b482cd0a083905773490f8fb7afa02551a2d1",
+      "path": "/cutadapt/_qualtrim.pyx",
+      "output": "quality_trim_single.py",
+      "reason": "Single-pass quality trimming is a concise, realistic loop optimization example for preprocessing workloads."
+    },
+    {
+      "blob_id": "3d8251a9ed49a6333002e3303db0403903e92209",
+      "path": "/topicmodel.pyx",
+      "output": "topic_model_gibbs.py",
+      "reason": "Collapsed Gibbs sampling for topic models provides substantial nested-loop probabilistic compute structure."
+    },
+    {
+      "blob_id": "5d811d62aaee45cb1e20763a809ea3d651da1b2a",
+      "path": "/cypyffx/cyffx.pyx",
+      "output": "ffx_core.py",
+      "reason": "Radix arithmetic and round-function byte operations are compact cryptographic-style numeric kernels."
+    },
+    {
+      "blob_id": "fe2ef39f0d70670ba40f4d0a4951cce091b57300",
+      "path": "/bonus/cython_impl.pyx",
+      "output": "collatz_longest.py",
+      "reason": "Collatz trajectory scanning is an integer-heavy benchmark-style loop kernel useful for baseline optimization tasks."
+    },
+    {
+      "blob_id": "6aec64b7af42df7a8801219dd8f6b7baa127aeed",
+      "path": "/guides to algorithms/Guia01/PythonCython/fiboRec_cy.pyx",
+      "output": "fibo_recursive_timing.py",
+      "reason": "Recursive Fibonacci timing harness is a lightweight recursion/perf-pattern example with clear conversion opportunities."
+    }
+  ],
+  "skipped": [
+    {
+      "blob_id": "86136d1fbddf6769a9866e7312208c95b653451e",
+      "path": "/tests/run/import_star.pyx",
+      "reason": "Cython language test fixture rather than a meaningful standalone compute kernel for GRPO data."
+    }
+  ]
+}

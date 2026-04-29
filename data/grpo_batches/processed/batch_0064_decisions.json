@@ -1,0 +1,65 @@
+{
+  "batch": 64,
+  "accepted": [
+    {
+      "blob_id": "e6cf76b018cea2ce2b2c0c483a82f955e3a88aef",
+      "path": "/gps_util/geohash.pyx",
+      "output": "geohash_codec.py",
+      "reason": "Geohash bit-interleaving encode/decode loops are compact geospatial numeric kernels."
+    },
+    {
+      "blob_id": "1e2beb43d0e1e7ded35edd8f093727129ad997b2",
+      "path": "/lnn.pyx",
+      "output": "nearest_label_classifier.py",
+      "reason": "Prototype compression and nearest-distance classification are practical lightweight ML kernels."
+    },
+    {
+      "blob_id": "7b08b5d1d99049c1e31d0449ff1a2ed501e2ade0",
+      "path": "/vecfuncs.pyx",
+      "output": "vector_geometry_ops.py",
+      "reason": "Vector algebra, segment intersection, and reflection primitives provide reusable geometry optimization patterns."
+    },
+    {
+      "blob_id": "f8e16fcf724049abcb06d7c069d8f9b90b82afe2",
+      "path": "/association_measures/binomial.pyx",
+      "output": "binomial_choose.py",
+      "reason": "Binomial coefficient accumulation is a concise combinatorics kernel with simple loop arithmetic."
+    },
+    {
+      "blob_id": "0002f5b2010c654602ad2d25652908971e8f6a36",
+      "path": "/taco/lib/cpathfinder.pyx",
+      "output": "dag_pathfinder.py",
+      "reason": "Topological dynamic path extraction from DAGs is high-value graph optimization logic."
+    },
+    {
+      "blob_id": "a497082500edc5efe86547084bca57cc71de0571",
+      "path": "/Task17/worker.pyx",
+      "output": "spinlock_buffer.py",
+      "reason": "Spinlock-style circular insertion and position-tracking loops are strong iterative state-update kernels."
+    },
+    {
+      "blob_id": "7b3e4e89c225a0b4e1c03c62a170b0507418f622",
+      "path": "/clogistic.pyx",
+      "output": "logistic_sgd_variants.py",
+      "reason": "Dense/sparse stochastic logistic updates provide realistic iterative optimization workloads."
+    },
+    {
+      "blob_id": "a36f37a3bcb33242d5dee76ed961a862764296b8",
+      "path": "/raynet/raynet/utils/fast_utils.pyx",
+      "output": "ray_triangle_intersections.py",
+      "reason": "Moller-Trumbore ray-triangle intersection loops are classic 3D geometry acceleration kernels."
+    }
+  ],
+  "skipped": [
+    {
+      "blob_id": "2df5108f85d64264c0167a3209145fa63bd556b8",
+      "path": "/stim_experiment/alg.pyx",
+      "reason": "Mostly C-wrapper data-structure glue (external calg dependency) with low standalone Python-kernel value."
+    },
+    {
+      "blob_id": "dfdea969cc5a841772659a3ab040d4c059b381f3",
+      "path": "/basic/_preprocess.pyx",
+      "reason": "Heavy OpenCV/SciPy image pipeline integration; less suitable as a concise standalone GRPO conversion target."
+    }
+  ]
+}

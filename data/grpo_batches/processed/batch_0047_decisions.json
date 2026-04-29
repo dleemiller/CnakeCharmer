@@ -1,0 +1,65 @@
+{
+  "batch": 47,
+  "accepted": [
+    {
+      "blob_id": "7e53e694a1895aaccae03f57199eb327781cdb0c",
+      "path": "/python/_creg.pyx",
+      "output": "creg_dataset_utils.py",
+      "reason": "Feature-map conversion and dataset bookkeeping form practical structured preprocessing kernels."
+    },
+    {
+      "blob_id": "9e851ad911cc28ded19a54b7b580e12e55144827",
+      "path": "/castrays.pyx",
+      "output": "raycast_core.py",
+      "reason": "Raycasting trigonometric table setup and camera-plane math are useful graphics computation patterns."
+    },
+    {
+      "blob_id": "1655227a3d11c6da1f3ef87a787d634e4034da49",
+      "path": "/src/datasets/CFlight.pyx",
+      "output": "flight_record.py",
+      "reason": "Compact typed record model with equality semantics is reusable dataset-entity logic."
+    },
+    {
+      "blob_id": "fd9543157639c85603cefc88416e572d59c52254",
+      "path": "/misc/cfunctions.pyx",
+      "output": "grid_interpolation_kernels.py",
+      "reason": "Binary search, interpolation weights, and utility kernels are high-signal numeric primitives."
+    },
+    {
+      "blob_id": "97007c896ca6a8407f4218e350330c0b74b5e369",
+      "path": "/crossing_tree/_crossing.pyx",
+      "output": "crossing_tree.py",
+      "reason": "Crossing-level detection and interpolation over sampled trajectories provide strong time-series kernels."
+    },
+    {
+      "blob_id": "166c294c24bd183908e1277310ca534bf4cf45b1",
+      "path": "/recommenders/cython_recommenders/SLIM_MSE_fast.pyx",
+      "output": "slim_mse_train.py",
+      "reason": "Sparse-profile SGD updates for item-item similarity are robust recommender optimization workloads."
+    },
+    {
+      "blob_id": "c83876ea9285d011178e81e13fb548a6611f0d28",
+      "path": "/pokeher/handscore.pyx",
+      "output": "poker_handscore.py",
+      "reason": "Hand ranking and best-combination search contain clear combinatorial evaluation logic."
+    },
+    {
+      "blob_id": "e73b711820db42d5d8abde8a4f8b11683b66137e",
+      "path": "/phd/equation_state/equation_state.pyx",
+      "output": "ideal_gas_eos.py",
+      "reason": "Primitive/conservative variable transforms and sound-speed computation are core scientific kernels."
+    }
+  ],
+  "skipped": [
+    {
+      "blob_id": "f5ec80ca822c79ef0a80f229c6f4f4a8bc7df6ea",
+      "path": "/structure/improved_simulator.pyx",
+      "reason": "Placeholder/template-like code with ellipses is incomplete and not usable as concrete training example."
+    },
+    {
+      "blob_id": "3e16048d99c951ce733b146c3f9d96beaa71c219",
+      "path": "/tests/run/classbody_exec.pyx",
+      "reason": "Cython language behavior regression test, not a standalone optimization kernel."
+    }
+  ]
+}

@@ -1,0 +1,64 @@
+{
+  "batch": 68,
+  "accepted": [
+    {
+      "blob_id": "80f06f9ea313ede81c8af51c5e9a80962f80b51e",
+      "path": "/primes.pyx",
+      "output": "primes_list.py",
+      "reason": "Prime generation with trial division is a clean integer-loop baseline for optimization tasks."
+    },
+    {
+      "blob_id": "6bcf6fcbbfc5f5db8ace523b9be6d963cadc473a",
+      "path": "/pycwp/cytools/regularize.pyx",
+      "output": "regularize_3d.py",
+      "reason": "EPR/TV/Tikhonov regularization terms and gradients provide strong 3D numerical stencil-style kernels."
+    },
+    {
+      "blob_id": "4820fced60c190dd43916504608bff15f674ce04",
+      "path": "/interpolation/inverse_distance.pyx",
+      "output": "inverse_distance_interp.py",
+      "reason": "Inverse-distance interpolation over raster grids is practical spatial weighting logic with nested loops."
+    },
+    {
+      "blob_id": "eae21d0427cd116cdda967c96c39c9430c7ed1a4",
+      "path": "/python/cython/pairwise1.pyx",
+      "output": "pairwise_euclidean.py",
+      "reason": "Pairwise Euclidean distance matrix computation is a canonical dense-loop performance workload."
+    },
+    {
+      "blob_id": "94fa9ab3144d1d19bb44f0b7f225afef072947b8",
+      "path": "/misc/integrate.pyx",
+      "output": "integrate_midpoint.py",
+      "reason": "Simple numerical integration loop serves as a compact scalar compute kernel."
+    },
+    {
+      "blob_id": "d3b063f02509101f0ae9e8f80889549a5f104070",
+      "path": "/pyproct/clustering/evaluation/metrics/cython/graph/minMaxCut.pyx",
+      "output": "minmaxcut_metric.py",
+      "reason": "MinMaxCut aggregation over cluster partitions is useful graph-partition objective logic."
+    },
+    {
+      "blob_id": "799b3bf6d0dacdef106cd6036b971d89f6d507ec",
+      "path": "/src/dilap/geometry/pointset.pyx",
+      "output": "pointset_ops.py",
+      "reason": "Pointset insertion/search and transform operations provide reusable geometry data-structure kernels."
+    }
+  ],
+  "skipped": [
+    {
+      "blob_id": "0cab1092775c444f812a5176345c9a563dc37c6d",
+      "path": "/tests/run/cf_none.pyx",
+      "reason": "Cython compiler/runtime None-check test cases are not standalone optimization workloads."
+    },
+    {
+      "blob_id": "17ec12c11a04e8f8926bb1914e51ba18c4056942",
+      "path": "/code-master/lib/bitbots/util/kalman.pyx",
+      "reason": "Wrapper around external C++ kalman/vector classes is integration-heavy with limited standalone conversion value."
+    },
+    {
+      "blob_id": "29ef546aee26fff2123aaa7a0d553ce64efeca1d",
+      "path": "/python/flowfilter/gpu/camera.pyx",
+      "reason": "Thin camera property wrapper around external GPU object has minimal algorithmic content."
+    }
+  ]
+}

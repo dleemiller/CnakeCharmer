@@ -1,0 +1,65 @@
+{
+  "batch": 43,
+  "accepted": [
+    {
+      "blob_id": "0d7a69e5bd916e3a2b339926c06aa1464dc8777d",
+      "path": "/logan/p027/my_solver.pyx",
+      "output": "quadratic_prime_search.py",
+      "reason": "Prime testing and quadratic run-length search is a compact algorithmic loop benchmark."
+    },
+    {
+      "blob_id": "a39d97883d94f8216af8ec8961b68158935aec4a",
+      "path": "/2015/day3/day3_c.pyx",
+      "output": "visited_houses.py",
+      "reason": "Coordinate-walk visitation counting with alternating agents provides clean integer-state kernels."
+    },
+    {
+      "blob_id": "48c4b0c62022fb86ed34e3c6976781464e8c19a6",
+      "path": "/cryoem/polar_image_ft.pyx",
+      "output": "polar_fourier_sampling.py",
+      "reason": "Polar sampling radius/angle helper loops are useful numerical preprocessing kernels."
+    },
+    {
+      "blob_id": "9eb154e402c6d1f7b1194d7e9cda2338b3ecb9f5",
+      "path": "/aatree/faa.pyx",
+      "output": "aatree_map.py",
+      "reason": "AA-tree skew/split and persistent insert operations are strong structured data-structure patterns."
+    },
+    {
+      "blob_id": "2b96e0b8ff6ae955c264add6d2bc11ab33953c16",
+      "path": "/pandas/src/isnull.pyx",
+      "output": "isnull_scan.py",
+      "reason": "Null/NaN/Inf mask scanning is a practical vector/object traversal kernel."
+    },
+    {
+      "blob_id": "16be488342e24bad63509e4ed775b1fac37a8191",
+      "path": "/easyAI/games/find_five_cython.pyx",
+      "output": "gomoku_find_five.py",
+      "reason": "Directional run-length win detection is a clear board-search optimization target."
+    },
+    {
+      "blob_id": "c6601f15ed3ed71576aea9f6f1e1ee39db085059",
+      "path": "/sher/scf/scf_helper.pyx",
+      "output": "scf_matrix_ops.py",
+      "reason": "Density/Fock matrix assembly loops represent high-value scientific computing kernels."
+    },
+    {
+      "blob_id": "492e2482f1a0afcd2014e85e769e989a5a2db3c8",
+      "path": "/dynetlsm/forecast.pyx",
+      "output": "mixture_forecast_utils.py",
+      "reason": "Mixture-normal density and renormalization utilities are robust probabilistic numeric patterns."
+    }
+  ],
+  "skipped": [
+    {
+      "blob_id": "e418a0294fc926723b65f02c7f2ce69b99891fcf",
+      "path": "/tests/run/funcexc_iter_T228.pyx",
+      "reason": "Exception-state iterator behavior test, not a standalone optimization kernel."
+    },
+    {
+      "blob_id": "39586c4aa8cbd517b160b3e3f8d8e2f536b24191",
+      "path": "/src/Game/piece_class.pyx",
+      "reason": "Game-specific piece recursion and move object semantics are highly domain-bound for GRPO unpaired use."
+    }
+  ]
+}

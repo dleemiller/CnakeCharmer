@@ -1,0 +1,65 @@
+{
+  "batch": 61,
+  "accepted": [
+    {
+      "blob_id": "e498c0993052f1e5a1f7e3cf3e6d8402f0ae4c48",
+      "path": "/montecarlo/node.pyx",
+      "output": "mcts_node_selection.py",
+      "reason": "UCT-style selection and recursive value backpropagation are core tree-search optimization kernels."
+    },
+    {
+      "blob_id": "c9cc76e00cc8088eb668e30c666f9f5694ee146e",
+      "path": "/mathx/quadtree.pyx",
+      "output": "spatial_quadtree.py",
+      "reason": "Quadtree subdivision, insertion, collapse, and AABB querying provide strong spatial data-structure workloads."
+    },
+    {
+      "blob_id": "6d5ebbd0e0b5e5391d0a0c882f3073dacd3c1c99",
+      "path": "/src/wynona/prot/nw.pyx",
+      "output": "needleman_wunsch_alignment.py",
+      "reason": "Needleman-Wunsch dynamic-programming alignment is a classic high-value sequence optimization pattern."
+    },
+    {
+      "blob_id": "779ae0288807e870e7cef61d174039fef894f2b2",
+      "path": "/rtchemstats/cython/pair2d.pyx",
+      "output": "pair_histogram_analysis.py",
+      "reason": "Pairwise periodic geometry with 2D histogram accumulation is rich numerical/scientific loop material."
+    },
+    {
+      "blob_id": "bc2e47904dd4b1eb2577655a063ecabe8aa0e6ab",
+      "path": "/5th Place_bonus/utilities/invert_flow.pyx",
+      "output": "flow_field_inversion.py",
+      "reason": "Flow inversion via destination splatting and collision resolution offers practical dense-array transform logic."
+    },
+    {
+      "blob_id": "2ff6b49bb7f3e2aa2c4208e9fc95148d9761c5e4",
+      "path": "/wk8/CyQuantumWalk.pyx",
+      "output": "quantum_walk_simulation.py",
+      "reason": "Quantum-walk coin and shift updates provide iterative state-transition kernels with normalization loops."
+    },
+    {
+      "blob_id": "c73a455e937eadc1788f2ab7accb856ca1d096c3",
+      "path": "/python/cython/cstratdef/rsi2_def.pyx",
+      "output": "rsi_breakout_strategy.py",
+      "reason": "MA/RSI trading state machine is a compact temporal decision loop useful for control-flow optimization."
+    },
+    {
+      "blob_id": "89fb8a29bf99d6f59830187aff5098398e56fa59",
+      "path": "/PyR2/transf.pyx",
+      "output": "quaternion_transforms.py",
+      "reason": "Quaternion/matrix conversion and rigid-transform helpers are common geometry kernels for numeric acceleration."
+    }
+  ],
+  "skipped": [
+    {
+      "blob_id": "07ce6055ae1e23deb87b65b40e82c68085849a66",
+      "path": "/cython/parallel/smdreader.pyx",
+      "reason": "Highly integration-specific low-level file-descriptor chunk reader with platform I/O coupling; limited standalone GRPO utility."
+    },
+    {
+      "blob_id": "8a32d7b009555e52d489f12d78e68aca50b3bbf8",
+      "path": "/mprpc/_server.pyx",
+      "reason": "Network RPC server glue is framework/protocol integration-heavy and less suited for pure algorithmic optimization tasks."
+    }
+  ]
+}

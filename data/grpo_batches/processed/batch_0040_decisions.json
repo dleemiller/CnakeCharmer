@@ -1,0 +1,65 @@
+{
+  "batch": 40,
+  "accepted": [
+    {
+      "blob_id": "355396fd29c8ce760e53c579b07d1c34ff413d81",
+      "path": "/pb_bss_eval/extraction/cythonized/c_eig.pyx",
+      "output": "gev_beamformer.py",
+      "reason": "Generalized eigenvector selection across frequency bins is a strong numerical linear-algebra kernel."
+    },
+    {
+      "blob_id": "65575fbbfb4f50a07feeb24738d28aa985b72bcf",
+      "path": "/budget_cython_fast.pyx",
+      "output": "budget_allocation_objective.py",
+      "reason": "Graph adjacency reductions and multiplicative objective loops map well to Cython speedups."
+    },
+    {
+      "blob_id": "713257b4241919e07aa05d0b3cd8dd6d58152cd8",
+      "path": "/pysscanf/sscanf.pyx",
+      "output": "structured_sscanf_parser.py",
+      "reason": "Typed row parsing and field slicing provide practical tokenization kernels with clear control flow."
+    },
+    {
+      "blob_id": "dd367b77c0be7b7a90036c3d8febc9b725e38f2c",
+      "path": "/gsee/climatedata_interface/kt_h_sinusfunc.pyx",
+      "output": "solar_clearness_index.py",
+      "reason": "Solar-angle trigonometric loops and vectorized apply logic provide robust numeric conversion examples."
+    },
+    {
+      "blob_id": "6fbe95888abc4a0df586e5f9f5ba11905bca7bd0",
+      "path": "/Python Books/Athena/training/demo/demo/pyrex/sum.pyx",
+      "output": "contiguous_sum.py",
+      "reason": "Contiguous-array reduction is a compact baseline kernel useful for low-level optimization practice."
+    },
+    {
+      "blob_id": "dd5a4b0b2bf91a86278c115957fb8138a739d8fa",
+      "path": "/qutip/cy/interpolate.pyx",
+      "output": "cubic_spline_interpolation.py",
+      "reason": "Piecewise cubic basis evaluation and batched interpolation form high-value numerical loop patterns."
+    },
+    {
+      "blob_id": "e709d0f2318c71539c796f1b598ef6b483faa3aa",
+      "path": "/river/stats/mean.pyx",
+      "output": "running_mean.py",
+      "reason": "Online weighted mean update/revert logic is a reusable streaming-statistics kernel."
+    },
+    {
+      "blob_id": "de7661628f1f36d93c7095450aa61012f4bcfbed",
+      "path": "/extendedDTW/extendedDTW.pyx",
+      "output": "dynamic_time_warping.py",
+      "reason": "Dynamic-programming DTW with optional path extraction is a strong algorithmic optimization target."
+    }
+  ],
+  "skipped": [
+    {
+      "blob_id": "586bf1f9c92f85fd560b7101046f00350061279f",
+      "path": "/chapter_3/c_pointers_in_cython/c_pointers.pyx",
+      "reason": "Educational pointer demo is too small and didactic for GRPO conversion value."
+    },
+    {
+      "blob_id": "5a09c73c229c3bbdc0724e942701993c2b6a8caf",
+      "path": "/basevar/caller/batchcaller.pyx",
+      "reason": "Deeply coupled variant-calling pipeline code is highly domain-specific and dependency-heavy."
+    }
+  ]
+}

@@ -1,0 +1,65 @@
+{
+  "batch": 59,
+  "accepted": [
+    {
+      "blob_id": "4f28eda20483bbfe0972ddd1833df5255463eb1b",
+      "path": "/raysect/core/math/function/float/function2d/blend.pyx",
+      "output": "blend2d_function.py",
+      "reason": "Clamped linear interpolation between two callable fields is a concise numeric blending kernel."
+    },
+    {
+      "blob_id": "3996b210fd07e82945aa71b7775f5abd587553c2",
+      "path": "/Código/heatCython.pyx",
+      "output": "heat_equation_step.py",
+      "reason": "Explicit finite-difference heat evolution contains practical stencil-style PDE update loops."
+    },
+    {
+      "blob_id": "5d982de00262061d0549ea9f2065a055fc2e0a9f",
+      "path": "/reveal_graph_embedding/eps_randomwalk/cython_opt/push.pyx",
+      "output": "pagerank_push_ops.py",
+      "reason": "Local push updates for residual/score vectors are strong sparse-graph iterative kernels."
+    },
+    {
+      "blob_id": "365a53cbc2e4bb849629e4ab23c726aec3a222ac",
+      "path": "/EvoDAG/function_selection.pyx",
+      "output": "function_tournament.py",
+      "reason": "Tournament selection with adaptive feasible-function filtering is useful evolutionary search control logic."
+    },
+    {
+      "blob_id": "6d5c6b5d5ba34d9402f9b7db778e209c5bc2f985",
+      "path": "/Session_06/fibonacci-cython/fib.pyx",
+      "output": "fibonacci_kernels.py",
+      "reason": "Iterative/recursive Fibonacci kernels provide classic recursion-vs-loop optimization patterns."
+    },
+    {
+      "blob_id": "49cdb61144a6408f1efc0d40f42d27e4d5ed42f8",
+      "path": "/parallel/simple/simple_mp.pyx",
+      "output": "parallel_array_compute.py",
+      "reason": "Elementwise heavy-math transform over dense matrices is a practical compute-kernel baseline."
+    },
+    {
+      "blob_id": "63b2da69f3cc6d01820e82cb41ba25e6d0432da4",
+      "path": "/multidynet/omega_lsm.pyx",
+      "output": "omega_lsm_update.py",
+      "reason": "Polya-Gamma omega and log-likelihood updates are high-value latent-variable model kernels."
+    },
+    {
+      "blob_id": "7050ad74f373e4063c4f3a1fc2ebe996ec2be531",
+      "path": "/terra/FFA/FFA_cy.pyx",
+      "output": "fast_folding_algorithm.py",
+      "reason": "FFA shift-add butterfly stages are strong signal-processing style dynamic folding kernels."
+    }
+  ],
+  "skipped": [
+    {
+      "blob_id": "ddeac175d9b7546a04e8a30cffd39a3c818454e8",
+      "path": "/phi_cy_parallel.pyx",
+      "reason": "Depends on external `breakage` implementation and tightly coupled Jacobian construction details."
+    },
+    {
+      "blob_id": "a602e661c6008e87e39ee211b2cb4e1750768cb2",
+      "path": "/sage/src/sage/structure/list_clone_demo.pyx",
+      "reason": "Large framework demonstration classes are integration-heavy and low standalone optimization value."
+    }
+  ]
+}

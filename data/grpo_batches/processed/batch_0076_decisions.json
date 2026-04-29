@@ -1,0 +1,63 @@
+{
+  "batch": 76,
+  "accepted": [
+    {
+      "blob_id": "ad3a8fb29b6d98b52eaf948715b73de7f32fa3c7",
+      "path": "/sher/utils/enuc.pyx",
+      "output": "enuc_rate_utils.py",
+      "reason": "Energy-rate style exp/power utility kernels are compact numerical building blocks."
+    },
+    {
+      "blob_id": "b1c930a64f25bb9f4922dd0a7c8f0e5a0038e0c3",
+      "path": "/statdyn/math_helper.pyx",
+      "output": "md_stat_helpers.py",
+      "reason": "Running statistics and autocorrelation loops are useful molecular-dynamics analysis kernels."
+    },
+    {
+      "blob_id": "050a8916bedebcd7f2fa1793654e110b6f3ec0bf",
+      "path": "/queueing_tool/queues/choice.pyx",
+      "output": "queue_choice_sampling.py",
+      "reason": "Queue-selection strategies are clean loop-based stochastic decision kernels."
+    },
+    {
+      "blob_id": "faf59478e10b7e2f5fef86cdbe3e7df0e1e78035",
+      "path": "/taggd/io/barcode_utils.pyx",
+      "output": "barcode_run_lengths.py",
+      "reason": "Run-length extraction/normalization is a practical sequence-processing kernel."
+    },
+    {
+      "blob_id": "cce4bbbbb629b709d9d0d58b6f521495551e443c",
+      "path": "/mixed/cython/integral_semipy.pyx",
+      "output": "integral_semipy_kernel.py",
+      "reason": "Trapezoidal integration is a canonical numerical kernel with straightforward loop optimization."
+    },
+    {
+      "blob_id": "6ebe691c9061a775bce3d1189da02fe6bff14953",
+      "path": "/renderer/cython/PyRenderer.pyx",
+      "output": "pathtracer_pixel_accum.py",
+      "reason": "Per-pixel sample accumulation is a core rendering workload with dense arithmetic loops."
+    }
+  ],
+  "skipped": [
+    {
+      "blob_id": "96e4cba1d3a5201ed5d524d4a121239207fc0238",
+      "path": "/tests/run/set.pyx",
+      "reason": "Cython set behavior tests are not suitable as standalone optimization exemplars."
+    },
+    {
+      "blob_id": "8d5731dbf27f21c29eba464820d0718f20e180ef",
+      "path": "/aiowebsockets/framing.pyx",
+      "reason": "Websocket framing/protocol internals are integration/protocol-specific and less reusable."
+    },
+    {
+      "blob_id": "d7212eba66ba628db6cdb535eb9ed453c398565f",
+      "path": "/persist_kv_store/stores/serializer.pyx",
+      "reason": "Serializer plumbing is framework-specific glue rather than generic compute-kernel supervision."
+    },
+    {
+      "blob_id": "f1c218e1f8e5a52c1ccddc8343d20b6c61ec7dbe",
+      "path": "/tbmod/core.pyx",
+      "reason": "Project-specific core glue appears domain-coupled and less transferable for broad GRPO optimization data."
+    }
+  ]
+}

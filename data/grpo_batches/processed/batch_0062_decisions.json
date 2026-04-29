@@ -1,0 +1,65 @@
+{
+  "batch": 62,
+  "accepted": [
+    {
+      "blob_id": "085c527229e5ee1aabf0b38fd68c6b39a828d000",
+      "path": "/rotation2d/rotation2d.pyx",
+      "output": "rotation2d_geometry.py",
+      "reason": "Rectangular/polar conversion and axis-relative rotation are compact geometry kernels with clear numeric optimization potential."
+    },
+    {
+      "blob_id": "9f5030a27ee4e200743ca248deb654fbef26c068",
+      "path": "/sample_abc.pyx",
+      "output": "sample_abc_mcmc.py",
+      "reason": "MCMC-ABC proposal/acceptance loop is high-signal stochastic inference logic with repeated numeric operations."
+    },
+    {
+      "blob_id": "f4596d1f6041ccaa8c40b7a278991dd728fb9680",
+      "path": "/sw_algorithm.pyx",
+      "output": "smith_waterman_alignment.py",
+      "reason": "Smith-Waterman DP table fill and traceback provides strong sequence-alignment optimization structure."
+    },
+    {
+      "blob_id": "e559d11e9550949d1ce7f3d1c51e638fdfa91cac",
+      "path": "/cython_class_with_dict.pyx",
+      "output": "weighted_dot_benchmark.py",
+      "reason": "Repeated dictionary-backed weighted-sum loops provide micro-kernel benchmarking patterns for Python-to-Cython speedups."
+    },
+    {
+      "blob_id": "c999af2c2ea0ecbdf1f82ec15a22e839ec18a5e7",
+      "path": "/lib/bx/bbi/cirtree_file.pyx",
+      "output": "cirtree_overlap_search.py",
+      "reason": "Hierarchical interval-overlap traversal is a valuable recursive indexing and range-query workload."
+    },
+    {
+      "blob_id": "42cd3470af88e91ccc5ccc0efcb67af7c5fad7a5",
+      "path": "/metrics/mse_m/mse_cy.pyx",
+      "output": "mean_squared_error_int.py",
+      "reason": "Dense integer-difference reduction is a concise baseline numeric kernel useful for low-overhead loop optimization."
+    },
+    {
+      "blob_id": "d2ee4a09b3ac7ffa2b349a010a5a08898fa42c36",
+      "path": "/11-spectral-norm/02-cython/spectral_norm.pyx",
+      "output": "spectral_norm_power.py",
+      "reason": "Power-method spectral norm with nested matrix-vector loops is a canonical compute-intensive benchmark kernel."
+    },
+    {
+      "blob_id": "55a5f0f372e898c1fbd5a829fbc32764706dcfb4",
+      "path": "/structure/analysis/skeleton.pyx",
+      "output": "zhang_suen_skeletonize.py",
+      "reason": "Iterative thinning with neighborhood LUT logic provides practical image-morphology control-flow and array update patterns."
+    }
+  ],
+  "skipped": [
+    {
+      "blob_id": "fddaef6d0a3d4998dc2232bafaa30c0b66a7ad66",
+      "path": "/tests/run/if_else_expr.pyx",
+      "reason": "Primarily a Cython parser/regression test fixture with limited standalone algorithmic training value."
+    },
+    {
+      "blob_id": "23b67b34ed920f1ad37802fe4cef9fc76676de33",
+      "path": "/_test.pyx",
+      "reason": "C++ interop demonstration/test scaffolding is integration/tutorial oriented rather than a reusable optimization kernel."
+    }
+  ]
+}

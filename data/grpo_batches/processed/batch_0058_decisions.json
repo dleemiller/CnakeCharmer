@@ -1,0 +1,66 @@
+{
+  "batch": 58,
+  "accepted": [
+    {
+      "blob_id": "8e3589d4bca91194ce03c18f4681719b1de9e10a",
+      "path": "/package/PartSegCore/sprawl_utils/euclidean_cython.pyx",
+      "output": "euclidean_region_grow.py",
+      "reason": "Euclidean frontier expansion on 3D neighborhoods is a strong queue-driven geometric propagation kernel."
+    },
+    {
+      "blob_id": "7d2412bb67274bb7ffa4c5a08bfb5f80ad698f1c",
+      "path": "/hierarchy/hierarchy3.pyx",
+      "output": "hierarchical_indices.py",
+      "reason": "Hierarchical index traversal over multiscale levels provides concise nested-loop structure."
+    },
+    {
+      "blob_id": "1bc61e06c0c5b0b7dc2116c6803668ee7c0872ed",
+      "path": "/spacy/training/align.pyx",
+      "output": "token_alignments.py",
+      "reason": "Whitespace-aware character/token alignment is practical NLP preprocessing logic with careful pointer-like scans."
+    },
+    {
+      "blob_id": "d2b5ef8c88b58041fe330b0042debb4f2df48985",
+      "path": "/Read_QC_Pipeline/Dependencies/cutadapt/cutadapt-1.8.1/cutadapt/_seqio.pyx",
+      "output": "fastq_sequence_io.py",
+      "reason": "FASTQ parsing with strict format checks and record assembly is high-signal I/O parsing logic."
+    },
+    {
+      "blob_id": "b8fae67f688ba8aed88a356d19cfdd9792c55423",
+      "path": "/examples/c++/CyCppPrimes/primes_cy.pyx",
+      "output": "first_n_primes.py",
+      "reason": "Trial-division prime generation is a compact integer kernel and common optimization baseline."
+    },
+    {
+      "blob_id": "8f3ba3efae2c1fcd5ed9d271dedd861bd353afb9",
+      "path": "/tour_graph/tour_graph.pyx",
+      "output": "tour_graph_random_walk.py",
+      "reason": "Random-walk cover-time simulation over adjacency matrices offers useful stochastic graph-loop patterns."
+    },
+    {
+      "blob_id": "9364f9b57fad28af03ac6ff86135ca0448eab48c",
+      "path": "/uttut/pipeline/edit/label_propagation.pyx",
+      "output": "label_propagation_ops.py",
+      "reason": "Replacement/span-based label propagation captures practical sequence-edit transformation logic."
+    },
+    {
+      "blob_id": "9034b94ffedf705f531236a213f209462652517c",
+      "path": "/cyPyon/Parser.pyx",
+      "output": "pyon_parser_core.py",
+      "reason": "Recursive descent parsing across dict/list/custom-object forms is strong control-flow training material."
+    },
+    {
+      "blob_id": "d342b0348aed9912ea83b383f0a9fb10aa3a69bf",
+      "path": "/Max/Blatt2/aufg2_cython.pyx",
+      "output": "linear_congruential.py",
+      "reason": "Linear congruential generator loop is a clean numeric sequence kernel."
+    }
+  ],
+  "skipped": [
+    {
+      "blob_id": "a6965f96b93c99b10507ea998a55a58706cde213",
+      "path": "/cython_opt/calc_mod.pyx",
+      "reason": "Brittle image-processing script with hardcoded indexing and plotting/file dependencies; lower standalone utility."
+    }
+  ]
+}

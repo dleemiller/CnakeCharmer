@@ -1,0 +1,62 @@
+{
+  "batch": 69,
+  "accepted": [
+    {
+      "blob_id": "69bdc3ed93c964486dbdafb85afc66422b36ec34",
+      "path": "/eventio/header.pyx",
+      "output": "eventio_header_parse.py",
+      "reason": "Binary header field parsing uses tight byte-slicing loops and is a practical systems-style kernel."
+    },
+    {
+      "blob_id": "bc36da3ebde2f71b5ed862d2b2e3c9124f7a7002",
+      "path": "/cython/timestep.pyx",
+      "output": "timestep_integrator.py",
+      "reason": "Timestep-based state updates are canonical numeric simulation loops suitable for Cython acceleration."
+    },
+    {
+      "blob_id": "22d5975272978e9b0d12589668297c67ed74e3d1",
+      "path": "/jsonsubset/json_parser.pyx",
+      "output": "json_subset_parser.py",
+      "reason": "Character-wise parsing/state-machine logic gives useful branch-heavy loop coverage for optimization traces."
+    },
+    {
+      "blob_id": "294ea0e69e43a07024f86b7edce98f554696964b",
+      "path": "/word_embedding_loader/loader/word2vec_bin.pyx",
+      "output": "word2vec_binary_loader.py",
+      "reason": "Binary token and float-row decoding is a realistic data-loading workload with repeated byte-level operations."
+    },
+    {
+      "blob_id": "d3b027b7477482ad9f345a87a5878335959f7c29",
+      "path": "/utils_cython/data_utils_c.pyx",
+      "output": "bearing_rul_features.py",
+      "reason": "Rolling statistics and normalization steps are common predictive-maintenance preprocessing kernels."
+    }
+  ],
+  "skipped": [
+    {
+      "blob_id": "dfb8c08f78fd15aac3d67123f0e48f6eafeacc6b",
+      "path": "/tests/run/any.pyx",
+      "reason": "Cython test fixture code is not a standalone optimization target for GRPO training examples."
+    },
+    {
+      "blob_id": "72dc34343979a3466003da986fbec73a96f499f3",
+      "path": "/newpropagateS15/npropagateS15.pyx",
+      "reason": "Highly domain-specific propagation routine with project-coupled semantics is less reusable for general conversion tasks."
+    },
+    {
+      "blob_id": "c6f664995054090fc6e03cac72488122d8f954e5",
+      "path": "/f_cython.pyx",
+      "reason": "Likely thin language-bridge wrapper with limited algorithmic core for reusable optimization supervision."
+    },
+    {
+      "blob_id": "27b136594e417ee0f9d0b1c4b0dcac8836818f43",
+      "path": "/mha/mht/mht_c.pyx",
+      "reason": "Multi-hypothesis tracking implementation appears tightly coupled to external project structures."
+    },
+    {
+      "blob_id": "1b8f9ca734050b5fd812d0336d165447f714c490",
+      "path": "/pycpptraj/datasets/DataSet_double.pyx",
+      "reason": "Dataset container internals are integration-heavy and less suitable as generic Cython optimization exemplars."
+    }
+  ]
+}

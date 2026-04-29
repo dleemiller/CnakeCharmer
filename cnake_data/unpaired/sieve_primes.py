@@ -1,33 +1,21 @@
-def sieve_primes(n):
-    """Count primes up to n using the Sieve of Eratosthenes.
+"""Sieve of Eratosthenes prime generator."""
 
-    Returns (prime_count, sum of first 100 primes, largest prime <= n).
-    """
-    is_prime = [True] * (n + 1)
-    is_prime[0] = False
-    if n > 0:
-        is_prime[1] = False
+from __future__ import annotations
 
-    i = 2
-    while i * i <= n:
-        if is_prime[i]:
+import math
+
+
+def sieve(n):
+    arr = [0] * (n + 1)
+    for i in range(2, n + 1):
+        arr[i] = 1
+
+    sqrt_n = int(math.sqrt(n))
+    for i in range(2, sqrt_n + 1):
+        if arr[i] == 1:
             j = i * i
             while j <= n:
-                is_prime[j] = False
+                arr[j] = 0
                 j += i
-        i += 1
 
-    count = 0
-    sum_first_100 = 0
-    largest = 0
-    found = 0
-
-    for i in range(2, n + 1):
-        if is_prime[i]:
-            count += 1
-            largest = i
-            if found < 100:
-                sum_first_100 += i
-                found += 1
-
-    return (count, sum_first_100, largest)
+    return [i for i in range(2, n + 1) if arr[i] == 1]

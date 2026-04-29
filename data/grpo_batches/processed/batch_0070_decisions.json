@@ -1,0 +1,62 @@
+{
+  "batch": 70,
+  "accepted": [
+    {
+      "blob_id": "bb9c3fbe83ace1eb40fe7c6e69d742f8bb025486",
+      "path": "/code/lib/_anisotropic.pyx",
+      "output": "anisotropic_diffusion_step.py",
+      "reason": "Anisotropic diffusion stencils are high-signal numeric kernels with nested grid loops."
+    },
+    {
+      "blob_id": "31c59deeb625c87367e0a88adcb83ebe35f07163",
+      "path": "/kivent_cython/kivent_cython/particle.pyx",
+      "output": "particle_system_step.py",
+      "reason": "Particle position/velocity integration is a reusable simulation workload with straightforward tight loops."
+    },
+    {
+      "blob_id": "0496da5957463392c3245e5ccbf17094815fe617",
+      "path": "/mission/opt/core.pyx",
+      "output": "mission_objective_core.py",
+      "reason": "Objective aggregation and action scoring loops are practical optimization kernels for model training."
+    },
+    {
+      "blob_id": "f8ee0093557efadb6396973cf2b59ca7f95101fa",
+      "path": "/pippi/oscs/sineosc.pyx",
+      "output": "sine_oscillator_bank.py",
+      "reason": "Oscillator-bank synthesis provides numeric inner loops common in DSP/audio workloads."
+    },
+    {
+      "blob_id": "d691e5e726fa6c523ec7e38ca8fa367bf6e0af15",
+      "path": "/rtchemstats/cython/bond.pyx",
+      "output": "bond_geometry_metrics.py",
+      "reason": "Bond-distance geometry computations are clean vector-math kernels suitable for Cython conversion tasks."
+    }
+  ],
+  "skipped": [
+    {
+      "blob_id": "b60f32003d31195080a56593dcb80aa6e59a4879",
+      "path": "/smoke/replay/decoder/recv_prop/dint64.pyx",
+      "reason": "Protocol decoding appears format/integration-specific and less reusable as a generic optimization exemplar."
+    },
+    {
+      "blob_id": "9b401be07030663d9942e06ccc24b8456be2e690",
+      "path": "/tests/run/dynamic_attributes.pyx",
+      "reason": "Cython runtime feature tests are not standalone algorithmic optimization targets."
+    },
+    {
+      "blob_id": "ed816d7942bdfb7b196c6cf060d77909419f3e0e",
+      "path": "/cython_lib_foo_callback/py/foo.pyx",
+      "reason": "Callback/demo wrapper code is glue-heavy and low signal for general Cython speedup training."
+    },
+    {
+      "blob_id": "04555977fb3d7ee2d47efafbea2d1ccb55c63fe9",
+      "path": "/tests/run/pinard5.pyx",
+      "reason": "Compiler regression test content is not appropriate for reusable GRPO optimization data."
+    },
+    {
+      "blob_id": "1259fe7a8c9b9efaf3a462265ff9245ab9b0c41f",
+      "path": "/python/io/lely_io/poll.pyx",
+      "reason": "I/O polling wrappers are integration/system-call oriented rather than compute-kernel optimization examples."
+    }
+  ]
+}

@@ -1,0 +1,63 @@
+{
+  "batch": 72,
+  "accepted": [
+    {
+      "blob_id": "e3542659211e42680d9d3707ad3cf2f0c495f9f9",
+      "path": "/sealion/cython_tsne.pyx",
+      "output": "tsne_pairwise_affinities.py",
+      "reason": "Pairwise distance and Gaussian affinity loops are high-signal dense numerical kernels."
+    },
+    {
+      "blob_id": "b552db5d70b1f505f2fdc77493982622ec219c4b",
+      "path": "/gram_schmidt.pyx",
+      "output": "gram_schmidt_orthonormal.py",
+      "reason": "Gram-Schmidt orthonormalization is a classic linear algebra workload with nested loops."
+    },
+    {
+      "blob_id": "6ad43e5a47060df5b9ceec55aaa80df71544b080",
+      "path": "/docs/papers/sc2013/bench/cython/pi_buffon_para.pyx",
+      "output": "buffon_pi_simulation.py",
+      "reason": "Buffon-style Monte Carlo hit counting is a compact stochastic numeric kernel."
+    },
+    {
+      "blob_id": "044f37e0d159e8d571fe4d74c3cc4f7c7c853cf4",
+      "path": "/utils/cython_nms.pyx",
+      "output": "nms_iou_filter.py",
+      "reason": "NMS with IoU filtering is a common computer-vision optimization primitive."
+    },
+    {
+      "blob_id": "b86781367b1daaf7f7a50d1248667ee96f0bdcb2",
+      "path": "/revcomp_c.pyx",
+      "output": "reverse_complement_fast.py",
+      "reason": "Reverse-complement transformation is a widely used sequence-processing kernel."
+    },
+    {
+      "blob_id": "c7d30b8e14f96253520d64f9c99aa9844c3c9099",
+      "path": "/blaze/desc/llindexers.pyx",
+      "output": "llindexer_offsets.py",
+      "reason": "Prefix-offset indexing and flat-index location are reusable low-level array indexing kernels."
+    }
+  ],
+  "skipped": [
+    {
+      "blob_id": "4e54a5d5d61cab76999ad6378797a9063cb1dc68",
+      "path": "/tests/run/dynamic_args.pyx",
+      "reason": "Cython language feature tests are not suitable as standalone optimization exemplars."
+    },
+    {
+      "blob_id": "b4e68eb55f44fd15592c5fe6c52aff3756cf4edb",
+      "path": "/day-10/part-1/bebert.pyx",
+      "reason": "Advent-of-Code style script is too task-specific and limited for reusable conversion supervision."
+    },
+    {
+      "blob_id": "b904d6525fffb7a4130a2cb4baa241fb6825fe5b",
+      "path": "/orderedobject.pyx",
+      "reason": "Object-heavy ordered-structure internals are less aligned with numeric kernel optimization goals."
+    },
+    {
+      "blob_id": "16967cd172baa67db2b8ac775fcbd806c2098000",
+      "path": "/Cython/Examples/Third/c_functions.pyx",
+      "reason": "Small tutorial/example wrappers have limited algorithmic depth for GRPO training value."
+    }
+  ]
+}

@@ -1,0 +1,63 @@
+{
+  "batch": 78,
+  "accepted": [
+    {
+      "blob_id": "a1588384118b3b5ec3e957cbeee0aa3e2453ccea",
+      "path": "/fracpy/fracpy.pyx",
+      "output": "fractal_escape_iter.py",
+      "reason": "Fractal escape-time loops are classic numerical iteration kernels suitable for optimization tasks."
+    },
+    {
+      "blob_id": "7c615b6191fdce74548e8babade56a684e403c50",
+      "path": "/hist_by_r/func.pyx",
+      "output": "hist_by_radius.py",
+      "reason": "Radial histogram accumulation is a reusable aggregation kernel with nested loop structure."
+    },
+    {
+      "blob_id": "1199bce45dec79848bf94b92072f1fc54220499f",
+      "path": "/mlsauce/stump/_stumpc.pyx",
+      "output": "stump_split_score.py",
+      "reason": "Decision stump threshold scoring is a practical ML optimization primitive."
+    },
+    {
+      "blob_id": "2142bbef1374c574ca4d74f367cbf4bab3b8743d",
+      "path": "/spectralnorm/spectralnorm.pyx",
+      "output": "spectralnorm_power_iter.py",
+      "reason": "Power-iteration spectral norm estimation is a high-value linear algebra kernel."
+    },
+    {
+      "blob_id": "b894c3c9ad18e1e09b927e07e779d26050afe776",
+      "path": "/cython_conv.pyx",
+      "output": "cython_conv2d_core.py",
+      "reason": "2D convolution is a canonical dense compute kernel for Cython speedup tasks."
+    },
+    {
+      "blob_id": "e74861af90be1fc04fa0f22b469ad96881e10a26",
+      "path": "/python/cudf/cudf/bindings/stream_compaction.pyx",
+      "output": "stream_compaction_scan.py",
+      "reason": "Stream compaction scan/select is a fundamental data-parallel primitive."
+    }
+  ],
+  "skipped": [
+    {
+      "blob_id": "a66c06db0e47c0181803e911a359f18a2d1ad30b",
+      "path": "/tests/run/addloop.pyx",
+      "reason": "Cython add-loop test case is compiler behavior coverage, not a standalone optimization workload."
+    },
+    {
+      "blob_id": "87adbe7ed403d86077926e0742c3ecc6a8a4fd53",
+      "path": "/tests/run/unicodefunction.pyx",
+      "reason": "Unicode function behavior tests are runtime checks with low transfer for optimization training."
+    },
+    {
+      "blob_id": "0920ecc63b3c4ee0137f42de7c0f3924115e2662",
+      "path": "/tests/run/inlined_context_manager.pyx",
+      "reason": "Context-manager inlining tests are not algorithmic optimization exemplars."
+    },
+    {
+      "blob_id": "43c6fa0db6d191a63666b4540c2d46094089508a",
+      "path": "/cys2n/cys2n.pyx",
+      "reason": "Specialized utility conversion code appears domain-specific and less reusable for GRPO training."
+    }
+  ]
+}

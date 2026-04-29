@@ -1,0 +1,65 @@
+{
+  "batch": 50,
+  "accepted": [
+    {
+      "blob_id": "12de67f21e32b1ca2a9e215a05f90583aaccf723",
+      "path": "/lib/coptdynlib.pyx",
+      "output": "popdyn_diffusion.py",
+      "reason": "Population dynamics normalization and bounded stochastic diffusion are strong probabilistic numeric kernels."
+    },
+    {
+      "blob_id": "bf2eb988b3c2b8f142f52a72940520fdf0bd602d",
+      "path": "/quantarhei/core/cy_stochastics.pyx",
+      "output": "stochastic_correlated_noise.py",
+      "reason": "Correlation-driven covariance assembly and correlated complex noise synthesis provide rich numeric patterns."
+    },
+    {
+      "blob_id": "5c6005d96a6a353dda0213a24175bceb022e27ec",
+      "path": "/sagrada/board.pyx",
+      "output": "dispatch_call_overhead.py",
+      "reason": "Method-dispatch loop microkernels are useful for optimization and profiling-oriented training examples."
+    },
+    {
+      "blob_id": "b866fa3370f69a50e5426bd02aae866804d68356",
+      "path": "/bootstrap/utils_blowflies.pyx",
+      "output": "blowfly_bootstrap_utils.py",
+      "reason": "Likelihood integral and bootstrap transition helpers are solid scientific computing kernels."
+    },
+    {
+      "blob_id": "1ffbde83e3deca71b05441811438878e0e26245e",
+      "path": "/sage/src/sage/combinat/combinat_cython.pyx",
+      "output": "stirling_s2.py",
+      "reason": "Stirling number computation with combinatorial summation captures useful integer arithmetic patterns."
+    },
+    {
+      "blob_id": "601e8ca56c993fe3cb4db1f792519a8123d4e704",
+      "path": "/src/geom/Node.pyx",
+      "output": "node_geom.py",
+      "reason": "Node geometry utilities and vector-normalization helpers provide practical spatial computation logic."
+    },
+    {
+      "blob_id": "144fe61058e91d8968053a7c7502144aa227a53d",
+      "path": "/Cython/sieve/sieve_cython.pyx",
+      "output": "sieve_primes.py",
+      "reason": "Sieve of Eratosthenes is a classic high-signal integer loop kernel."
+    },
+    {
+      "blob_id": "58f53a24c753ebc08926a29df084430468bb4c4e",
+      "path": "/qaccel/count.pyx",
+      "output": "markov_counts.py",
+      "reason": "Transition-count accumulation over chunked trajectories is a concise state-modeling kernel."
+    }
+  ],
+  "skipped": [
+    {
+      "blob_id": "9008e8aa76157a34de81027c1f645dd47c308a82",
+      "path": "/api/beeview.pyx",
+      "reason": "Heavy external C++ renderer wrapper with file/graphics integration; low standalone kernel value."
+    },
+    {
+      "blob_id": "f5682960eba426516044683bcc66f327d2d11742",
+      "path": "/moduleinterface/_pjon_cython.pyx",
+      "reason": "Hardware bus binding and callback plumbing are integration-specific, not ideal unpaired conversion material."
+    }
+  ]
+}

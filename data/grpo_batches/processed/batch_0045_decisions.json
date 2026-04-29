@@ -1,0 +1,66 @@
+{
+  "batch": 45,
+  "accepted": [
+    {
+      "blob_id": "d6c273eb37cb7c502b8652f075e532575cf664da",
+      "path": "/pydsstools/src/catalog.pyx",
+      "output": "pathname_catalog_utils.py",
+      "reason": "Catalog path-list container logic provides compact pointer-like bookkeeping patterns."
+    },
+    {
+      "blob_id": "a5491a1237196009178913ad9d2f74f9087b6ba1",
+      "path": "/mmgpy/problems/two_dimensional/_future/mathematics/signal.pyx",
+      "output": "discrete_signal_sums.py",
+      "reason": "Discrete impulse/heaviside/ramp superposition is a clean numeric sequence-processing kernel."
+    },
+    {
+      "blob_id": "ba7ad2de5cf0c464246ac9c6fd22ab92f27999f2",
+      "path": "/cy/lib.pyx",
+      "output": "periodic_distances.py",
+      "reason": "Pairwise distance computation with periodic wrap is a high-value geometry kernel for optimization."
+    },
+    {
+      "blob_id": "488efd2d5a3760d9eb9ef85eaaaa89227ae63a56",
+      "path": "/tsfuse/data/df.pyx",
+      "output": "df_windows_to_array.py",
+      "reason": "Window-packing from grouped tabular data into padded tensors is practical preprocessing logic."
+    },
+    {
+      "blob_id": "55ceff07512ac23e9474f35ab84bcfa8b256d056",
+      "path": "/src/crecognize.pyx",
+      "output": "fsa_inner_loop.py",
+      "reason": "Finite-state transition scanning with bit-packed state encoding is a strong algorithmic loop pattern."
+    },
+    {
+      "blob_id": "9f5d53c71241ae1fb279550dfd51d7fac608a471",
+      "path": "/Code/LOS.pyx",
+      "output": "line_of_sight.py",
+      "reason": "Supercover line tracing with opacity checks is a useful path-visibility computational kernel."
+    },
+    {
+      "blob_id": "41208f9806d5f06349ab2964cafc0b96f2d6ce7d",
+      "path": "/conway/conway/step.pyx",
+      "output": "conway_step.py",
+      "reason": "Cellular automata neighborhood updates are concise 2D stencil-style kernels."
+    },
+    {
+      "blob_id": "06d1cb1c3dcd879ce970a19bffa5b924fb939d8c",
+      "path": "/gb/sorting/largest.pyx",
+      "output": "quickselect_median.py",
+      "reason": "In-place quickselect median extraction is a classic branch-heavy selection algorithm target."
+    },
+    {
+      "blob_id": "9a3cfd4bc0cec222c06bf6f3319577bf741499d8",
+      "path": "/coinC.pyx",
+      "output": "coin_combinations.py",
+      "reason": "Queue-based combination counting plus prime generation offers compact integer algorithm workloads."
+    }
+  ],
+  "skipped": [
+    {
+      "blob_id": "bea10219d0f87e98b70ebbb6a5a46a1ecf7b952c",
+      "path": "/Utils/utils.pyx",
+      "reason": "Primarily domain-specific geometry/robot utility classes with limited standalone kernel focus for this dataset."
+    }
+  ]
+}
