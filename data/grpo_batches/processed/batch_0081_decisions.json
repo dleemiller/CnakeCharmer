@@ -1,0 +1,63 @@
+{
+  "batch": 81,
+  "accepted": [
+    {
+      "blob_id": "f18a4b4bd1ec93f56a12282e19d137f96c0531f3",
+      "path": "/sorted_nearest/src/cluster_by.pyx",
+      "output": "interval_cluster_labels.py",
+      "reason": "Interval clustering over sorted endpoints is a strong loop-based algorithmic optimization candidate."
+    },
+    {
+      "blob_id": "ae714d5ffeb4801f4baae00b2d439f50f85b47a8",
+      "path": "/SpinUtil.pyx",
+      "output": "event_prob_binary_search.py",
+      "reason": "Binary search over cumulative probabilities is a reusable core routine with clear optimization relevance."
+    },
+    {
+      "blob_id": "e4ae0d9803cf8e86f9407e8d1c6830ff77a138dc",
+      "path": "/mask_accelerated.pyx",
+      "output": "volume_mask_hull.py",
+      "reason": "3D voxel masking with hull half-space tests is compute-heavy and well aligned with Cython acceleration."
+    },
+    {
+      "blob_id": "ec3e62d311d87c8a3ab207a2c6d7688fabc77aad",
+      "path": "/pyapprox/cython/adaptive_sparse_grid.pyx",
+      "output": "smolyak_coeff_update.py",
+      "reason": "Smolyak coefficient updates are compact numerical kernels with deterministic loop structure."
+    },
+    {
+      "blob_id": "d0e80c0db7a474c6295dece7a397ef202c27c2f4",
+      "path": "/pxutil.pyx",
+      "output": "bilinear_sample_image.py",
+      "reason": "Bilinear interpolation and mirrored boundary handling are standard image-processing kernels for optimization training."
+    },
+    {
+      "blob_id": "930f1f95d8d324147b6f6a9cc0466e11d909e467",
+      "path": "/cykmeans.pyx",
+      "output": "kmeans_distance_core.py",
+      "reason": "K-means distance matrix computation is a classic numeric hotspot with clear performance tuning opportunities."
+    }
+  ],
+  "skipped": [
+    {
+      "blob_id": "b74667f8c2e16fc05039875cb5b4938c0797406e",
+      "path": "/cefpython/stream.pyx",
+      "reason": "CEF stream wrapper is integration/memory-management glue rather than a standalone optimization workload."
+    },
+    {
+      "blob_id": "392e17146ae9b55d7f99ae78ea0b4d50689ed1c3",
+      "path": "/phys.pyx",
+      "reason": "Relies on SciPy-special bindings and physics-specific context; less suitable as a portable unpaired GRPO Python target."
+    },
+    {
+      "blob_id": "6ba8ed05fb8fc274d32098fb67e369219d8ca105",
+      "path": "/misc/advent/2017/5/l.pyx",
+      "reason": "Puzzle-specific script with file I/O dependency has limited transfer value for optimization training."
+    },
+    {
+      "blob_id": "b0f9bafd708eb37addb24a034ee0475fdc7931ad",
+      "path": "/exwsim/utils/cli_args.pyx",
+      "reason": "Argument marshalling helper is interface glue code, not a computational optimization exemplar."
+    }
+  ]
+}

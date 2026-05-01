@@ -1,0 +1,68 @@
+{
+  "batch": 88,
+  "accepted": [
+    {
+      "blob_id": "9db26b0f07f597bf6b1f2a457e3a997b743ab8ab",
+      "path": "/hmm_kit/_hmmc.pyx",
+      "output": "hmm_viterbi_forward_backward.py",
+      "reason": "Viterbi/forward-backward dynamic-programming kernels are high-value sequence-model optimization examples."
+    },
+    {
+      "blob_id": "2d7ef9c5d1e0069f06910f9cf69831b320aab5dd",
+      "path": "/run_analysis/modelData/dps.pyx",
+      "output": "lake_policy_dynamics.py",
+      "reason": "Lake pollution policy dynamics include repeated nonlinear updates and constrained control logic suitable for optimization."
+    },
+    {
+      "blob_id": "198eda538cadd163b4b21754b5e56aff685964bc",
+      "path": "/fiddling/server/cutils/collisions.pyx",
+      "output": "collision_geometry.py",
+      "reason": "Circle-circle and circle-line geometric collision checks are dense numeric kernels with clear compute structure."
+    },
+    {
+      "blob_id": "fbb1a64b11141265da7bb17709105c8dc2d24f1c",
+      "path": "/taco/lib/csuffixarray.pyx",
+      "output": "suffixarray_search_utils.py",
+      "reason": "Suffix-array compare/range binary search routines are algorithmically rich and transferable optimization targets."
+    },
+    {
+      "blob_id": "5eb322794e9c9c13f5289bfaa894ec2c6a0707f6",
+      "path": "/edge_gravity/edge_gravity.pyx",
+      "output": "edge_gravity_core.py",
+      "reason": "Edge occurrence counting across shortest paths provides useful nested-loop graph-analysis logic."
+    },
+    {
+      "blob_id": "213f6de53eb82efec84f3d185fbc03ce3d7360ef",
+      "path": "/Cython/cybook10-TypedMemoryviews/memview.pyx",
+      "output": "memoryview_summer.py",
+      "reason": "Typed-memoryview summation is a compact low-level loop baseline for optimization behavior."
+    }
+  ],
+  "skipped": [
+    {
+      "blob_id": "0f58392555c44bfa91e325c67cf4d595e7c278a6",
+      "path": "/csv_event_rows_to_dict_parallel.pyx",
+      "reason": "Invalid parallelization over Python objects/iterators yields low-quality and potentially incorrect optimization signal."
+    },
+    {
+      "blob_id": "1e793f5673f5a3b1be7b5779ee1e6d27355eb6a8",
+      "path": "/ray_tracing/material.pyx",
+      "reason": "Ray-tracing material classes depend on project-specific geometry types and object model, reducing standalone portability."
+    },
+    {
+      "blob_id": "ed3b9183090acc34f669c00b61d3c2f333ecf25f",
+      "path": "/cython/module.pyx",
+      "reason": "Point list generation/typed loop micro-example is too trivial and overlaps existing baseline kernels."
+    },
+    {
+      "blob_id": "293310429552a27c14554f6e916bbc5d746d65d8",
+      "path": "/tests/run/set_iter.pyx",
+      "reason": "Cython compiler behavior tests are not representative algorithmic optimization workloads."
+    },
+    {
+      "blob_id": "f2bfb2d93982c22ec6363de82b8ddcdf4193d0aa",
+      "path": "/acsylla/_cython/result/value.pyx",
+      "reason": "Database value-wrapper accessor is integration glue with minimal computational optimization value."
+    }
+  ]
+}

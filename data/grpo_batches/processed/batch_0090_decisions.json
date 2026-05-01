@@ -1,0 +1,63 @@
+{
+  "batch": 90,
+  "accepted": [
+    {
+      "blob_id": "fa74e92fe19f7c4c43e566241a3fdbea5f31d95e",
+      "path": "/ray_tracing/shape.pyx",
+      "output": "ray_sphere_hits.py",
+      "reason": "Ray-sphere intersection math is a classic geometric kernel with clear optimization structure."
+    },
+    {
+      "blob_id": "d6ce7dbba0a6b665efb1520d6e91c6e3a256bf5c",
+      "path": "/geoblend/convolve.pyx",
+      "output": "mask_aware_laplacian.py",
+      "reason": "Mask-aware 4-neighbor convolution with thresholding is a strong image-processing loop kernel."
+    },
+    {
+      "blob_id": "1aa4bf844b076ab02576d7a2c00721545c465440",
+      "path": "/example_cy.pyx",
+      "output": "increment_loop_baseline.py",
+      "reason": "Simple typed increment loop serves as a compact baseline optimization example."
+    },
+    {
+      "blob_id": "261cab401fc881cd13a3290f4eb6d6b918e2b998",
+      "path": "/chp09_profiling/1_direct_cython/integrate_full_cython.pyx",
+      "output": "sin2_integrators.py",
+      "reason": "Numerical integration over trigonometric kernels is reusable and optimization-relevant."
+    },
+    {
+      "blob_id": "d0c66b39a4ea6f9e21588f3b27a32ebdbea00ebb",
+      "path": "/inplace_cython.pyx",
+      "output": "inplace_fft_core.py",
+      "reason": "In-place FFT with bit-reversal and butterfly stages is a high-value algorithmic optimization target."
+    },
+    {
+      "blob_id": "6bd999983f7aa35dad00ddd8cb8356f7ba85a558",
+      "path": "/cython_alloc.pyx",
+      "output": "growable_double_buffer.py",
+      "reason": "Growable numeric buffer logic captures useful memory-management style patterns for optimization tasks."
+    }
+  ],
+  "skipped": [
+    {
+      "blob_id": "5660b13421132dc9d89976018e5b3aa46a1324d6",
+      "path": "/tests/run/extinherit.pyx",
+      "reason": "Inheritance behavior test fixture is not an algorithmic compute optimization workload."
+    },
+    {
+      "blob_id": "ac2a99094a0057d45568385a707d5f1e1364207d",
+      "path": "/shrubbery/shrubbery/shrubbing.pyx",
+      "reason": "Tiny class/property demo provides minimal optimization signal."
+    },
+    {
+      "blob_id": "c65fa32f7e9684a470dc40774db33f527dfabd02",
+      "path": "/pytraj/datasets/DatasetFloat.pyx",
+      "reason": "C++ dataset wrapper is integration plumbing with limited standalone kernel value."
+    },
+    {
+      "blob_id": "244bf7e45e094a4175ca60a7bd40f8563e847eb7",
+      "path": "/tests/run/cyfunction_METH_O_GH1728.pyx",
+      "reason": "Function-signature error behavior test is not relevant optimization training data."
+    }
+  ]
+}

@@ -1,0 +1,62 @@
+{
+  "batch": 85,
+  "accepted": [
+    {
+      "blob_id": "ca1a22839a0848924d73795309fe5f9fb0601663",
+      "path": "/fireml-dataset/processing/dataset/realtime/land_cover.pyx",
+      "output": "land_cover_raster_kernels.py",
+      "reason": "Raster conversion, one-hot encoding, and missing-value handling are core loop kernels with strong optimization value."
+    },
+    {
+      "blob_id": "157d9dfc551282d49168681123f421d1eaf45906",
+      "path": "/functions.pyx",
+      "output": "average_quality_fastpow.py",
+      "reason": "Phred-to-probability aggregation is a practical numeric reduction kernel relevant for speedup training."
+    },
+    {
+      "blob_id": "5149a571700f1bb5def0c8cbefa348edeb03a315",
+      "path": "/pyrostex/temp.pyx",
+      "output": "temperature_map_physics.py",
+      "reason": "Atmospheric pressure and latitude cross-section functions are concise physics kernels suitable for optimization tasks."
+    },
+    {
+      "blob_id": "9a1de0bd09f106300232bf128ab8761157e15f1e",
+      "path": "/cornac/models/sorec/cython/sorec.pyx",
+      "output": "sorec_factor_updates.py",
+      "reason": "SoRec-style sigmoid/error-driven factor updates are dense numeric loops with clear performance relevance."
+    },
+    {
+      "blob_id": "9b7227841c7f76919828776a5124f863cb939691",
+      "path": "/production/FasterNLP/Cython_test/test_cython.pyx",
+      "output": "sumint_range.py",
+      "reason": "Simple integer summation loop is a compact baseline kernel useful for basic optimization behavior."
+    }
+  ],
+  "skipped": [
+    {
+      "blob_id": "6be7fbcab6adebc007b93f1bce9388ce53d43f23",
+      "path": "/emolog_pc/emolog/cython_util.pyx",
+      "reason": "Utility/decorator and unpack helpers are mostly orchestration glue with low standalone optimization signal."
+    },
+    {
+      "blob_id": "6676aa600ce0dd234186f5e116bad0f325873293",
+      "path": "/data_population/src/logic/meili_populate.pyx",
+      "reason": "Database/index population script is IO/service orchestration rather than compute-kernel optimization."
+    },
+    {
+      "blob_id": "ad10fa5e9a0f0f0d1583ce25bbd9ca4fa4be28a0",
+      "path": "/cython/identify_writer.pyx",
+      "reason": "Depends heavily on CV/ML stack and application pipeline context, reducing portability for unpaired optimization tasks."
+    },
+    {
+      "blob_id": "ec04ca9d3a28700eb97bab9b3f484626ea9f7528",
+      "path": "/test.pyx",
+      "reason": "Large stochastic simulation with file IO and global mutable state is noisy and less suitable for stable training signal."
+    },
+    {
+      "blob_id": "a4ca7f4c8e1f840e1c82a4729cac35d14c4fe420",
+      "path": "/blaze/desc/lldescriptors.pyx",
+      "reason": "Descriptor/wrapper abstractions are interface-level plumbing rather than direct numeric optimization kernels."
+    }
+  ]
+}

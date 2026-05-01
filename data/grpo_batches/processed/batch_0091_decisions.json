@@ -1,0 +1,62 @@
+{
+  "batch": 91,
+  "accepted": [
+    {
+      "blob_id": "49888f3638ebf2596914e6e75ce20d17b7d40dee",
+      "path": "/pyrosm/tagparser.pyx",
+      "output": "tagparser_dense_ops.py",
+      "reason": "Dense key/value tag parsing and tag-column explosion provide structured loop-heavy dict/list transformations."
+    },
+    {
+      "blob_id": "a081595dd3617452efee23f4888e86d177c1f764",
+      "path": "/rlscore/learner/_interactive_rls_classifier.pyx",
+      "output": "rls_class_reassignment.py",
+      "reason": "Class reassignment local-search over matrix-like state is a strong iterative optimization workload."
+    },
+    {
+      "blob_id": "44f9e0ebab1d3711e3a71f4c8ddb16bd8881c1bc",
+      "path": "/relaxation.pyx",
+      "output": "csr_gauss_seidel_relaxation.py",
+      "reason": "CSR Gauss-Seidel and projected updates are classic numerical kernels suited for Cython speedups."
+    },
+    {
+      "blob_id": "7e32210fb7931890558ee341cc03956e89546b70",
+      "path": "/glearn/_correlation/_compute_dense_correlation.pyx",
+      "output": "dense_correlation_derivatives.py",
+      "reason": "Correlation Jacobian/Hessian computations are dense numeric loops with clear optimization opportunities."
+    },
+    {
+      "blob_id": "227bbc41b2445e4599fa8f283137141c06294ce4",
+      "path": "/ratings/glicko2/glicko2.pyx",
+      "output": "glicko2_rating_update.py",
+      "reason": "Iterative volatility solve and rating updates provide nontrivial math-heavy control flow for optimization."
+    }
+  ],
+  "skipped": [
+    {
+      "blob_id": "fc62646bc0e970da7430bf9ce0a40fbb12114c39",
+      "path": "/NLP/StringModules/Optimizers.pyx",
+      "reason": "Mostly declarations/utility scaffolding with limited standalone kernel content."
+    },
+    {
+      "blob_id": "0be217d58c8d82c53ce15b28484aa7686e91c812",
+      "path": "/tests/run/for_in_string.pyx",
+      "reason": "Interpreter behavior/string-iteration test fixture, not representative optimization workload."
+    },
+    {
+      "blob_id": "7ccbd90f931a5a1998716d9e6611d562c0a36d20",
+      "path": "/util.pyx",
+      "reason": "General math helper collection without a focused end-to-end kernel/problem statement."
+    },
+    {
+      "blob_id": "25e10c2e5c789a4c5a857bab3067b58bf7869ece",
+      "path": "/src/dilap/BROKEN/toremove/bbox.pyx",
+      "reason": "Marked BROKEN/toremove and tied to external project types; not suitable for clean training examples."
+    },
+    {
+      "blob_id": "a182bfb474782b4bd36341df4d412cc1682dadfd",
+      "path": "/pandas/src/reindex.pyx",
+      "reason": "High overlap with existing reindex-style unpaired data already present; skipped to reduce duplication."
+    }
+  ]
+}

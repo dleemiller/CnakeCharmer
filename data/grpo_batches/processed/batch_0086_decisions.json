@@ -1,0 +1,63 @@
+{
+  "batch": 86,
+  "accepted": [
+    {
+      "blob_id": "40e2a69a0b433bbb527e64fca674400eef432268",
+      "path": "/lightning/impl/prox_fast.pyx",
+      "output": "tv_prox_kernels.py",
+      "reason": "Total-variation proximal routines are strong optimization kernels with nested passes over vectors/matrices."
+    },
+    {
+      "blob_id": "f7974e20ff739beb44f01bf7289c83e98b9188a0",
+      "path": "/FDApy/src/sigma.pyx",
+      "output": "sigma_estimation_series.py",
+      "reason": "Sigma estimation via finite differences/MSE is a compact numeric loop workload suitable for speedup tasks."
+    },
+    {
+      "blob_id": "ca6428c9de5a675f3b9d1e2c9ef0c07d981ceb42",
+      "path": "/primes/primes.pyx",
+      "output": "prime_tools.py",
+      "reason": "Primality and sieve routines are canonical algorithmic kernels with clear optimization signal."
+    },
+    {
+      "blob_id": "4e928933b2846b6bbf5c8e11cc703c765ae97690",
+      "path": "/work_in_progress/_old/mask_tiff/normalizeImage.pyx",
+      "output": "image_normalize_minmax.py",
+      "reason": "Min/max scan plus per-pixel normalization is a standard image-processing loop pattern."
+    },
+    {
+      "blob_id": "f9ccf20e532c725ba8ec830e8a3a36687d3c9981",
+      "path": "/pyjkstra.pyx",
+      "output": "dijkstra_shortest_paths.py",
+      "reason": "Shortest-path computation over weighted graphs is a high-value algorithmic optimization target."
+    },
+    {
+      "blob_id": "fc6c8e7a3970ed7e267c2daec981f4e72d302e45",
+      "path": "/smoke/replay/decoder/packet_entities.pyx",
+      "output": "entity_patch_decode.py",
+      "reason": "Entity patch/deletion decode flow provides useful stateful list-processing logic for agentic coding tasks."
+    }
+  ],
+  "skipped": [
+    {
+      "blob_id": "ce7e5091c57e519173f8ef89544fc6e30139ea4d",
+      "path": "/src/MatrixFuncs.pyx",
+      "reason": "Contains legacy Python2-style code and heavy project-specific statistical context, reducing portability and quality."
+    },
+    {
+      "blob_id": "6498e8f9f4737e2073aea8f40519a7b5503734cf",
+      "path": "/scorep.pyx",
+      "reason": "Profiling-library wrapper is systems integration glue rather than a standalone compute optimization kernel."
+    },
+    {
+      "blob_id": "d766214a57b2f5c11980305043c5fd7567d9c37a",
+      "path": "/cbma_ext.pyx",
+      "reason": "Randomized itemset-hiding heuristic is highly domain-specific and less stable as generic optimization training data."
+    },
+    {
+      "blob_id": "dac6f5e261737336623650839d1228f9739f6c34",
+      "path": "/test3.pyx",
+      "reason": "Streaming/msgpack merge utility is IO-oriented and orchestration-heavy with limited Cython optimization relevance."
+    }
+  ]
+}

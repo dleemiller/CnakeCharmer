@@ -1,0 +1,64 @@
+{
+  "batch": 94,
+  "accepted": [
+    {
+      "blob_id": "6dc4476e680ac0b6d9a6dbbbc1a85b6845b9565d",
+      "path": "/src/nanopyx/core/analysis/ccm_helper_functions.pyx",
+      "output": "even_square_image_ops.py",
+      "reason": "Array-shape checks and center-crop transforms over 3D image stacks are useful numeric preprocessing kernels."
+    },
+    {
+      "blob_id": "4d1085a54a886ecf16271640ca877cddc4095658",
+      "path": "/mandelbrot_cy.pyx",
+      "output": "mandelbrot_escape_grid.py",
+      "reason": "Mandelbrot escape iteration is a classic nested-loop compute kernel with clear optimization value."
+    },
+    {
+      "blob_id": "ee5cb0e32f8d22a9e8a14bd5fc4d5ca662373cfa",
+      "path": "/la/src/cflabel.pyx",
+      "output": "list_mapping_indices.py",
+      "reason": "Index mapping between label lists is a compact but common data-transformation kernel."
+    },
+    {
+      "blob_id": "9f1a5b0e2ebc136bec3f16ebefe794108834b5b1",
+      "path": "/orbit/framing.pyx",
+      "output": "ws_frame_parser.py",
+      "reason": "Binary frame parsing with masking and variable-length payload handling is a practical performance-sensitive loop workload."
+    },
+    {
+      "blob_id": "9c7255687ebb2f3686272345e92de655f71a9b7f",
+      "path": "/python/helpers/third_party/thriftpy/_shaded_thriftpy/transport/cybase.pyx",
+      "output": "cybuffer_transport_core.py",
+      "reason": "Byte-buffer cursor management and resize/read/write logic provide systems-style optimization examples."
+    },
+    {
+      "blob_id": "f9f38ead7ff5361186c2837d1941f7b933d58e1e",
+      "path": "/Cython/sieve/.ipynb_checkpoints/sieve_cython_dll-checkpoint.pyx",
+      "output": "sieve_linked_primes.py",
+      "reason": "Prime sieve elimination loops remain a strong algorithmic optimization target despite notebook-checkpoint origin."
+    },
+    {
+      "blob_id": "293e6899cb2836d9c09e4f5f0dc86e64a04967e8",
+      "path": "/DECSKS-18 -- 1D1V_two_species_boundary_problems_--_part_3/v2.0/DECSKS/lib/remap.pyx",
+      "output": "remap_flux_assignment.py",
+      "reason": "Grid remap and flux-sifting updates are numerically relevant kernel-style array operations."
+    }
+  ],
+  "skipped": [
+    {
+      "blob_id": "f11d6d11b416c263c5648e98a98d351f61f4169a",
+      "path": "/ucp/_libs/ucx_object.pyx",
+      "reason": "Resource-finalizer wrapper for UCX handles; lifecycle plumbing rather than optimization kernel."
+    },
+    {
+      "blob_id": "5b3e9468b6c76949217ce376a6627d1dcb10dbe2",
+      "path": "/CCEA/Cython_Code/ccea.pyx",
+      "reason": "Large class-based algorithm framework with heavy external coupling; not a clean standalone kernel extract in this pass."
+    },
+    {
+      "blob_id": "a396fb81e2f99fae6e3305f099f2be74417353a6",
+      "path": "/genomicfeatures/_BEDFeature.pyx",
+      "reason": "Feature parsing/object model is domain-specific record plumbing with limited generic kernel value."
+    }
+  ]
+}

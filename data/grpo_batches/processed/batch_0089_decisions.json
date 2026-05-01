@@ -1,0 +1,68 @@
+{
+  "batch": 89,
+  "accepted": [
+    {
+      "blob_id": "3289b9192d517bf4853a7d45e863f8136c8a2491",
+      "path": "/src/_sk_debye.pyx",
+      "output": "debye_structure_factor.py",
+      "reason": "Debye structure-factor accumulation over periodic pair distances is a strong nested-loop numerical kernel."
+    },
+    {
+      "blob_id": "4b42ec6546d7c7097a497705d5d81c4926b86ac7",
+      "path": "/skimage/transform/_project.pyx",
+      "output": "homography_bilinear.py",
+      "reason": "Homography mapping with bilinear interpolation is a canonical image-warp compute primitive."
+    },
+    {
+      "blob_id": "1e3e8241a6a44477a50d3d65318984c508df083c",
+      "path": "/inc/codecs/int.pyx",
+      "output": "integer_codec_checks.py",
+      "reason": "Integer codec bounds-check and conversion logic is practical low-level data handling useful for optimization tasks."
+    },
+    {
+      "blob_id": "bad3eb0cf89475176d794957696962526394d6a2",
+      "path": "/coro/_read_stream.pyx",
+      "output": "buffered_stream_read_until.py",
+      "reason": "Buffered delimiter scanning is a compact streaming algorithm with tight pointer/index style control flow."
+    },
+    {
+      "blob_id": "9db26b0f07f597bf6b1f2a457e3a997b743ab8ab",
+      "path": "/hmm_kit/_hmmc.pyx",
+      "output": "hmm_viterbi_simple.py",
+      "reason": "Alternative Viterbi implementation provides additional DP trace diversity for sequence decoding workloads."
+    },
+    {
+      "blob_id": "e6ca6b78af798bb0d74ff27a705acc747e8270de",
+      "path": "/vlasov/core/hamiltonian.pyx",
+      "output": "hamiltonian_energy_momentum.py",
+      "reason": "Hamiltonian energy/momentum reductions over phase-space grids are high-value physics compute kernels."
+    }
+  ],
+  "skipped": [
+    {
+      "blob_id": "92ac0c0c933fab51da028ba209098d84528b52ea",
+      "path": "/adlinklib.pyx",
+      "reason": "Mostly minimal wrapper/demo code with limited standalone optimization signal."
+    },
+    {
+      "blob_id": "532373646777688709818054ca9ddcaec3ce8f4d",
+      "path": "/tests/run/cdef_multiple_inheritance_nodict.pyx",
+      "reason": "Cython inheritance behavior test code is not an algorithmic optimization workload."
+    },
+    {
+      "blob_id": "2f9c908e35e6c6e7b46200b68f21665a20134d28",
+      "path": "/contrib/python/pyzmq/py2/zmq/backend/cython/_device.pyx",
+      "reason": "Messaging device/proxy wrapper is integration-layer orchestration with low compute-kernel relevance."
+    },
+    {
+      "blob_id": "e32cc407d50ad02ab0f944b1a09cb00763141190",
+      "path": "/algorithms.pyx",
+      "reason": "Legacy image-note extraction with heavy project coupling/object logic gives noisy and less portable training signal."
+    },
+    {
+      "blob_id": "b8107ab7e3fbfaebe6f023d8003478b589167d12",
+      "path": "/tests/run/enumerate_T316.pyx",
+      "reason": "Compiler optimization tests for enumerate are not representative optimization targets for code synthesis."
+    }
+  ]
+}
