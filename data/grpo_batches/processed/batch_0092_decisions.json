@@ -1,0 +1,63 @@
+{
+  "batch": 92,
+  "accepted": [
+    {
+      "blob_id": "6e24b4a340e848fb64e4293717d715639e7e7050",
+      "path": "/PyRuSH/StaticSentencizerFun.pyx",
+      "output": "static_sentencizer_rules.py",
+      "reason": "Sentence-boundary rule scanning and annotation loops are practical token-processing kernels with clear optimization structure."
+    },
+    {
+      "blob_id": "73ef2c459d7389a56a6e660b43c03f50154b0e48",
+      "path": "/supplychainpy/demand/_squared_error.pyx",
+      "output": "squared_error_grid_aggregation.py",
+      "reason": "Grid-wise squared-error aggregation over nested records is useful for loop optimization tasks."
+    },
+    {
+      "blob_id": "14448c65868880f426df668ccbafd294d517e2ba",
+      "path": "/waves2/gauss/gaussc.pyx",
+      "output": "gaussian_obp_profile.py",
+      "reason": "Gaussian profile generation uses dense numeric loops and math-heavy kernels suitable for Cython speedups."
+    },
+    {
+      "blob_id": "61a8ff0a4f03f3cd42ad967e350a621d7189f243",
+      "path": "/abce/online_variance.pyx",
+      "output": "online_variance_tracker.py",
+      "reason": "Streaming online-variance updates are compact numeric kernels with stateful iterative updates."
+    },
+    {
+      "blob_id": "91a67e941d963bf38e3863e1c40d549fd565f171",
+      "path": "/src/_metrics_cy.pyx",
+      "output": "manifold_ranking_metrics.py",
+      "reason": "Trustworthiness/continuity/LCMC metrics provide matrix-style aggregation loops with optimization value."
+    },
+    {
+      "blob_id": "ffb25bbde0b3675cb47244295397caad057f118e",
+      "path": "/Cython_Tutorial_Two.pyx",
+      "output": "dynamic_array_memory_growth.py",
+      "reason": "Dynamic array growth patterns capture memory-management behavior that is useful for systems-style optimization examples."
+    }
+  ],
+  "skipped": [
+    {
+      "blob_id": "264e757cc56c4701247a449dd385780313eebbb7",
+      "path": "/src/voperation.pyx",
+      "reason": "Binding/introspection constants and wrapper plumbing rather than a focused compute kernel."
+    },
+    {
+      "blob_id": "bc4018d67997752fcd45ddae8e1093c30a4c0439",
+      "path": "/tests/run/ext_attr_assign.pyx",
+      "reason": "Cython attribute-assignment test fixture, not optimization-target workload."
+    },
+    {
+      "blob_id": "948266c9279fdc561aef106400162e1240f8bd1d",
+      "path": "/cefpython/javascript_callback_cef1.pyx",
+      "reason": "CEF integration callback plumbing is framework-specific glue, not standalone numeric/algorithmic kernel."
+    },
+    {
+      "blob_id": "b063928d2ccb60c92cc801db252f06408343ef7a",
+      "path": "/tests/run/dynamic_attributes.pyx",
+      "reason": "Dynamic attribute behavior tests are not representative of Cython performance optimization tasks."
+    }
+  ]
+}

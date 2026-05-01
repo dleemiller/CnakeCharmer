@@ -1,0 +1,64 @@
+{
+  "batch": 39,
+  "accepted": [
+    {
+      "blob_id": "8bd0bbff651c29052baabfc401629f40d6cdc160",
+      "path": "/ode_cy_cdef.pyx",
+      "output": "breakage_ode.py",
+      "reason": "Triangular-loop ODE update plus moment aggregation is a clean numeric kernel for Cython acceleration."
+    },
+    {
+      "blob_id": "e5b0218307a6192a8fb51a0d59efcf9d4f488ddb",
+      "path": "/raysect/core/math/_mat4.pyx",
+      "output": "mat4_matrix.py",
+      "reason": "4x4 coercion and matrix multiplication provide reusable fixed-size linear-algebra loop patterns."
+    },
+    {
+      "blob_id": "17712010f64a8540ae166861e57de0e58ae1f56d",
+      "path": "/BIN/code/sudoku_generate.pyx",
+      "output": "sudoku_grid_builder.py",
+      "reason": "Permutation-driven grid construction supplies deterministic indexing-heavy combinatorial logic."
+    },
+    {
+      "blob_id": "450de50bfd211979d71ba480440b278b4c7219b6",
+      "path": "/quick_pandas/ext/operators.pyx",
+      "output": "grouped_operators.py",
+      "reason": "Indexed reductions and window means are high-value baseline kernels for typed loop optimization."
+    },
+    {
+      "blob_id": "c3ce7aa2fd470e72cd93dbf679629d788bd10448",
+      "path": "/utils/img_preprocessing.pyx",
+      "output": "image_preprocessing_utils.py",
+      "reason": "Image dimension rounding and match-point extraction provide practical array indexing kernels."
+    },
+    {
+      "blob_id": "86cfe88d6b22564b5ef7e0df345a1144e7a7cdee",
+      "path": "/acceleration-by-c/python/numba/numba_ma.pyx",
+      "output": "moving_average_window.py",
+      "reason": "Incremental rolling average logic is a concise, high-signal optimization target."
+    },
+    {
+      "blob_id": "2d77d069763515ef62398198fa16d198a5080aa5",
+      "path": "/CQFProject/SimulateLegs.pyx",
+      "output": "copula_uniform_sampling.py",
+      "reason": "Nested Monte Carlo sampling loops and DF search objective are strong numeric training patterns."
+    }
+  ],
+  "skipped": [
+    {
+      "blob_id": "bef364ec1fc38ea19bf6226fbb13d6f80a9d0e27",
+      "path": "/src/pypore/strategies/absolute_change_threshold_strategy.pyx",
+      "reason": "Thin strategy wrapper with constant-return methods offers little optimization signal."
+    },
+    {
+      "blob_id": "cf46c86eedb6732fb5d6f296b15a1458b477455b",
+      "path": "/kivypkgtplapp/hello_cython.pyx",
+      "reason": "Toy hello-world class is too trivial for GRPO conversion training."
+    },
+    {
+      "blob_id": "c037a4a28e0dbd0ea45c85e5e0d4c6ab9c5be3e8",
+      "path": "/sequencing_tools/bam_tools/bam_cluster.pyx",
+      "reason": "Heavy BAM/pysam workflow and plotting stack are domain-bound and not standalone kernel material."
+    }
+  ]
+}

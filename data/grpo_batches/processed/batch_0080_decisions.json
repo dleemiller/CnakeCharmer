@@ -1,0 +1,62 @@
+{
+  "batch": 80,
+  "accepted": [
+    {
+      "blob_id": "8cc1b9bc490d8623e0e88ace57bcbb791d95ff5a",
+      "path": "/wheel/cynet.pyx",
+      "output": "dense_blas_style_ops.py",
+      "reason": "Dense linear-algebra style forward-pass loops are high-value optimization targets for Cython conversion."
+    },
+    {
+      "blob_id": "21bc96b702c5058b3fc1cab0c48ed47d06ffb41b",
+      "path": "/old/commonroad-telluride2020/tireModel.pyx",
+      "output": "tire_magic_formula.py",
+      "reason": "Magic-formula tire-force computations are numeric kernels with repeated transcendental operations and clear optimization utility."
+    },
+    {
+      "blob_id": "d08c8d04014efe65bbe79fed5f34d6e1153408dc",
+      "path": "/core/optimized/transformations.pyx",
+      "output": "beam_splitter_transform.py",
+      "reason": "Nested-loop beam-splitter transforms provide substantial arithmetic workload ideal for performance-focused training examples."
+    },
+    {
+      "blob_id": "e78a97cfc4e76ad6761c62f738defb216ce792c6",
+      "path": "/photutils/utils/_sampling.pyx",
+      "output": "block_sampling_ops.py",
+      "reason": "Block downsample/upsample array kernels are canonical stencil-style loops suited to Cython speedup tasks."
+    },
+    {
+      "blob_id": "af80538ef82ab3c71ca22b7e4b46f0962d6dc8ee",
+      "path": "/pyapprox/cython/function_train.pyx",
+      "output": "function_train_core_eval.py",
+      "reason": "Function-train core evaluation uses structured nested loops over basis coefficients and maps well to optimization workflows."
+    }
+  ],
+  "skipped": [
+    {
+      "blob_id": "20cfd08a49ebfa151aa34daa25831266e71514f3",
+      "path": "/aio_pipe.pyx",
+      "reason": "Async pipe/event-loop integration code is I/O and runtime orchestration, not a standalone numeric optimization problem."
+    },
+    {
+      "blob_id": "c0af0e92284e6fd32c6ff2c1787732a593fddeed",
+      "path": "/tests/run/builtin_memory_view.pyx",
+      "reason": "Cython compiler/runtime test fixture for memoryview behavior is not an optimization-training workload."
+    },
+    {
+      "blob_id": "c7e9c436400313852c5f5d05fe5d7b2d2ea38279",
+      "path": "/asynckafka/settings.pyx",
+      "reason": "Tiny settings/debug flag module lacks meaningful computational content for Cython speedup training."
+    },
+    {
+      "blob_id": "a0855d16f51bd9b09233a5deae6c3e19e9ff1673",
+      "path": "/Cython_Tutorial_One.pyx",
+      "reason": "Tutorial/demo code is primarily pedagogical and not a realistic optimization target."
+    },
+    {
+      "blob_id": "c21b6628db321da55bc10bb4e4b594e94dde872c",
+      "path": "/sslca/modelBaseUnpicklerUtil.pyx",
+      "reason": "Memoryview pickling/unpickling utility is type-conversion glue with limited value for optimization-centric training."
+    }
+  ]
+}

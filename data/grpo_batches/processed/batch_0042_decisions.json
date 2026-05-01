@@ -1,0 +1,65 @@
+{
+  "batch": 42,
+  "accepted": [
+    {
+      "blob_id": "3fab4ea395ab3026eddff2846f82e355c77689d7",
+      "path": "/lpd_research/branchbound/bnb.pyx",
+      "output": "branch_and_bound_core.py",
+      "reason": "Core branch-and-bound node selection and branching flow is a high-value algorithmic search pattern."
+    },
+    {
+      "blob_id": "c4452115c5d723936935be6badd333e6fbfe3738",
+      "path": "/lib/python2.7/site-packages/odps/src/types_c.pyx",
+      "output": "odps_type_validators.py",
+      "reason": "Scalar type validation for integer, datetime, decimal, and string boundaries provides practical utility kernels."
+    },
+    {
+      "blob_id": "256090a0573903631b55f6939e15eca3c80b0bed",
+      "path": "/quick_pandas/ext/example.pyx",
+      "output": "fused_compute.py",
+      "reason": "Clipped affine elementwise transforms over 2D arrays are clean numeric loop kernels for optimization."
+    },
+    {
+      "blob_id": "5f74e881adf7188c4a0126d8b8f400b03bfe85f5",
+      "path": "/buildUserWeightMatrix.pyx",
+      "output": "user_similarity_weights.py",
+      "reason": "Pairwise Pearson-correlation matrix construction is a strong recommendation-style numeric workload."
+    },
+    {
+      "blob_id": "6838b6aed394ee6e91769ee03fbfacd8a1639322",
+      "path": "/_refine_point_list.pyx",
+      "output": "refine_point_list.py",
+      "reason": "Trilinear interpolation with local search over guesses is a high-signal geometric refinement kernel."
+    },
+    {
+      "blob_id": "8b2fad4eda0f6248237e64af555bcd74dc3b27d8",
+      "path": "/hazma/spectra/_positron/_muon.pyx",
+      "output": "muon_positron_spectrum.py",
+      "reason": "Piecewise spectral density evaluation with relativistic transforms provides advanced numeric function patterns."
+    },
+    {
+      "blob_id": "58df381b478155d988182f0d5aed369bd4716d9d",
+      "path": "/LDL/ldl1.pyx",
+      "output": "ldl_decomposition.py",
+      "reason": "Nested-loop LDL decomposition is a canonical matrix factorization kernel."
+    },
+    {
+      "blob_id": "d57fab55763662abee5fba377d769403f562db03",
+      "path": "/kaggler/online_model/_tree.pyx",
+      "output": "online_tree_split.py",
+      "reason": "Online split selection and recursive node updates are strong incremental-learning algorithm patterns."
+    }
+  ],
+  "skipped": [
+    {
+      "blob_id": "78afb6a13a78f2915e0d2ecdc964fac7b8d4a9c1",
+      "path": "/tests/errors/extended_unpacking.pyx",
+      "reason": "Parser error regression fixture, not a computational conversion target."
+    },
+    {
+      "blob_id": "d7e1de9369faa5fc090f7923056b778846a28190",
+      "path": "/imagecodecs/_brunsli.pyx",
+      "reason": "Primarily codec binding and error plumbing around external library calls, limited standalone kernel value."
+    }
+  ]
+}

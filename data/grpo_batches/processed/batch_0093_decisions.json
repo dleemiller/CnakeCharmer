@@ -1,0 +1,63 @@
+{
+  "batch": 93,
+  "accepted": [
+    {
+      "blob_id": "20a2ff218ad0ba3628d50577fa85d7950f244d83",
+      "path": "/Matrix Multiplication/cy/cymatrix.pyx",
+      "output": "matrix_multiply_triple_loop.py",
+      "reason": "Dense matrix multiplication is a canonical numeric kernel with straightforward Cython optimization opportunities."
+    },
+    {
+      "blob_id": "4501cf68eac806c724727693e093fb75d8940677",
+      "path": "/Challenge_1/ctext_extractor.pyx",
+      "output": "wiki_pattern_extractor.py",
+      "reason": "Regex-guided recursive pattern extraction over windows provides meaningful loop/string processing optimization workload."
+    },
+    {
+      "blob_id": "4c7a33ae05956e6793a561d3252fcd40a167e3df",
+      "path": "/connect4/Connect4Logic.pyx",
+      "output": "connect4_board_logic.py",
+      "reason": "Board-state updates and win-condition scans are useful grid-iteration kernels for optimization practice."
+    },
+    {
+      "blob_id": "e35f6761c85fb6a33e17929f2a60323cbdb8efa0",
+      "path": "/example_code/cython_recipe/cython_files/cy_levenshtein.pyx",
+      "output": "levenshtein_distance_dp.py",
+      "reason": "Levenshtein dynamic programming is a strong classic kernel with nested-loop and memory update patterns."
+    },
+    {
+      "blob_id": "12d3ec54e738c5ac206e97f56d3165dfe2debf24",
+      "path": "/xpsi/likelihoods/_poisson_likelihood_given_background.pyx",
+      "output": "poisson_background_likelihood.py",
+      "reason": "Phase-shifted integration plus Poisson log-likelihood accumulation is a high-value numerical workload."
+    },
+    {
+      "blob_id": "5d875d5c01b2551c8697d83e861af1f8cbac2968",
+      "path": "/native/cyworker.pyx",
+      "output": "nbody_worker_update.py",
+      "reason": "N-body force accumulation and state integration provide substantial compute-kernel optimization signal."
+    }
+  ],
+  "skipped": [
+    {
+      "blob_id": "f33056dbecd393f563ff1b9e7ed3bf706f6b8fb9",
+      "path": "/src_test/cython/parallel/print_argument_with_parallel2.pyx",
+      "reason": "Parallel print/demo code with heavy I/O and test scaffolding; low training value for optimization kernels."
+    },
+    {
+      "blob_id": "6505c57c365cdb7e336d06a38c66301023d5ab39",
+      "path": "/fastwarc/fastwarc/tools.pyx",
+      "reason": "Primarily archive I/O/compression orchestration and external integration, not a focused standalone kernel."
+    },
+    {
+      "blob_id": "d558c446d16b34380bc521cacd2f8ea04b0df702",
+      "path": "/renpy/gl2/gl2polygon.pyx",
+      "reason": "Engine-specific geometry/object plumbing; tightly coupled to external runtime structures."
+    },
+    {
+      "blob_id": "e50923d04a73e008cdb196998e42ddd1d4598ddb",
+      "path": "/kivypkgtplapp/hello_cython_cython.pyx",
+      "reason": "Minimal hello/wrapper example with negligible algorithmic optimization content."
+    }
+  ]
+}

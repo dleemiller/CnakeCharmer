@@ -36,6 +36,7 @@ TRACES_DIR = Path("data/traces")
 MASTER_FILES = [TRACES_DIR / "master_traces.jsonl"]
 TOOLS_FILE = Path("data/tools.json")
 SYSTEM_PROMPT_FILE = Path("data/system_prompt.txt")
+BENCHMARK_CACHE_FILE = Path(".benchmark_cache.json")
 
 
 # ---------------------------------------------------------------------------
@@ -161,6 +162,66 @@ def assign_effort_terciles(records: list[dict]) -> None:
         )
 
 
+def load_benchmark_speedup_refs() -> dict[str, float]:
+    """Load benchmark speedup references by benchmark/problem stem.
+
+    Returns:
+        Dict mapping benchmark_id/stem -> speedup reference (>1.0).
+    """
+    if not BENCHMARK_CACHE_FILE.exists():
+        return {}
+
+    try:
+        payload = json.loads(BENCHMARK_CACHE_FILE.read_text())
+    except Exception:
+        logger.warning(f"Failed to parse {BENCHMARK_CACHE_FILE}; ignoring benchmark refs")
+        return {}
+
+    refs: dict[str, float] = {}
+    results = payload.get("results", {})
+    if not isinstance(results, dict):
+        return refs
+
+    for bench_id, entries in results.items():
+        if not isinstance(bench_id, str) or not isinstance(entries, list):
+            continue
+        best = 0.0
+        for rec in entries:
+            if not isinstance(rec, dict):
+                continue
+            try:
+                sp = float(rec.get("speedup", 0.0) or 0.0)
+            except (TypeError, ValueError):
+                sp = 0.0
+            if sp > best:
+                best = sp
+        if best > 1.0:
+            refs[bench_id] = min(100.0, best)
+
+    return refs
+
+
+def trace_reasoning_char_count(trace: Trace) -> int:
+    """Count reasoning characters directly from trace trajectory fields.
+
+    Uses `reasoning_i` first, then falls back to `thought_i`, mirroring render logic.
+    """
+    v1 = trace.to_v1_dict()
+    traj = v1.get("trajectory", {})
+    total = 0
+    for i in range(v1.get("num_iterations", 0)):
+        reasoning = (
+            (traj.get(f"reasoning_{i}", "") or "")
+            .replace("<think>\n", "")
+            .replace("\n</think>", "")
+        )
+        reasoning = reasoning.strip()
+        if not reasoning:
+            reasoning = (traj.get(f"thought_{i}", "") or "").strip()
+        total += len(reasoning)
+    return total
+
+
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
@@ -176,6 +237,17 @@ def main():
     parser.add_argument("--max-tokens", type=int, default=16384)
     parser.add_argument("--min-iters", type=int, default=0)
     parser.add_argument("--require-finish", action="store_true")
+    parser.add_argument(
+        "--min-analysis-chars",
+        type=int,
+        default=256,
+        help="Minimum total analysis characters required per example (default: 256)",
+    )
+    parser.add_argument(
+        "--allow-no-analysis",
+        action="store_true",
+        help="Allow rendered examples with zero analysis content (default: reject for format consistency)",
+    )
     args = parser.parse_args()
 
     # --- Load everything up front ---
@@ -207,13 +279,48 @@ def main():
     traces = load_traces(input_paths)
     logger.info(f"Total: {len(traces)} traces")
 
+    # Per-problem speedup normalization references.
+    # Preference order:
+    #   1) benchmark cache baseline by problem stem (min(100, benchmark_speedup))
+    #   2) max speedup seen in traces for that problem (min(100, max_trace_speedup))
+    #   3) fallback 100
+    problem_max_speedup: dict[str, float] = defaultdict(float)
+    for trace in traces:
+        m = parse_trace_metrics(trace)
+        if m["speedup"] > problem_max_speedup[trace.problem_id]:
+            problem_max_speedup[trace.problem_id] = m["speedup"]
+
+    benchmark_refs_by_stem = load_benchmark_speedup_refs()
+    if benchmark_refs_by_stem:
+        logger.info(
+            f"Loaded benchmark refs for {len(benchmark_refs_by_stem)} problems from {BENCHMARK_CACHE_FILE}"
+        )
+    else:
+        logger.info("No benchmark speedup refs found; using trace-derived refs")
+
+    problem_speedup_ref: dict[str, float] = {}
+    for pid in problems:
+        stem = pid.split("/")[-1]
+        bench_ref = benchmark_refs_by_stem.get(stem, 0.0)
+        if bench_ref > 1.0:
+            problem_speedup_ref[pid] = bench_ref
+            continue
+        mx = problem_max_speedup.get(pid, 0.0)
+        problem_speedup_ref[pid] = min(100.0, mx) if mx > 1.0 else 100.0
+
     # --- Score & filter ---
     logger.info("Scoring and filtering traces...")
     candidates: list[Candidate] = []
-    skip_problem, skip_finish, skip_iters = 0, 0, 0
+    skip_problem, skip_finish, skip_iters, skip_analysis_raw = 0, 0, 0, 0
 
     for trace in traces:
-        sft = score_trace(trace)
+        if (not args.allow_no_analysis) and trace_reasoning_char_count(
+            trace
+        ) < args.min_analysis_chars:
+            skip_analysis_raw += 1
+            continue
+        speedup_ref = problem_speedup_ref.get(trace.problem_id, 100.0)
+        sft = score_trace(trace, speedup_ref=speedup_ref)
         if sft < args.min_score:
             continue
         if args.require_finish and not any(s.tool_name == "finish" for s in trace.steps):
@@ -242,7 +349,11 @@ def main():
 
     logger.info(
         f"  {len(candidates)} passed "
-        f"(skipped {skip_problem} unknown, {skip_finish} no finish, {skip_iters} too few iters)"
+        f"(skipped {skip_problem} unknown, {skip_finish} no finish, "
+        f"{skip_iters} too few iters, {skip_analysis_raw} low/no analysis)"
+    )
+    logger.info(
+        f"  Coverage after score/filter: {len({c.trace.problem_id for c in candidates})} problems"
     )
 
     # --- Validate trace structure ---
@@ -257,19 +368,34 @@ def main():
     if n_invalid:
         logger.info(f"  Trace validation: dropped {n_invalid}")
     candidates = valid
+    logger.info(
+        f"  Coverage after trace validation: {len({c.trace.problem_id for c in candidates})} problems"
+    )
 
     # --- Render & token screen ---
     screened = []
     n_too_long = 0
+    n_no_analysis = 0
     for c in candidates:
         c.text = render(c.trace, c.inputs, system_prompt, tokenizer, tools)
         if count_tokens(c.text) > args.max_tokens:
             n_too_long += 1
+        elif (not args.allow_no_analysis) and total_analysis_length(
+            c.text
+        ) < args.min_analysis_chars:
+            n_no_analysis += 1
         else:
             screened.append(c)
     if n_too_long:
         logger.info(f"  Token screen (>{args.max_tokens}): dropped {n_too_long}")
+    if n_no_analysis:
+        logger.info(
+            f"  Analysis screen (<{args.min_analysis_chars} chars): dropped {n_no_analysis}"
+        )
     candidates = screened
+    logger.info(
+        f"  Coverage after render screens: {len({c.trace.problem_id for c in candidates})} problems"
+    )
 
     # --- Select top-k per problem (best per model, then top-k by score) ---
     by_key: dict[tuple[str, str], Candidate] = {}

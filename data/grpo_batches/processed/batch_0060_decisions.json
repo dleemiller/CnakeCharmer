@@ -1,0 +1,65 @@
+{
+  "batch": 60,
+  "accepted": [
+    {
+      "blob_id": "bd048406228a0555218f881a0636ddee44eeb72b",
+      "path": "/algorithm/dists.pyx",
+      "output": "distribution_primitives.py",
+      "reason": "Uniform and truncated-normal density/CDF routines are compact numeric primitives with clear optimization pathways."
+    },
+    {
+      "blob_id": "a58677d6d68911ee556b271f21c6bbb68fbc8b7e",
+      "path": "/PaddleCV/3d_vision/PointRCNN/utils/cyops/iou3d_utils.pyx",
+      "output": "iou3d_geometry.py",
+      "reason": "Rotated-rectangle clipping and area intersection logic provides robust geometry-heavy kernels."
+    },
+    {
+      "blob_id": "3a8a0ac72e46ca36eed526fd0ed2eacad36d8d4b",
+      "path": "/karta/raster/crfuncs.pyx",
+      "output": "raster_sampling_fill.py",
+      "reason": "Bilinear sampling and grid fill/aggregation loops are practical raster numerical workloads."
+    },
+    {
+      "blob_id": "d252446053854de9ffa90f77360e27f59bf74d0f",
+      "path": "/Starfish/covariance.pyx",
+      "output": "sphere_overlap_covariance.py",
+      "reason": "Covariance-kernel style numerical matrix construction is valuable for scientific compute optimization."
+    },
+    {
+      "blob_id": "0741537387e8fcd4c80613b8fead8f39023df4b9",
+      "path": "/qutip/cy/sparse_utils.pyx",
+      "output": "sparse_matrix_utils.py",
+      "reason": "Sparse bandwidth/profile and permutation loops are strong sparse linear algebra training material."
+    },
+    {
+      "blob_id": "3902b65d90be1e067d9fb051ac58672bda406adb",
+      "path": "/string_distance/edit_distance.pyx",
+      "output": "string_distance_suite.py",
+      "reason": "Edit-distance dynamic programming and sequence operations are broadly useful algorithmic kernels."
+    },
+    {
+      "blob_id": "d6882982fae937331c30e8c7f603fa43997914aa",
+      "path": "/geometry/tools.pyx",
+      "output": "vector_rotation_tools.py",
+      "reason": "Batch quaternion/vector rotation operations are concise geometric numeric patterns."
+    },
+    {
+      "blob_id": "00ddf2d5b94b4293a88c9879cdbeda19c15030a0",
+      "path": "/python/katana/native_interfacing/buffer_access.pyx",
+      "output": "buffer_conversion.py",
+      "reason": "Buffer-protocol conversion helpers model practical data-interchange and low-copy pipeline logic."
+    }
+  ],
+  "skipped": [
+    {
+      "blob_id": "2cecfffaf03951f75bfde2aedfbcd6470d9f71be",
+      "path": "/extras/python-bindings/src/foo/foo_ext.pyx",
+      "reason": "Primarily a thin native-wrapper class with limited standalone algorithmic optimization value."
+    },
+    {
+      "blob_id": "3fc6cb91a0da3c8f6edc15666104e4d18471b0ac",
+      "path": "/oursqlx/util.pyx",
+      "reason": "Tightly coupled MySQL C-extension glue code is integration-specific and less suitable for generic GRPO kernels."
+    }
+  ]
+}

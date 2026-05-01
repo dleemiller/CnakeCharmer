@@ -1,0 +1,65 @@
+{
+  "batch": 44,
+  "accepted": [
+    {
+      "blob_id": "4e1fb7905e032312bd57d0683175580af2e0c831",
+      "path": "/cython_ITF.pyx",
+      "output": "psnr_masked.py",
+      "reason": "Masked PSNR image-quality computation is a compact pixel-loop numeric kernel."
+    },
+    {
+      "blob_id": "df009d0b3fd4c722cdf4f2a4400c36886d2987ad",
+      "path": "/pyMetaLearn/optimizers/metalearn_optimizer/correlation_tree/tau.pyx",
+      "output": "kendall_tau.py",
+      "reason": "Kendall tau pairwise concordance counting provides strong nested-loop statistics patterns."
+    },
+    {
+      "blob_id": "269f04128b3d0b949725befeb52470511db0cdc7",
+      "path": "/RadialAverage_C.pyx",
+      "output": "radial_average.py",
+      "reason": "Radial bin accumulation over 2D arrays is a practical signal/image processing kernel."
+    },
+    {
+      "blob_id": "d9c236a151ed0be31243d519cfc0f0710f6b937a",
+      "path": "/no_omp.pyx",
+      "output": "no_omp_kernel.py",
+      "reason": "Pure nested-loop compute kernel is useful low-level optimization exercise material."
+    },
+    {
+      "blob_id": "b5feed3759318b846238ef485944f0ff8d05430f",
+      "path": "/p_91.pyx",
+      "output": "right_triangles_grid.py",
+      "reason": "Grid-based right-triangle counting is a clear combinatorial geometry loop workload."
+    },
+    {
+      "blob_id": "98ef77aff28e6d70b19305c8b96930f208600282",
+      "path": "/python/cython/with_numpy/prime_check.pyx",
+      "output": "prime_check_batch.py",
+      "reason": "Batched primality checks over contiguous numeric arrays are solid conversion targets."
+    },
+    {
+      "blob_id": "88ce3a279bf9469f93900edb16f855d1a719a2a0",
+      "path": "/pomdp_py/algorithms/value_iteration.pyx",
+      "output": "pomdp_value_iteration.py",
+      "reason": "Policy-tree value accumulation over state/action/observation models is a strong planning kernel pattern."
+    },
+    {
+      "blob_id": "05eb8ea3ac2ad23107716a5e5a56115da340dc9b",
+      "path": "/src/LTMstats.pyx",
+      "output": "liability_threshold_stats.py",
+      "reason": "Heritability and normalization helper loops provide scientific-statistics numeric workload examples."
+    }
+  ],
+  "skipped": [
+    {
+      "blob_id": "5d716bbc2f20ec66aaf7869be32031fea2ee4ac2",
+      "path": "/python/cython/hello.pyx",
+      "reason": "Mostly tutorial/demo snippets with limited standalone kernel value."
+    },
+    {
+      "blob_id": "887002e23844bef0353898f215c962920204f49b",
+      "path": "/psage/libs/smalljac/wrapper2.pyx",
+      "reason": "External library callback wrapper plumbing is too binding-specific for unpaired optimization training."
+    }
+  ]
+}

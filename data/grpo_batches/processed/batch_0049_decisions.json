@@ -1,0 +1,66 @@
+{
+  "batch": 49,
+  "accepted": [
+    {
+      "blob_id": "d210774b66d88b40051541b871f33dc139edeb50",
+      "path": "/uvloop/errors.pyx",
+      "output": "uv_error_mapping.py",
+      "reason": "Error-code to exception/socket mapping is practical systems utility logic with clear branching behavior."
+    },
+    {
+      "blob_id": "b7c3da3cff3f81fc22f9e94758439502bdd6d08c",
+      "path": "/lib/calc_score/calc_score_naive_bayes.pyx",
+      "output": "naive_bayes_scores.py",
+      "reason": "Bernoulli/multinomial Naive Bayes scoring loops are high-signal classification kernels."
+    },
+    {
+      "blob_id": "78be3cf42a8ea9be33b35f585d983bdcc20465fe",
+      "path": "/lipid_cy.pyx",
+      "output": "lipid_traj_utils.py",
+      "reason": "Trajectory parsing and coordinate tensor assembly provide useful numeric data-ingestion patterns."
+    },
+    {
+      "blob_id": "f84dac9e1912fe729ba26ca17c141b0f682fe287",
+      "path": "/pyrle/src/getitem.pyx",
+      "output": "rle_getitem.py",
+      "reason": "Run-length slicing and location lookup operations are strong compressed-array manipulation kernels."
+    },
+    {
+      "blob_id": "961135642860bdaa659f93da3426a89a0a55f91b",
+      "path": "/loss_functions.pyx",
+      "output": "hinge_loss.py",
+      "reason": "Hinge loss and gradient routines are concise optimization primitives for linear classifiers."
+    },
+    {
+      "blob_id": "f2bed32de84a01c183adbc40480fce565fbc595d",
+      "path": "/cython/memory/cmem.pyx",
+      "output": "random_noise_buffer.py",
+      "reason": "Random noise generation loop is a compact sampling kernel suitable for conversion tasks."
+    },
+    {
+      "blob_id": "eaf76c8fec3f1428869ef8cd98fdc9a31c251b77",
+      "path": "/pohmm/_hmmc.pyx",
+      "output": "pohmm_fb.py",
+      "reason": "Forward/backward lattice and ln-eta updates in log-space are high-value sequence-model kernels."
+    },
+    {
+      "blob_id": "088a64ec2a5afe01ff9e09935d8b99b8524d02dd",
+      "path": "/core/models/matrix3d.pyx",
+      "output": "matrix3d_ops.py",
+      "reason": "3x3 determinant/inverse/transpose/vector-dot routines are reusable linear algebra kernels."
+    },
+    {
+      "blob_id": "4d1a9b6a01dd19a3a9529ab7806ead838fe3db2e",
+      "path": "/python/gnl/pdes/petsc/kernel.pyx",
+      "output": "divergence_kernels.py",
+      "reason": "Finite-difference divergence and pressure-gradient stencils are strong PDE numeric kernels."
+    }
+  ],
+  "skipped": [
+    {
+      "blob_id": "4b0132dcffd9277092719a36049ea35eb4bd69f4",
+      "path": "/cythonic/plugins/sens_functions.pyx",
+      "reason": "Depends on external ant_state/fun_args/observations structs not present here; incomplete as standalone training example."
+    }
+  ]
+}

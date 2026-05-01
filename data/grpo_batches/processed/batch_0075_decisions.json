@@ -1,0 +1,64 @@
+{
+  "batch": 75,
+  "accepted": [
+    {
+      "blob_id": "4e71f9f692547dcd36342dd8c54a55c1f61d8ee0",
+      "path": "/kaggler/util.pyx",
+      "output": "kaggler_util_metrics.py",
+      "reason": "Utility metric kernels (weighted stats/inequality metrics) are useful numeric preprocessing workloads."
+    },
+    {
+      "blob_id": "6d0c1f57c8217666243c243e0f1f60546b417790",
+      "path": "/cosmolisa/astrophysics.pyx",
+      "output": "astrophysics_distance_modulus.py",
+      "reason": "Astrophysical magnitude-distance transforms are compact scientific-computing kernels."
+    },
+    {
+      "blob_id": "28d43843c23dff7c20fb475ea96bdda2ff3fc40a",
+      "path": "/cylane.pyx",
+      "output": "lane_pixel_histogram.py",
+      "reason": "Lane-detection column histogram logic is a common dense image-loop workload."
+    },
+    {
+      "blob_id": "3f57a078b7e21d1482f548a5711fe930d33a8d6c",
+      "path": "/pyrosm/graph_export.pyx",
+      "output": "graph_export_edges.py",
+      "reason": "Graph adjacency-to-edge transformations are reusable structural data kernels."
+    },
+    {
+      "blob_id": "9b849a5107020cac6c276ea9a75af4face26bcb5",
+      "path": "/p1_MiniAlphaGo/Valid/valid.pyx",
+      "output": "minialphago_valid_moves.py",
+      "reason": "Board-validity and move-generation loops are concise algorithmic kernels."
+    },
+    {
+      "blob_id": "8369bfe0ba49ff551e6bbd8d169d7cddc0699f35",
+      "path": "/mpcinc_orig/cython/mpcincfgm.pyx",
+      "output": "mpc_incfgm_step.py",
+      "reason": "MPC gradient/matvec iterations are high-value control-optimization kernels."
+    },
+    {
+      "blob_id": "5dedd53e8bac5edc557d0f1593eed618f409c04f",
+      "path": "/wrapping_triangulation/pyleafarea.pyx",
+      "output": "leafarea_triangle_sum.py",
+      "reason": "Triangle area aggregation is a practical geometry/meshing kernel with simple tight loops."
+    }
+  ],
+  "skipped": [
+    {
+      "blob_id": "2fcbbbdebe95d880ea6d7830f33173205ff58a43",
+      "path": "/cython/pxd/cy_array.pyx",
+      "reason": "Learning/example array wrapper code is low-depth tutorial material, not strong standalone optimization data."
+    },
+    {
+      "blob_id": "e73ca84c35c66102b5b7af3fd95b76dc3cae0493",
+      "path": "/eorepo/eodefault.pyx",
+      "reason": "Binding/default wrapper logic is integration-heavy and less reusable for generic conversion tasks."
+    },
+    {
+      "blob_id": "fca759e91b6cd37599a5a5bad0e6889a8b0830ad",
+      "path": "/im3D/isd/s_c/global_SC_isd.pyx",
+      "reason": "Specialized domain routine appears tightly coupled and not broadly transferable for GRPO supervision."
+    }
+  ]
+}

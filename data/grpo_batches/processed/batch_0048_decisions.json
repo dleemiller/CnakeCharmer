@@ -1,0 +1,65 @@
+{
+  "batch": 48,
+  "accepted": [
+    {
+      "blob_id": "99803e9d284ea5c9566668db542a4175ca618c64",
+      "path": "/proj3/golomb_cython.pyx",
+      "output": "golomb_codec.py",
+      "reason": "Golomb bitstream encode/decode logic is a compact entropy-coding kernel with bit-level operations."
+    },
+    {
+      "blob_id": "a60496d3524afd5b3f1cf2d67ef4311d63c0a3ec",
+      "path": "/cdnmf_fast.pyx",
+      "output": "cdnmf_update.py",
+      "reason": "Projected-gradient coordinate updates for constrained NMF are strong matrix-optimization primitives."
+    },
+    {
+      "blob_id": "e6f37ce6c2c42d49a6f649545496937d0e32cc67",
+      "path": "/cython/parallel/multitasking_threads.pyx",
+      "output": "threaded_buffer_read.py",
+      "reason": "Buffered read loops with completion flags represent practical concurrent I/O workflow patterns."
+    },
+    {
+      "blob_id": "18af6802f3f625f62fd020bd0acf91cb60d81a2b",
+      "path": "/spacy/training/alignment_array.pyx",
+      "output": "alignment_array.py",
+      "reason": "Flat ragged-array storage with start/end indexing is a useful data-layout kernel."
+    },
+    {
+      "blob_id": "8c2fdb49b73a12e4897e6e91d629bb862822a198",
+      "path": "/pomdp_py/algorithms/value_iteration.pyx",
+      "output": "pomdp_value_iteration_v2.py",
+      "reason": "Policy-tree value aggregation over transition and observation probabilities is a strong planning kernel."
+    },
+    {
+      "blob_id": "4ed39169917e1730ca6c12af70aaa8ccf92c9491",
+      "path": "/cypyserialize/serializers.pyx",
+      "output": "byte_serializers.py",
+      "reason": "Typed integer pack/unpack routines are practical low-level serialization kernels."
+    },
+    {
+      "blob_id": "69ac09a133772171b4794dc8163cb5de7eade15b",
+      "path": "/Cython/algorithms/dijkstra.pyx",
+      "output": "dijkstra_matrix.py",
+      "reason": "Dijkstra shortest-path over adjacency matrix is a canonical graph-algorithm optimization workload."
+    },
+    {
+      "blob_id": "05c242fd3db01cf387458f6f532f4b5f3472207c",
+      "path": "/xedrift/interpolation.pyx",
+      "output": "trilinear_interp4d.py",
+      "reason": "Trilinear interpolation over 4D arrays provides high-signal numeric indexing and weighting logic."
+    }
+  ],
+  "skipped": [
+    {
+      "blob_id": "7341ab070e50162cd29b1eabacc5a75d16dea2d4",
+      "path": "/old/ftl.pyx",
+      "reason": "OpenGL/SDL texture-loading binding code is integration-heavy and not a standalone conversion kernel."
+    },
+    {
+      "blob_id": "d2e0a248c716629913a5d573b3f676296ce111bb",
+      "path": "/tests/run/cfunc_convert.pyx",
+      "reason": "Cython cfunc conversion behavior test rather than domain algorithmic kernel code."
+    }
+  ]
+}

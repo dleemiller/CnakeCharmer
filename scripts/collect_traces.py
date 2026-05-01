@@ -373,7 +373,9 @@ def main():
         output_path = Path(f"data/traces/{slug}_{prompt_id}.jsonl")
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
-    # Resume: count existing traces per problem for this model
+    # Resume: count existing traces per problem for this model.
+    # Use master traces when available so starting a new output file doesn't
+    # re-run already completed problems for the same model.
     # Normalize model names: strip :free suffix and -preview so variants match
     def normalize_model(m: str) -> str:
         return m.removesuffix(":free").removesuffix("-preview")
@@ -381,8 +383,19 @@ def main():
     existing_counts = Counter()
     existing_best_reward = {}
     model_norm = normalize_model(args.model)
-    if output_path.exists():
-        with open(output_path) as f:
+    resume_sources = []
+    master_path = Path("data/traces/master_traces.jsonl")
+    if master_path.exists():
+        resume_sources.append(master_path)
+    elif output_path.exists():
+        resume_sources.append(output_path)
+
+    # If master is present and output file is separate, include output too.
+    if output_path.exists() and output_path not in resume_sources:
+        resume_sources.append(output_path)
+
+    for src in resume_sources:
+        with open(src) as f:
             for line in f:
                 if line.strip():
                     try:
@@ -401,7 +414,8 @@ def main():
             logger.info(
                 f"Resuming: {sum(existing_counts.values())} qualifying traces "
                 f"(reward >= {args.resume_min_reward:g}) for {args.model} "
-                f"across {len(existing_counts)} problems"
+                f"across {len(existing_counts)} problems "
+                f"from {', '.join(str(p) for p in resume_sources)}"
             )
 
     # Build work list, skipping completed problems
@@ -460,13 +474,16 @@ def main():
         work.sort(key=_priority_key)
         logger.info(
             f"Priority ordering enabled (target={target}, sft_file={sft_path}, "
-            f"known_sft_problems={len(sft_counts)})"
+            f"known_sft_problems={len(sft_counts)}, total_catalog_problems={len(all_problems)})"
         )
 
     if skipped:
         logger.info(f"Skipping {skipped} complete problems, {len(work)} traces remaining")
 
-    if args.shuffle:
+    # Keep priority mode deterministic: shuffling defeats the priority ranking.
+    if args.shuffle and args.priority:
+        logger.info("Ignoring --shuffle because --priority is enabled")
+    elif args.shuffle:
         random.shuffle(work)
 
     # Run

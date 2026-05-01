@@ -1,0 +1,63 @@
+{
+  "batch": 52,
+  "accepted": [
+    {
+      "blob_id": "ff00605c3254425598e663731b576494ce17f812",
+      "path": "/spnss/vv.pyx",
+      "output": "variable_vector_code.py",
+      "reason": "Variable-code parsing and support-validation logic provide mixed string parsing and structured loop kernels."
+    },
+    {
+      "blob_id": "6d751871e4046eef7ad495bd46f3c441b43a76b0",
+      "path": "/src/TabuSearch.pyx",
+      "output": "tabu_search_core.py",
+      "reason": "Core tabu-search control flow and granular-neighborhood filtering are strong optimization-search training patterns."
+    },
+    {
+      "blob_id": "4438874a2aaffb74164ef76567c6f02c293ed37c",
+      "path": "/Notes/CSC-492-D01-2018FA Topics Python-Shlanta - 11162018 - 1257 PM/speedup.pyx",
+      "output": "dice_six_probability.py",
+      "reason": "Monte Carlo trial loops over random draws are concise numeric kernels with clear optimization opportunities."
+    },
+    {
+      "blob_id": "1bbb109f9eb0c65252af8ad703ba4626dd2de7c7",
+      "path": "/utils/poly_utils.pyx",
+      "output": "poly2d_utils.py",
+      "reason": "2D polynomial multiply/integrate/derivative loops are high-signal nested numeric kernels."
+    },
+    {
+      "blob_id": "449aedebfab9bb9c5dff54e2feb7724703f3985e",
+      "path": "/signal/moving_average/moving_average_cy.pyx",
+      "output": "moving_average_filters.py",
+      "reason": "Moving-average filters are common streaming kernels with straightforward loop optimization behavior."
+    },
+    {
+      "blob_id": "665460aa5f12308ce0e9ebbde0a85cc10213a2e0",
+      "path": "/cython_floor_gen.pyx",
+      "output": "floor_generator.py",
+      "reason": "Procedural generation with adaptive difficulty contains practical branch-heavy sequence update logic."
+    }
+  ],
+  "skipped": [
+    {
+      "blob_id": "e10ce28fe0e70820851ec1fa2eb2fc34dcacf4a5",
+      "path": "/py/src/land.pyx",
+      "reason": "Thin wrapper around external C extension (`c_land`) rather than standalone optimization logic."
+    },
+    {
+      "blob_id": "12f0a638f210b5f25d094dd46ae681021ba68afa",
+      "path": "/im3D/metrics/metrics_rms.pyx",
+      "reason": "Source appears incomplete/broken and largely a simple reduction; lower value than other candidates in this batch."
+    },
+    {
+      "blob_id": "5b2fd28b6f5e5c35f3c719f2f8ba9dd048bec5b3",
+      "path": "/psana/psana/smdreader.pyx",
+      "reason": "Tightly coupled to custom binary reader Cython types and file descriptors; not a portable standalone kernel."
+    },
+    {
+      "blob_id": "bfbc786ff3736d7f5a2da60cf357178aded72c47",
+      "path": "/pygrafix/image/_image.pyx",
+      "reason": "OpenGL/resource-management integration code is heavy on external API coupling and low GRPO conversion value."
+    }
+  ]
+}

@@ -1,0 +1,63 @@
+{
+  "batch": 79,
+  "accepted": [
+    {
+      "blob_id": "d28afad3a3d11294d12216ca0139070bea484beb",
+      "path": "/MuNeG/graph/gen/GraphGenerator.pyx",
+      "output": "graph_generator_erdos.py",
+      "reason": "Random graph edge-generation loops are a strong fit for Cython-oriented optimization tasks."
+    },
+    {
+      "blob_id": "b4fc12e42473726ef1e911c19ffcc33f8614273f",
+      "path": "/src/shape/CTriangle.pyx",
+      "output": "triangle_shape_metrics.py",
+      "reason": "Triangle geometry computations expose dense numeric operations suitable for speedup-focused optimization."
+    },
+    {
+      "blob_id": "0aa8919267ce2d611ba38c1e3f253946ecf05b50",
+      "path": "/cython/sieve_cython.pyx",
+      "output": "sieve_count_primes.py",
+      "reason": "Prime-sieve style boolean array iteration is a canonical benchmark-friendly kernel."
+    },
+    {
+      "blob_id": "1654e5c54730079b6f86a0f33fc73d904f324cfc",
+      "path": "/ICython/Core/peakFunctions.pyx",
+      "output": "peak_window_features.py",
+      "reason": "Waveform peak/window scans map cleanly to loop-heavy numeric processing tasks."
+    },
+    {
+      "blob_id": "e88d233ae2896943f2ca6c5944d6e8994175ad91",
+      "path": "/algorithm/tinycadlib.pyx",
+      "output": "tinycad_affine_ops.py",
+      "reason": "Affine transforms and bounding-box passes are practical geometry kernels with optimization headroom."
+    },
+    {
+      "blob_id": "bb364825d8322887b82311619ecbc3dd8a919d27",
+      "path": "/quad_mesh_simplify/heap.pyx",
+      "output": "mesh_heap_update.py",
+      "reason": "Heap percolation/update logic is a useful algorithmic pattern for optimization training."
+    }
+  ],
+  "skipped": [
+    {
+      "blob_id": "200fbd1c18df6efda720111680d9cc216f39de4d",
+      "path": "/ahserver/server/parser/buffer.pyx",
+      "reason": "Parser transport buffer wrapper is mostly integration glue and less suitable as a standalone optimization exercise."
+    },
+    {
+      "blob_id": "fd4a6896d731d32ad9432f37183a5f4037725e2a",
+      "path": "/python/helpers/third_party/thriftpy/_shaded_thriftpy/transport/buffered/cybuffered.pyx",
+      "reason": "Third-party transport wrapper code is I/O integration focused rather than core numeric or algorithmic compute."
+    },
+    {
+      "blob_id": "ad642771409575f5c9b5a56b503d02ce27436147",
+      "path": "/tests/run/lambda_class_T605.pyx",
+      "reason": "Cython language-behavior test fixture is not a representative optimization target."
+    },
+    {
+      "blob_id": "b4f80df9b463e2f7396226fcca93f4bd003ed819",
+      "path": "/neco/ctypes/include_no_stats.pyx",
+      "reason": "State-space traversal depends on project-specific runtime context and offers low transfer as a standalone example."
+    }
+  ]
+}

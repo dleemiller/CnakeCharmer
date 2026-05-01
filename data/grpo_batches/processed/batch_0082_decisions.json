@@ -1,0 +1,62 @@
+{
+  "batch": 82,
+  "accepted": [
+    {
+      "blob_id": "9844bb11782a4a5243edc2a82985090245479c34",
+      "path": "/stash/generate_lightcurve.pyx",
+      "output": "transit_lightcurve_scan.py",
+      "reason": "Transit mask supersampling/rebinning is a dense image-style kernel with strong optimization relevance."
+    },
+    {
+      "blob_id": "89225657f14c2b4805a4dfef310450bed937ff03",
+      "path": "/HW05/C_mul.pyx",
+      "output": "int_matrix_multiply.py",
+      "reason": "Integer matrix multiplication is a canonical nested-loop compute kernel for Cython speedup tasks."
+    },
+    {
+      "blob_id": "dc0b94518ea5a396b7b1a99b1f5abe29cb2ba9da",
+      "path": "/src/cogent3/maths/_period.pyx",
+      "output": "periodic_signal_kernels.py",
+      "reason": "Goertzel, iPDFT, and autocorrelation routines are high-signal numerical loops suitable for optimization training."
+    },
+    {
+      "blob_id": "1f17958b21dd2be2641a6c4b7812d31db58a8e62",
+      "path": "/smoke/replay/decoder/recv_prop/dvector.pyx",
+      "output": "vector_normal_decode.py",
+      "reason": "Vector decoding with normalization/sqrt logic is a compact but realistic math kernel."
+    },
+    {
+      "blob_id": "7bc02fb312051deeddb2bcf5a7562afa5bff2124",
+      "path": "/pathwaynetwork/esabo.pyx",
+      "output": "entropy_association_matrix.py",
+      "reason": "Entropy and shuffle-based association scoring provides loop-heavy statistical computation with optimization headroom."
+    }
+  ],
+  "skipped": [
+    {
+      "blob_id": "63168eabdc51d9f001e89508a503399921179878",
+      "path": "/src/h3/_cy/util.pyx",
+      "reason": "Mostly conversion/validation helpers around H3 types; limited standalone optimization value."
+    },
+    {
+      "blob_id": "5f287e90b65150282cbeeb1a3e68d9a683876582",
+      "path": "/tests/run/type_slots_int_long_T287.pyx",
+      "reason": "Cython behavior test for numeric slots is not a target optimization workload."
+    },
+    {
+      "blob_id": "d20da3541cf37c6594260e1d9da853997d6e2f57",
+      "path": "/tests/run/always_allow_keywords_T295.pyx",
+      "reason": "Keyword-argument semantics test suite is compiler/runtime behavior coverage, not algorithmic compute."
+    },
+    {
+      "blob_id": "386c3fa8bb8bb7720fe736e52dcdf486e576b8fe",
+      "path": "/cython/parallel/multi_tasking.pyx",
+      "reason": "Tiny prange demo has insufficient computational substance for GRPO optimization data."
+    },
+    {
+      "blob_id": "f4326057aeb6084533a156885db5b2bf2b1e6d84",
+      "path": "/run_cpython.pyx",
+      "reason": "Very small list-building/counting demo is too trivial for useful optimization training signal."
+    }
+  ]
+}

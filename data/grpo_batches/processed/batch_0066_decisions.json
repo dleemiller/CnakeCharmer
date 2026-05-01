@@ -1,0 +1,63 @@
+{
+  "batch": 66,
+  "accepted": [
+    {
+      "blob_id": "5bf0e4973a6622455186c2f16782a18204c55c77",
+      "path": "/gpsig/sigKer_fast.pyx",
+      "output": "signature_kernel_diag.py",
+      "reason": "Signature-kernel dynamic-programming recurrences over path increments are high-value numerical sequence kernels."
+    },
+    {
+      "blob_id": "e531abd28c7498df811909dcfc72cc06145e73e9",
+      "path": "/src/pycrop2ml_ui/packages/Simplace_SoilTemperature/crop2ml/algo/pyx/SnowCoverCalculator.pyx",
+      "output": "snow_cover_calculator.py",
+      "reason": "Snowpack/evaporation/melt state updates provide practical geophysical process-model loop logic."
+    },
+    {
+      "blob_id": "6f356940ae060ce0316bb7930b7ebab4bec0b33b",
+      "path": "/src/distance/stationary_distribution.pyx",
+      "output": "stationary_distribution_distance.py",
+      "reason": "Stationary distribution estimation from generated contexts is a useful probabilistic sequence-analysis kernel."
+    },
+    {
+      "blob_id": "5304c28194cc18a20fcb2b12f5410a738b174ab3",
+      "path": "/cysorting.pyx",
+      "output": "cysorting_algorithms.py",
+      "reason": "Insertion and merge sort routines remain strong baseline algorithmic optimization examples."
+    },
+    {
+      "blob_id": "9964878dbc2224ffb6b491a9b743c95270e73e8a",
+      "path": "/multidynet/multinet/deltas_lds.pyx",
+      "output": "multidynet_delta_updates.py",
+      "reason": "Natural-parameter accumulation and mean-field updates are compact inference kernels with nested loops."
+    },
+    {
+      "blob_id": "ea2083be9068b3c476099490c55aca703419ba8b",
+      "path": "/cupy/_core/new_fusion.pyx",
+      "output": "fusion_dispatch_cache.py",
+      "reason": "Type/shape keyed dispatch and kernel caching logic is high-signal runtime optimization control flow."
+    }
+  ],
+  "skipped": [
+    {
+      "blob_id": "7245b4edc1488a7bc057fe9a168eb946d47c4c19",
+      "path": "/pytraj/parms/ParmFile.pyx",
+      "reason": "Primarily C++ topology file wrapper glue with heavy external type dependencies and low standalone kernel value."
+    },
+    {
+      "blob_id": "4f6193803ec4cc2f74ded254553d84f8d0df7ca7",
+      "path": "/tests/run/cypclass_pyobject_conversion.pyx",
+      "reason": "Cython language/runtime conversion test suite, not a target algorithmic workload."
+    },
+    {
+      "blob_id": "3adb7d0c319db3fa798bae022e6821721f32ebd5",
+      "path": "/pheno_pkg/src/pyx/IsMomentRegistredZC_39.pyx",
+      "reason": "Single boolean membership check is too trivial for meaningful Cython optimization training."
+    },
+    {
+      "blob_id": "f79b3842285896003c759dbf98ae8fb33ece8e66",
+      "path": "/lame/hip.pyx",
+      "reason": "Decoder API wrapper around external library calls has limited standalone algorithmic content."
+    }
+  ]
+}

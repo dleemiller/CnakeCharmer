@@ -1,0 +1,64 @@
+{
+  "batch": 41,
+  "accepted": [
+    {
+      "blob_id": "100c2b72d0af81f57c72bdb2be068a8717571bdc",
+      "path": "/tree.pyx",
+      "output": "decision_tree_array.py",
+      "reason": "Array-backed tree growth, split indexing, and traversal logic are strong structured-kernel examples."
+    },
+    {
+      "blob_id": "3433d7db1afe086714203025ddf5b4c7485045fd",
+      "path": "/raysect/optical/observer/point_generator.pyx",
+      "output": "point_generators.py",
+      "reason": "Point sampling over deterministic and disk distributions gives compact geometric generation kernels."
+    },
+    {
+      "blob_id": "3b115fb16afe138edeb59c5c68eca3c6fbb32cbb",
+      "path": "/python/cuquantum/utils.pyx",
+      "output": "nested_sequence_utils.py",
+      "reason": "Nested-sequence checks and allocation/free callback wrappers capture useful low-level utility patterns."
+    },
+    {
+      "blob_id": "c737a6dabdf03bff6d23af9795d8ce2a8dd14b94",
+      "path": "/examples/wall_force_torque.pyx",
+      "output": "wall_force_torque.py",
+      "reason": "Wall potential force and torque equations provide concise physics-oriented numeric kernels."
+    },
+    {
+      "blob_id": "512e13708932051f2597beb11099789523e56a5b",
+      "path": "/pybayes/wrappers/_numpy.pyx",
+      "output": "index_reindex_ops.py",
+      "reason": "Reindex, gather, and scatter routines are broadly reusable index-manipulation optimization targets."
+    },
+    {
+      "blob_id": "1df51d984cf3730a8a64546517681747eb8aeab3",
+      "path": "/goinput.pyx",
+      "output": "go_board_features.py",
+      "reason": "Board-feature flattening and label construction produce practical dense feature-engineering loops."
+    },
+    {
+      "blob_id": "99040185d3db0bbe91637edaae18a5d1e25237e3",
+      "path": "/bloomfilter/_bloomfilter.pyx",
+      "output": "bloom_filter_math.py",
+      "reason": "Bloom-filter sizing math and seed generation offer high-signal probabilistic data-structure kernels."
+    }
+  ],
+  "skipped": [
+    {
+      "blob_id": "cfae79867e9fe9bdf9dff70f7a6521232482b029",
+      "path": "/tests/run/pep442_tp_finalize.pyx",
+      "reason": "Cython lifecycle semantics test coverage, not standalone computational kernel logic."
+    },
+    {
+      "blob_id": "21d225704fc0dbc4ed3dc6d1a88cbb7c57d05d46",
+      "path": "/tests/run/starargs.pyx",
+      "reason": "Argument-passing behavior tests are language conformance checks, not conversion targets."
+    },
+    {
+      "blob_id": "264189d2ae50f31764e87b82cf1248e7346a33e8",
+      "path": "/microscopes/mixture/definition.pyx",
+      "reason": "Primarily model-definition/wrapper plumbing with little independent numeric-kernel content."
+    }
+  ]
+}

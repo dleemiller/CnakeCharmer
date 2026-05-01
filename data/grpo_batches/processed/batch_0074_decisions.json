@@ -1,0 +1,63 @@
+{
+  "batch": 74,
+  "accepted": [
+    {
+      "blob_id": "a17678d2edf38e8ad32c5ea6871a908dc6db20f5",
+      "path": "/indexer/__doclist.pyx",
+      "output": "doclist_index_scores.py",
+      "reason": "Document scoring/ranking loops are reusable indexing kernels with clear optimization value."
+    },
+    {
+      "blob_id": "19ed083bb1f244306d726ab4afc1e602f5a43713",
+      "path": "/cfuncs.pyx",
+      "output": "cfuncs_array_ops.py",
+      "reason": "Basic vector arithmetic kernels (saxpy/dot) are compact, high-signal numeric workloads."
+    },
+    {
+      "blob_id": "dbfa56fb40bae8bab72a4767ceb157d4d4b1c2f9",
+      "path": "/funcs.pyx",
+      "output": "graphevo_objective.py",
+      "reason": "Graph partition objective and balance penalty loops are useful optimization-task examples."
+    },
+    {
+      "blob_id": "8ac4f098d6e2a17b4481b1bf6509dc546cb6f8e9",
+      "path": "/galaxy.pyx",
+      "output": "galaxy_profile_metrics.py",
+      "reason": "Radial profile accumulation captures practical astrophysical numeric aggregation patterns."
+    },
+    {
+      "blob_id": "ff0889b9c6e1f8395534e0973a0ff63a483e2156",
+      "path": "/bl2_skingen/imaging/overlay.pyx",
+      "output": "image_overlay_blend.py",
+      "reason": "Pixel-wise alpha blending is a common image-processing kernel with dense loops."
+    },
+    {
+      "blob_id": "936de74d3a5723a268a5af1ea66a334e3778420d",
+      "path": "/data_structures/sumtree/sumtree.pyx",
+      "output": "sumtree_updates.py",
+      "reason": "Sum-tree build/update/sample operations are important RL data-structure kernels."
+    }
+  ],
+  "skipped": [
+    {
+      "blob_id": "70e1d5c802e7837b715902d305e7de1b7dc75882",
+      "path": "/tests/run/methodmangling_cdef.pyx",
+      "reason": "Cython method-mangling test cases are not suitable as standalone optimization targets."
+    },
+    {
+      "blob_id": "d54d42653e6d8dd7bb147b29628b21d8235db08d",
+      "path": "/tests/run/autotestdict_cdef.pyx",
+      "reason": "Compiler/runtime behavior tests have low transfer value for conversion training."
+    },
+    {
+      "blob_id": "40b5c796309844086435582cd8891d6d3fe6cc80",
+      "path": "/analysis/examples/cython_test/cython_plugins.pyx",
+      "reason": "Example plugin scaffold code is integration-heavy and not a robust numeric kernel exemplar."
+    },
+    {
+      "blob_id": "adf66ae6235b2cb84294595783f590c8aa273cd6",
+      "path": "/src/Game/Pieces/StarTrekChess/king_s.pyx",
+      "reason": "Game-piece rule logic is domain-specific and less aligned with Cython speedup-focused trace goals."
+    }
+  ]
+}

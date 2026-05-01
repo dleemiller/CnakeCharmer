@@ -1,0 +1,63 @@
+{
+  "batch": 87,
+  "accepted": [
+    {
+      "blob_id": "e4c40ebfe18986e195342831988a02b8edfdccc4",
+      "path": "/pyapprox/cython/sparse_grid.pyx",
+      "output": "smolyak_coeff_kernels.py",
+      "reason": "Smolyak-coefficient accumulation over index lattices is a high-signal combinatorial numeric kernel."
+    },
+    {
+      "blob_id": "d15d6f6139726bd62d7746f96b0d715734e78ed2",
+      "path": "/traj_dist/cydist/erp.pyx",
+      "output": "erp_trajectory_distance.py",
+      "reason": "ERP trajectory distance uses dynamic programming with geometric costs and is a strong optimization target."
+    },
+    {
+      "blob_id": "b1c966282da2a38598934b21316decfa3f1bba4c",
+      "path": "/hmmlearn/_hmmc.pyx",
+      "output": "hmm_dp_core.py",
+      "reason": "Forward/Viterbi log-domain DP kernels are core sequence-model primitives with clear performance relevance."
+    },
+    {
+      "blob_id": "e173aed32cb2d3698f72b2d693d557d17b8ea885",
+      "path": "/cython/fast_histogram/histogram.pyx",
+      "output": "histogram_fast_bins.py",
+      "reason": "1D/2D histogram binning loops are canonical dense counting kernels for Cython optimization."
+    },
+    {
+      "blob_id": "b297b3de6d68d6f66b7a691aa5bee30bcaf5977a",
+      "path": "/autodiff/AdFloat.pyx",
+      "output": "autodiff_scalar_ops.py",
+      "reason": "Automatic differentiation scalar operator rules are reusable compute logic with stable optimization patterns."
+    },
+    {
+      "blob_id": "35be301a560749c36823207d89768beb5456694f",
+      "path": "/assignment4/integrator/cython_integrator.pyx",
+      "output": "numeric_integrators.py",
+      "reason": "Right and midpoint numerical integration loops are compact and transferable optimization examples."
+    }
+  ],
+  "skipped": [
+    {
+      "blob_id": "0f58392555c44bfa91e325c67cf4d595e7c278a6",
+      "path": "/csv_event_rows_to_dict_parallel.pyx",
+      "reason": "Contains invalid parallelization patterns over Python iterators/objects and low-quality signal for robust training."
+    },
+    {
+      "blob_id": "3ae86b685dd392f3e4c7eb88317f567e796e98d8",
+      "path": "/bsd/kld.pyx",
+      "reason": "Kernel module wrapper is OS-integration plumbing, not a direct algorithmic optimization workload."
+    },
+    {
+      "blob_id": "5ecf59aeaa50ef83e358b313a80b1496f468c98b",
+      "path": "/add_matrices/add_matrices.pyx",
+      "reason": "Very trivial matrix addition kernel adds limited new signal beyond existing arithmetic examples."
+    },
+    {
+      "blob_id": "22d2decc3588af3b54a56d7970016795487fe977",
+      "path": "/genomicfeatures/_BaseFeatures.pyx",
+      "reason": "Feature/iterator object model is mostly class plumbing and legacy style, with low compute-kernel value."
+    }
+  ]
+}

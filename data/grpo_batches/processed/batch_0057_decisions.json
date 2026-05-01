@@ -1,0 +1,65 @@
+{
+  "batch": 57,
+  "accepted": [
+    {
+      "blob_id": "6e0477ffa5becb727c0c0c004507c4faae926062",
+      "path": "/cython/_euler.pyx",
+      "output": "euler_kernels.py",
+      "reason": "Classic arithmetic loops (multiples/Fibonacci/sum-square difference) are high-signal optimization kernels."
+    },
+    {
+      "blob_id": "fbd03c670a684cb376b465d0f4eec78d84494ff2",
+      "path": "/champ/adapters_cython.pyx",
+      "output": "adapter_hamming.py",
+      "reason": "Hamming-distance and adapter-position scans are concise sequence-processing kernels."
+    },
+    {
+      "blob_id": "00340cede577480fa210968deb5fb07ee5dda6a0",
+      "path": "/pyfpt/numerics/importance_sampling_cython.pyx",
+      "output": "importance_sampling_paths.py",
+      "reason": "Reflected SDE path simulation with likelihood-ratio weights is a strong stochastic numeric kernel."
+    },
+    {
+      "blob_id": "073c8269eef52b21004077b9962f105b231af8bf",
+      "path": "/mcts-full/Node.pyx",
+      "output": "mcts_node_core.py",
+      "reason": "MCTS node expansion/selection/backprop flow is valuable agentic search logic for optimization training."
+    },
+    {
+      "blob_id": "d060b053177ceff988fca9fbd204a501f7b3548b",
+      "path": "/tools/traj_dist/pydist/erp_c.pyx",
+      "output": "erp_trajectory.py",
+      "reason": "ERP dynamic-programming distance over trajectories is a practical time-series alignment kernel."
+    },
+    {
+      "blob_id": "8993f5323ca8c33cadd9f5bbd3b51d2cd9605531",
+      "path": "/mcts-simulate/GridWorld.pyx",
+      "output": "gridworld_env.py",
+      "reason": "Gridworld transition dynamics and terminal checks provide compact simulation-environment control logic."
+    },
+    {
+      "blob_id": "e3234cb7fe68f6db5d0b169e4b90fbea9422dafd",
+      "path": "/aurora/nn/pyx/fast_pooling.pyx",
+      "output": "max_pool_ops.py",
+      "reason": "Max-pooling forward kernels are standard deep-learning tensor loops with clear optimization paths."
+    },
+    {
+      "blob_id": "9865f981188edd8c6638d3245f092a3656fb4fa5",
+      "path": "/research_utils/fast_pga.pyx",
+      "output": "rotate_north_pole.py",
+      "reason": "Vector-normalization and Rodrigues-style rotation matrix construction is a solid geometric numeric kernel."
+    }
+  ],
+  "skipped": [
+    {
+      "blob_id": "7e7b5d6b3db8b602d630890f9e3c9f254640378a",
+      "path": "/ucp/_libs/topological_distance.pyx",
+      "reason": "Hardware-topology/NVML wrapper code is integration-heavy and not a portable standalone compute target."
+    },
+    {
+      "blob_id": "f33665df9f9dd4c1ec8575c7bdd910c9234eae64",
+      "path": "/hierarchy/hierarchy2.pyx",
+      "reason": "Large image-pipeline and IO-heavy hierarchy module has broad external coupling and low standalone conversion clarity."
+    }
+  ]
+}

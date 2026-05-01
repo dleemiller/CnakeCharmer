@@ -2,7 +2,7 @@
 SFT trace scoring for dataset selection.
 
 Ranks traces by speedup tier first, then tiebreaks within tier
-by annotation, efficiency, conciseness, and compactness.
+by annotation, efficiency, and conciseness.
 
 Used for: best-per-model-per-problem selection, GRPO reward baseline.
 
@@ -32,26 +32,33 @@ def sft_score(
     num_iters: int = 5,
     thought_tokens: int = 2000,
     code_tokens: int = 1500,
+    speedup_ref: float = 100.0,
 ) -> float:
     """Score a trace for SFT selection.
 
     Quality (90%): speedup dominates, correctness and annotation support.
-    Tiebreaker (10%): efficiency, conciseness, compactness — only matters
+    Tiebreaker (10%): efficiency and conciseness — only matters
     within the same speedup tier.
 
     Returns:
         Score from 0.0 to ~1.0. Higher is better.
     """
     # Primary: solution quality
-    perf = min(math.log2(speedup) / math.log2(100), 1.0) if speedup > 1 else 0
+    # Normalize speedup by a reference capped at 100x (dataset can pass a per-problem max).
+    # This keeps large anomalies from dominating while avoiding under-crediting
+    # problems whose realistic ceilings are below 100x.
+    if speedup <= 1:
+        perf = 0.0
+    else:
+        ref = max(1.000001, float(speedup_ref))
+        perf = min(math.log2(speedup) / math.log2(ref), 1.0)
     quality = 0.25 * correctness + 0.40 * perf + 0.15 * annotation + 0.05 * lint + 0.05 * memory
 
-    # Secondary: efficiency tiebreaker (never overrides quality)
+    # Secondary: efficiency/conciseness tiebreaker (never overrides quality)
     # Count only evaluate_cython calls, not finish — calling finish is good behavior
     efficiency = max(0, 1.0 - (num_iters - 1) / 4)
     conciseness = max(0, 1.0 - thought_tokens / 5000)
-    compactness = max(0, 1.0 - code_tokens / 3000)
-    tiebreaker = 0.05 * efficiency + 0.025 * conciseness + 0.025 * compactness
+    tiebreaker = 0.065 * efficiency + 0.035 * conciseness
 
     return quality + tiebreaker
 
@@ -133,7 +140,7 @@ def parse_trace_metrics(trace) -> dict:
     }
 
 
-def score_trace(trace) -> float:
+def score_trace(trace, speedup_ref: float = 100.0) -> float:
     """Score a trace for SFT selection. Returns 0.0 if hard filters fail."""
     if not passes_hard_filters(trace):
         return 0.0
@@ -151,4 +158,5 @@ def score_trace(trace) -> float:
         num_iters=m["num_iters"],
         thought_tokens=m["thought_tokens"],
         code_tokens=m["code_tokens"],
+        speedup_ref=speedup_ref,
     )

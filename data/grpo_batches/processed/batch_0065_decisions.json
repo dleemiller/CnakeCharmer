@@ -1,0 +1,63 @@
+{
+  "batch": 65,
+  "accepted": [
+    {
+      "blob_id": "f7831234d3e5e8afe927ccdadd0ce3e5c4694292",
+      "path": "/cython_utils/initdata.pyx",
+      "output": "lda_init_structures.py",
+      "reason": "Topic-sequence initialization and term/topic count aggregation are high-signal probabilistic modeling kernels."
+    },
+    {
+      "blob_id": "8d98b8c9e7e4ba24dd42e08aea14410077ab054c",
+      "path": "/Task_3/cythv.pyx",
+      "output": "nbody_velocity_verlet.py",
+      "reason": "All-pairs gravitational acceleration and velocity-Verlet updates provide strong numerical simulation loops."
+    },
+    {
+      "blob_id": "e3e36c4537a7a2bf4dededa418e5ba522e8aef74",
+      "path": "/src/xy/linalg2d/affine_2d.pyx",
+      "output": "affine2d_transform.py",
+      "reason": "Affine transform composition and point mapping represent reusable geometry-control kernels."
+    },
+    {
+      "blob_id": "25ac641c0c45980e7f8d6ee865356f61201a830b",
+      "path": "/Spacy/source2.7/thinc/neural/optimizers.pyx",
+      "output": "thinc_optimizer_updates.py",
+      "reason": "Nesterov/Adam parameter update logic is central iterative optimization material for model training loops."
+    },
+    {
+      "blob_id": "6f51bf409d3f95079854e276d71377984edcfd1d",
+      "path": "/linreg_squared_rnn.pyx",
+      "output": "recurrent_linear_policy.py",
+      "reason": "Action-scoring with recurrent action-state coupling is a compact sequential decision kernel."
+    },
+    {
+      "blob_id": "4050cc17c6940acfdc5821effe2e34454b79e74e",
+      "path": "/triangle/core.pyx",
+      "output": "triangle_io_buffers.py",
+      "reason": "Typed buffer replacement/copy patterns around triangulation IO are practical memory-layout transformation helpers."
+    }
+  ],
+  "skipped": [
+    {
+      "blob_id": "3f750c96dd5ba12c946a5f7a7acc814ae4bf645a",
+      "path": "/statistics_cy.pyx",
+      "reason": "Mixed/incomplete statistical code fragment with unclear boundaries and heavy context dependence."
+    },
+    {
+      "blob_id": "11ed824dd399124a4467d1e6526793e14cf4c111",
+      "path": "/vice/src/multizone/tests/cases/_generic.pyx",
+      "reason": "Primarily a framework-specific test harness rather than a standalone optimization target."
+    },
+    {
+      "blob_id": "c45b3bd16df42743bf5d568511f51078e9282568",
+      "path": "/experiments/opencog/opencog-neuralnet/cython/opencog/ptrvalue.pyx",
+      "reason": "Thin pointer-wrapper interop glue has limited algorithmic training value by itself."
+    },
+    {
+      "blob_id": "e18d48a54218d5ffd98d61b1f0e3b33901ebe097",
+      "path": "/tests/run/lepage_1.pyx",
+      "reason": "Small Cython behavior regression test; useful for language testing but weak as GRPO conversion data."
+    }
+  ]
+}

@@ -1,0 +1,62 @@
+{
+  "batch": 83,
+  "accepted": [
+    {
+      "blob_id": "8990fb8038e4be4ac0128c5dbfa912c009bd55c6",
+      "path": "/string_distance/sequence_distance.pyx",
+      "output": "string_sequence_distance_dp.py",
+      "reason": "Longest-common-substring/subsequence dynamic programming are high-value algorithmic kernels for optimization tasks."
+    },
+    {
+      "blob_id": "0be2f123e46934d4e5e394e5ddd0e31af97527a8",
+      "path": "/py/pgt/Quaternion.pyx",
+      "output": "quaternion_ops.py",
+      "reason": "Quaternion multiply/normalize operations are dense numeric primitives with clear performance relevance."
+    },
+    {
+      "blob_id": "8ae8f2cc21ce7c2706119eb01aa266a8c0e871e2",
+      "path": "/src/ldpc/c_util.pyx",
+      "output": "binary_vector_conversions.py",
+      "reason": "Dense/sparse binary conversion loops are compact data-processing kernels useful for Cython speedup training."
+    },
+    {
+      "blob_id": "03b9968e1c63bd4bfe3b77d458eddf22d503e307",
+      "path": "/cythonHelpers.pyx",
+      "output": "square_matrix_multiply_benchmark.py",
+      "reason": "Square matrix multiplication is a canonical nested-loop compute workload with strong optimization signal."
+    },
+    {
+      "blob_id": "5e61f5e36c3bb515253715139aab79a85de6d9ca",
+      "path": "/Layers/Functions/lor.pyx",
+      "output": "lor_feature_aggregation.py",
+      "reason": "Sparse-indexed feature aggregation over fixed-width blocks is loop-heavy and suitable for optimization-focused examples."
+    }
+  ],
+  "skipped": [
+    {
+      "blob_id": "6f75a99457434b313c39eac6e07917447c039276",
+      "path": "/python/io/lely_io/addr.pyx",
+      "reason": "Network address wrapper/properties are integration-layer code, not standalone compute kernels."
+    },
+    {
+      "blob_id": "599ce4fd87b7494db97f0b4a2c1b5c5d517ad5d4",
+      "path": "/uvloop/handles/idle.pyx",
+      "reason": "Event-loop handle lifecycle management is systems glue and not a direct optimization benchmark target."
+    },
+    {
+      "blob_id": "961fec85f13bf60b0bb4276283a6acfc5c18cd2e",
+      "path": "/pylightxl/readxl_scrape.pyx",
+      "reason": "Regex/XML scraping is parser glue with mixed IO concerns and lower transfer for Cython compute optimization."
+    },
+    {
+      "blob_id": "93980e09f803b1257ce693a0d932cdf96f1fa375",
+      "path": "/lib/ts/ts36323_lte_pdcp.pyx",
+      "reason": "Protocol stack scaffold is mostly unfinished state-machine/spec scaffolding, not a focused numerical kernel."
+    },
+    {
+      "blob_id": "397df3299b23af60c6b10d8566b5cfa9b05c2863",
+      "path": "/ce_hiddenlayer50.pyx",
+      "reason": "Project-coupled blackbox trainer has heavy external dependencies and weak portability as unpaired GRPO optimization data."
+    }
+  ]
+}

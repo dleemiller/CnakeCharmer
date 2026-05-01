@@ -21,7 +21,7 @@ traces:  ## Collect traces using a model profile
 	$(eval _TOP := $(shell $(call PROFILE_GET,model.top_p)))
 	$(eval _ATT := $(shell $(call PROFILE_GET,collection.attempts)))
 	$(eval _MIT := $(shell $(call PROFILE_GET,collection.max_iters)))
-	$(eval _PAR := $(shell $(call PROFILE_GET,collection.parallel)))
+	$(eval _PAR := $(if $(PARALLEL),$(PARALLEL),$(shell $(call PROFILE_GET,collection.parallel))))
 	$(eval _PRG := $(shell $(call PROFILE_GET,prompt.program)))
 	$(eval _EB := $(shell $(PROFILE_EB)))
 	$(UV_RUN) python scripts/collect_traces.py \
@@ -39,7 +39,7 @@ traces:  ## Collect traces using a model profile
 		$(if $(PRIORITY),--priority) \
 		$(if $(PRIORITY_TARGET),--priority-target $(PRIORITY_TARGET)) \
 		$(if $(PRIORITY_SFT_FILE),--priority-sft-file $(PRIORITY_SFT_FILE)) \
-		--all --shuffle
+		--all $(if $(SHUFFLE),--shuffle)
 
 make-traces: traces  ## Alias for traces (supports PRIORITY=1)
 
@@ -49,7 +49,7 @@ traces-best:  ## Collect best-of-N traces (5 attempts, keep best)
 	$(eval _TMP := $(shell $(call PROFILE_GET,model.temperature)))
 	$(eval _TOP := $(shell $(call PROFILE_GET,model.top_p)))
 	$(eval _MIT := $(shell $(call PROFILE_GET,collection.max_iters)))
-	$(eval _PAR := $(shell $(call PROFILE_GET,collection.parallel)))
+	$(eval _PAR := $(if $(PARALLEL),$(PARALLEL),$(shell $(call PROFILE_GET,collection.parallel))))
 	$(eval _PRG := $(shell $(call PROFILE_GET,prompt.program)))
 	$(eval _EB := $(shell $(PROFILE_EB)))
 	$(UV_RUN) python scripts/collect_traces.py \
@@ -66,7 +66,7 @@ traces-best:  ## Collect best-of-N traces (5 attempts, keep best)
 		$(if $(PRIORITY),--priority) \
 		$(if $(PRIORITY_TARGET),--priority-target $(PRIORITY_TARGET)) \
 		$(if $(PRIORITY_SFT_FILE),--priority-sft-file $(PRIORITY_SFT_FILE)) \
-		--all --shuffle --attempts 5
+		--all $(if $(SHUFFLE),--shuffle) --attempts 5
 
 consolidate:  ## Consolidate trace files into master JSONL
 	$(UV_RUN) python scripts/consolidate_traces.py

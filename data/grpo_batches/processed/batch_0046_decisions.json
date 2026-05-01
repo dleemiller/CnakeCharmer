@@ -1,0 +1,65 @@
+{
+  "batch": 46,
+  "accepted": [
+    {
+      "blob_id": "96cb595c2ae6329077e6fe8495a6287b1134768b",
+      "path": "/Monte Carlo Simulation with Cython/plain_cython.pyx",
+      "output": "monte_carlo_sixes.py",
+      "reason": "Monte Carlo probability estimation over nested dice-roll loops is a clean stochastic kernel."
+    },
+    {
+      "blob_id": "d99a76b2333ab56123407bb3499de2afc96a2eaf",
+      "path": "/renpy/gl2/gl2model.pyx",
+      "output": "gl2_model_ops.py",
+      "reason": "Model copy/subsurface geometry transforms provide practical graphics data-path manipulation logic."
+    },
+    {
+      "blob_id": "0ddb1871349972a305daf7e2099b2f2c22a4c6ce",
+      "path": "/pattern_concentration/optimal_set.pyx",
+      "output": "indexed_quicksort.py",
+      "reason": "Indexed quicksort partitioning captures reusable in-place array and permutation update patterns."
+    },
+    {
+      "blob_id": "20c120b157cd0f68e132c2976a05a6c9be8c1f5c",
+      "path": "/sparse_skiplist_vector.pyx",
+      "output": "sparse_skiplist.py",
+      "reason": "Randomized-level skiplist upsert/find operations are high-value data-structure optimization targets."
+    },
+    {
+      "blob_id": "2c0609bfb0a701bed3dc014d9a8aae951e686399",
+      "path": "/Read_QC_Pipeline/Dependencies/cutadapt/cutadapt-1.8.1/cutadapt/_qualtrim.pyx",
+      "output": "quality_trim.py",
+      "reason": "Bidirectional quality-trim scan is a compact sequence-processing kernel used in bioinformatics pipelines."
+    },
+    {
+      "blob_id": "9a1571c77708c5b09f8bfa888730cfd907126985",
+      "path": "/equilibrium/cython/dm/fsm/fsm_internal.pyx",
+      "output": "fsm_ode_solver.py",
+      "reason": "ODE right-hand-side evaluation and stepping loops are strong scientific numeric workload examples."
+    },
+    {
+      "blob_id": "b500e73d61455197a06ec08c3073674b42356add",
+      "path": "/sklearn/ensemble/_hist_gradient_boosting/_binning.pyx",
+      "output": "map_to_bins.py",
+      "reason": "Column-wise binary-search bin mapping is a robust preprocessing kernel for tree-based ML models."
+    },
+    {
+      "blob_id": "18f3caa439dd93a3607b0943b9bb307604720a58",
+      "path": "/gray.pyx",
+      "output": "gray_convert.py",
+      "reason": "Per-pixel grayscale conversion over RGB channels is a simple but useful image kernel."
+    }
+  ],
+  "skipped": [
+    {
+      "blob_id": "6c85c4722bc8f05120b3f6c470a1631bd1a7fed3",
+      "path": "/uvloop/handles/check.pyx",
+      "reason": "Event-loop handle lifecycle/callback glue is runtime-integration code rather than standalone conversion kernel."
+    },
+    {
+      "blob_id": "536a3e32728ee7e8404c7927d0d978bd455c209d",
+      "path": "/libsgpersist.pyx",
+      "reason": "SCSI device binding and ioctl-style wrapper logic is too system-specific for unpaired GRPO kernel focus."
+    }
+  ]
+}

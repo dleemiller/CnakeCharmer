@@ -1,0 +1,65 @@
+{
+  "batch": 56,
+  "accepted": [
+    {
+      "blob_id": "3d99f5fed3e1615e6d48ecd85f09fc8a31f42ea5",
+      "path": "/dexplo/_libs/timedelta.pyx",
+      "output": "timedelta_components.py",
+      "reason": "Timedelta component extraction over dense int64 arrays is a practical data-processing kernel with predictable loop structure."
+    },
+    {
+      "blob_id": "bc80063e7d1d1cf00a08f3ee688bbbcfc3dab94a",
+      "path": "/c_possible_moves.pyx",
+      "output": "avalam_possible_moves.py",
+      "reason": "Board-neighborhood move enumeration is a compact combinatorial search kernel with clear constraints."
+    },
+    {
+      "blob_id": "8f8a8a1629d5cc0dafa308f8e8d027b6cc8d40b1",
+      "path": "/src/spike/bitboard_cython.pyx",
+      "output": "bitboard_othello.py",
+      "reason": "Bitboard directional scans and mobility counting are high-signal bitwise optimization kernels."
+    },
+    {
+      "blob_id": "1f34d6b844e60073e7ca6c4053b4838c61fac578",
+      "path": "/pyorama/data/hash_map.pyx",
+      "output": "open_address_hashmap.py",
+      "reason": "Open-address linear probing with growth/rehash captures core hash-table performance logic."
+    },
+    {
+      "blob_id": "c741ca3bdf01f60bc2c82a35459a0b830568f4db",
+      "path": "/src/nanopyx/core/analysis/pearson_correlation.pyx",
+      "output": "pearson_shifted_correlation.py",
+      "reason": "Shifted-window Pearson correlation is a useful image-analysis reduction kernel."
+    },
+    {
+      "blob_id": "7338efa4d2c7e805081f047db87e6e20585b1a22",
+      "path": "/ipythondistarray/trunk/ipythondistarray/core/maps_fast.pyx",
+      "output": "block_distribution_map.py",
+      "reason": "Owner/local-global index transforms provide concise distributed-array mapping primitives."
+    },
+    {
+      "blob_id": "a37d5ac3d1dfe9df7d0fa4f3160c20716dd110e9",
+      "path": "/integrations/c_rocheFunctions.pyx",
+      "output": "roche_geometry.py",
+      "reason": "Roche potential and effective-gravity computations are rich numeric kernels with physics-oriented structure."
+    },
+    {
+      "blob_id": "fe46fab94e86ebdc3ad9cdc1ca8860d69262a81a",
+      "path": "/mandelbrot/optimised.pyx",
+      "output": "mandelbrot_optimized_grid.py",
+      "reason": "Optimized Mandelbrot grid evaluation is a classic complex-iteration workload with heavy inner loops."
+    }
+  ],
+  "skipped": [
+    {
+      "blob_id": "dab4b020195b28f478c12394d96483697642813c",
+      "path": "/GEERTS-reproduction/hippocampus/fastBVC.pyx",
+      "reason": "Heavily coupled to project-specific geometry utilities and environment attributes; lower standalone portability."
+    },
+    {
+      "blob_id": "d115f2b8f1f2b8aba5cc59935d2028d5dc9a8b92",
+      "path": "/python/pycudann.pyx",
+      "reason": "Primarily a C/CUDA wrapper and object binding layer rather than direct standalone computational kernel logic."
+    }
+  ]
+}

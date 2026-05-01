@@ -1,22 +1,16 @@
-def veriPoint(re, im, power=17, thresh=100):
-    x = complex(0, 0)
-    c = complex(re, im)
-    for _ in range(thresh):
-        x = x**power + c
-        if abs(x.real) > 2.0 or abs(x.imag) > 2.0:
-            return False
-    return True
+"""Mandelbrot set membership test for a single point."""
+
+from __future__ import annotations
 
 
-def veriPoint_c(re, im):
-    thresh = 30
-    old_re = 0.0
-    old_im = 0.0
-    for _ in range(thresh):
-        new_re = old_re * old_re - old_im * old_im + im
-        new_im = 2 * old_re * old_im + re
-        old_re = new_re
-        old_im = new_im
-        if new_im**2.0 + new_re**2.0 > 4.0:
+def mandel(real, imag, max_iterations=20):
+    z_real = 0.0
+    z_imag = 0.0
+    for _ in range(max_iterations):
+        z_real, z_imag = (
+            z_real * z_real - z_imag * z_imag + real,
+            2.0 * z_real * z_imag + imag,
+        )
+        if (z_real * z_real + z_imag * z_imag) >= 4.0:
             return False
-    return True
+    return (z_real * z_real + z_imag * z_imag) < 4.0

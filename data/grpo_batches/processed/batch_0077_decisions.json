@@ -1,0 +1,65 @@
+{
+  "batch": 77,
+  "accepted": [
+    {
+      "blob_id": "018dd874c5016ae86d74f989f6ac4a4c96434ed9",
+      "path": "/anagram.pyx",
+      "output": "anagram_signature_counts.py",
+      "reason": "Anagram signature/count grouping provides compact string-processing loops with optimization value."
+    },
+    {
+      "blob_id": "b29ac8687c3b14f7f703cd62005a9cc2e6b977db",
+      "path": "/glycresoft_ms2_classification/utils/cmass_heap.pyx",
+      "output": "cmass_heap_ops.py",
+      "reason": "Heap push/pop operations are reusable core data-structure kernels used in many optimization pipelines."
+    },
+    {
+      "blob_id": "922185aa0d6ea5768cd2a037a6284946e74945a5",
+      "path": "/system.pyx",
+      "output": "lj_system_energy.py",
+      "reason": "Lennard-Jones pair-energy accumulation is a canonical molecular simulation compute kernel."
+    },
+    {
+      "blob_id": "d0cabd24085f9551dddfe1a26076c475c81fae76",
+      "path": "/src/Cython_examples/SLIM_MSE_fastest.pyx",
+      "output": "slim_mse_update.py",
+      "reason": "SLIM-style SGD/MSE updates are practical recommender optimization kernels with tight loops."
+    },
+    {
+      "blob_id": "c9c385fd6db5965fad549aa74c9ec5d439bc58fe",
+      "path": "/Cython/primes.pyx",
+      "output": "primes_trial_batch.py",
+      "reason": "Prime trial-division loops are simple but high-signal integer optimization workloads."
+    },
+    {
+      "blob_id": "3c28243ee884f954d3072cfd4fe97bab09336a06",
+      "path": "/landlab/components/flexure/cfuncs.pyx",
+      "output": "flexure_stencil_update.py",
+      "reason": "Flexure-style stencil updates are strong PDE-like kernels for Cython acceleration practice."
+    },
+    {
+      "blob_id": "ee7828da4c0f9b9e994f8358db8661b15352445f",
+      "path": "/medianfilter.pyx",
+      "output": "medianfilter_window.py",
+      "reason": "Sliding-window median filtering is a common signal/image processing kernel."
+    },
+    {
+      "blob_id": "77a471a5cdb51537c4e750a7717ada62543a955f",
+      "path": "/sklearntools/interpolation.pyx",
+      "output": "interpolation_piecewise_linear.py",
+      "reason": "Piecewise linear interpolation is a broadly reusable numeric kernel with predictable control flow."
+    }
+  ],
+  "skipped": [
+    {
+      "blob_id": "dc2d7052f19474e5747ce2f9a560fa16ad1995ae",
+      "path": "/ipythondistarray/trunk/ipythondistarray/mpi/mpibase_fast.pyx",
+      "reason": "MPI base internals are framework/integration glue rather than standalone optimization exemplars."
+    },
+    {
+      "blob_id": "7e8cba463c05e16cb1db85f569b9526f5a8040fe",
+      "path": "/BaseLib/mpi/calculate.pyx",
+      "reason": "Distributed MPI-oriented task glue is too environment-coupled for generic conversion training."
+    }
+  ]
+}

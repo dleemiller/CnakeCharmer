@@ -1,0 +1,63 @@
+{
+  "batch": 84,
+  "accepted": [
+    {
+      "blob_id": "35ba4dc3bc1f2b1731af91006af076afa4ebeaef",
+      "path": "/src/nanopyx/liquid/_le_convolution.pyx",
+      "output": "conv2d_clamped.py",
+      "reason": "2D convolution with boundary clamping is a canonical high-value optimization kernel."
+    },
+    {
+      "blob_id": "90ce663a06e3cae427dfe6b1eb80409d54248be2",
+      "path": "/src/biotite/sequence/codec.pyx",
+      "output": "sequence_codec_map.py",
+      "reason": "Sequence symbol encode/decode and code mapping are tight loops with clear Cython speedup potential."
+    },
+    {
+      "blob_id": "3dec74cc375ef27b4b6eb57dc07b5edcb062db9b",
+      "path": "/perfusionslic/additional/create_im.pyx",
+      "output": "slic_region_relabel_features.py",
+      "reason": "Supervoxel relabeling and voxel-feature extraction are loop-heavy array operations suitable for optimization."
+    },
+    {
+      "blob_id": "0b740854edc5aa49b751f96e660f018a84f7cde2",
+      "path": "/bo_project_2/CythonLogProbability.pyx",
+      "output": "log_probability_ops.py",
+      "reason": "Log-space probability arithmetic is numerically sensitive and compute-focused, making it useful training data."
+    },
+    {
+      "blob_id": "ecc44798677947cc4c6caa641dca47b93f86ac7b",
+      "path": "/py/pgt/Vector2.pyx",
+      "output": "vector2_arith.py",
+      "reason": "Vector arithmetic/dot/normalize primitives are dense numeric operations with straightforward optimization patterns."
+    },
+    {
+      "blob_id": "ad0cfcdaa10db59883383422355eb9a7525c932a",
+      "path": "/day-03/part-1/bebert.pyx",
+      "output": "slope_tree_count.py",
+      "reason": "Grid traversal with modular indexing is a compact algorithmic loop kernel useful for optimization tasks."
+    }
+  ],
+  "skipped": [
+    {
+      "blob_id": "6bd755d2176f0706238622db5a8da7b30faeae58",
+      "path": "/source/pysph/sph/funcs/density_funcs.pyx",
+      "reason": "Heavily framework-coupled SPH class implementation depends on project internals, reducing portability as unpaired data."
+    },
+    {
+      "blob_id": "ec12df33e36db3a518cbf27065c33943cc7736a7",
+      "path": "/libs/text_normalizer/text_normalizer.pyx",
+      "reason": "Text normalization wrapper is dominated by project-specific NLP plumbing rather than standalone optimization kernels."
+    },
+    {
+      "blob_id": "73a34371c5f31b8fc6e8c12c1f5e736043db6bc2",
+      "path": "/test/ds_algorithms/cythonize/selection_sort.pyx",
+      "reason": "Contains incorrect/buggy selection-sort logic and low-quality signal for training stable optimization behavior."
+    },
+    {
+      "blob_id": "00a52187bccd7dce5d5b3ca9d52bd91d40dc9fa1",
+      "path": "/pytraj/core/TopologyList.pyx",
+      "reason": "C++ topology container wrapper is mostly interface/memory-management glue, not a direct compute optimization target."
+    }
+  ]
+}

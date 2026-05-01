@@ -1,0 +1,64 @@
+{
+  "batch": 73,
+  "accepted": [
+    {
+      "blob_id": "fc4ceae23b2ebfbd87218caa3a3a2c2b5d3b1c7e",
+      "path": "/larana/crossdist.pyx",
+      "output": "cross_distance_matrix.py",
+      "reason": "Cross-distance computation is a reusable dense numeric kernel with clear vectorized loop structure."
+    },
+    {
+      "blob_id": "974c2c524f55afc8f0e35eb03280386be9ae50b0",
+      "path": "/imseg/rand_forest/vector_feature.pyx",
+      "output": "rf_vector_feature_bins.py",
+      "reason": "Feature binning/statistics loops are practical ML preprocessing kernels for optimization traces."
+    },
+    {
+      "blob_id": "cc14f758955aa962746da2284ef58b785d075c3a",
+      "path": "/nbody/nbody.pyx",
+      "output": "nbody_step.py",
+      "reason": "N-body pairwise force accumulation is a classic high-value performance workload."
+    },
+    {
+      "blob_id": "518db4802dc05fa8d060ef0c1035981e0ed2eb40",
+      "path": "/tools_data/particle_ops.pyx",
+      "output": "particle_ops_stats.py",
+      "reason": "Particle aggregation and radial-distance computations provide reusable simulation data kernels."
+    },
+    {
+      "blob_id": "ce90e7a97e1976a9ef19755766a3eae85bcd5fe1",
+      "path": "/energybalance_pkg/src/pyx/SoilHeatFlux.pyx",
+      "output": "soil_heat_flux_core.py",
+      "reason": "Soil heat flux/divergence loops are strong stencil-like numeric operations."
+    },
+    {
+      "blob_id": "e75293007e2b04bbc1b45eb6cc34f01c21a910fc",
+      "path": "/xwp_cython/prop2d_4loop.pyx",
+      "output": "propagation_2d_four_loop.py",
+      "reason": "2D propagation update loops are highly suitable for Cython conversion and optimization training."
+    },
+    {
+      "blob_id": "c10e18d9630e564cc088f8c184a6a99d5b124048",
+      "path": "/final_project/_alignment.pyx",
+      "output": "sequence_alignment_dp.py",
+      "reason": "Dynamic-programming sequence alignment is a canonical algorithmic kernel with rich loop structure."
+    }
+  ],
+  "skipped": [
+    {
+      "blob_id": "87713756a6620061dfbc3453d9105713a184476d",
+      "path": "/codecs/int.pyx",
+      "reason": "Integer codec internals are wire-format specific and less transferable for general optimization supervision."
+    },
+    {
+      "blob_id": "6b14545e16785990245a7df9c89b2e2a65eb29da",
+      "path": "/cupy_backends/cuda/stream.pyx",
+      "reason": "CUDA stream backend bindings are runtime integration glue rather than standalone compute kernels."
+    },
+    {
+      "blob_id": "6b7b2ff5196bf6055275ff47a84a186e42fac8f6",
+      "path": "/lib/cyac/utf8.pyx",
+      "reason": "UTF-8 parsing internals are specialized low-level text codec logic outside core numeric optimization goals."
+    }
+  ]
+}

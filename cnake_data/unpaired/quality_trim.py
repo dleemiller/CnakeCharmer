@@ -1,9 +1,9 @@
-"""Quality trimming routines for sequencing reads."""
+"""Quality trimming index finder (BWA-style partial-sum heuristic)."""
 
 from __future__ import annotations
 
 
-def quality_trim_index(qualities: str, cutoff_front: int, cutoff_back: int, base: int = 33):
+def quality_trim_index(qualities, cutoff_front, cutoff_back, base=33):
     stop = len(qualities)
     start = 0
 
@@ -30,22 +30,3 @@ def quality_trim_index(qualities: str, cutoff_front: int, cutoff_back: int, base
     if start >= stop:
         start, stop = 0, 0
     return start, stop
-
-
-def nextseq_trim_index(sequence, cutoff: int, base: int = 33):
-    bases = sequence.sequence
-    qualities = sequence.qualities
-    s = 0
-    max_qual = 0
-    max_i = len(qualities)
-    for i in range(max_i - 1, -1, -1):
-        q = ord(qualities[i]) - base
-        if bases[i] == "G":
-            q = cutoff - 1
-        s += cutoff - q
-        if s < 0:
-            break
-        if s > max_qual:
-            max_qual = s
-            max_i = i
-    return max_i
